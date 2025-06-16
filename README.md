@@ -1,1 +1,1 @@
-# AG-News-Text-Classification
+# AG News Text Classification
