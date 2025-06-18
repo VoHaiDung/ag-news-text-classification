@@ -9,3 +9,6 @@ The project follows a standard NLP pipeline, including data preprocessing (token
 Performance is assessed using standard metrics including accuracy, precision, recall, and F1-score, with emphasis on model generalization and practical deployment. The project serves as both a technical exercise and a foundational case study in text classification, providing insight into the challenges and design considerations of real-world NLP applications.
 
 All implementation is conducted using widely adopted libraries such as scikit-learn, TensorFlow/Keras, and Hugging Face Transformers, with reproducible experiments and modular code structure. This makes the project an ideal entry-level portfolio item for showcasing skills in applied natural language processing.
+
+## 📰 Dataset
+
