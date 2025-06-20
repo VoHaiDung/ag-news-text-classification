@@ -12,3 +12,16 @@ All implementation is conducted using widely adopted libraries such as scikit-le
 
 ## 📰 Dataset
 
+The AG News dataset is a widely used benchmark for topic classification in natural language processing. It consists of news articles collected from over 2,000 news sources by ComeToMyHead during more than one year of activity. The dataset is organized into four topic categories:
+
+- **World**
+- **Sports**
+- **Business**
+- **Science/Technology**
+
+Each sample includes a short title and description of a news article, serving as input text for classification. The dataset is balanced across classes and is pre-split into:
+
+- **Training set**: 120,000 samples (30,000 per class)
+- **Test set**: 7,600 samples (1,900 per class)
+
+This dataset presents several challenges common to real-world NLP tasks, including class ambiguity, domain overlap, and varied writing styles. It is available via the [Hugging Face Datasets library](https://huggingface.co/datasets/ag_news) and supports immediate use with PyTorch and TensorFlow pipelines.
