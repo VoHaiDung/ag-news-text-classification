@@ -25,3 +25,16 @@ Each sample includes a short title and description of a news article, serving as
 - **Test set**: 7,600 samples (1,900 per class)
 
 This dataset presents several challenges common to real-world NLP tasks, including class ambiguity, domain overlap, and varied writing styles. It is available via the [Hugging Face Datasets library](https://huggingface.co/datasets/ag_news) and supports immediate use with PyTorch and TensorFlow pipelines.
+
+## 🔧 Installation
+
+This project requires the following Python libraries:
+
+- `transformers` – for loading pre-trained BERT models
+- `datasets` – for accessing the AG News dataset easily
+- `torch` – for model training using PyTorch
+- `scikit-learn` – for evaluation metrics and helper functions
+
+### 📦 Install via pip:
+```bash
+pip install transformers datasets torch scikit-learn
