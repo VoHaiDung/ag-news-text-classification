@@ -28,13 +28,15 @@ This dataset presents several challenges common to real-world NLP tasks, includi
 
 ## 🔧 Installation
 
-This project requires the following Python libraries:
+This project requires Python 3.7+ and the following libraries:
 
-- `transformers` – for loading pre-trained BERT models
-- `datasets` – for accessing the AG News dataset easily
-- `torch` – for model training using PyTorch
-- `scikit-learn` – for evaluation metrics and helper functions
+- `transformers` – for loading and fine-tuning pre-trained BERT models  
+- `datasets` – for easy access to the AG News dataset and others  
+- `torch` – for training and inference using PyTorch  
+- `scikit-learn` – for evaluation metrics and basic utilities  
+- `evaluate` – for streamlined integration of metrics like accuracy
 
-### 📦 Install via pip:
+📦 Install dependencies via pip:
+
 ```bash
-pip install transformers datasets torch scikit-learn
+pip install transformers datasets torch scikit-learn evaluate
