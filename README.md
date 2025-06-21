@@ -24,7 +24,7 @@ Each sample includes a short title and description of a news article, serving as
 - **Training set**: 120,000 samples (30,000 per class)
 - **Test set**: 7,600 samples (1,900 per class)
 
-This dataset presents several challenges common to real-world NLP tasks, including class ambiguity, domain overlap, and varied writing styles. It is available via the [Hugging Face Datasets library](https://huggingface.co/datasets/ag_news) and supports immediate use with PyTorch and TensorFlow pipelines.
+This dataset presents several challenges common to real-world NLP tasks, including class ambiguity, domain overlap, and varied writing styles. It is available via the [Hugging Face Datasets library](https://huggingface.co/datasets/ag_news), the [TorchText loader](https://pytorch.org/text/stable/datasets.html#AG_NEWS), and the [original CSV source](http://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html), and supports immediate use with PyTorch and TensorFlow pipelines.
 
 ## Installation
 
