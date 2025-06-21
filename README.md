@@ -1,6 +1,6 @@
 # AG News Text Classification
 
-## 📌 Project Overview
+## Project Overview
 
 This project addresses the task of multi-class text classification using the AG News dataset, which comprises news articles labeled across four categories: World, Sports, Business, and Science/Technology. The objective is to develop and evaluate machine learning and deep learning models capable of accurately classifying news content based on textual features.
 
@@ -10,7 +10,7 @@ Performance is assessed using standard metrics including accuracy, precision, re
 
 All implementation is conducted using widely adopted libraries such as scikit-learn, TensorFlow/Keras, and Hugging Face Transformers, with reproducible experiments and modular code structure. This makes the project an ideal entry-level portfolio item for showcasing skills in applied natural language processing.
 
-## 📰 Dataset
+## Dataset
 
 The AG News dataset is a widely used benchmark for topic classification in natural language processing. It consists of news articles collected from over 2,000 news sources by ComeToMyHead during more than one year of activity. The dataset is organized into four topic categories:
 
@@ -26,7 +26,7 @@ Each sample includes a short title and description of a news article, serving as
 
 This dataset presents several challenges common to real-world NLP tasks, including class ambiguity, domain overlap, and varied writing styles. It is available via the [Hugging Face Datasets library](https://huggingface.co/datasets/ag_news) and supports immediate use with PyTorch and TensorFlow pipelines.
 
-## 🔧 Installation
+## Installation
 
 This project requires Python 3.7+ and the following libraries:
 
@@ -36,7 +36,7 @@ This project requires Python 3.7+ and the following libraries:
 - `scikit-learn` – for evaluation metrics and basic utilities  
 - `evaluate` – for streamlined integration of metrics like accuracy
 
-📦 Install dependencies via pip:
+Install dependencies via pip:
 
 ```bash
 pip install transformers datasets torch scikit-learn evaluate
