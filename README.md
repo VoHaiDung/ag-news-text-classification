@@ -1,6 +1,6 @@
 # AG News Text Classification
 
-## Project Overview
+## Introduction
 
 This project addresses the task of multi-class text classification using the AG News dataset, which comprises news articles labeled across four categories: World, Sports, Business, and Science/Technology. The objective is to develop and evaluate machine learning and deep learning models capable of accurately classifying news content based on textual features.
 
