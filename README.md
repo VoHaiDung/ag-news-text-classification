@@ -4,11 +4,18 @@
 
 This project addresses the task of multi-class text classification using the AG News dataset, which comprises news articles labeled across four categories: World, Sports, Business, and Science/Technology. The objective is to develop and evaluate machine learning and deep learning models capable of accurately classifying news content based on textual features.
 
-The project follows a standard NLP pipeline, including data preprocessing (tokenization, normalization), feature representation (TF-IDF, word embeddings), and supervised model training. Multiple approaches are explored and compared, ranging from classical algorithms such as Naive Bayes and Logistic Regression to advanced architectures like Convolutional Neural Networks (CNN) and fine-tuned Transformer-based models (BERT).
+The project follows a standard NLP pipeline, including:
+- **Data preprocessing**: tokenization, normalization.
+- **Feature representation**: TF-IDF, word embeddings.
+- **Supervised learning**: model training, validation, and testing.
 
-Performance is assessed using standard metrics including accuracy, precision, recall, and F1-score, with emphasis on model generalization and practical deployment. The project serves as both a technical exercise and a foundational case study in text classification, providing insight into the challenges and design considerations of real-world NLP applications.
+Multiple modeling approaches are explored and compared, ranging from classical algorithms such as Naive Bayes and Logistic Regression, to deep learning techniques like Convolutional Neural Networks (CNN) and fine-tuned Transformer-based models (BERT).
 
-All implementation is conducted using widely adopted libraries such as scikit-learn, TensorFlow/Keras, and Hugging Face Transformers, with reproducible experiments and modular code structure. This makes the project an ideal entry-level portfolio item for showcasing skills in applied natural language processing.
+A key focus of the project is on the Transformer pipeline, leveraging Hugging Face Transformers and pretrained BERT models through a modular and extensible architecture. This allows easy experimentation with transfer learning, fine-tuning strategies, and inference performance.
+
+Performance is assessed using standard metrics including accuracy, precision, recall, and F1-score, with emphasis on model generalization and practical deployment.
+
+All implementation is conducted using widely adopted libraries such as scikit-learn, TensorFlow/Keras, and Hugging Face Transformers, with reproducible experiments and modular code structure.
 
 ## Dataset
 
@@ -40,3 +47,33 @@ Install dependencies via pip:
 
 ```bash
 pip install transformers datasets torch scikit-learn evaluate
+```
+
+## Evaluation Metrics
+
+To assess the model’s performance on the AG News classification task, we evaluate it using standard classification metrics:
+
+- **Accuracy**: Overall correctness of the model.
+- **Precision**: Proportion of positive identifications that were actually correct.
+- **Recall**: Proportion of actual positives that were correctly identified.
+- **F1-Score**: Harmonic mean of precision and recall.
+
+### Evaluation Code
+
+Use the following code snippet to compute metrics during training or evaluation:
+
+```python
+from sklearn.metrics import classification_report, accuracy_score, precision_score, recall_score, f1_score
+
+def compute_metrics(pred):
+    labels = pred.label_ids
+    preds = pred.predictions.argmax(-1)
+    print("Classification Report:")
+    print(classification_report(labels, preds, target_names=label_names, digits=4))
+    acc = accuracy_score(labels, preds)
+    return {
+        'accuracy': acc,
+        'precision': precision_score(labels, preds, average='weighted'),
+        'recall': recall_score(labels, preds, average='weighted'),
+        'f1': f1_score(labels, preds, average='weighted')
+    }
