@@ -25,6 +25,6 @@ if __name__ == "__main__":
         print("Usage: python predict.py \"Your input text here\"")
         sys.exit(1)
 
-    input_text = sys.argv[1]
+    input_text = " ".join(sys.argv[1:])
     prediction = classify(input_text)
     print(f"Predicted category: {prediction}")
