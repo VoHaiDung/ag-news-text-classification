@@ -80,6 +80,7 @@ def compute_metrics(pred):
 ```
 
 **Note**: Replace label_names with your actual class labels, for example:
+
 ```python
 label_names = ['World', 'Sports', 'Business', 'Sci/Tech']
 ```
