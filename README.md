@@ -48,6 +48,23 @@ Install dependencies via pip:
 ```bash
 pip install transformers datasets torch scikit-learn evaluate
 ```
+## Project Structure
+
+The repository is organized as follows:
+
+```plaintext
+agnews-bert/
+│
+├── data/              # (Optional) Custom dataset storage or logs
+├── models/            # Saved models after training (e.g. final_model/)
+├── results/           # Output directory for logs and checkpoints
+│   └── logs/          # Training logs (TensorBoard, metrics...)
+├── train.py           # Main training script (BERT + Transformers)
+├── predict.py         # (Optional) Script for inference on new text
+├── requirements.txt   # Python dependencies for easy setup
+├── README.md          # Project documentation
+└── LICENSE            # License information
+```
 
 ## Evaluation Metrics
 
