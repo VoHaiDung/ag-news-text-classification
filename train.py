@@ -13,16 +13,16 @@ import os
 # Constants
 MODEL_NAME = "bert-base-uncased"
 NUM_LABELS = 4
-OUTPUT_DIR = "./results"
-MODEL_SAVE_PATH = os.path.join(OUTPUT_DIR, "final_model")
 MAX_LENGTH = 128
 EPOCHS = 3
 BATCH_SIZE = 16
 LEARNING_RATE = 2e-5
+OUTPUT_DIR = "./results"
+MODEL_SAVE_PATH = os.path.join(OUTPUT_DIR, "final_model")
 
 def main():
     # 0. Make sure directories exist
-    os.makedirs(MODEL_SAVE_PATH, exist_ok=True)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
     os.makedirs(os.path.join(OUTPUT_DIR, "logs"), exist_ok=True)
     
     # 1. Load AG News dataset
