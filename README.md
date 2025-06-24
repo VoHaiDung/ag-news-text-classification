@@ -77,3 +77,24 @@ def compute_metrics(pred):
         'recall': recall_score(labels, preds, average='weighted'),
         'f1': f1_score(labels, preds, average='weighted')
     }
+```
+
+**Note**: Replace label_names with your actual class labels, for example:
+```python
+label_names = ['World', 'Sports', 'Business', 'Sci/Tech']
+```
+
+### Sample Results (BERT base uncased fine-tuned on AG News)
+
+| Class        | Precision | Recall | F1-Score   |
+| ------------ | --------- | ------ | ---------- |
+| World        | 0.94      | 0.93   | 0.94       |
+| Sports       | 0.97      | 0.96   | 0.96       |
+| Business     | 0.93      | 0.93   | 0.93       |
+| Sci/Tech     | 0.93      | 0.94   | 0.93       |
+| **Macro**    | 0.94      | 0.94   | 0.94       |
+| **Weighted** | 0.94      | 0.94   | 0.94       |
+| **Accuracy** |           |        | **0.9402** |
+
+These scores indicate that the BERT-based model performs consistently well across all four categories in AG News.
+
