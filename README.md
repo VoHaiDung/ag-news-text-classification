@@ -48,6 +48,13 @@ Install dependencies via pip:
 ```bash
 pip install transformers datasets torch scikit-learn evaluate
 ```
+
+Or install them all at once with:
+
+```bash
+pip install -r requirements.txt
+```
+
 ## Project Structure
 
 The repository is organized as follows:
