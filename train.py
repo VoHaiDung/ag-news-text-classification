@@ -26,7 +26,7 @@ def main():
     os.makedirs(os.path.join(OUTPUT_DIR, "logs"), exist_ok=True)
     
     # 1. Load AG News dataset
-    dataset = load_dataset("ag_news")
+    dataset = load_dataset("ag_news", cache_dir="/content/cache")
 
     # 2. Load tokenizer
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
