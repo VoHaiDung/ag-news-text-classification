@@ -14,6 +14,7 @@ import os
 MODEL_NAME = "bert-base-uncased"
 NUM_LABELS = 4
 OUTPUT_DIR = "./results"
+MODEL_SAVE_PATH = os.path.join(OUTPUT_DIR, "final_model")
 MAX_LENGTH = 128
 EPOCHS = 3
 BATCH_SIZE = 16
@@ -37,7 +38,7 @@ def main():
     # 4. Load pre-trained BERT model
     model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, num_labels=NUM_LABELS)
 
-    # 5. Define metric
+    # 5. Define evaluation metrics
     accuracy_metric = evaluate.load("accuracy")
     f1_metric = evaluate.load("f1")
     precision_metric = evaluate.load("precision")
@@ -53,7 +54,7 @@ def main():
             "f1": f1_metric.compute(predictions=predictions, references=labels, average="macro")["f1"]
         }
 
-    # 6. Training arguments
+    # 6. Define training arguments
     training_args = TrainingArguments(
         output_dir=OUTPUT_DIR,
         evaluation_strategy="epoch",
@@ -69,7 +70,7 @@ def main():
         metric_for_best_model="accuracy",
     )
 
-    # 7. Trainer
+    # 7. Create Trainer instance
     trainer = Trainer(
         model=model,
         args=training_args,
@@ -79,16 +80,19 @@ def main():
         compute_metrics=compute_metrics,
     )
 
-    # 8. Train
+    # 8. Train the model
     trainer.train()
 
-    # 9. Evaluate
+    # 9. Evaluate the model
     eval_result = trainer.evaluate()
-    print("Final evaluation:", eval_result)
+    print("Final Evaluation:")
+    for k, v in eval_result.items():
+        print(f"{k}: {v:.4f}")
 
-    # 10. Save model
-    model.save_pretrained(os.path.join(OUTPUT_DIR, "final_model"))
-    tokenizer.save_pretrained(os.path.join(OUTPUT_DIR, "final_model"))
+    # 10. Save model and tokenizer
+    model.save_pretrained(MODEL_SAVE_PATH)
+    tokenizer.save_pretrained(MODEL_SAVE_PATH)
+    print(f"Model and tokenizer saved to: {MODEL_SAVE_PATH}")
 
 if __name__ == "__main__":
     main()
