@@ -27,4 +27,4 @@ if __name__ == "__main__":
 
     input_text = sys.argv[1]
     prediction = classify(input_text)
-    print(f"📌 Predicted category: {prediction}")
+    print(f"Predicted category: {prediction}")
