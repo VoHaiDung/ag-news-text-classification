@@ -21,6 +21,10 @@ BATCH_SIZE = 16
 LEARNING_RATE = 2e-5
 
 def main():
+    # 0. Make sure directories exist
+    os.makedirs(MODEL_SAVE_PATH, exist_ok=True)
+    os.makedirs(os.path.join(OUTPUT_DIR, "logs"), exist_ok=True)
+    
     # 1. Load AG News dataset
     dataset = load_dataset("ag_news")
 
