@@ -69,12 +69,13 @@ ag-news-text-classification/
 ├── data/                      # (Optional) Custom dataset storage or logs
 ├── models/                    # Saved models after training (e.g. final_model/)
 ├── results/                   # Output directory for logs and checkpoints
-│   └── logs/                  # Training logs (TensorBoard, metrics...)
+│   └── logs/                  # Training logs (TensorBoard, metrics, etc.)
 ├── train.py                   # Main training script (BERT + Transformers)
 ├── predict.py                 # (Optional) Script for inference on new text
 ├── requirements.txt           # Python dependencies for easy setup
 ├── README.md                  # Project documentation
-└── LICENSE                    # License information
+├── LICENSE                    # License information
+├── .gitignore                 # Git ignore rules (cache, outputs, environments, etc.)
 ```
 
 ## Evaluation Metrics
