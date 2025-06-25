@@ -42,7 +42,6 @@ This project requires Python 3.7+ and the following libraries:
 - `torch` – for training and inference using PyTorch  
 - `scikit-learn` – for evaluation metrics and basic utilities  
 - `evaluate` – for streamlined integration of metrics like accuracy
-- `numpy` – for numerical operations, used in metrics computation
 - `tqdm` – for visual progress bars during training
 - `scipy` – required for some advanced loss/metrics functions in Hugging Face Trainer
 - `tensorboard` – for training log visualization
