@@ -11,14 +11,16 @@ import numpy as np
 import os
 
 # Constants
-MODEL_NAME = "bert-base-uncased"
+MODEL_NAME = "microsoft/deberta-v3-base"
 NUM_LABELS = 4
-MAX_LENGTH = 128
+MAX_LENGTH = 512
+STRIDE = 128
 EPOCHS = 3
 BATCH_SIZE = 16
 LEARNING_RATE = 2e-5
 OUTPUT_DIR = "./results"
 MODEL_SAVE_PATH = os.path.join(OUTPUT_DIR, "final_model")
+
 
 def main():
     # 0. Make sure directories exist
@@ -31,15 +33,56 @@ def main():
     # 2. Load tokenizer
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
-    # 3. Preprocess function
+    # 3. Preprocess with sliding-window
     def preprocess_function(examples):
-        return tokenizer(examples["text"], padding="max_length", truncation=True, max_length=MAX_LENGTH)
+        texts = examples["text"]
+        labels = examples["label"]
+        out_input_ids = []
+        out_attention_mask = []
+        out_labels = []
 
-    encoded_dataset = dataset.map(preprocess_function, batched=True)
-    encoded_dataset = encoded_dataset.rename_column("label", "labels")
-    encoded_dataset.set_format("torch", columns=["input_ids", "attention_mask", "labels"])
+        for text, label in zip(texts, labels):
+            # full tokenization without truncation
+            enc = tokenizer(text, return_attention_mask=True, return_offsets_mapping=False, truncation=False)
+            ids = enc["input_ids"]
+            mask = enc["attention_mask"]
+            total_len = len(ids)
+            start = 0
 
-    # 4. Load pre-trained BERT model
+            while start < total_len:
+                end = min(start + MAX_LENGTH, total_len)
+                chunk_ids = ids[start:end]
+                chunk_mask = mask[start:end]
+
+                # pad if needed
+                pad_len = MAX_LENGTH - len(chunk_ids)
+                if pad_len > 0:
+                    chunk_ids = chunk_ids + [tokenizer.pad_token_id] * pad_len
+                    chunk_mask = chunk_mask + [0] * pad_len
+
+                out_input_ids.append(chunk_ids)
+                out_attention_mask.append(chunk_mask)
+                out_labels.append(label)
+
+                if end == total_len:
+                    break
+                start += (MAX_LENGTH - STRIDE)
+
+        return {
+            "input_ids": out_input_ids,
+            "attention_mask": out_attention_mask,
+            "labels": out_labels,
+        }
+
+    # apply mapping to both train and test splits
+    tokenized = dataset.map(
+        preprocess_function,
+        batched=True,
+        remove_columns=["text", "label"],
+    )
+    tokenized.set_format("torch", columns=["input_ids", "attention_mask", "labels"])
+
+    # 4. Load DeBERTa-v3 model
     model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, num_labels=NUM_LABELS)
 
     # 5. Define evaluation metrics
@@ -55,7 +98,7 @@ def main():
             "accuracy": accuracy_metric.compute(predictions=predictions, references=labels)["accuracy"],
             "precision": precision_metric.compute(predictions=predictions, references=labels, average="macro")["precision"],
             "recall": recall_metric.compute(predictions=predictions, references=labels, average="macro")["recall"],
-            "f1": f1_metric.compute(predictions=predictions, references=labels, average="macro")["f1"]
+            "f1": f1_metric.compute(predictions=predictions, references=labels, average="macro")["f1"],
         }
 
     # 6. Define training arguments
@@ -74,20 +117,20 @@ def main():
         metric_for_best_model="accuracy",
     )
 
-    # 7. Create Trainer instance
+    # 7. Create Trainer
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=encoded_dataset["train"],
-        eval_dataset=encoded_dataset["test"],
+        train_dataset=tokenized["train"],
+        eval_dataset=tokenized["test"],
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
     )
 
-    # 8. Train the model
+    # 8. Train
     trainer.train()
 
-    # 9. Evaluate the model
+    # 9. Evaluate
     eval_result = trainer.evaluate()
     print("Final Evaluation:")
     for k, v in eval_result.items():
@@ -97,6 +140,7 @@ def main():
     model.save_pretrained(MODEL_SAVE_PATH)
     tokenizer.save_pretrained(MODEL_SAVE_PATH)
     print(f"Model and tokenizer saved to: {MODEL_SAVE_PATH}")
+
 
 if __name__ == "__main__":
     main()
