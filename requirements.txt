@@ -6,9 +6,6 @@ transformers>=4.30.0
 datasets>=2.14.6
 evaluate>=0.4.0
 
-# Filesystem compatibility fix
-fsspec==2023.9.2
-
 # Utility
 numpy>=1.21.0
 scikit-learn>=1.0.0
