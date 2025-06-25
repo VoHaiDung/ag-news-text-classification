@@ -75,7 +75,7 @@ ag-news-text-classification/
 ├── requirements.txt           # Python dependencies for easy setup
 ├── README.md                  # Project documentation
 ├── LICENSE                    # License information
-├── .gitignore                 # Git ignore rules (cache, outputs, environments, etc.)
+└── .gitignore                 # Git ignore rules (cache, outputs, environments, etc.)
 ```
 
 ## Evaluation Metrics
