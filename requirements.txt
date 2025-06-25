@@ -3,6 +3,7 @@ transformers==4.39.3
 datasets==2.14.6
 evaluate>=0.4.0
 huggingface_hub>=0.14.0
+accelerate==0.30.1
 
 # Compatibility
 numpy<2
