@@ -2,15 +2,13 @@
 torch>=1.13.0
 
 # Hugging Face Transformers ecosystem
-transformers>=4.30.0
+transformers>=4.41.0
 datasets>=2.14.6
 evaluate>=0.4.0
 
-# Utility
+# Utility & Evaluation
 numpy>=1.21.0
 scikit-learn>=1.0.0
-
-# Optional but recommended
 tqdm>=4.64.0
 scipy>=1.7.0
 tensorboard>=2.11.0
