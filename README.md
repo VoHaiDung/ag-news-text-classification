@@ -42,16 +42,15 @@ This project requires Python 3.7+ and the following libraries:
 - `torch` – for training and inference using PyTorch  
 - `scikit-learn` – for evaluation metrics and basic utilities  
 - `evaluate` – for streamlined integration of metrics like accuracy
-- `fsspec` – required by datasets for file system operations (specific version avoids compatibility errors)
 - `numpy` – for numerical operations, used in metrics computation
-- `tqdm` (optional) – for visual progress bars during training
-- `scipy` (optional) – required for some advanced loss/metrics functions in Hugging Face Trainer
-- `tensorboard` (optional) – for training log visualization
+- `tqdm` – for visual progress bars during training
+- `scipy` – required for some advanced loss/metrics functions in Hugging Face Trainer
+- `tensorboard` – for training log visualization
 
 Install dependencies via pip:
 
 ```bash
-pip install --upgrade pip && pip install transformers datasets>=2.14.6 torch>=1.13.0 scikit-learn evaluate fsspec==2023.9.2 numpy tqdm scipy tensorboard
+pip install transformers datasets torch scikit-learn evaluate tqdm scipy tensorboard
 ```
 
 Or install them all at once with:
