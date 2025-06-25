@@ -45,11 +45,12 @@ This project requires Python 3.7+ and the following libraries:
 - `tqdm` – for visual progress bars during training
 - `scipy` – required for some advanced loss/metrics functions in Hugging Face Trainer
 - `tensorboard` – for training log visualization
+- `huggingface_hub` – for downloading, sharing, and syncing models with the Hugging Face Hub
 
 Install dependencies via pip:
 
 ```bash
-pip install transformers datasets torch scikit-learn evaluate tqdm scipy tensorboard
+pip install transformers datasets torch scikit-learn evaluate tqdm scipy tensorboard huggingface_hub
 ```
 
 Or install them all at once with:
