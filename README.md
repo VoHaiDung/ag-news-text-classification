@@ -34,7 +34,7 @@ This dataset presents several challenges common to real-world NLP tasks, includi
 
 ## Installation
 
-This project requires Python 3.7+ and the following libraries:
+This project requires Python 3.8+ and the following libraries:
 
 - `transformers` – for loading and fine-tuning the DeBERTa-v3 model using Hugging Face
 - `datasets` – for accessing and handling the AG News dataset efficiently
