@@ -2,20 +2,18 @@
 
 ## Introduction
 
-This project addresses the task of multi-class text classification using the AG News dataset, which comprises news articles labeled across four categories: World, Sports, Business, and Science/Technology. The objective is to develop and evaluate machine learning and deep learning models capable of accurately classifying news content based on textual features.
+This project focuses on multi-class text classification using the AG News dataset, which contains news articles categorized into four classes: **World**, **Sports**, **Business**, and **Science/Technology**. The goal is to develop a robust classification pipeline that leverages advanced Transformer-based architectures, particularly Microsoft’s DeBERTa-v3, to improve classification performance on short and long news segments.
 
-The project follows a standard NLP pipeline, including:
-- **Data preprocessing**: tokenization, normalization.
-- **Feature representation**: TF-IDF, word embeddings.
-- **Supervised learning**: model training, validation, and testing.
+A key innovation of this project is the integration of a **Sliding Window** strategy for input text segmentation. This approach allows effective handling of longer news articles by breaking them into overlapping chunks, enabling the model to capture broader contextual signals without truncating information. This approach aims to improve performance on lengthy input classification tasks, providing a reproducible benchmark for evaluating Transformer-based architectures on real-world datasets.
 
-Multiple modeling approaches are explored and compared, ranging from classical algorithms such as Naive Bayes and Logistic Regression, to deep learning techniques like Convolutional Neural Networks (CNN) and fine-tuned Transformer-based models (BERT).
+The NLP pipeline includes:
+- **Data preprocessing**: tokenization, sliding window segmentation, normalization.
+- **Modeling**: fine-tuning a pretrained `microsoft/deberta-v3-base` using Hugging Face Transformers.
+- **Evaluation**: accuracy, precision, recall, F1-score, and analysis across all four news categories.
 
-A key focus of the project is on the Transformer pipeline, leveraging Hugging Face Transformers and pretrained BERT models through a modular and extensible architecture. This allows easy experimentation with transfer learning, fine-tuning strategies, and inference performance.
+Unlike prior classical approaches (e.g., Naive Bayes or Logistic Regression), this project emphasizes the transfer learning capabilities of DeBERTa-v3 and the use of modular code design for extensibility and reproducibility.
 
-Performance is assessed using standard metrics including accuracy, precision, recall, and F1-score, with emphasis on model generalization and practical deployment.
-
-All implementation is conducted using widely adopted libraries such as scikit-learn, TensorFlow/Keras, and Hugging Face Transformers, with reproducible experiments and modular code structure.
+All components are implemented using widely adopted libraries such as `Transformers`, `Datasets`, `Evaluate`, and `Accelerate` from Hugging Face, making the codebase easy to adapt for other classification tasks.
 
 ## Dataset
 
