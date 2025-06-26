@@ -36,20 +36,21 @@ This dataset presents several challenges common to real-world NLP tasks, includi
 
 This project requires Python 3.7+ and the following libraries:
 
-- `transformers` – for loading and fine-tuning pre-trained BERT models  
-- `datasets` – for easy access to the AG News dataset and others  
-- `torch` – for training and inference using PyTorch  
-- `scikit-learn` – for evaluation metrics and basic utilities  
-- `evaluate` – for streamlined integration of metrics like accuracy
-- `tqdm` – for visual progress bars during training
-- `scipy` – required for some advanced loss/metrics functions in Hugging Face Trainer
-- `tensorboard` – for training log visualization
-- `huggingface_hub` – for downloading, sharing, and syncing models with the Hugging Face Hub
+- `transformers` – for loading and fine-tuning the DeBERTa-v3 model using Hugging Face
+- `datasets` – for accessing and handling the AG News dataset efficiently
+- `torch` – for model training and inference with PyTorch 
+- `evaluate` – for computing evaluation metrics like accuracy and F1
+- `scikit-learn` – for classification reports and utility functions
+- `tqdm` –  for progress bars during training and evaluation
+- `scipy` – for compatibility with evaluation functions
+- `tensorboard` – for monitoring training logs visually
+- `huggingface_hub` – for sharing, syncing, or downloading models from Hugging Face
+- `accelerate` – for managing hardware configuration (CPU/GPU) and efficient training
 
 Install dependencies via pip:
 
 ```bash
-pip install transformers datasets torch scikit-learn evaluate tqdm scipy tensorboard huggingface_hub
+pip install transformers datasets torch evaluate scikit-learn tqdm scipy tensorboard huggingface_hub accelerate
 ```
 
 Or install them all at once with:
