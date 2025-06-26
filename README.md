@@ -7,6 +7,7 @@ This project focuses on multi-class text classification using the AG News datase
 A key innovation of this project is the integration of a **Sliding Window** strategy for input text segmentation. This approach allows effective handling of longer news articles by breaking them into overlapping chunks, enabling the model to capture broader contextual signals without truncating information. This approach aims to improve performance on lengthy input classification tasks, providing a reproducible benchmark for evaluating Transformer-based architectures on real-world datasets.
 
 The NLP pipeline includes:
+
 - **Data preprocessing**: tokenization, sliding window segmentation, normalization.
 - **Modeling**: fine-tuning a pretrained `microsoft/deberta-v3-base` using Hugging Face Transformers.
 - **Evaluation**: accuracy, precision, recall, F1-score, and analysis across all four news categories.
