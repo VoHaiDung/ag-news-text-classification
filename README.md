@@ -2,19 +2,22 @@
 
 ## Introduction
 
-This project focuses on multi-class text classification using the AG News dataset, which contains news articles categorized into four classes: **World**, **Sports**, **Business**, and **Science/Technology**. The goal is to develop a robust classification pipeline that leverages advanced Transformer-based architectures, particularly Microsoft’s DeBERTa-v3, to improve classification performance on short and long news segments.
+This project addresses the task of **multi-class text classification** on the widely used **AG News** dataset, which consists of news articles labeled into four distinct categories: **World**, **Sports**, **Business**, and **Science/Technology**. The objective is to construct a **highly accurate and scalable classification pipeline** that leverages **state-of-the-art Transformer-based language models**, with a particular focus on **Microsoft’s DeBERTa-v3** and **AllenAI’s Longformer** architectures.
 
-A key innovation of this project is the integration of a **Sliding Window** strategy for input text segmentation. This approach allows effective handling of longer news articles by breaking them into overlapping chunks, enabling the model to capture broader contextual signals without truncating information. This approach aims to improve performance on lengthy input classification tasks, providing a reproducible benchmark for evaluating Transformer-based architectures on real-world datasets.
+A central challenge in real-world document classification lies in the processing of **long-form textual inputs** that exceed the maximum token length allowed by standard Transformer models (typically 512 tokens). To overcome this limitation, the pipeline integrates a **Sliding Window** strategy for DeBERTa-v3, which systematically segments input documents into overlapping windows, ensuring full coverage of long documents without loss of contextual information. In parallel, the use of **Longformer**, with its extended context window (up to 4096 tokens), enables direct modeling of longer sequences without fragmentation.
 
-The NLP pipeline includes:
+To further improve classification performance and model robustness, this project incorporates an **ensemble mechanism** that combines the output logits of both DeBERTa-v3 and Longformer. This **soft-voting ensemble approach** balances the strengths of both architectures: DeBERTa’s powerful contextual representations in shorter segments and Longformer’s capacity for modeling global context in longer texts.
 
-- **Data preprocessing**: tokenization, sliding window segmentation, normalization.
-- **Modeling**: fine-tuning a pretrained `microsoft/deberta-v3-base` using Hugging Face Transformers.
-- **Evaluation**: accuracy, precision, recall, F1-score, and analysis across all four news categories.
+The pipeline includes:
 
-Unlike prior classical approaches (e.g., Naive Bayes or Logistic Regression), this project emphasizes the transfer learning capabilities of DeBERTa-v3 and the use of modular code design for extensibility and reproducibility.
+- **Data preprocessing**: tokenization, normalization, and sliding-window segmentation.
+- **Modeling**: fine-tuning of `microsoft/deberta-v3-large` and `allenai/longformer-large-4096` using Hugging Face Transformers.
+- **Evaluation**: accuracy, precision, recall, and F1-score across all categories, with full classification reports.
+- **Inference**: ensemble prediction using averaged logits across multiple models.
 
-All components are implemented using widely adopted libraries such as `Transformers`, `Datasets`, `Evaluate`, and `Accelerate` from Hugging Face, making the codebase easy to adapt for other classification tasks.
+This implementation significantly outperforms traditional classification approaches (e.g., Naive Bayes, SVM, Logistic Regression), highlighting the advantages of **transfer learning**, **multi-model ensembling**, and **context-aware tokenization strategies** in modern NLP pipelines.
+
+All components are built with **modular**, **extensible code** using Hugging Face’s `transformers`, `datasets`, `evaluate`, and `accelerate` libraries, ensuring that the project can be easily adapted to other classification tasks or datasets involving long-form text.
 
 ## Dataset
 
