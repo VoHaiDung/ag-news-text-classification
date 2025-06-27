@@ -6,7 +6,7 @@ This project investigates the problem of **multi-class text classification** usi
 
 A fundamental limitation in Transformer-based models, such as BERT and its variants, lies in their constrained **maximum input sequence length** (typically 512 tokens), which poses significant challenges in classifying **long-form text** - a common characteristic in real-world documents. To circumvent this issue, the proposed architecture integrates a **Sliding Window mechanism** with **DeBERTa-v3**, enabling the model to process extended sequences through overlapping textual segments while maintaining global contextual coherence.
 
-Concurrently, the use of **Longformer** — an architecture specifically engineered for extended attention spans (up to 4096 tokens) - facilitates direct encoding of long-range dependencies without segmentation. This dual-model approach enables robust contextual representation across both short and long textual inputs.
+Concurrently, the use of **Longformer** - an architecture specifically engineered for extended attention spans (up to 4096 tokens) - facilitates direct encoding of long-range dependencies without segmentation. This dual-model approach enables robust contextual representation across both short and long textual inputs.
 
 To optimize both computational efficiency and generalization capability, this work adopts **LoRA (Low-Rank Adaptation)**, a paradigm within **Parameter-Efficient Fine-Tuning (PEFT)**. By introducing trainable low-rank matrices into attention layers while freezing the bulk of pretrained parameters, LoRA significantly reduces the number of trainable parameters during fine-tuning, enabling **efficient adaptation on limited hardware resources** without compromising predictive performance.
 
