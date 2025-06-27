@@ -16,11 +16,11 @@ In pursuit of greater transparency and accountability in model behavior, the pro
 
 **The pipeline encompasses the following components:**
 
-- **Preprocessing**: Advanced tokenization, normalization, and window-based input segmentation
-- **Modeling**: Fine-tuning of `microsoft/deberta-v3-large` and `allenai/longformer-large-4096` with LoRA via the Hugging Face PEFT framework
-- **Ensembling**: Logit-level aggregation across models to enhance robustness and reduce variance
-- **Evaluation**: Comprehensive reporting of Accuracy, Precision, Recall, and F1-Score across all classes
-- **Analysis**: Qualitative and quantitative error investigation, along with model interpretability via XAI techniques
+- **Preprocessing**: Advanced tokenization, normalization, and window-based input segmentation.
+- **Modeling**: Fine-tuning of `microsoft/deberta-v3-large` and `allenai/longformer-large-4096` with LoRA via the Hugging Face PEFT framework.
+- **Ensembling**: Logit-level aggregation across models to enhance robustness and reduce variance.
+- **Evaluation**: Comprehensive reporting of Accuracy, Precision, Recall, and F1-Score across all classes.
+- **Analysis**: Qualitative and quantitative error investigation, along with model interpretability via XAI techniques.
 
 By integrating recent advances in **transformer modeling**, **efficient fine-tuning**, and **model interpretability**, this project sets forth a replicable and scalable NLP pipeline. The framework not only surpasses classical baselines such as Naive Bayes and Support Vector Machines, but also provides a blueprint for future work in **long-form document** classification under constrained computational environments.
 
