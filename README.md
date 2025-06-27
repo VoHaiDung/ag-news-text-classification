@@ -2,22 +2,29 @@
 
 ## Introduction
 
-This project addresses the task of **multi-class text classification** on the widely used **AG News** dataset, which consists of news articles labeled into four distinct categories: **World**, **Sports**, **Business**, and **Science/Technology**. The objective is to construct a **highly accurate and scalable classification pipeline** that leverages **state-of-the-art Transformer-based language models**, with a particular focus on **Microsoft’s DeBERTa-v3** and **AllenAI’s Longformer** architectures.
+This project investigates the problem of **multi-class text classification** using the **AG News dataset**, a well-established benchmark dataset comprising English-language news articles categorized into four thematic classes: *World*, *Sports*, *Business*, and *Science/Technology*. The central objective is to design and evaluate a high-performance classification framework that leverages **state-of-the-art Transformer architectures**, incorporating strategies to address both the **limitations of input length** and the **efficiency of fine-tuning** in large-scale language models.
 
-A central challenge in real-world document classification lies in the processing of **long-form textual inputs** that exceed the maximum token length allowed by standard Transformer models (typically 512 tokens). To overcome this limitation, the pipeline integrates a **Sliding Window** strategy for DeBERTa-v3, which systematically segments input documents into overlapping windows, ensuring full coverage of long documents without loss of contextual information. In parallel, the use of **Longformer**, with its extended context window (up to 4096 tokens), enables direct modeling of longer sequences without fragmentation.
+A fundamental limitation in Transformer-based models, such as BERT and its variants, lies in their constrained **maximum input sequence length** (typically 512 tokens), which poses significant challenges in classifying **long-form text** — a common characteristic in real-world documents. To circumvent this issue, the proposed architecture integrates a **Sliding Window mechanism** with **DeBERTa-v3**, enabling the model to process extended sequences through overlapping textual segments while maintaining global contextual coherence.
 
-To further improve classification performance and model robustness, this project incorporates an **ensemble mechanism** that combines the output logits of both DeBERTa-v3 and Longformer. This **soft-voting ensemble approach** balances the strengths of both architectures: DeBERTa’s powerful contextual representations in shorter segments and Longformer’s capacity for modeling global context in longer texts.
+Concurrently, the use of **Longformer** — an architecture specifically engineered for extended attention spans (up to 4096 tokens) — facilitates direct encoding of long-range dependencies without segmentation. This dual-model approach enables robust contextual representation across both short and long textual inputs.
 
-The pipeline includes:
+To optimize both computational efficiency and generalization capability, this work adopts **LoRA (Low-Rank Adaptation)**, a paradigm within **Parameter-Efficient Fine-Tuning (PEFT)**. By introducing trainable low-rank matrices into attention layers while freezing the bulk of pretrained parameters, LoRA significantly reduces the number of trainable parameters during fine-tuning, enabling **efficient adaptation on limited hardware resources** without compromising predictive performance.
 
-- **Data preprocessing**: tokenization, normalization, and sliding-window segmentation.
-- **Modeling**: fine-tuning of `microsoft/deberta-v3-large` and `allenai/longformer-large-4096` using Hugging Face Transformers.
-- **Evaluation**: accuracy, precision, recall, and F1-score across all categories, with full classification reports.
-- **Inference**: ensemble prediction using averaged logits across multiple models.
+Moreover, the framework integrates a **logit-level ensemble strategy**, aggregating the outputs of DeBERTa-v3 and Longformer via soft-voting. This ensemble approach seeks to synergize the localized precision of DeBERTa with the global modeling capacity of Longformer, resulting in a more robust and generalizable classifier.
 
-This implementation significantly outperforms traditional classification approaches (e.g., Naive Bayes, SVM, Logistic Regression), highlighting the advantages of **transfer learning**, **multi-model ensembling**, and **context-aware tokenization strategies** in modern NLP pipelines.
+In pursuit of greater transparency and accountability in model behavior, the project further incorporates **Error Analysis** and **Explainable AI (XAI)** methodologies. Post-hoc interpretability tools such as attention heatmaps and logit attribution are employed to analyze model predictions, diagnose failure cases, and guide iterative improvements through targeted data and architecture refinement.
 
-All components are built with **modular**, **extensible code** using Hugging Face’s `transformers`, `datasets`, `evaluate`, and `accelerate` libraries, ensuring that the project can be easily adapted to other classification tasks or datasets involving long-form text.
+**The pipeline encompasses the following components:**
+
+- **Preprocessing**: Advanced tokenization, normalization, and window-based input segmentation
+- **Modeling**: Fine-tuning of `microsoft/deberta-v3-large` and `allenai/longformer-large-4096` with LoRA via the Hugging Face PEFT framework
+- **Ensembling**: Logit-level aggregation across models to enhance robustness and reduce variance
+- **Evaluation**: Comprehensive reporting of Accuracy, Precision, Recall, and F1-Score across all classes
+- **Analysis**: Qualitative and quantitative error investigation, along with model interpretability via XAI techniques
+
+By integrating recent advances in **transformer modeling**, **efficient fine-tuning**, and **model interpretability**, this project sets forth a replicable and scalable NLP pipeline. The framework not only surpasses classical baselines such as Naive Bayes and Support Vector Machines, but also provides a blueprint for future work in **long-form document** classification under constrained computational environments.
+
+All components are developed using the Hugging Face `transformers`, `datasets`, `evaluate`, and `peft` libraries, ensuring **modularity**, **reproducibility**, and **applicability to a wide range of real-world classification tasks**.
 
 ## Dataset
 
