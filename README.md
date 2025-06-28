@@ -28,19 +28,29 @@ All components are developed using the Hugging Face `transformers`, `datasets`, 
 
 ## Dataset
 
-The AG News dataset is a widely used benchmark for topic classification in natural language processing. It consists of news articles collected from over 2,000 news sources by ComeToMyHead during more than one year of activity. The dataset is organized into four topic categories:
+The **AG News** dataset, introduced by **Xiang Zhang, Junbo Zhao, and Yann LeCun in 2015**, is a well-established benchmark corpus for topic classification in natural language processing (NLP). It was curated as part of the **ComeToMyHead** academic project and consists of news articles collected from over 2,000 news sources over a period exceeding one year.
+
+The dataset is organized into four high-level topical categories:
 
 - **World**
 - **Sports**
 - **Business**
 - **Science/Technology**
 
-Each sample includes a short title and description of a news article, serving as input text for classification. The dataset is balanced across classes and is pre-split into:
+Each instance comprises a concise **title** and **description** of a news article, together forming the input text for classification. This design supports both short-form and long-form input handling, making it particularly well-suited for evaluating models such as **DeBERTa-v3**, **Longformer**, and those fine-tuned via **LoRA (Low-Rank Adaptation)** for efficient long-sequence modeling.
+
+The dataset is **balanced across categories** and comes with a predefined split:
 
 - **Training set**: 120,000 samples (30,000 per class)
 - **Test set**: 7,600 samples (1,900 per class)
 
-This dataset presents several challenges common to real-world NLP tasks, including class ambiguity, domain overlap, and varied writing styles. It is available via the [Hugging Face Datasets library](https://huggingface.co/datasets/ag_news), the [TorchText loader](https://pytorch.org/text/stable/datasets.html#AG_NEWS), and the [original CSV source](http://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html), and supports immediate use with PyTorch and TensorFlow pipelines.
+AG News captures various real-world challenges in text classification, including:
+
+- **Semantic ambiguity across topic boundaries**
+- **Domain overlap and concept drift**
+- **Stylistic variation and differences in textual length**
+
+The dataset is publicly available via the [Hugging Face Datasets library](https://huggingface.co/datasets/ag_news), [TorchText loader](https://pytorch.org/text/stable/datasets.html#AG_NEWS), and the [original CSV source](http://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html), making it readily integrable with **PyTorch** and **TensorFlow** pipelines.
 
 ## Installation
 
