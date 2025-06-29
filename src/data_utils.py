@@ -66,7 +66,7 @@ def prepare_data_pipeline(
     tokenizer = get_tokenizer(model_name)
     tokenized = tokenize_dataset(dataset, tokenizer, max_length, stride)
     save_tokenized_dataset(tokenized, output_dir)
-    print("Data preprocessing complete.")
+    print("Data preprocessing complete")
 
 
 if __name__ == "__main__":
