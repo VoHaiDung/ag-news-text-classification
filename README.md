@@ -85,17 +85,54 @@ The repository is organized as follows:
 
 ```plaintext
 ag-news-text-classification/
+├── README.md
+├── LICENSE
+├── requirements.txt
+├── environment.yml
+├── .gitignore
 │
-├── data/                      # (Optional) Custom dataset storage or logs
-├── models/                    # Saved models after training (e.g. final_model/)
-├── results/                   # Output directory for logs and checkpoints
-│   └── logs/                  # Training logs (TensorBoard, metrics, etc.)
-├── train.py                   # Main training script (BERT + Transformers)
-├── predict.py                 # (Optional) Script for inference on new text
-├── requirements.txt           # Python dependencies for easy setup
-├── README.md                  # Project documentation
-├── LICENSE                    # License information
-└── .gitignore                 # Git ignore rules (cache, outputs, environments, etc.)
+├── configs/
+│   ├── deberta_config.yaml
+│   ├── longformer_config.yaml
+│   ├── lora_config.yaml
+│   └── ensemble_config.yaml
+│
+├── data/
+│   ├── raw/
+│   ├── interim/
+│   └── processed/
+│
+├── notebooks/
+│   ├── explore_dataset.ipynb
+│   ├── train_visualization.ipynb
+│   ├── error_analysis_xai.ipynb
+│   └── colab_demo.ipynb
+│
+├── src/
+│   ├── __init__.py
+│   ├── data_utils.py
+│   ├── train.py
+│   ├── evaluate.py
+│   ├── ensemble.py
+│   ├── deberta_lora.py
+│   ├── longformer_lora.py
+│   ├── explainability.py
+│   ├── inference.py
+│   ├── predict_pipeline.py
+│   └── utils.py
+│
+├── scripts/
+│   ├── run_preprocess.sh
+│   ├── run_train_deberta.sh
+│   ├── run_train_longformer.sh
+│   ├── run_ensemble.sh
+│   └── run_full_pipeline.sh
+│
+└── outputs/
+    ├── checkpoints/
+    ├── logs/
+    ├── metrics/
+    └── figures/
 ```
 
 ## Evaluation Metrics
