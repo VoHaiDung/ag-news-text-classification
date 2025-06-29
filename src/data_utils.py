@@ -4,19 +4,19 @@ from transformers import AutoTokenizer
 
 
 def load_agnews_dataset():
-    """Load AG News dataset from Hugging Face."""
+    """Load AG News dataset from Hugging Face"""
     return load_dataset("ag_news")
 
 
 def get_tokenizer(model_name):
-    """Load tokenizer given a model name."""
+    """Load tokenizer given a model name"""
     return AutoTokenizer.from_pretrained(model_name)
 
 
 def preprocess_function(example, tokenizer, max_length=512, stride=256):
     """
-    Tokenize a single example with sliding window.
-    Applies truncation and overlapping segments if needed.
+    Tokenize a single example with sliding window
+    Applies truncation and overlapping segments if needed
     """
     text = example["title"] + " " + example["description"]
     tokenized = tokenizer(
@@ -33,7 +33,7 @@ def preprocess_function(example, tokenizer, max_length=512, stride=256):
 
 
 def tokenize_dataset(dataset, tokenizer, max_length=512, stride=256):
-    """Tokenize all splits in the dataset."""
+    """Tokenize all splits in the dataset"""
     tokenized_datasets = DatasetDict()
     for split in dataset:
         print(f"Tokenizing: {split}")
@@ -47,7 +47,7 @@ def tokenize_dataset(dataset, tokenizer, max_length=512, stride=256):
 
 
 def save_tokenized_dataset(tokenized_datasets, output_dir="data/interim/"):
-    """Save tokenized datasets to disk."""
+    """Save tokenized datasets to disk"""
     os.makedirs(output_dir, exist_ok=True)
     for split in tokenized_datasets:
         path = os.path.join(output_dir, split)
@@ -61,7 +61,7 @@ def prepare_data_pipeline(
     stride=256,
     output_dir="data/interim/"
 ):
-    """Run full pipeline: load → tokenize → save."""
+    """Run full pipeline: load → tokenize → save"""
     dataset = load_agnews_dataset()
     tokenizer = get_tokenizer(model_name)
     tokenized = tokenize_dataset(dataset, tokenizer, max_length, stride)
