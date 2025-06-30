@@ -22,15 +22,6 @@ class DebertaLoraConfig:
 
 
 def get_deberta_lora_model(config: Optional[DebertaLoraConfig] = None) -> PreTrainedModel:
-    """
-    Load a DeBERTa-v3-large model and apply LoRA adapters for parameter-efficient fine-tuning.
-
-    Args:
-        config (DebertaLoraConfig, optional): Configuration for model and LoRA settings.
-
-    Returns:
-        PreTrainedModel: A DeBERTa model wrapped with LoRA adapters for sequence classification.
-    """
     cfg = config or DebertaLoraConfig()
 
     logger.info("Loading base model: %s with %d labels", cfg.model_name, cfg.num_labels)
