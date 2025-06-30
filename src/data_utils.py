@@ -7,12 +7,8 @@ from datasets import load_dataset, DatasetDict, Dataset
 from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
 # Configure logger
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    level=logging.INFO
-)
+logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 def combine_title_description(title: str, description: str) -> str:
     return f"{title.strip()} {description.strip()}"
