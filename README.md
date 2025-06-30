@@ -14,6 +14,8 @@ Moreover, the framework integrates a **logit-level ensemble strategy**, aggregat
 
 In pursuit of greater transparency and accountability in model behavior, the project further incorporates **Error Analysis** and **Explainable AI (XAI)** methodologies. Post-hoc interpretability tools such as attention heatmaps and logit attribution are employed to analyze model predictions, diagnose failure cases, and guide iterative improvements through targeted data and architecture refinement.
 
+In addition to the core architecture, further performance gains may be achieved through advanced extensions such as **domain-adaptive pretraining (DAPT)**, **confidence-based pseudo-labeling**, **stacking ensembles with meta-learners**, **k-fold cross-validation**, and **targeted data augmentation**. These strategies aim to **enhance robustness**, **reduce variance**, and **align model priors** more closely with the target domain.
+
 **The pipeline encompasses the following components:**
 
 - **Preprocessing**: Advanced tokenization, normalization, and window-based input segmentation.
