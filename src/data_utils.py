@@ -1,17 +1,16 @@
 import os
 from datasets import load_dataset, DatasetDict
 from transformers import AutoTokenizer
-from tqdm import tqdm
 
 
 def load_agnews_dataset():
     """
     Load the AG News dataset using the Hugging Face Datasets library.
+
     Returns:
         DatasetDict: A dictionary containing 'train' and 'test' splits.
     """
-    dataset = load_dataset("ag_news")
-    return dataset
+    return load_dataset("ag_news")
 
 
 def get_tokenizer(model_name):
@@ -19,7 +18,7 @@ def get_tokenizer(model_name):
     Load a pre-trained tokenizer for a specified Transformer model.
 
     Args:
-        model_name (str): The Hugging Face model identifier (e.g., 'microsoft/deberta-v3-large').
+        model_name (str): The Hugging Face model identifier.
 
     Returns:
         PreTrainedTokenizer: The corresponding tokenizer object.
@@ -27,57 +26,61 @@ def get_tokenizer(model_name):
     return AutoTokenizer.from_pretrained(model_name)
 
 
-def preprocess_function(example, tokenizer, max_length=512, stride=256):
+def preprocess_function(examples, tokenizer, max_length=512, stride=256):
     """
-    Tokenize a single AG News example using a sliding window strategy.
-    This approach ensures that long sequences exceeding max_length are
-    divided into overlapping segments.
+    Tokenize examples using sliding window strategy for long inputs.
 
     Args:
-        example (dict): A single input example with 'title', 'description', and 'label'.
+        examples (dict): A batch of input examples with 'title', 'description', and 'label'.
         tokenizer (PreTrainedTokenizer): Tokenizer to apply.
-        max_length (int): Maximum number of tokens per segment.
-        stride (int): Overlap between consecutive segments.
+        max_length (int): Max token length per segment.
+        stride (int): Overlap between segments.
 
     Returns:
-        dict: Tokenized output including overflow segments and repeated labels.
+        dict: Tokenized batch including overflow segments and labels.
     """
-    text = example["title"] + " " + example["description"]
+    texts = [t + " " + d for t, d in zip(examples["title"], examples["description"])]
     tokenized = tokenizer(
-        text,
+        texts,
         truncation=True,
         max_length=max_length,
         stride=stride,
         return_overflowing_tokens=True,
-        return_offsets_mapping=True,
+        return_offsets_mapping=False,
         padding="max_length"
     )
 
-    # Duplicate the label for each overflow segment
-    tokenized["labels"] = [example["label"]] * len(tokenized["input_ids"])
+    # Repeat labels to match number of overflowed inputs
+    labels = []
+    for i in range(len(tokenized["input_ids"])):
+        sample_idx = tokenized["overflow_to_sample_mapping"][i]
+        labels.append(examples["label"][sample_idx])
+    tokenized["labels"] = labels
+
     return tokenized
 
 
 def tokenize_dataset(dataset, tokenizer, max_length=512, stride=256):
     """
-    Apply the preprocessing function to all splits of the dataset.
+    Apply preprocessing to all splits using batched mapping for speed.
 
     Args:
-        dataset (DatasetDict): Dataset with train/test splits.
+        dataset (DatasetDict): Dataset with 'train' and 'test' splits.
         tokenizer (PreTrainedTokenizer): Tokenizer object.
-        max_length (int): Maximum length for each tokenized input.
-        stride (int): Overlap between segments when splitting long sequences.
+        max_length (int): Max sequence length.
+        stride (int): Overlap size for sliding window.
 
     Returns:
-        DatasetDict: Tokenized version of the input dataset.
+        DatasetDict: Tokenized dataset.
     """
     tokenized_datasets = DatasetDict()
     for split in dataset:
         print(f"Tokenizing split: {split}")
         tokenized = dataset[split].map(
             lambda x: preprocess_function(x, tokenizer, max_length, stride),
-            batched=False,
+            batched=True,
             remove_columns=dataset[split].column_names,
+            desc=f"Tokenizing {split}"
         )
         tokenized_datasets[split] = tokenized
     return tokenized_datasets
@@ -85,17 +88,17 @@ def tokenize_dataset(dataset, tokenizer, max_length=512, stride=256):
 
 def save_tokenized_dataset(tokenized_datasets, output_dir="data/interim/"):
     """
-    Save the tokenized dataset to disk in Arrow format.
+    Save the tokenized datasets to disk in Arrow format.
 
     Args:
-        tokenized_datasets (DatasetDict): Tokenized datasets.
-        output_dir (str): Directory where the processed datasets will be stored.
+        tokenized_datasets (DatasetDict): Tokenized dataset.
+        output_dir (str): Output directory.
     """
     os.makedirs(output_dir, exist_ok=True)
     for split in tokenized_datasets:
-        save_path = os.path.join(output_dir, split)
-        print(f"Saving {split} split to {save_path}")
-        tokenized_datasets[split].save_to_disk(save_path)
+        path = os.path.join(output_dir, split)
+        print(f"Saving {split} split to {path}")
+        tokenized_datasets[split].save_to_disk(path)
 
 
 def prepare_data_pipeline(
@@ -105,13 +108,13 @@ def prepare_data_pipeline(
     output_dir="data/interim/"
 ):
     """
-    End-to-end data pipeline that loads, tokenizes, and saves the AG News dataset.
+    Full pipeline to load, tokenize, and save AG News dataset.
 
     Args:
-        model_name (str): Name of the pre-trained model for tokenizer loading.
-        max_length (int): Maximum token length for input sequences.
-        stride (int): Overlap used for the sliding window during tokenization.
-        output_dir (str): Path to store the processed dataset.
+        model_name (str): Model name for tokenizer.
+        max_length (int): Max sequence length.
+        stride (int): Sliding window stride.
+        output_dir (str): Output path for processed data.
     """
     dataset = load_agnews_dataset()
     tokenizer = get_tokenizer(model_name)
