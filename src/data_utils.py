@@ -15,16 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 def combine_title_description(title: str, description: str) -> str:
-    """
-    Concatenate title and description into a single text string.
-
-    Args:
-        title (str): News article title.
-        description (str): News article description/body.
-
-    Returns:
-        str: Combined and normalized text.
-    """
     return f"{title.strip()} {description.strip()}"
 
 
@@ -37,15 +27,6 @@ class DataConfig:
 
 
 def load_agnews_dataset() -> DatasetDict:
-    """
-    Load the AG News dataset.
-
-    Returns:
-        DatasetDict: A dictionary with 'train' and 'test' splits. Each example contains:
-            - 'title' (str): Headline of the news article.
-            - 'description' (str): Short body text.
-            - 'label' (int): Class index (0: World, 1: Sports, 2: Business, 3: Sci/Tech).
-    """
     logger.info("Loading AG News dataset from Hugging Face Datasets...")
     dataset = load_dataset("ag_news")
     logger.info("Dataset loaded: %d train examples, %d test examples.",
@@ -54,15 +35,6 @@ def load_agnews_dataset() -> DatasetDict:
 
 
 def get_tokenizer(model_name: str) -> PreTrainedTokenizerBase:
-    """
-    Initialize and return a pre-trained tokenizer.
-
-    Args:
-        model_name (str): Hugging Face model identifier.
-
-    Returns:
-        PreTrainedTokenizerBase: Tokenizer for the specified model.
-    """
     logger.info("Loading tokenizer for model: %s", model_name)
     tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
     return tokenizer
@@ -74,18 +46,6 @@ def preprocess_function(
     max_length: int,
     stride: int
 ) -> Dict[str, List]:
-    """
-    Tokenize and segment examples with a sliding window.
-
-    Args:
-        examples (dict): Batch of examples containing 'title', 'description', and 'label'.
-        tokenizer (PreTrainedTokenizerBase): Tokenizer instance.
-        max_length (int): Maximum tokens per segment.
-        stride (int): Overlap tokens between segments.
-
-    Returns:
-        dict: Tokenized inputs with keys 'input_ids', 'attention_mask', and 'labels'.
-    """
     # Combine title + description
     texts = [combine_title_description(t, d) for t, d in zip(examples["title"], examples["description"])]
 
@@ -123,18 +83,6 @@ def tokenize_dataset(
     max_length: int,
     stride: int
 ) -> DatasetDict:
-    """
-    Apply preprocessing to all dataset splits in batched mode.
-
-    Args:
-        dataset (DatasetDict): Original dataset with splits.
-        tokenizer (PreTrainedTokenizerBase): Tokenizer to apply.
-        max_length (int): Max token length per segment.
-        stride (int): Overlap size.
-
-    Returns:
-        DatasetDict: Tokenized dataset.
-    """
     tokenized_datasets = DatasetDict()
     for split, ds in dataset.items():
         logger.info("Tokenizing split: %s (max_length=%d, stride=%d)", split, max_length, stride)
@@ -152,13 +100,6 @@ def save_tokenized_dataset(
     tokenized_datasets: DatasetDict,
     output_dir: str
 ) -> None:
-    """
-    Persist tokenized datasets to disk in Arrow format.
-
-    Args:
-        tokenized_datasets (DatasetDict): Tokenized splits.
-        output_dir (str): Directory to save processed data.
-    """
     os.makedirs(output_dir, exist_ok=True)
     for split, ds in tokenized_datasets.items():
         path = os.path.join(output_dir, split)
@@ -169,12 +110,6 @@ def save_tokenized_dataset(
 def prepare_data_pipeline(
     config: Optional[DataConfig] = None
 ) -> None:
-    """
-    End-to-end pipeline: load, tokenize, and save AG News data.
-
-    Args:
-        config (DataConfig, optional): Pipeline configuration. Uses default if None.
-    """
     cfg = config or DataConfig()
     # Load and preprocess
     dataset = load_agnews_dataset()
