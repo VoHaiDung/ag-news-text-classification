@@ -10,7 +10,7 @@ from torch.nn.functional import softmax
 from tqdm.auto import tqdm
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-# Set up logging
+# Set up logger
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
