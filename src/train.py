@@ -13,15 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 def load_tokenized_dataset(data_dir: str = "data/interim/") -> DatasetDict:
-    """
-    Load tokenized AG News dataset from disk.
-
-    Args:
-        data_dir (str): Path to the directory containing tokenized splits.
-
-    Returns:
-        DatasetDict: Dictionary with 'train' and 'test' datasets.
-    """
     dataset = {
         split: load_from_disk(os.path.join(data_dir, split))
         for split in ["train", "test"]
@@ -31,15 +22,6 @@ def load_tokenized_dataset(data_dir: str = "data/interim/") -> DatasetDict:
 
 
 def compute_metrics(eval_pred: Tuple) -> Dict[str, float]:
-    """
-    Compute classification metrics.
-
-    Args:
-        eval_pred (Tuple): A tuple of (logits, labels)
-
-    Returns:
-        Dict[str, float]: Computed accuracy, precision, recall, and F1-score.
-    """
     from sklearn.metrics import accuracy_score, precision_recall_fscore_support
 
     logits, labels = eval_pred
@@ -61,14 +43,6 @@ def train_model(
     output_dir: str = "outputs/checkpoints/deberta/",
     data_dir: str = "data/interim/"
 ) -> None:
-    """
-    Fine-tune a DeBERTa-v3 model with LoRA on the AG News dataset.
-
-    Args:
-        model_name (str): Pretrained model identifier.
-        output_dir (str): Output directory for saving model and tokenizer.
-        data_dir (str): Input directory of tokenized dataset.
-    """
     logger.info("Initializing training pipeline for %s", model_name)
 
     # Load data and tokenizer
