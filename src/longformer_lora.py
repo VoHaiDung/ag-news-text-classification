@@ -22,15 +22,6 @@ class LongformerLoraConfig:
 
 
 def get_longformer_lora_model(config: Optional[LongformerLoraConfig] = None) -> PreTrainedModel:
-    """
-    Load the Longformer-large model and apply LoRA for parameter-efficient fine-tuning.
-
-    Args:
-        config (LongformerLoraConfig, optional): Configuration for model and LoRA settings.
-
-    Returns:
-        PreTrainedModel: A Longformer model wrapped with LoRA adapters for sequence classification.
-    """
     cfg = config or LongformerLoraConfig()
 
     logger.info("Loading base model: %s with %d labels", cfg.model_name, cfg.num_labels)
