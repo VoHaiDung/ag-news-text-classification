@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 from datasets import load_dataset, DatasetDict, Dataset
 from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
-# Configure logger
+# Set up logger
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
