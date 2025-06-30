@@ -10,15 +10,6 @@ from datasets import load_dataset
 
 
 def load_unlabeled_text_data(file_path):
-    """
-    Load unlabeled text data for domain-adaptive pretraining.
-
-    Args:
-        file_path (str): Path to text file (.txt or .csv with 'text' column).
-
-    Returns:
-        Dataset: Hugging Face Dataset object.
-    """
     if file_path.endswith(".txt"):
         return load_dataset("text", data_files={"train": file_path})
     elif file_path.endswith(".csv"):
@@ -28,31 +19,10 @@ def load_unlabeled_text_data(file_path):
 
 
 def tokenize_function(examples, tokenizer, block_size=512):
-    """
-    Tokenize text and chunk into block_size segments.
-
-    Args:
-        examples (dict): Dictionary with 'text'.
-        tokenizer: Hugging Face tokenizer.
-        block_size (int): Length of token blocks.
-
-    Returns:
-        dict: Tokenized inputs.
-    """
     return tokenizer(examples["text"], return_special_tokens_mask=True, truncation=True, max_length=block_size)
 
 
 def group_texts(examples, block_size=512):
-    """
-    Concatenate texts and split into chunks of block_size for MLM.
-
-    Args:
-        examples (dict): Tokenized inputs.
-        block_size (int): Token length per segment.
-
-    Returns:
-        dict: Chunked input_ids and attention_mask.
-    """
     concatenated = {k: sum(examples[k], []) for k in examples.keys()}
     total_len = (len(concatenated["input_ids"]) // block_size) * block_size
     result = {
@@ -72,19 +42,6 @@ def run_dapt(
     batch_size=8,
     learning_rate=5e-5,
 ):
-    """
-    Run Domain-Adaptive Pretraining (DAPT) on unlabeled news corpus.
-
-    Args:
-        model_name (str): Pretrained model name.
-        data_file (str): Path to unlabeled text file (.txt or .csv).
-        output_dir (str): Where to save the adapted checkpoint.
-        block_size (int): Max tokens per segment.
-        mlm_prob (float): Probability of masking tokens.
-        num_train_epochs (int): Number of training epochs.
-        batch_size (int): Per-device batch size.
-        learning_rate (float): Learning rate.
-    """
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForMaskedLM.from_pretrained(model_name)
 
