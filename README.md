@@ -95,25 +95,33 @@ ag-news-text-classification/
 │   ├── deberta_config.yaml
 │   ├── longformer_config.yaml
 │   ├── lora_config.yaml
-│   └── ensemble_config.yaml
+│   ├── ensemble_config.yaml
+│   └── pretrain_config.yaml
 │
 ├── data/
 │   ├── raw/
 │   ├── interim/
-│   └── processed/
+│   ├── processed/
+│   └── external/
 │
 ├── notebooks/
 │   ├── explore_dataset.ipynb
 │   ├── train_visualization.ipynb
 │   ├── error_analysis_xai.ipynb
+│   ├── domain_adaptive_pretrain.ipynb
 │   └── colab_demo.ipynb
 │
 ├── src/
 │   ├── __init__.py
 │   ├── data_utils.py
+│   ├── pretrain_lm.py
+│   ├── pseudo_label.py
 │   ├── train.py
+│   ├── train_longformer.py
 │   ├── evaluate.py
 │   ├── ensemble.py
+│   ├── stacking.py
+│   ├── cv_run.py
 │   ├── deberta_lora.py
 │   ├── longformer_lora.py
 │   ├── explainability.py
@@ -123,16 +131,26 @@ ag-news-text-classification/
 │
 ├── scripts/
 │   ├── run_preprocess.sh
+│   ├── run_pretrain_dapt.sh
 │   ├── run_train_deberta.sh
 │   ├── run_train_longformer.sh
+│   ├── run_pseudo_label.sh
 │   ├── run_ensemble.sh
+│   ├── run_stack.sh
+│   ├── run_cv.sh
 │   └── run_full_pipeline.sh
 │
-└── outputs/
-    ├── checkpoints/
-    ├── logs/
-    ├── metrics/
-    └── figures/
+├── outputs/
+│   ├── checkpoints/
+│   ├── dapt_checkpoints/
+│   ├── pseudo_labels/
+│   ├── logs/
+│   ├── metrics/
+│   └── figures/
+│
+└── ci/
+    ├── lint.yml
+    └── test.yml
 ```
 
 ## Evaluation Metrics
