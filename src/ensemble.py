@@ -47,16 +47,6 @@ def load_model(model_dir: str, device: torch.device) -> torch.nn.Module:
 
 
 def prepare_dataloader(dataset: Dataset, batch_size: int) -> DataLoader:
-    """
-    Convert a Hugging Face Dataset into PyTorch DataLoader.
-
-    Args:
-        dataset (Dataset): Tokenized HF dataset with labels.
-        batch_size (int): Number of samples per batch.
-
-    Returns:
-        DataLoader: Pytorch DataLoader for batched inference.
-    """
     def collate_fn(batch):
         return {
             'input_ids': torch.tensor([ex['input_ids'] for ex in batch], dtype=torch.long),
