@@ -17,15 +17,6 @@ from tqdm.auto import tqdm
 
 
 def configure_logger(log_path: str = None) -> logging.Logger:
-    """
-    Configure and return a logger for tracking training/inference process.
-
-    Args:
-        log_path (str): Optional file path to save log output.
-
-    Returns:
-        logging.Logger: Configured logger instance.
-    """
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
 
@@ -48,16 +39,6 @@ logger = configure_logger("outputs/logs/ensemble.log")
 
 
 def load_model(model_dir: str, device: torch.device) -> torch.nn.Module:
-    """
-    Load a fine-tuned Hugging Face transformer model to specified device.
-
-    Args:
-        model_dir (str): Directory path to the saved model.
-        device (torch.device): Target device (CPU or CUDA).
-
-    Returns:
-        torch.nn.Module: Loaded model ready for inference.
-    """
     logger.info(f"Loading model from {model_dir}")
     model = AutoModelForSequenceClassification.from_pretrained(model_dir)
     model.to(device)
@@ -91,17 +72,6 @@ def inference(
     dataloader: DataLoader,
     device: torch.device
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """
-    Run inference and collect logits and labels for evaluation.
-
-    Args:
-        model (torch.nn.Module): Transformer model for classification.
-        dataloader (DataLoader): DataLoader providing batched inputs.
-        device (torch.device): CPU or GPU for inference.
-
-    Returns:
-        Tuple[np.ndarray, np.ndarray]: Tuple of logits and ground-truth labels.
-    """
     all_logits, all_labels = [], []
     amp_ctx = torch.cuda.amp.autocast if device.type == 'cuda' else torch.no_grad
     with torch.no_grad():
@@ -121,16 +91,6 @@ def inference(
 
 
 def compute_metrics(logits: np.ndarray, labels: np.ndarray) -> Dict[str, float]:
-    """
-    Compute standard classification metrics: accuracy, precision, recall, F1.
-
-    Args:
-        logits (np.ndarray): Logit outputs from model.
-        labels (np.ndarray): Ground truth class labels.
-
-    Returns:
-        Dict[str, float]: Dictionary of metrics.
-    """
     preds = logits.argmax(axis=1)
     acc = accuracy_score(labels, preds)
     precision, recall, f1, _ = precision_recall_fscore_support(
@@ -149,24 +109,12 @@ def print_classification_report(
     labels: np.ndarray,
     target_names: Tuple[str, ...]
 ) -> None:
-    """
-    Generate and log the detailed per-class classification report.
-
-    Args:
-        logits (np.ndarray): Predicted logits from ensemble model.
-        labels (np.ndarray): True labels.
-        target_names (Tuple[str]): Class label names.
-    """
     preds = logits.argmax(axis=1)
     report = classification_report(labels, preds, target_names=target_names, zero_division=0)
     logger.info("Detailed Classification Report:\n%s", report)
 
 
 def main():
-    """
-    Main function to run soft-voting ensemble of DeBERTa and Longformer.
-    Performs inference on test set, computes metrics, and saves logits if specified.
-    """
     parser = argparse.ArgumentParser(
         description="Ensemble DeBERTa & Longformer via weighted soft-voting"
     )
