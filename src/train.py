@@ -1,97 +1,102 @@
 import os
-import argparse
 import logging
-from typing import Dict, Tuple
-
+import numpy as np
 import torch
-from datasets import load_from_disk, DatasetDict
-from transformers import (
-    AutoTokenizer,
-    Trainer,
-    TrainingArguments,
-)
-from peft import prepare_model_for_int8_training
+from datasets import DatasetDict
+from transformers import AutoTokenizer, TrainingArguments, Trainer
 
-from .deberta_lora import get_deberta_lora_model
+from src.data_utils import load_agnews_dataset, get_tokenizer, tokenize_dataset, DataConfig
+from src.deberta_lora import get_deberta_lora_model, DebertaLoraConfig
+from src.longformer_lora import get_longformer_lora_model, LongformerLoraConfig
+import evaluate
 
 # Set up logger
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-def load_dataset_splits(data_dir: str, train_split: str, val_split: str) -> DatasetDict:
-    ds = {
-        "train": load_from_disk(os.path.join(data_dir, train_split)),
-        "val": load_from_disk(os.path.join(data_dir, val_split)),
-    }
-    logger.info("Loaded splits: %s (%d) | %s (%d)",
-                train_split, len(ds["train"]), val_split, len(ds["val"]))
-    return ds
-
-
-def compute_metrics(eval_pred: Tuple) -> Dict[str, float]:
-    from sklearn.metrics import accuracy_score, precision_recall_fscore_support
-
+def compute_metrics(eval_pred):
     logits, labels = eval_pred
-    preds = logits.argmax(axis=1)
-    acc = accuracy_score(labels, preds)
-    prec, rec, f1, _ = precision_recall_fscore_support(
-        labels, preds, average="macro", zero_division=0
-    )
-    return {"accuracy": acc, "precision": prec, "recall": rec, "f1": f1}
+    preds = np.argmax(logits, axis=-1)
+    return {
+        "accuracy": evaluate.load("accuracy").compute(predictions=preds, references=labels)["accuracy"],
+        "precision": evaluate.load("precision").compute(predictions=preds, references=labels, average="macro")["precision"],
+        "recall": evaluate.load("recall").compute(predictions=preds, references=labels, average="macro")["recall"],
+        "f1": evaluate.load("f1").compute(predictions=preds, references=labels, average="macro")["f1"],
+    }
 
 
 def main():
-    parser = argparse.ArgumentParser("LoRA fine‑tune DeBERTa‑v3 on AG News")
-    parser.add_argument("--model_name", type=str, default="microsoft/deberta-v3-large")
-    parser.add_argument("--data_dir", type=str, default="data/interim")
-    parser.add_argument("--train_split", type=str, default="train")
-    parser.add_argument("--val_split", type=str, default="test")
-    parser.add_argument("--output_dir", type=str, default="outputs/checkpoints/deberta_lora")
-    parser.add_argument("--epochs", type=int, default=3)
-    parser.add_argument("--batch_size", type=int, default=8)
-    parser.add_argument("--learning_rate", type=float, default=2e-5)
-    args = parser.parse_args()
+    # Load and preprocess dataset
+    cfg = DataConfig(
+        model_name="microsoft/deberta-v3-large",
+        max_length=512,
+        stride=256
+    )
+    dataset = load_agnews_dataset()            # theo Hugging Face
+    tokenizer = get_tokenizer(cfg.model_name)
+    tokenized = tokenize_dataset(dataset, tokenizer, cfg.max_length, cfg.stride)
+    tokenized.set_format("torch", columns=["input_ids", "attention_mask", "labels"])
 
-    # Load data
-    dataset = load_dataset_splits(args.data_dir, args.train_split, args.val_split)
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+    # Initialize LoRA models
+    deb_cfg = DebertaLoraConfig(
+        model_name=cfg.model_name,
+        num_labels=4
+    )
+    model_deberta = get_deberta_lora_model(deb_cfg)
 
-    # Load LoRA‑wrapped model
-    model = get_deberta_lora_model(base_model=args.model_name)
-    model = prepare_model_for_int8_training(model)
+    lon_cfg = LongformerLoraConfig(
+        model_name="allenai/longformer-large-4096",
+        num_labels=4
+    )
+    model_longformer = get_longformer_lora_model(lon_cfg)
 
+    # Shared training arguments
+    output_dir = "results"
+    os.makedirs(output_dir, exist_ok=True)
     training_args = TrainingArguments(
-        output_dir=args.output_dir,
-        per_device_train_batch_size=args.batch_size,
-        per_device_eval_batch_size=args.batch_size,
-        num_train_epochs=args.epochs,
-        learning_rate=args.learning_rate,
+        output_dir=output_dir,
         evaluation_strategy="epoch",
         save_strategy="epoch",
+        learning_rate=2e-5,
+        per_device_train_batch_size=16,
+        per_device_eval_batch_size=16,
+        num_train_epochs=5,
+        weight_decay=0.01,
+        logging_dir=os.path.join(output_dir, "logs"),
+        logging_steps=50,
         load_best_model_at_end=True,
-        metric_for_best_model="f1",
-        save_total_limit=2,
-        fp16=torch.cuda.is_available(),
-        logging_dir=os.path.join(args.output_dir, "logs"),
-        report_to="none",
+        metric_for_best_model="accuracy",
     )
 
-    trainer = Trainer(
-        model=model,
+    # Train DeBERTa-LoRA
+    logger.info("[DeBERTa-LoRA] Training started")
+    trainer_deberta = Trainer(
+        model=model_deberta,
         args=training_args,
-        train_dataset=dataset["train"],
-        eval_dataset=dataset["val"],
+        train_dataset=tokenized["train"],
+        eval_dataset=tokenized["test"],
         tokenizer=tokenizer,
         compute_metrics=compute_metrics,
     )
+    trainer_deberta.train()
+    trainer_deberta.save_model(os.path.join(output_dir, "deberta_lora"))
+    logger.info("[DeBERTa-LoRA] Model saved to results/deberta_lora")
 
-    logger.info("Starting training...")
-    trainer.train()
+    # Train Longformer-LoRA
+    logger.info("[Longformer-LoRA] Training started")
+    trainer_longformer = Trainer(
+        model=model_longformer,
+        args=training_args,
+        train_dataset=tokenized["train"],
+        eval_dataset=tokenized["test"],
+        tokenizer=tokenizer,
+        compute_metrics=compute_metrics,
+    )
+    trainer_longformer.train()
+    trainer_longformer.save_model(os.path.join(output_dir, "longformer_lora"))
+    logger.info("[Longformer-LoRA] Model saved to results/longformer_lora")
 
-    model.save_pretrained(args.output_dir)
-    tokenizer.save_pretrained(args.output_dir)
-    logger.info("Saved model and tokenizer to %s", args.output_dir)
+    logger.info("Training pipeline completed.")
 
 
 if __name__ == "__main__":
