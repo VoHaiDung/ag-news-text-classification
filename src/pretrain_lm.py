@@ -11,8 +11,7 @@ from transformers import (
 from datasets import load_dataset
 
 # Set up logger
-t_logging_format = "%(asctime)s — %(name)s — %(levelname)s — %(message)s"
-logging.basicConfig(format=t_logging_format, level=logging.INFO)
+logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def load_unlabeled_text_data(file_path):
