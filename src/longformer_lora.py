@@ -6,8 +6,9 @@ from transformers import AutoModelForSequenceClassification, PreTrainedModel
 from peft import LoraConfig, get_peft_model, TaskType
 
 # Set up logger
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+if not logger.handlers:
+    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
 
 @dataclass(frozen=True)
@@ -51,4 +52,4 @@ def get_longformer_lora_model(config: Optional[LongformerLoraConfig] = None) -> 
 
 if __name__ == "__main__":
     model = get_longformer_lora_model()
-    print(model.print_trainable_parameters())
+    model.print_trainable_parameters()
