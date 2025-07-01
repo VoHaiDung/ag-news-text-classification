@@ -5,9 +5,10 @@ from typing import Optional
 from transformers import AutoModelForSequenceClassification, PreTrainedModel
 from peft import LoraConfig, get_peft_model, TaskType
 
-# Set up logger
-logging.basicConfig(level=logging.INFO)
+# Set up logger with duplicate handler check
 logger = logging.getLogger(__name__)
+if not logger.handlers:
+    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
 
 @dataclass(frozen=True)
@@ -51,4 +52,4 @@ def get_deberta_lora_model(config: Optional[DebertaLoraConfig] = None) -> PreTra
 
 if __name__ == "__main__":
     model = get_deberta_lora_model()
-    print(model.print_trainable_parameters())
+    model.print_trainable_parameters()
