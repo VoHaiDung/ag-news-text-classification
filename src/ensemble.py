@@ -20,17 +20,18 @@ def configure_logger(log_path: str = None) -> logging.Logger:
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
 
-    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    if not logger.handlers:
+        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 
-    stream_handler = logging.StreamHandler()
-    stream_handler.setFormatter(formatter)
-    logger.addHandler(stream_handler)
+        stream_handler = logging.StreamHandler()
+        stream_handler.setFormatter(formatter)
+        logger.addHandler(stream_handler)
 
-    if log_path:
-        os.makedirs(os.path.dirname(log_path), exist_ok=True)
-        file_handler = logging.FileHandler(log_path)
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
+        if log_path:
+            os.makedirs(os.path.dirname(log_path), exist_ok=True)
+            file_handler = logging.FileHandler(log_path)
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
 
     return logger
 
@@ -38,6 +39,7 @@ def configure_logger(log_path: str = None) -> logging.Logger:
 logger = configure_logger("outputs/logs/ensemble.log")
 
 
+# Load fine-tuned model from directory
 def load_model(model_dir: str, device: torch.device) -> torch.nn.Module:
     logger.info(f"Loading model from {model_dir}")
     model = AutoModelForSequenceClassification.from_pretrained(model_dir)
@@ -46,6 +48,7 @@ def load_model(model_dir: str, device: torch.device) -> torch.nn.Module:
     return model
 
 
+# Prepare DataLoader from Hugging Face Dataset
 def prepare_dataloader(dataset: Dataset, batch_size: int) -> DataLoader:
     def collate_fn(batch):
         return {
@@ -57,29 +60,35 @@ def prepare_dataloader(dataset: Dataset, batch_size: int) -> DataLoader:
     return DataLoader(dataset, batch_size=batch_size, collate_fn=collate_fn)
 
 
+# Inference using AMP (if CUDA) and return logits + labels
 def inference(
     model: torch.nn.Module,
     dataloader: DataLoader,
     device: torch.device
 ) -> Tuple[np.ndarray, np.ndarray]:
     all_logits, all_labels = [], []
-    amp_ctx = torch.cuda.amp.autocast if device.type == 'cuda' else torch.no_grad
-    with torch.no_grad():
-        for batch in tqdm(dataloader, desc="Inference"):
-            input_ids = batch['input_ids'].to(device)
-            attention_mask = batch['attention_mask'].to(device)
-            labels = batch['labels'].cpu().numpy()
+    use_amp = device.type == 'cuda'
 
-            with amp_ctx():
+    for batch in tqdm(dataloader, desc="Inference"):
+        input_ids = batch['input_ids'].to(device)
+        attention_mask = batch['attention_mask'].to(device)
+        labels = batch['labels'].cpu().numpy()
+
+        with torch.no_grad():
+            if use_amp:
+                with torch.cuda.amp.autocast():
+                    outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+            else:
                 outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-            logits = outputs.logits.cpu().numpy()
 
-            all_logits.append(logits)
-            all_labels.append(labels)
+        logits = outputs.logits.cpu().numpy()
+        all_logits.append(logits)
+        all_labels.append(labels)
 
     return np.vstack(all_logits), np.concatenate(all_labels)
 
 
+# Compute macro metrics from logits
 def compute_metrics(logits: np.ndarray, labels: np.ndarray) -> Dict[str, float]:
     preds = logits.argmax(axis=1)
     acc = accuracy_score(labels, preds)
@@ -94,6 +103,7 @@ def compute_metrics(logits: np.ndarray, labels: np.ndarray) -> Dict[str, float]:
     }
 
 
+# Print full classification report
 def print_classification_report(
     logits: np.ndarray,
     labels: np.ndarray,
@@ -104,6 +114,7 @@ def print_classification_report(
     logger.info("Detailed Classification Report:\n%s", report)
 
 
+# Entry point
 def main():
     parser = argparse.ArgumentParser(
         description="Ensemble DeBERTa & Longformer via weighted soft-voting"
@@ -138,13 +149,15 @@ def main():
     logger.info("Running inference with Longformer...")
     logits_longformer, _ = inference(model_longformer, dataloader, device)
 
+    # Normalize weights (optional)
+    total_weight = args.weight_deberta + args.weight_longformer
+    w_deb = args.weight_deberta / total_weight
+    w_lon = args.weight_longformer / total_weight
+
     # Soft-voting ensemble of logits
     logger.info("Ensembling outputs (weights: DeBERTa=%.2f, Longformer=%.2f)",
-                args.weight_deberta, args.weight_longformer)
-    logits_ensemble = (
-        args.weight_deberta * logits_deberta +
-        args.weight_longformer * logits_longformer
-    )
+                w_deb, w_lon)
+    logits_ensemble = w_deb * logits_deberta + w_lon * logits_longformer
 
     # Compute and log evaluation metrics
     metrics = compute_metrics(logits_ensemble, labels)
