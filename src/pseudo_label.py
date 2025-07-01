@@ -41,16 +41,25 @@ def predict_logits(
             return_overflowing_tokens=True,
             return_tensors="pt",
         )
-        with torch.no_grad(), torch.cuda.amp.autocast():
-            logits_chunks = []
-            for i in range(tokenized["input_ids"].shape[0]):
-                input_ids = tokenized["input_ids"][i].unsqueeze(0).to(device)
-                attention = tokenized["attention_mask"][i].unsqueeze(0).to(device)
-                out = model(input_ids=input_ids, attention_mask=attention)
-                logits_chunks.append(out.logits.cpu())
-        # Average logits across all segments
-        stacked = torch.stack(logits_chunks).mean(dim=0)
-        all_logits.append(stacked.squeeze(0).numpy())
+        
+        logits_chunks = []
+        for i in range(tokenized["input_ids"].shape[0]):
+            input_ids = tokenized["input_ids"][i].unsqueeze(0).to(device)
+            attention_mask = tokenized["attention_mask"][i].unsqueeze(0).to(device)
+
+            with torch.no_grad():
+                if use_amp:
+                    with torch.cuda.amp.autocast():
+                        outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+                else:
+                    outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+
+            logits_chunks.append(outputs.logits.cpu())
+
+        # Average over all sliding segments
+        mean_logits = torch.stack(logits_chunks).mean(dim=0)
+        all_logits.append(mean_logits.squeeze(0).numpy())
+
     return np.vstack(all_logits)
 
 def main():
