@@ -22,14 +22,14 @@ def configure_logger() -> logging.Logger:
 
 logger = configure_logger()
 
-
+# Load multiple logits files and corresponding labels
 def load_logits_and_labels(logits_paths: List[str], labels_path: str) -> Tuple[np.ndarray, np.ndarray]:
     logits_list = [np.load(path) for path in logits_paths]
     X = np.concatenate(logits_list, axis=1)
     y = np.load(labels_path)
     return X, y
 
-
+# Build a stacking classifier with base and meta learners
 def build_stacking_classifier(cv: int = 5) -> StackingClassifier:
     base_learners = [
         ("lr", LogisticRegression(max_iter=1000, solver="lbfgs", random_state=42)),
@@ -44,7 +44,7 @@ def build_stacking_classifier(cv: int = 5) -> StackingClassifier:
     )
     return clf
 
-
+# Evaluate the trained model on input data
 def evaluate_model(model, X: np.ndarray, y: np.ndarray, class_names: List[str]) -> None:
     preds = model.predict(X)
     acc = accuracy_score(y, preds)
