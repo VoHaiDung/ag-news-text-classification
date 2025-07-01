@@ -10,7 +10,7 @@ from transformers import (
 )
 from datasets import load_dataset
 
-# Configure logger
+# Set up logger
 t_logging_format = "%(asctime)s — %(name)s — %(levelname)s — %(message)s"
 logging.basicConfig(format=t_logging_format, level=logging.INFO)
 logger = logging.getLogger(__name__)
