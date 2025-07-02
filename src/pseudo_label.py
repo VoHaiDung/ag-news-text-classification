@@ -1,113 +1,136 @@
 import os
 import argparse
-import logging
-from typing import List
-
-import numpy as np
 import pandas as pd
+import numpy as np
 import torch
-from torch.nn.functional import softmax
+from typing import List
 from tqdm.auto import tqdm
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-# Set up logger
-logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
-logger = logging.getLogger(__name__)
+from src.utils import configure_logger
 
-def tokenize_sliding(examples, tokenizer, max_len: int = 512, stride: int = 256):
-    # Apply sliding window tokenization to a batch of texts
-    return tokenizer(
-        examples["text"],
-        truncation=True,
-        max_length=max_len,
-        stride=stride,
-        return_overflowing_tokens=True,
-        padding="max_length",
-    )
+# Set up logger
+logger = configure_logger("outputs/logs/pseudo_label.log")
+
+# Predict mean logits per document using sliding-window inference
+# texts: list of documents; max_len, stride control window size
+# batch_size: number of documents per batch for inference
 
 def predict_logits(
-    model, tokenizer, texts: List[str], device: torch.device
+    model: torch.nn.Module,
+    tokenizer,
+    texts: List[str],
+    device: torch.device,
+    max_len: int,
+    stride: int,
+    batch_size: int
 ) -> np.ndarray:
-    # Predict mean logits per document using sliding window
     all_logits = []
-    for text in tqdm(texts, desc="Infer"):
-        # Tokenize with overflow to handle long sequences
-        tokenized = tokenizer(
-            text,
-            max_length=512,
-            stride=256,
-            truncation=True,
-            padding="max_length",
-            return_overflowing_tokens=True,
-            return_tensors="pt",
-        )
-        
-        logits_chunks = []
-        for i in range(tokenized["input_ids"].shape[0]):
-            input_ids = tokenized["input_ids"][i].unsqueeze(0).to(device)
-            attention_mask = tokenized["attention_mask"][i].unsqueeze(0).to(device)
+    use_amp = device.type == "cuda"
 
-            with torch.no_grad():
-                if use_amp:
-                    with torch.cuda.amp.autocast():
-                        outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-                else:
-                    outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+    for batch_start in range(0, len(texts), batch_size):
+        batch_texts = texts[batch_start:batch_start + batch_size]
+        for text in batch_texts:
+            tokenized = tokenizer(
+                text,
+                max_length=max_len,
+                stride=stride,
+                truncation=True,
+                padding="max_length",
+                return_overflowing_tokens=True,
+                return_tensors="pt",
+            )
 
-            logits_chunks.append(outputs.logits.cpu())
+            logits_chunks = []
+            for i in range(tokenized["input_ids"].shape[0]):
+                input_ids = tokenized["input_ids"][i].unsqueeze(0).to(device)
+                attention_mask = tokenized["attention_mask"][i].unsqueeze(0).to(device)
 
-        # Average over all sliding segments
-        mean_logits = torch.stack(logits_chunks).mean(dim=0)
-        all_logits.append(mean_logits.squeeze(0).numpy())
+                with torch.no_grad():
+                    if use_amp:
+                        with torch.cuda.amp.autocast():
+                            out = model(input_ids=input_ids, attention_mask=attention_mask)
+                    else:
+                        out = model(input_ids=input_ids, attention_mask=attention_mask)
+                logits_chunks.append(out.logits.cpu())
+
+            mean_logits = torch.stack(logits_chunks).mean(dim=0)
+            all_logits.append(mean_logits.squeeze(0).numpy())
 
     return np.vstack(all_logits)
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate pseudo labels using ensemble models")
-    parser.add_argument("--unlabeled_csv", type=str, required=True)  # Input CSV with 'title' and 'description'
-    parser.add_argument("--deberta_dir", type=str, required=True)
-    parser.add_argument("--longformer_dir", type=str, required=True)
-    parser.add_argument("--output_csv", type=str, default="data/processed/pseudo_labeled.csv")
-    parser.add_argument("--prob_threshold", type=float, default=0.90)
-    parser.add_argument("--batch_size", type=int, default=8)  # Not used (windowed tokenization is per sample)
+    parser = argparse.ArgumentParser(description="Generate pseudo-labels using ensemble models")
+    parser.add_argument("--unlabeled_csv", type=str, required=True,
+                        help="Input CSV with 'title' and 'description' columns")
+    parser.add_argument("--deberta_dir", type=str, required=True,
+                        help="Path to DeBERTa-LoRA model")
+    parser.add_argument("--longformer_dir", type=str, required=True,
+                        help="Path to Longformer-LoRA model")
+    parser.add_argument("--output_csv", type=str, default="data/processed/pseudo_labeled.csv",
+                        help="Output pseudo-labeled CSV path")
+    parser.add_argument("--prob_threshold", type=float, default=0.90,
+                        help="Probability threshold for pseudo-labeling")
+    parser.add_argument("--max_len", type=int, default=512,
+                        help="Max tokens per window")
+    parser.add_argument("--stride", type=int, default=256,
+                        help="Stride size for sliding window")
+    parser.add_argument("--batch_size", type=int, default=8,
+                        help="Number of documents per inference batch")
     args = parser.parse_args()
 
-    # Load unlabeled corpus
-    raw_df = pd.read_csv(args.unlabeled_csv)
-    texts = (raw_df["title"] + " " + raw_df["description"]).tolist()
-    logger.info("Loaded %d unlabeled samples", len(texts))
+    # Load unlabeled data with error handling
+    try:
+        raw_df = pd.read_csv(args.unlabeled_csv)
+    except Exception as e:
+        logger.error(f"Failed to read CSV: {e}")
+        return
+    if 'title' not in raw_df.columns or 'description' not in raw_df.columns:
+        logger.error("CSV must contain 'title' and 'description' columns")
+        return
 
-    # Load tokenizers and models
+    texts = (raw_df['title'] + ' ' + raw_df['description']).tolist()
+    logger.info(f"Loaded {len(texts)} unlabeled samples")
+
+    # Load models and tokenizers
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    logger.info(f"Using device: {device}")
     tok_deb = AutoTokenizer.from_pretrained(args.deberta_dir)
     tok_lon = AutoTokenizer.from_pretrained(args.longformer_dir)
     model_deb = AutoModelForSequenceClassification.from_pretrained(args.deberta_dir).to(device).eval()
     model_lon = AutoModelForSequenceClassification.from_pretrained(args.longformer_dir).to(device).eval()
 
-    # Predict logits for each model
-    logits_deb = predict_logits(model_deb, tok_deb, texts, device)
-    logits_lon = predict_logits(model_lon, tok_lon, texts, device)
+    # Predict logits in batches
+    logger.info("Predicting logits with DeBERTa...")
+    logits_deb = predict_logits(
+        model_deb, tok_deb, texts, device,
+        args.max_len, args.stride, args.batch_size
+    )
+    logger.info("Predicting logits with Longformer...")
+    logits_lon = predict_logits(
+        model_lon, tok_lon, texts, device,
+        args.max_len, args.stride, args.batch_size
+    )
 
-    # Ensemble by soft-voting
+    # Ensemble logits and compute probabilities
     logits_ensemble = (logits_deb + logits_lon) / 2
-    probs = softmax(torch.from_numpy(logits_ensemble), dim=-1).numpy()
+    probs = torch.softmax(torch.from_numpy(logits_ensemble), dim=-1).numpy()
     max_probs = probs.max(axis=1)
     preds = probs.argmax(axis=1)
 
-    # Filter by probability threshold
-    keep_mask = max_probs >= args.prob_threshold
-    kept = sum(keep_mask)
-    logger.info("Selected %d / %d samples (≥ %.2f prob)", kept, len(texts), args.prob_threshold)
+    # Filter by threshold
+    mask = max_probs >= args.prob_threshold
+    selected = mask.sum()
+    logger.info(f"Selected {selected} / {len(texts)} samples (>= {args.prob_threshold:.2f})")
 
-    pseudo_df = raw_df.loc[keep_mask].copy()
-    pseudo_df["label"] = preds[keep_mask]
-    pseudo_df["confidence"] = max_probs[keep_mask]
+    # Create and save pseudo-labeled DataFrame
+    pseudo_df = raw_df.loc[mask].copy()
+    pseudo_df['label'] = preds[mask]
+    pseudo_df['confidence'] = max_probs[mask]
 
-    # Save pseudo‑labeled CSV
     os.makedirs(os.path.dirname(args.output_csv), exist_ok=True)
     pseudo_df.to_csv(args.output_csv, index=False)
-    logger.info("Pseudo-labeled data saved to %s", args.output_csv)
-
+    logger.info(f"Pseudo-labeled data saved to {args.output_csv}")
 
 if __name__ == "__main__":
     main()
