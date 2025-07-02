@@ -1,46 +1,26 @@
 import os
 import argparse
-import logging
-from typing import Dict, Tuple
-
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
-from datasets import load_from_disk, Dataset
+from datasets import load_from_disk
+from typing import Tuple
+
 from transformers import AutoModelForSequenceClassification
-from sklearn.metrics import (
-    accuracy_score,
-    precision_recall_fscore_support,
-    classification_report,
-)
 from tqdm.auto import tqdm
 
+from src.utils import (
+    configure_logger,
+    prepare_dataloader,
+    compute_metrics,
+    print_classification_report,
+)
 
-def configure_logger(log_path: str = None) -> logging.Logger:
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO)
-
-    if not logger.handlers:
-        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-
-        stream_handler = logging.StreamHandler()
-        stream_handler.setFormatter(formatter)
-        logger.addHandler(stream_handler)
-
-        if log_path:
-            os.makedirs(os.path.dirname(log_path), exist_ok=True)
-            file_handler = logging.FileHandler(log_path)
-            file_handler.setFormatter(formatter)
-            logger.addHandler(file_handler)
-
-    return logger
-
-
+# Setting logger
 logger = configure_logger("outputs/logs/ensemble.log")
 
 
-# Load fine-tuned model from directory
 def load_model(model_dir: str, device: torch.device) -> torch.nn.Module:
+    # Load fine-tuned model for inference
     logger.info(f"Loading model from {model_dir}")
     model = AutoModelForSequenceClassification.from_pretrained(model_dir)
     model.to(device)
@@ -48,31 +28,19 @@ def load_model(model_dir: str, device: torch.device) -> torch.nn.Module:
     return model
 
 
-# Prepare DataLoader from Hugging Face Dataset
-def prepare_dataloader(dataset: Dataset, batch_size: int) -> DataLoader:
-    def collate_fn(batch):
-        return {
-            'input_ids': torch.tensor([ex['input_ids'] for ex in batch], dtype=torch.long),
-            'attention_mask': torch.tensor([ex['attention_mask'] for ex in batch], dtype=torch.long),
-            'labels': torch.tensor([ex['labels'] for ex in batch], dtype=torch.long),
-        }
-
-    return DataLoader(dataset, batch_size=batch_size, collate_fn=collate_fn)
-
-
-# Inference using AMP (if CUDA) and return logits + labels
 def inference(
     model: torch.nn.Module,
-    dataloader: DataLoader,
+    dataloader,
     device: torch.device
 ) -> Tuple[np.ndarray, np.ndarray]:
+    # Run inference (optionally with AMP) returning logits and labels arrays
     all_logits, all_labels = [], []
-    use_amp = device.type == 'cuda'
+    use_amp = device.type == "cuda"
 
     for batch in tqdm(dataloader, desc="Inference"):
-        input_ids = batch['input_ids'].to(device)
-        attention_mask = batch['attention_mask'].to(device)
-        labels = batch['labels'].cpu().numpy()
+        input_ids = batch["input_ids"].to(device)
+        attention_mask = batch["attention_mask"].to(device)
+        labels = batch["labels"].cpu().numpy()
 
         with torch.no_grad():
             if use_amp:
@@ -88,33 +56,6 @@ def inference(
     return np.vstack(all_logits), np.concatenate(all_labels)
 
 
-# Compute macro metrics from logits
-def compute_metrics(logits: np.ndarray, labels: np.ndarray) -> Dict[str, float]:
-    preds = logits.argmax(axis=1)
-    acc = accuracy_score(labels, preds)
-    precision, recall, f1, _ = precision_recall_fscore_support(
-        labels, preds, average='macro', zero_division=0
-    )
-    return {
-        'accuracy': acc,
-        'precision': precision,
-        'recall': recall,
-        'f1': f1
-    }
-
-
-# Print full classification report
-def print_classification_report(
-    logits: np.ndarray,
-    labels: np.ndarray,
-    target_names: Tuple[str, ...]
-) -> None:
-    preds = logits.argmax(axis=1)
-    report = classification_report(labels, preds, target_names=target_names, zero_division=0)
-    logger.info("Detailed Classification Report:\n%s", report)
-
-
-# Entry point
 def main():
     parser = argparse.ArgumentParser(
         description="Ensemble DeBERTa & Longformer via weighted soft-voting"
@@ -126,8 +67,7 @@ def main():
     parser.add_argument("--weight_deberta", type=float, default=0.5)
     parser.add_argument("--weight_longformer", type=float, default=0.5)
     parser.add_argument("--save_logits", type=str, default="")
-    parser.add_argument("--class_names", nargs="+",
-                        default=["World", "Sports", "Business", "Sci/Tech"])
+    parser.add_argument("--class_names", nargs="+", default=["World", "Sports", "Business", "Sci/Tech"])
     args = parser.parse_args()
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -138,36 +78,32 @@ def main():
     logger.info("Loaded test dataset with %d samples", len(ds_test))
     dataloader = prepare_dataloader(ds_test, args.batch_size)
 
-    # Load both fine-tuned models
+    # Load models
     model_deberta = load_model(args.deberta_dir, device)
     model_longformer = load_model(args.longformer_dir, device)
 
-    # Inference for both models
+    # Inference
     logger.info("Running inference with DeBERTa...")
     logits_deberta, labels = inference(model_deberta, dataloader, device)
 
     logger.info("Running inference with Longformer...")
     logits_longformer, _ = inference(model_longformer, dataloader, device)
 
-    # Normalize weights (optional)
+    # Normalize and ensemble logits
     total_weight = args.weight_deberta + args.weight_longformer
     w_deb = args.weight_deberta / total_weight
     w_lon = args.weight_longformer / total_weight
-
-    # Soft-voting ensemble of logits
-    logger.info("Ensembling outputs (weights: DeBERTa=%.2f, Longformer=%.2f)",
-                w_deb, w_lon)
+    logger.info("Ensembling outputs (weights: DeBERTa=%.2f, Longformer=%.2f)", w_deb, w_lon)
     logits_ensemble = w_deb * logits_deberta + w_lon * logits_longformer
 
-    # Compute and log evaluation metrics
+    # Compute and log metrics
     metrics = compute_metrics(logits_ensemble, labels)
-    logger.info("Ensemble Metrics:")
-    for k, v in metrics.items():
-        logger.info("  %s: %.4f", k, v)
+    logger.info("Ensemble Metrics: %s", metrics)
 
+    # Print classification report
     print_classification_report(logits_ensemble, labels, tuple(args.class_names))
 
-    # Save logits and labels if required
+    # Save logits if requested
     if args.save_logits:
         os.makedirs(args.save_logits, exist_ok=True)
         np.save(os.path.join(args.save_logits, "logits_deberta.npy"), logits_deberta)
