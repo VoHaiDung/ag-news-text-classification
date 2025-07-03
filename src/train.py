@@ -10,7 +10,7 @@ from src.utils import configure_logger, set_global_seed, compute_metrics
 from src.deberta_lora import get_deberta_lora_model, DebertaLoraConfig
 from src.longformer_lora import get_longformer_lora_model, LongformerLoraConfig
 
-# Set up logger and fix seed
+# Initialize logger and fix seed
 logger = configure_logger("results/logs/train.log")
 
 def main():
