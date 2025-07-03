@@ -1,15 +1,15 @@
-import logging
+import argparse
 from dataclasses import dataclass
 from typing import Optional
 
+import logging
 from transformers import AutoModelForSequenceClassification, PreTrainedModel
 from peft import LoraConfig, get_peft_model, TaskType
 
-# Set up logger with duplicate handler check
-logger = logging.getLogger(__name__)
-if not logger.handlers:
-    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
+from src.utils import configure_logger
 
+# Initialize logger
+logger = configure_logger("results/logs/deberta_lora.log")
 
 @dataclass(frozen=True)
 class DebertaLoraConfig:
@@ -22,34 +22,55 @@ class DebertaLoraConfig:
     target_modules: Optional[list] = None
 
 
-def get_deberta_lora_model(config: Optional[DebertaLoraConfig] = None) -> PreTrainedModel:
-    cfg = config or DebertaLoraConfig()
-
-    logger.info("Loading base model: %s with %d labels", cfg.model_name, cfg.num_labels)
+def get_deberta_lora_model(config: DebertaLoraConfig) -> PreTrainedModel:
+    # Load base DeBERTa model and apply LoRA adapters
+    logger.info("Loading base model: %s with %d labels", config.model_name, config.num_labels)
     base_model = AutoModelForSequenceClassification.from_pretrained(
-        cfg.model_name,
-        num_labels=cfg.num_labels
+        config.model_name,
+        num_labels=config.num_labels
     )
 
-    target_modules = cfg.target_modules or ["query_proj", "value_proj"]
-
-    logger.info("Applying LoRA: r=%d, alpha=%d, dropout=%.2f, target_modules=%s",
-                cfg.r, cfg.lora_alpha, cfg.lora_dropout, target_modules)
+    target_modules = config.target_modules or ["query_proj", "value_proj"]
+    logger.info(
+        "Applying LoRA: r=%d, alpha=%d, dropout=%.2f, target_modules=%s",
+        config.r, config.lora_alpha, config.lora_dropout, target_modules
+    )
 
     lora_cfg = LoraConfig(
-        r=cfg.r,
-        lora_alpha=cfg.lora_alpha,
+        r=config.r,
+        lora_alpha=config.lora_alpha,
         target_modules=target_modules,
-        lora_dropout=cfg.lora_dropout,
-        bias=cfg.bias,
+        lora_dropout=config.lora_dropout,
+        bias=config.bias,
         task_type=TaskType.SEQ_CLS
     )
 
     model = get_peft_model(base_model, lora_cfg)
-    logger.info("LoRA adapters successfully applied.")
+    logger.info("LoRA adapters successfully applied to DeBERTa-v3-large.")
     return model
 
 
+def main():
+    parser = argparse.ArgumentParser(description="Initialize DeBERTa-v3-large with LoRA adapters")
+    parser.add_argument("--r", type=int, default=16, help="LoRA rank")
+    parser.add_argument("--alpha", type=int, default=32, help="LoRA alpha scaling")
+    parser.add_argument("--dropout", type=float, default=0.1, help="LoRA dropout rate")
+    parser.add_argument("--model_name", type=str, default=DebertaLoraConfig.model_name, help="Pretrained model name or path")
+    parser.add_argument("--num_labels", type=int, default=4, help="Number of classification labels")
+    args = parser.parse_args()
+
+    config = DebertaLoraConfig(
+        model_name=args.model_name,
+        num_labels=args.num_labels,
+        r=args.r,
+        lora_alpha=args.alpha,
+        lora_dropout=args.dropout
+    )
+
+    model = get_deberta_lora_model(config)
+    logger.info("Model ready with trainable parameters:")
+    print(model.print_trainable_parameters())
+
+
 if __name__ == "__main__":
-    model = get_deberta_lora_model()
-    model.print_trainable_parameters()
+    main()
