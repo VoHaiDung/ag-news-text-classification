@@ -1,0 +1,23 @@
+# Fine‑tune Longformer‑large‑4096 with LoRA adapters
+model:
+  base_model: allenai/longformer-large-4096
+  num_labels: 4
+
+tokenization:
+  max_length: 4096
+  stride: 1024
+
+training:
+  epochs: 5
+  batch_size: 4
+  learning_rate: 2e-5
+  weight_decay: 0.01
+  gradient_accumulation_steps: 2
+  warmup_ratio: 0.1
+  fp16: true
+
+seed: 42
+
+output:
+  model_dir: results/longformer_lora
+  logging_dir: results/logs/longformer
