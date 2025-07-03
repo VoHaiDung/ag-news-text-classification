@@ -15,7 +15,7 @@ from src.utils import (
     print_classification_report,
 )
 
-# Set up logger
+# Initialize logger
 logger = configure_logger("outputs/logs/stacking.log")
 
 # Build stacking classifier with base and meta learners
