@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from tqdm.auto import tqdm
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
-import joblib  # model serialization
+import joblib
 
 from src.utils import configure_logger
 
@@ -102,12 +102,24 @@ def main():
     preds = probs.argmax(axis=1)
     conf = probs.max(axis=1)
 
-    # Save predictions
-    df['predicted_label'] = preds
-    df['confidence'] = conf
+    # Display detailed results for each text
+    class_names = args.class_names
+    for text, prob in zip(texts, probs):
+        pred_idx = prob.argmax()
+        pred_label = class_names[pred_idx]
+        print(f"Input Text:\n“{text}”\n")
+        print(f"Predict: {pred_label}\n")
+        print("Probabilities:")
+        for i, name in enumerate(class_names):
+            print(f"- {name:<10} {prob[i]:.2f}")
+        print("\n" + "-" * 50 + "\n")
+    
+    # Save to CSV
+    df["predicted_label"] = preds
+    df["confidence"] = conf
     os.makedirs(os.path.dirname(args.output_csv), exist_ok=True)
     df.to_csv(args.output_csv, index=False)
     logger.info(f"Predictions saved to {args.output_csv}")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
