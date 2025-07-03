@@ -1,20 +1,14 @@
 #!/usr/bin/env bash
-set -euo pipefail
+# Fine‑tune DeBERTa‑LoRA on AG News
+set -e
 
-# Usage: ./scripts/run_train_deberta.sh [MODEL_DIR] [EPOCHS] [BATCH_SIZE] [LR]
-MODEL_DIR=${1:-outputs/dapt_checkpoints/}
-EPOCHS=${2:-7}
-BATCH_SIZE=${3:-32}
-LR=${4:-3e-5}
-
-python -m src.train \
-  --model_name "${MODEL_DIR}" \
-  --train_split train_plus_pseudo \
-  --val_split test \
-  --output_dir outputs/checkpoints/deberta_lora \
-  --num_train_epochs "${EPOCHS}" \
-  --per_device_train_batch_size "${BATCH_SIZE}" \
-  --per_device_eval_batch_size 16 \
-  --learning_rate "${LR}" \
+python src/train.py \
+  --seed 42 \
+  --model_name microsoft/deberta-v3-large \
+  --longformer_name allenai/longformer-large-4096 \
+  --max_length 512 \
   --stride 256 \
-  --max_length 512
+  --lr 2e-5 \
+  --batch_size 16 \
+  --epochs 5 \
+  --weight_decay 0.01
