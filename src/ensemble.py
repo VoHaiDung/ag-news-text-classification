@@ -15,7 +15,7 @@ from src.utils import (
     print_classification_report,
 )
 
-# Set up logger
+# Initialize logger
 logger = configure_logger("outputs/logs/ensemble.log")
 
 
