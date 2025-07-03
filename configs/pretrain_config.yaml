@@ -1,0 +1,16 @@
+# Domain‑Adaptive Pre‑Training (DAPT) for DeBERTa
+pretrain:
+  model_name: microsoft/deberta-v3-large
+  data_file: data/external/unlabeled.txt
+  output_dir: outputs/dapt_checkpoints
+  block_size: 512
+  mlm_probability: 0.15
+
+training:
+  epochs: 5
+  batch_size: 8
+  learning_rate: 5e-5
+  save_steps: 500
+  save_total_limit: 2
+  logging_steps: 100
+  fp16: true
