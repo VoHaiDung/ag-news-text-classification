@@ -5,7 +5,7 @@ from typing import Optional
 from transformers import AutoModelForSequenceClassification, PreTrainedModel
 from peft import LoraConfig, get_peft_model, TaskType
 
-# Set up logger
+# Initialize logger
 logger = logging.getLogger(__name__)
 if not logger.handlers:
     logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
