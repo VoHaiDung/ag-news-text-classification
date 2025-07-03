@@ -7,7 +7,7 @@ from tqdm.auto import tqdm
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from typing import List, Tuple
 
-from src.utils import configure_logger  # project logger
+from src.utils import configure_logger
 
 # Initialize logger
 logger = configure_logger("results/logs/inference.log")
