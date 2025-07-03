@@ -9,7 +9,7 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 from src.utils import configure_logger
 
-# Set up logger
+# Initialize logger
 logger = configure_logger("outputs/logs/pseudo_label.log")
 
 # Predict mean logits per document using sliding-window inference
