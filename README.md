@@ -85,6 +85,13 @@ Or install them all at once with:
 pip install -r requirements.txt
 ```
 
+Install dependencies via Conda:
+
+```bash
+conda env create -f environment.yml
+conda activate agnews-classification
+```
+
 ## Project Structure
 
 The repository is organized as follows:
@@ -159,6 +166,10 @@ ag-news-text-classification/
     └── test.yml
 ```
 
+## Usage
+
+
+
 ## Evaluation Metrics
 
 To assess the model’s performance on the AG News classification task, we evaluate it using standard classification metrics:
@@ -195,7 +206,7 @@ def compute_metrics(pred):
 label_names = ['World', 'Sports', 'Business', 'Sci/Tech']
 ```
 
-### Sample Results (BERT base uncased fine-tuned on AG News)
+### Sample Results
 
 | Class        | Precision | Recall | F1-Score   |
 | ------------ | --------- | ------ | ---------- |
