@@ -56,23 +56,27 @@ The dataset is publicly available via the [Hugging Face Datasets library](https:
 
 ## Installation
 
-This project requires Python 3.8+ and the following libraries:
+This project requires Python 3.9+ and the following libraries:
 
-- `transformers` – for loading and fine-tuning the DeBERTa-v3 model using Hugging Face
+- `torch` – for model training and inference with PyTorch
+- `transformers` – for loading and fine‑tuning DeBERTa‑v3 and Longformer via Hugging Face
 - `datasets` – for accessing and handling the AG News dataset efficiently
-- `torch` – for model training and inference with PyTorch 
-- `evaluate` – for computing evaluation metrics like accuracy and F1
-- `scikit-learn` – for classification reports and utility functions
-- `tqdm` –  for progress bars during training and evaluation
-- `scipy` – for compatibility with evaluation functions
-- `tensorboard` – for monitoring training logs visually
-- `huggingface_hub` – for sharing, syncing, or downloading models from Hugging Face
-- `accelerate` – for managing hardware configuration (CPU/GPU) and efficient training
+- `evaluate` – for computing evaluation metrics like accuracy, precision, recall, and F1
+- `peft` – for Low‑Rank Adaptation (LoRA) fine‑tuning
+- `numpy` – for numerical operations
+- `pandas` – for data manipulation and I/O
+- `scikit‑learn` – for classification reports, cross‑validation, and utility functions
+- `tqdm` – for progress bars during training, evaluation, and inference
+- `matplotlib` – for plotting (attention heatmaps, training curves)
+- `shap` – for SHAP‑based explainability (force plots, summary plots)
+- `joblib` – for serializing stacking models and fast I/O
+- `gradio` – for launching an interactive web demo
+- `jupyterlab` – for interactive notebook exploration
 
 Install dependencies via pip:
 
 ```bash
-pip install transformers datasets torch evaluate scikit-learn tqdm scipy tensorboard huggingface_hub accelerate
+pip install transformers datasets torch evaluate peft numpy pandas scikit‑learn tqdm matplotlib shap joblib gradio jupyterlab
 ```
 
 Or install them all at once with:
