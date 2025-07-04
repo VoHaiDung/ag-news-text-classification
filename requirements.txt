@@ -1,18 +1,25 @@
-# Hugging Face ecosystem
-transformers==4.41.0
-accelerate==0.30.1
-datasets==2.14.6
+# Core deep learning frameworks
+torch>=2.0.0
+transformers>=4.35.0
+datasets>=2.13.1
 evaluate>=0.4.0
-huggingface_hub>=0.14.0
+peft>=0.4.0
 
-# Compatibility
-numpy<2
-protobuf<=3.20.3
+# Data processing & utilities
+numpy>=1.24.0
+pandas>=2.0.0
+tqdm>=4.65.0
+scikit-learn>=1.2.0
 
-# Evaluation tools
-scikit-learn>=1.0.0
-scipy>=1.7.0
+# Explainability & visualization
+matplotlib>=3.7.0
+shap>=0.41.0
 
-# Utility
-tqdm>=4.64.0
-tensorboard>=2.11.0
+# Model I/O & serialization
+joblib>=1.2.0
+
+# Web demo (Gradio)
+gradio>=3.30.0
+
+# Interactive exploration
+jupyterlab>=4.0.0
