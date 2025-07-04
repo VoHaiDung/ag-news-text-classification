@@ -1,33 +1,53 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-*.so
+*$py.class
 
-# Virtual environment
+# Virtual environments
 venv/
 env/
-*.egg-info/
+.venv/
+.env/
 
-# Jupyter
+# Conda environment files
+environment.yml
+
+# Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
-# Model output
-results/
-*.ckpt
-*.pt
-*.bin
-
-# Data
-*.csv
-*.tsv
-*.json
+# Data files
 data/
+outputs/
+results/
+
+# Logs
+*.log
+results/logs/
+
+# Hugging Face cache
+transformers_cache/
+datasets_cache/
+
+# Model checkpoints (saved by Trainer)
+**/checkpoint-*/
 
 # System files
 .DS_Store
+Thumbs.db
 
-# VSCode
+# IDE/editor settings
 .vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
 
-# Colab (if saving model)
-drive/
+# Python environment
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Coverage reports
+htmlcov/
+.coverage
+
+# Misc
+*.env
