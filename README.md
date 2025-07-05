@@ -28,6 +28,10 @@ By integrating recent advances in **transformer modeling**, **efficient fine-tun
 
 All components are developed using the Hugging Face `transformers`, `datasets`, `evaluate`, and `peft` libraries, ensuring **modularity**, **reproducibility**, and **applicability to a wide range of real-world classification tasks**.
 
+## Model Architecture
+
+
+
 ## Dataset
 
 The **AG News dataset**, introduced by **Xiang Zhang, Junbo Zhao, and Yann LeCun in 2015**, is a well-established benchmark corpus for topic classification in natural language processing (NLP). It was curated as part of the **ComeToMyHead** academic project and consists of news articles collected from over 2,000 news sources over a period exceeding one year.
@@ -85,7 +89,7 @@ Or install them all at once with:
 pip install -r requirements.txt
 ```
 
-Install dependencies via Conda:
+Install dependencies via conda:
 
 ```bash
 conda env create -f environment.yml
