@@ -82,10 +82,6 @@ demo = gr.Interface(
         gr.Label(num_top_classes=4, label="Probabilities"),
         gr.Textbox(label="Predicted Label")
     ],
-    examples=[
-        ["OpenAI just released GPT‑5 with improved natural language understanding...", 0.6, 0.4],
-        ["Real Madrid defeated Manchester City in the Champions League final.", 0.5, 0.5]
-    ],
     title="AG News Classification Demo",
     description="Ensemble DeBERTa‑LoRA & Longformer‑LoRA (or Stacking) for AG News multi-class text classification."
 )
