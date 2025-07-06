@@ -30,7 +30,7 @@ All components are developed using the Hugging Face `transformers`, `datasets`, 
 
 ## Model Architecture
 
-
+![Pipeline Diagram](images/pipeline.png)
 
 ## Dataset
 
