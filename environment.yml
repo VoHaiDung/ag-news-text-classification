@@ -25,4 +25,5 @@ dependencies:
     # I/O & demo
     - joblib>=1.2.0
     - gradio>=3.30.0
-    - jupyterlab>=4.0.0
+    - jupyterlab>=4.0.0,<5.0.0
+    - jupyter-client>=7.0.0,<8.0.0
