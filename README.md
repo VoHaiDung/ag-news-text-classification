@@ -104,6 +104,7 @@ The repository is organized as follows:
 ag-news-text-classification/
 ├── README.md
 ├── LICENSE
+├── setup.py
 ├── requirements.txt
 ├── environment.yml
 ├── .gitignore
@@ -156,6 +157,8 @@ ag-news-text-classification/
 │   ├── run_stack.sh
 │   ├── run_cv.sh
 │   └── run_full_pipeline.sh
+│
+├── app.py
 │
 ├── outputs/
 │   ├── checkpoints/
