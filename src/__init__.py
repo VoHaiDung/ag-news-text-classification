@@ -9,7 +9,22 @@ logging.basicConfig(
 )
 logger = logging.getLogger("ag_news")
 
-# Optional: expose key utilities for convenient importing
-from .data_utils import prepare_data_pipeline  # noqa: F401
-from .train import train_model                 # noqa: F401
-from .ensemble import main as run_ensemble     # noqa: F401
+# Optional expose key utilities for convenient importing
+try:
+    from .train import train_model
+except (ImportError, AttributeError):
+    try:
+        from .train import main as train_model
+    except Exception:
+        pass
+
+try:
+    from .ensemble import main as run_ensemble
+except Exception:
+    pass
+
+__all__ = [
+    "train_model",
+    "run_ensemble",
+    "logger",
+]
