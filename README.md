@@ -122,6 +122,9 @@ ag-news-text-classification/
 │   ├── processed/
 │   └── external/
 │
+├── images/
+│   └── pipeline.png
+│
 ├── notebooks/
 │   ├── explore_dataset.ipynb
 │   ├── train_visualization.ipynb
