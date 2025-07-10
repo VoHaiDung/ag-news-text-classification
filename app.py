@@ -10,7 +10,7 @@ DEBERTA_DIR    = "results/deberta_lora"
 LONGFORMER_DIR = "results/longformer_lora"
 STACKING_MODEL = "outputs/checkpoints/stacking_model.joblib"
 
-# Set device (GPU if available)
+# Set device
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Load DeBERTa-LoRA model and tokenizer
