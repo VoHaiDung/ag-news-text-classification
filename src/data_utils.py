@@ -3,7 +3,7 @@ import argparse
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
-from datasets import load_dataset, DatasetDict
+from datasets import load_dataset, DownloadMode, DatasetDict
 from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
 from src.utils import configure_logger
@@ -25,8 +25,12 @@ def combine_title_description(title: str, description: str) -> str:
 # Load AG News dataset
 def load_agnews_dataset() -> DatasetDict:
     logger.info("Loading AG News dataset...")
-    ds = load_dataset("ag_news")
-    logger.info(f"Loaded AG News: train={len(ds['train'])}, test={len(ds['test'])}")
+     ds = load_dataset(
+        "ag_news",
+        cache_dir="/tmp/hf_datasets",
+        download_mode=DownloadMode.FORCE_REDOWNLOAD
+    )
+    logger.info(f"Loaded AG News: train={len(dataset['train'])}, test={len(dataset['test'])}")
     return ds
 
 # Get tokenizer for given model
