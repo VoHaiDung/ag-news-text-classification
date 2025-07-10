@@ -25,7 +25,7 @@ def combine_title_description(title: str, description: str) -> str:
 # Load AG News dataset
 def load_agnews_dataset() -> DatasetDict:
     logger.info("Loading AG News dataset...")
-     ds = load_dataset(
+    ds = load_dataset(
         "ag_news",
         cache_dir="/tmp/hf_datasets",
         download_mode=DownloadMode.FORCE_REDOWNLOAD
