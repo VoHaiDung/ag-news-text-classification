@@ -27,6 +27,7 @@ def load_agnews_dataset() -> DatasetDict:
     logger.info("Loading AG News dataset...")
     ds = load_dataset(
         "ag_news",
+        cache_dir="/content/cache",
         download_mode="force_redownload"
     )
     logger.info(f"Loaded AG News: train={len(dataset['train'])}, test={len(dataset['test'])}")
