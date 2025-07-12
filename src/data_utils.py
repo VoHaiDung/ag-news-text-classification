@@ -30,7 +30,7 @@ def load_agnews_dataset() -> DatasetDict:
         cache_dir="/content/cache",
         download_mode="force_redownload"
     )
-    logger.info(f"Loaded AG News: train={len(dataset['train'])}, test={len(dataset['test'])}")
+    logger.info(f"Loaded AG News: train={len(ds['train'])}, test={len(ds['test'])}")
     return ds
 
 # Get tokenizer for given model
@@ -102,7 +102,6 @@ if __name__ == '__main__':
         stride=args.stride,
         output_dir=args.output_dir
     )
-    ds = load_agnews_dataset()
     tokenizer = get_tokenizer(cfg.model_name)
     tokenized = tokenize_dataset(ds, tokenizer, cfg.max_length, cfg.stride)
     save_tokenized_dataset(tokenized, cfg.output_dir)
