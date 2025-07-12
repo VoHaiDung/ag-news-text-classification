@@ -25,10 +25,16 @@ def combine_title_description(title: str, description: str) -> str:
 # Load AG News dataset
 def load_agnews_dataset() -> DatasetDict:
     logger.info("Loading AG News dataset...")
+    download_config = DownloadConfig(
+        cache_dir="/content/cache",
+        force_download=True,
+        max_retries=3
+    )
     ds = load_dataset(
         "ag_news",
-        cache_dir="/content/cache",
-        download_mode="force_redownload"
+        download_config=download_config,
+        use_auth_token=False,
+        streaming=False
     )
     logger.info(f"Loaded AG News: train={len(ds['train'])}, test={len(ds['test'])}")
     return ds
