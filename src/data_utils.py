@@ -102,6 +102,7 @@ if __name__ == '__main__':
         stride=args.stride,
         output_dir=args.output_dir
     )
+    ds = load_agnews_dataset()
     tokenizer = get_tokenizer(cfg.model_name)
     tokenized = tokenize_dataset(ds, tokenizer, cfg.max_length, cfg.stride)
     save_tokenized_dataset(tokenized, cfg.output_dir)
