@@ -115,6 +115,9 @@ ag-news-text-classification/
 ├── .dockerignore
 ├── .pre-commit-config.yaml
 │
+├── images/
+│   └── pipeline.png
+│
 ├── configs/
 │   ├── __init__.py
 │   ├── config_loader.py
