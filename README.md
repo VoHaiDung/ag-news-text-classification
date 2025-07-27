@@ -24,29 +24,21 @@ In essence, this project transcends a singular solution for AG News to become a 
 
 ## Dataset
 
-The **AG News dataset**, introduced by **Xiang Zhang, Junbo Zhao, and Yann LeCun in 2015**, is a well-established benchmark corpus for topic classification in natural language processing (NLP). It was curated as part of the **ComeToMyHead** academic project and consists of news articles collected from over 2,000 news sources over a period exceeding one year.
+This project is centered on the **AG News (AG's Corpus of News Articles)** dataset, a canonical benchmark for topic classification first introduced by Zhang et al. (2015). The corpus consists of 120,000 training and 7,600 test samples, each comprising a concatenated title and description from news articles. These instances are distributed evenly across four high-level categories: **World, Sports, Business, and Science/Technology**.
 
-The dataset is organized into four high-level topical categories:
+Beyond its scale and balanced nature, the AG News dataset presents several salient challenges that make it a compelling testbed for advanced NLP methodologies. For instance:
 
-- **World**
-- **Sports**
-- **Business**
-- **Science/Technology**
+- The inherent **semantic overlap** between categories (e.g., a technology article about a business merger) necessitates the sophisticated disambiguation capabilities of our proposed **ensemble models** and **contrastive learning** strategies.
+- The stylistic variance and presence of concise, often ambiguous, text snippets motivate our investigation into **data augmentation** techniques and the robustness conferred by **adversarial training**.
+- The standard instance length makes it a suitable baseline, but also highlights the need to evaluate how models like **DeBERTa** and **Longformer** generalize when exposed to longer, more context-rich documents.
 
-Each instance comprises a concise **title** and **description** of a news article, together forming the input text for classification. This design supports both short-form and long-form input handling, making it particularly well-suited for evaluating models such as **DeBERTa-v3**, **Longformer**, and those fine-tuned via **LoRA (Low-Rank Adaptation)** for efficient long-sequence modeling.
+Crucially, our project treats the AG News dataset not as an isolated resource, but as the **core component of a broader data ecosystem** designed to rigorously test our framework. This ecosystem is extended with:
 
-The dataset is **balanced across categories** and comes with a predefined split:
+1. **External News Corpora**: Large-scale datasets such as Reuters and BBC News are leveraged for **Domain-Adaptive Pretraining (DAPT)**, allowing models to acquire a richer understanding of journalistic language prior to fine-tuning on AG News.
+2. **Systematic Data Augmentation**: A suite of augmentation techniques, from **back-translation** to **GPT-4-based paraphrasing**, is employed to create diverse training sets aimed at improving model generalization and data efficiency.
+3. **Contrast and Adversarial Sets**: To move beyond standard I.I.D. evaluation, we generate specialized test sets to systematically measure model robustness and diagnose failure modes under controlled linguistic perturbations.
 
-- **Training set**: 120,000 samples (30,000 per class)
-- **Test set**: 7,600 samples (1,900 per class)
-
-AG News captures various real-world challenges in text classification, including:
-
-- **Semantic ambiguity across topic boundaries**
-- **Domain overlap and concept drift**
-- **Stylistic variation and differences in textual length**
-
-The dataset is publicly available via the [Hugging Face Datasets library](https://huggingface.co/datasets/ag_news), [TorchText loader](https://pytorch.org/text/stable/datasets.html#AG_NEWS), and the [original CSV source](http://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html), making it readily integrable with **PyTorch** and **TensorFlow** pipelines.
+This multi-faceted data strategy, with AG News at its center, provides the empirical foundation for our systematic investigation. To ensure the reproducibility of this work, the core AG News dataset is made publicly accessible through multiple established channels, including the [Hugging Face Datasets library](https://huggingface.co/datasets/ag_news), the [TorchText loader](https://pytorch.org/text/stable/datasets.html#AG_NEWS), and the [original CSV source](http://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html). This accessibility ensures ready integration with modern deep learning frameworks such as **PyTorch** and **TensorFlow**.
 
 ## Installation
 
