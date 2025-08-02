@@ -1,26 +1,76 @@
-# Core deep learning frameworks
+# Core ML Libraries
 torch>=2.0.0
 transformers>=4.35.0
-datasets>=2.13.1
+datasets>=2.14.0
 evaluate>=0.4.0
-peft>=0.4.0
+accelerate>=0.24.0
+peft>=0.6.0
 
-# Data processing & utilities
+# Data Processing
 numpy>=1.24.0
 pandas>=2.0.0
-tqdm>=4.65.0
-scikit-learn>=1.2.0
+scikit-learn>=1.3.0
+scipy>=1.10.0
 
-# Explainability & visualization
+# Visualization
 matplotlib>=3.7.0
-shap>=0.41.0
+seaborn>=0.12.0
+plotly>=5.15.0
 
-# Model I/O & serialization
-joblib>=1.2.0
+# NLP Tools
+nltk>=3.8.0
+spacy>=3.6.0
+textblob>=0.17.0
 
-# Web demo (Gradio)
-gradio>=3.30.0
+# Progress & Logging
+tqdm>=4.65.0
+coloredlogs>=15.0
+python-json-logger>=2.0.0
 
-# Interactive exploration
+# Experiment Tracking
+wandb>=0.15.0
+tensorboard>=2.13.0
+mlflow>=2.5.0
+
+# API & Web
+streamlit>=1.25.0
+fastapi>=0.100.0
+uvicorn>=0.23.0
+
+# Development Tools
+jupyter>=1.0.0
 jupyterlab>=4.0.0
-jupyter-client>=7.0.0,<8.0.0
+notebook>=7.0.0
+ipywidgets>=8.1.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.0
+
+# Code Quality
+black>=23.7.0
+flake8>=6.1.0
+isort>=5.12.0
+mypy>=1.5.0
+pre-commit>=3.3.0
+
+# Utilities
+python-dotenv>=1.0.0
+pyyaml>=6.0.0
+jsonlines>=3.1.0
+requests>=2.31.0
+click>=8.1.0
+rich>=13.5.0
+joblib>=1.3.0
+
+# Optimization Libraries
+xgboost>=2.0.0
+catboost>=1.2.0
+lightgbm>=4.0.0
+optuna>=3.3.0
+
+# System Monitoring
+psutil>=5.9.0
+gpustat>=1.1.0
+py-cpuinfo>=9.0.0
