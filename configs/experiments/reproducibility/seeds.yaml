@@ -1,0 +1,63 @@
+# Reproducibility configuration for experiments
+# This file ensures consistent results across runs
+
+# Random seeds for different libraries
+random_seeds:
+  python: 42          # Python's random module
+  numpy: 42          # NumPy random
+  torch: 42          # PyTorch random
+  transformers: 42   # Transformers library
+  
+# Deterministic behavior settings
+deterministic:
+  cudnn_deterministic: true      # Make cuDNN deterministic
+  cudnn_benchmark: false         # Disable cuDNN auto-tuner
+  torch_deterministic: true      # Enable PyTorch deterministic algorithms
+  
+# Environment variables for reproducibility  
+environment:
+  PYTHONHASHSEED: "42"          # Python hash seed
+  CUBLAS_WORKSPACE_CONFIG: ":4096:8"  # For deterministic CUBLAS
+  
+# Data processing reproducibility
+data:
+  shuffle_seed: 42              # Seed for data shuffling
+  split_seed: 42               # Seed for train/val/test splits
+  sampling_seed: 42            # Seed for data sampling
+  
+# Training reproducibility
+training:
+  dataloader_seed: 42          # Seed for DataLoader worker init
+  initialization_seed: 42      # Seed for weight initialization
+  dropout_seed: 42            # Seed for dropout layers
+  
+# Augmentation reproducibility
+augmentation:
+  back_translation_seed: 42    # Seed for back translation sampling
+  paraphrase_seed: 42         # Seed for paraphrase generation
+  noise_seed: 42              # Seed for noise injection
+  
+# Evaluation reproducibility
+evaluation:
+  bootstrap_seed: 42          # Seed for bootstrap sampling
+  split_seed: 42             # Seed for cross-validation splits
+  
+# Notes for reproducibility
+notes:
+  - "Always set seeds at the beginning of scripts"
+  - "Use worker_init_fn for DataLoader to ensure reproducible data loading"
+  - "Pin memory only when using GPU"
+  - "Set num_workers=0 for complete reproducibility (slower)"
+  - "Document hardware specs for each experiment"
+  
+# Hardware specifications template
+hardware_template:
+  gpu: "NVIDIA A100 40GB"
+  cuda_version: "11.8"
+  cudnn_version: "8.9.0"
+  cpu: "AMD EPYC 7763 64-Core"
+  ram: "512GB"
+  os: "Ubuntu 20.04.6 LTS"
+  python_version: "3.10.12"
+  pytorch_version: "2.0.1"
+  transformers_version: "4.35.0"
