@@ -88,14 +88,30 @@ ag-news-text-classification/
 ├── LICENSE
 ├── CITATION.cff
 ├── CHANGELOG.md
+├── ARCHITECTURE.md
+├── PERFORMANCE.md
+├── SECURITY.md
+├── TROUBLESHOOTING.md
+├── ROADMAP.md
 ├── setup.py
 ├── pyproject.toml
 ├── requirements.txt
 ├── Makefile
 ├── .env.example
+├── .env.test
 ├── .gitignore
 ├── .dockerignore
+├── .editorconfig
 ├── .pre-commit-config.yaml
+├── commitlint.config.js
+│
+├── .devcontainer/
+│   ├── devcontainer.json
+│   └── Dockerfile
+│
+├── .husky/
+│   ├── pre-commit
+│   └── commit-msg
 │
 ├── images/
 │   └── pipeline.png
@@ -104,6 +120,17 @@ ag-news-text-classification/
 │   ├── __init__.py
 │   ├── config_loader.py
 │   ├── constants.py
+│   │
+│   ├── environments/
+│   │   ├── dev.yaml
+│   │   ├── staging.yaml
+│   │   └── prod.yaml
+│   │
+│   ├── features/
+│   │   └── feature_flags.yaml
+│   │
+│   ├── secrets/
+│   │   └── secrets.template.yaml
 │   │
 │   ├── models/
 │   │   ├── single/
@@ -223,6 +250,26 @@ ag-news-text-classification/
 │   │   ├── factory.py
 │   │   ├── types.py
 │   │   └── exceptions.py
+│   │
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── rest/
+│   │   │   ├── endpoints.py
+│   │   │   ├── middleware.py
+│   │   │   └── validators.py
+│   │   ├── grpc/
+│   │   │   ├── services.py
+│   │   │   └── protos/
+│   │   └── graphql/
+│   │       ├── schema.py
+│   │       └── resolvers.py
+│   │
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── prediction_service.py
+│   │   ├── training_service.py
+│   │   ├── data_service.py
+│   │   └── model_management.py
 │   │
 │   ├── data/
 │   │   ├── __init__.py
@@ -435,6 +482,8 @@ ag-news-text-classification/
 │   │   │   ├── ensemble_metrics.py
 │   │   │   ├── robustness_metrics.py
 │   │   │   ├── efficiency_metrics.py
+│   │   │   ├── fairness_metrics.py
+│   │   │   ├── environmental_impact.py
 │   │   │   └── contrast_consistency.py
 │   │   ├── analysis/
 │   │   │   ├── error_analysis.py
@@ -442,6 +491,7 @@ ag-news-text-classification/
 │   │   │   ├── class_wise_analysis.py
 │   │   │   ├── failure_case_analysis.py
 │   │   │   ├── dataset_shift_analysis.py
+│   │   │   ├── bias_analysis.py
 │   │   │   └── contrast_set_analysis.py
 │   │   ├── interpretability/
 │   │   │   ├── attention_analysis.py
@@ -536,6 +586,136 @@ ag-news-text-classification/
 │       ├── experiment_tracker.py
 │       ├── result_aggregator.py
 │       └── leaderboard_generator.py
+│
+├── research/
+│   ├── papers/
+│   │   ├── references.bib
+│   │   └── related_work/
+│   ├── experiments_log/
+│   │   ├── daily_logs/
+│   │   └── experiment_notes.md
+│   ├── hypotheses/
+│   │   ├── current_hypotheses.md
+│   │   └── validation_results/
+│   └── findings/
+│       ├── key_insights.md
+│       └── failed_experiments/
+│
+├── monitoring/
+│   ├── dashboards/
+│   │   ├── grafana/
+│   │   └── prometheus/
+│   ├── alerts/
+│   │   ├── alert_rules.yaml
+│   │   └── notification_config.yaml
+│   ├── metrics/
+│   │   ├── custom_metrics.py
+│   │   └── metric_collectors.py
+│   └── logs_analysis/
+│       ├── log_parser.py
+│       └── anomaly_detector.py
+│
+├── security/
+│   ├── api_auth/
+│   │   ├── jwt_handler.py
+│   │   └── api_keys.py
+│   ├── data_privacy/
+│   │   ├── pii_detector.py
+│   │   └── data_masking.py
+│   ├── model_security/
+│   │   ├── adversarial_defense.py
+│   │   └── model_encryption.py
+│   └── audit_logs/
+│       ├── audit_logger.py
+│       └── compliance_reports/
+│
+├── plugins/
+│   ├── custom_models/
+│   │   ├── __init__.py
+│   │   └── plugin_interface.py
+│   ├── data_sources/
+│   │   ├── __init__.py
+│   │   └── custom_loaders/
+│   ├── evaluators/
+│   │   ├── __init__.py
+│   │   └── custom_metrics/
+│   └── processors/
+│       ├── __init__.py
+│       └── custom_preprocessors/
+│
+├── migrations/
+│   ├── data/
+│   │   ├── 001_initial_schema.py
+│   │   └── migration_runner.py
+│   ├── models/
+│   │   ├── version_converter.py
+│   │   └── compatibility_layer.py
+│   └── configs/
+│       └── config_migrator.py
+│
+├── cache/
+│   ├── redis/
+│   │   └── redis_config.yaml
+│   ├── memcached/
+│   │   └── memcached_config.yaml
+│   └── local/
+│       └── disk_cache.py
+│
+├── load_testing/
+│   ├── scenarios/
+│   │   ├── basic_load.yaml
+│   │   └── stress_test.yaml
+│   ├── scripts/
+│   │   ├── locust_test.py
+│   │   └── k6_test.js
+│   └── reports/
+│       └── performance_report_template.md
+│
+├── backup/
+│   ├── strategies/
+│   │   ├── incremental_backup.yaml
+│   │   └── full_backup.yaml
+│   ├── scripts/
+│   │   ├── backup_runner.sh
+│   │   └── restore_runner.sh
+│   └── recovery/
+│       ├── disaster_recovery_plan.md
+│       └── recovery_procedures/
+│
+├── quality/
+│   ├── test_plans/
+│   │   ├── unit_test_plan.md
+│   │   └── integration_test_plan.md
+│   ├── test_cases/
+│   │   ├── manual_tests/
+│   │   └── automated_tests/
+│   ├── bug_reports/
+│   │   └── bug_template.md
+│   └── coverage/
+│       └── coverage_reports/
+│
+├── quickstart/
+│   ├── README.md
+│   ├── minimal_example.py
+│   ├── train_simple.py
+│   ├── evaluate_simple.py
+│   ├── demo_app.py
+│   ├── colab_notebook.ipynb
+│   └── docker_quickstart/
+│       ├── Dockerfile
+│       └── docker-compose.yml
+│
+├── templates/
+│   ├── experiment/
+│   │   ├── experiment_template.py
+│   │   └── config_template.yaml
+│   ├── model/
+│   │   ├── model_template.py
+│   │   └── README_template.md
+│   ├── dataset/
+│   │   └── dataset_template.py
+│   └── evaluation/
+│       └── metric_template.py
 │
 ├── notebooks/
 │   ├── tutorials/
@@ -770,6 +950,28 @@ ag-news-text-classification/
 │   │   ├── basic_usage.md
 │   │   ├── advanced_features.md
 │   │   └── best_practices.md
+│   ├── architecture/
+│   │   ├── decisions/
+│   │   │   ├── 001-model-selection.md
+│   │   │   └── 002-ensemble-strategy.md
+│   │   ├── diagrams/
+│   │   │   ├── system-overview.puml
+│   │   │   └── data-flow.puml
+│   │   └── patterns/
+│   │       ├── factory-pattern.md
+│   │       └── strategy-pattern.md
+│   ├── operations/
+│   │   ├── runbooks/
+│   │   │   ├── deployment.md
+│   │   │   └── troubleshooting.md
+│   │   ├── sops/
+│   │   │   ├── model-update.md
+│   │   │   └── data-refresh.md
+│   │   └── incidents/
+│   │       └── incident-response.md
+│   ├── case_studies/
+│   │   ├── production-deployment.md
+│   │   └── performance-optimization.md
 │   └── _static/
 │       └── custom.css
 │
