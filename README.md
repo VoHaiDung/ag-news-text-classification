@@ -95,7 +95,6 @@ ag-news-text-classification/
 ├── ROADMAP.md
 ├── setup.py
 ├── pyproject.toml
-├── requirements.txt
 ├── Makefile
 ├── .env.example
 ├── .env.test
@@ -104,6 +103,20 @@ ag-news-text-classification/
 ├── .editorconfig
 ├── .pre-commit-config.yaml
 ├── commitlint.config.js
+│
+├── requirements.txt
+│   ├── base.txt
+│   ├── ml.txt
+│   ├── research.txt
+│   ├── prod.txt
+│   ├── dev.txt
+│   ├── data.txt
+│   ├── llm.txt
+│   ├── ui.txt
+│   ├── docs.txt
+│   ├── robustness.txt
+│   ├── minimal.txt
+│   └── all.txt
 │
 ├── .devcontainer/
 │   ├── devcontainer.json
