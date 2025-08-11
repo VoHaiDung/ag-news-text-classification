@@ -1,7 +1,7 @@
 # Include base and ML
 -r ml.txt
 
-# API serving (only FastAPI, removed Flask/Django)
+# API serving
 fastapi>=0.104.0,<0.105.0
 uvicorn[standard]>=0.24.0
 gunicorn>=21.2.0
