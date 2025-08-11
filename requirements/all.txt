@@ -1,0 +1,6 @@
+# Complete environment (for full development)
+-r dev.txt
+-r llm.txt
+-r ui.txt
+-r docs.txt
+-r robustness.txt
