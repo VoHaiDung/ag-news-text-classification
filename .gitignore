@@ -1,12 +1,8 @@
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
-
-# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -25,16 +21,10 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-
-# PyInstaller
 *.manifest
 *.spec
-
-# Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
-
-# Unit test / coverage reports
 htmlcov/
 .tox/
 .nox/
@@ -48,152 +38,656 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
-
-# Translations
 *.mo
 *.pot
-
-# Django stuff:
-*.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-
-# Flask stuff:
 instance/
 .webassets-cache
-
-# Scrapy stuff:
 .scrapy
-
-# Sphinx documentation
-docs/_build/
-
-# PyBuilder
 .pybuilder/
 target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
-*.ipynb_checkpoints/
-
-# IPython
+*/.ipynb_checkpoints/*
+.notebook_test_output/
+*.nbconvert.ipynb
+*.nbconvert.*
 profile_default/
 ipython_config.py
+notebooks/**/*.nbconvert.*
+notebooks/**/wandb/
+notebooks/**/mlruns/
+notebooks/**/.cache/
+notebooks/**/__pycache__/
+notebooks/**/*.pyc
+!notebooks/**/*.ipynb
 
-# pyenv
-.python-version
-
-# pipenv
-Pipfile.lock
-
-# poetry
-poetry.lock
-
-# pdm
-.pdm.toml
-
-# PEP 582
-__pypackages__/
-
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
-
-# SageMath parsed files
-*.sage.py
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# Spyder project settings
-.spyderproject
-.spyproject
-
-# Rope project settings
-.ropeproject
-
-# mkdocs documentation
-/site
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# Cython debug symbols
-cython_debug/
-
-# VS Code
-.vscode/
-*.code-workspace
-
-# PyCharm
-.idea/
-
-# macOS
-.DS_Store
-
-# Windows
-Thumbs.db
-ehthumbs.db
-
-# Data folders
-data/raw/
-data/processed/
-data/augmented/
-data/external/
-data/cache/
-data/pseudo_labeled/
-data/selected_subsets/
-
-# Model outputs
-outputs/models/
-outputs/results/
-outputs/logs/
-outputs/analysis/
-outputs/artifacts/
-
-# Weights & Biases
-wandb/
-
-# MLflow
-mlruns/
-mlflow.db
-
-# Tensorboard
-runs/
-
-# Large files
-*.pkl
-*.pth
-*.pt
-*.bin
+# Machine Learning / Deep Learning
 *.h5
 *.hdf5
+*.pkl
+*.pickle
+*.pth
+*.pt
+*.ckpt
 *.safetensors
+*.bin
 *.onnx
+*.pb
+*.tflite
+*.mlmodel
+*.mar
+*.ts
+*.weights
+*.caffemodel
+*.params
+*.json.gz
+!configs/**/*.yaml
+!configs/**/*.yml
+!configs/**/*.json
+!templates/**/*.yaml
+!templates/**/*.json
 
-# Temporary files
-*.tmp
-*.temp
+# Training outputs
+outputs/models/checkpoints/*
+outputs/models/pretrained/*
+outputs/models/fine_tuned/*
+outputs/models/ensembles/*
+outputs/models/optimized/*
+outputs/models/exported/*
+outputs/models/prompted/*
+outputs/models/distilled/*
+!outputs/models/checkpoints/.gitkeep
+!outputs/models/pretrained/.gitkeep
+!outputs/models/fine_tuned/.gitkeep
+!outputs/models/ensembles/.gitkeep
+!outputs/models/optimized/.gitkeep
+!outputs/models/exported/.gitkeep
+!outputs/models/prompted/.gitkeep
+!outputs/models/distilled/.gitkeep
+
+# Results and artifacts
+outputs/results/experiments/*
+outputs/results/ablations/*
+outputs/results/benchmarks/*
+outputs/results/reports/*
+outputs/analysis/error_analysis/*
+outputs/analysis/interpretability/*
+outputs/analysis/statistical/*
+outputs/artifacts/figures/*
+outputs/artifacts/tables/*
+outputs/artifacts/presentations/*
+!outputs/results/experiments/.gitkeep
+!outputs/results/ablations/.gitkeep
+!outputs/results/benchmarks/.gitkeep
+!outputs/results/reports/.gitkeep
+!outputs/analysis/error_analysis/.gitkeep
+!outputs/analysis/interpretability/.gitkeep
+!outputs/analysis/statistical/.gitkeep
+!outputs/artifacts/figures/.gitkeep
+!outputs/artifacts/tables/.gitkeep
+!outputs/artifacts/presentations/.gitkeep
+
+# Experiment Tracking & Logging
+wandb/
+mlruns/
+mlflow.db
+events.out.tfevents.*
+tensorboard/
+.neptune/
+neptune/
+.comet.config
+.cometml-runs/
+sacred_runs/
+sacred_logs/
+outputs/logs/training/*
+outputs/logs/tensorboard/*
+outputs/logs/wandb/*
+outputs/logs/mlflow/*
+!outputs/logs/training/.gitkeep
+!outputs/logs/tensorboard/.gitkeep
+!outputs/logs/wandb/.gitkeep
+!outputs/logs/mlflow/.gitkeep
+
+# Logs
+logs/
+**/logs/*.log
+**/*.log
+!load_testing/reports/performance_report_template.md
+
+# Data Files
+data/raw/ag_news/*
+!data/raw/ag_news/.gitkeep
+data/raw/**/*.csv
+data/raw/**/*.json
+data/raw/**/*.txt
+data/raw/**/*.tsv
+data/raw/**/*.parquet
+data/raw/**/*.feather
+data/raw/**/*.arrow
+
+# Processed data
+data/processed/train/*
+data/processed/validation/*
+data/processed/test/*
+data/processed/stratified_folds/*
+!data/processed/train/.gitkeep
+!data/processed/validation/.gitkeep
+!data/processed/test/.gitkeep
+!data/processed/stratified_folds/.gitkeep
+
+# Augmented data
+data/augmented/back_translated/*
+data/augmented/paraphrased/*
+data/augmented/synthetic/*
+data/augmented/mixup/*
+data/augmented/contrast_sets/*
+data/augmented/gpt4_augmented/*
+!data/augmented/back_translated/.gitkeep
+!data/augmented/paraphrased/.gitkeep
+!data/augmented/synthetic/.gitkeep
+!data/augmented/mixup/.gitkeep
+!data/augmented/contrast_sets/.gitkeep
+!data/augmented/gpt4_augmented/.gitkeep
+
+# External data
+data/external/news_corpus/cnn_dailymail/*
+data/external/news_corpus/reuters/*
+data/external/news_corpus/bbc_news/*
+data/external/news_corpus/reddit_news/*
+data/external/pretrain_data/*
+data/external/distillation_data/gpt4_annotations/*
+data/external/distillation_data/teacher_predictions/*
+!data/external/news_corpus/cnn_dailymail/.gitkeep
+!data/external/news_corpus/reuters/.gitkeep
+!data/external/news_corpus/bbc_news/.gitkeep
+!data/external/news_corpus/reddit_news/.gitkeep
+!data/external/pretrain_data/.gitkeep
+!data/external/distillation_data/gpt4_annotations/.gitkeep
+!data/external/distillation_data/teacher_predictions/.gitkeep
+
+# Other data directories
+data/pseudo_labeled/*
+data/selected_subsets/*
+data/cache/*
+!data/pseudo_labeled/.gitkeep
+!data/selected_subsets/.gitkeep
+!data/cache/.gitkeep
+
+# Cache
+cache/local/*
+cache/redis/*.rdb
+cache/memcached/*.cache
+!cache/local/.gitkeep
+!cache/redis/redis_config.yaml
+!cache/memcached/memcached_config.yaml
+.cache/
+*.cache
+
+# Environment & Configuration
+.env
+.env.local
+.env.production
+.env.staging
+.env.development
+.env.*.local
+!.env.example
+!.env.test
+configs/secrets/*.yaml
+configs/secrets/*.yml
+configs/secrets/*.json
+!configs/secrets/secrets.template.yaml
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+service-account.json
+gcp-key.json
+aws-credentials
+*.crt
+*.csr
+*.der
+
+# Security
+security/audit_logs/compliance_reports/*
+security/**/*.pem
+security/**/*.key
+security/**/*.crt
+!security/audit_logs/compliance_reports/.gitkeep
+
+# Development Containers
+.devcontainer/devcontainer.local.json
+.devcontainer/**/*.log
+.devcontainer/**/cache/
+!.devcontainer/devcontainer.json
+!.devcontainer/Dockerfile
+
+# Git Hooks
+.husky/_/
+!.husky/pre-commit
+!.husky/commit-msg
+
+# IDE & Editor
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+*.code-workspace
+.idea/
+*.iml
+*.iws
+*.ipr
+*.sublime-project
+*.sublime-workspace
 *.swp
 *.swo
 *~
+.vim/
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+.spyderproject
+.spyproject
+.ropeproject
 
-# Custom
-.scratch/
+# Operating System
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Package Managers
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+virtualenv/
+.python-version
+.pyenv/
+pipenv-proper-names.txt
+.conda/
+conda-meta/
+
+# Docker & Kubernetes
+.docker/
+docker-compose.override.yml
+.dockerignore.local
+*.kubeconfig
+kubeconfig
+.kube/
+
+# Cloud Platforms
+.aws/
+aws-exports.js
+.gcloud/
+.gsutil/
+.azure/
+.sagemaker/
+
+# Temporary Files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+.tmp/
 tmp/
 temp/
+
+# Research Specific
+research/experiments_log/daily_logs/*
+research/hypotheses/validation_results/*
+research/findings/failed_experiments/*
+research/papers/related_work/*
+!research/experiments_log/daily_logs/.gitkeep
+!research/hypotheses/validation_results/.gitkeep
+!research/findings/failed_experiments/.gitkeep
+!research/papers/related_work/.gitkeep
+!research/papers/**/*.bib
+!research/**/*.md
+*.RData
+*.rds
+*.mat
+*.sav
+*.dta
+*.sas7bdat
+*.xlsx
+*.xls
+
+# LaTeX
+*.aux
+*.lof
+*.lot
+*.fls
+*.out
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+.*.lb
+*.dvi
+*.xdv
+*-converted-to.*
+*.bbl
+*.bcf
+*.blg
+*-blx.aux
+*-blx.bib
+*.run.xml
+*.fdb_latexmk
+*.synctex
+*.synctex(busy)
+*.synctex.gz
+*.synctex.gz(busy)
+*.pdfsync
+*.bib.bak
+
+# Documentation
+docs/_build/
+docs/_static/generated/
+docs/_templates/generated/
+docs/**/__pycache__/
+!docs/**/*.md
+!docs/**/*.rst
+!docs/**/*.puml
+!docs/_static/custom.css
+
+# Benchmarks
+benchmarks/**/*.json
+benchmarks/**/*.csv
+benchmarks/**/*.html
+!benchmarks/**/*template*
+!benchmarks/**/*example*
+!benchmarks/accuracy/model_comparison.json
+!benchmarks/accuracy/ensemble_results.json
+!benchmarks/speed/inference_benchmarks.json
+!benchmarks/speed/training_benchmarks.json
+!benchmarks/efficiency/memory_usage.json
+!benchmarks/efficiency/energy_consumption.json
+!benchmarks/robustness/adversarial_results.json
+!benchmarks/robustness/ood_detection.json
+!benchmarks/robustness/contrast_set_results.json
+
+# Quality
+quality/coverage/coverage_reports/*
+quality/test_cases/manual_tests/*
+quality/test_cases/automated_tests/*
+!quality/coverage/coverage_reports/.gitkeep
+!quality/test_cases/manual_tests/.gitkeep
+!quality/test_cases/automated_tests/.gitkeep
+!quality/**/*.md
+
+# Load Testing
+load_testing/reports/*.html
+load_testing/reports/*.json
+!load_testing/reports/performance_report_template.md
+
+# Backup & Recovery
+backup/archives/
+backup/temp/
+backup/recovery/recovery_procedures/*
+!backup/recovery/recovery_procedures/.gitkeep
+!backup/**/*.md
+!backup/**/*.sh
+!backup/**/*.yaml
+*.sql
+*.dump
+
+# Monitoring
+monitoring/dashboards/grafana/data/
+monitoring/dashboards/prometheus/data/
+monitoring/**/*.db
+monitoring/**/*.rrd
+!monitoring/**/*.yaml
+!monitoring/**/*.py
+
+# Plugins
+plugins/**/build/
+plugins/**/dist/
+plugins/custom_models/__pycache__/
+plugins/data_sources/custom_loaders/*
+plugins/evaluators/custom_metrics/*
+plugins/processors/custom_preprocessors/*
+!plugins/custom_models/__init__.py
+!plugins/custom_models/plugin_interface.py
+!plugins/data_sources/__init__.py
+!plugins/data_sources/custom_loaders/.gitkeep
+!plugins/evaluators/__init__.py
+!plugins/evaluators/custom_metrics/.gitkeep
+!plugins/processors/__init__.py
+!plugins/processors/custom_preprocessors/.gitkeep
+
+# Migrations
+migrations/backups/
+migrations/**/__pycache__/
+!migrations/**/*.py
+
+# Deployment
+deployment/**/secrets/
+deployment/**/*.env
+deployment/**/*.key
+deployment/**/*.pem
+deployment/cloud/aws/sagemaker/*
+deployment/cloud/aws/lambda/*
+deployment/cloud/aws/ecs/*
+deployment/cloud/gcp/vertex-ai/*
+deployment/cloud/gcp/cloud-run/*
+deployment/cloud/azure/ml-studio/*
+deployment/edge/mobile/tflite/*
+deployment/edge/mobile/coreml/*
+deployment/edge/iot/nvidia-jetson/*
+deployment/serverless/functions/*
+deployment/serverless/api-gateway/*
+!deployment/**/*.yaml
+!deployment/**/*.yml
+!deployment/**/Dockerfile*
+!deployment/**/*.sh
+!deployment/**/.gitkeep
+
+# CI/CD
+.github/workflows/local/
+ci/artifacts/
+ci/reports/
+ci/**/*.log
+ci/**/.cache/
+!ci/**/*.sh
+
+# Images
+images/*.tmp
+images/*.bak
+!images/*.png
+
+# Quickstart
+quickstart/**/cache/
+quickstart/**/__pycache__/
+quickstart/**/*.pyc
+quickstart/**/wandb/
+quickstart/**/mlruns/
+quickstart/docker_quickstart/build/
+!quickstart/**/*.md
+!quickstart/**/*.ipynb
+!quickstart/**/*.py
+!quickstart/**/Dockerfile*
+!quickstart/**/docker-compose.yml
+
+# Templates - keep all template files
+!templates/**/*
+
+# Tools
+tools/**/output/
+tools/**/*.prof
+tools/**/.cache/
+tools/**/__pycache__/
+!tools/**/*.py
+
+# Prompts - keep all prompt files
+!prompts/**/*.txt
+!prompts/**/*.json
+!prompts/**/*.yaml
+!prompts/**/*.md
+
+# App
+app/**/__pycache__/
+app/**/*.pyc
+app/**/cache/
+app/**/.streamlit/
+!app/**/*.py
+!app/**/*.css
+!app/**/*.js
+!app/**/*.png
+
+# Scripts
+scripts/**/output/
+scripts/**/__pycache__/
+scripts/**/*.pyc
+!scripts/**/*.py
+!scripts/**/*.sh
+
+# Tests
+tests/**/__pycache__/
+tests/**/*.pyc
+tests/**/coverage/
+tests/**/.pytest_cache/
+tests/**/*.coverage
+!tests/**/*.py
+
+# Experiments
+experiments/**/results/
+experiments/**/outputs/
+experiments/**/__pycache__/
+experiments/**/*.pyc
+experiments/hyperparameter_search/*.db
+experiments/benchmarks/*.prof
+experiments/results/*.pickle
+!experiments/**/*.py
+
+# Source modules
+src/**/__pycache__/
+src/**/*.pyc
+src/api/**/cache/
+src/models/**/weights/
+src/training/**/checkpoints/
+src/domain_adaptation/**/pretrained/
+src/distillation/**/teacher_models/*.pth
+src/distillation/**/teacher_models/*.pt
+src/evaluation/**/results/
+src/inference/**/optimized_models/
+!src/**/*.py
+!src/api/**/*.proto
+
+# DVC
+.dvc/cache/
+.dvc/tmp/
+.dvcignore.local
+
+# Profiling
+*.prof
+*.lprof
+*.calltree
+.profile_output/
+
+# Python caches
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+__pypackages__/
+
+# Streamlit
+.streamlit/cache/
+.streamlit/config.toml
+
+# FastAPI
+.fastapi_cache/
+
+# Custom patterns
+*.local
+personal_notes/
+TODO.personal
+*.dat
+*.msgpack
+.gdb_history
+peda-session-*
+
+# Compressed files
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# Media files
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.mkv
+*.webm
+
+# Keep all .gitkeep files
+!**/.gitkeep
+
+# Keep all template files
+!**/*template*
+!**/*example*
+
+# Keep configuration samples
+!**/*.sample
+!**/*.example
+
+# End of .gitignore
