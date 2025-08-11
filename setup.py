@@ -358,7 +358,7 @@ PACKAGE_DATA = {
     "ci": ["**/*.sh", "**/*.py", "**/*.yml"],
 }
 
-# Data files to include
+# Data files
 data_files = [
     # Configuration files
     ('config', ['configs/**/*.yaml', 'configs/**/*.yml', 'configs/**/*.json']),
