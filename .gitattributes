@@ -1,0 +1,26 @@
+# ==============================================================================
+# Project : AG News Text Classification
+# Team    : Aimer PAM
+# Author  : Vo Hai Dung
+# License : MIT
+# ==============================================================================
+# Line endings are pinned per file type so the bootstrap scripts survive a
+# round trip through a Windows checkout. Without this, core.autocrlf rewrites
+# bootstrap.sh with CRLF and macOS/Linux reject it with "bad interpreter".
+
+* text=auto eol=lf
+
+*.sh   text eol=lf
+*.cmd  text eol=crlf
+*.bat  text eol=crlf
+*.ps1  text eol=crlf
+
+# Binary deliverables must never be line-ending converted.
+*.png    binary
+*.jpg    binary
+*.mp4    binary
+*.docx   binary
+*.pptx   binary
+*.xlsx   binary
+*.safetensors binary
+*.bin    binary

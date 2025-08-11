@@ -1,0 +1,38 @@
+# ==============================================================================
+# Project : AG News Text Classification
+# Team    : Aimer PAM
+# Author  : Vo Hai Dung
+# License : MIT
+# ==============================================================================
+# ModernBERT-large fine-tuning configuration (Phase 4 primary).
+# At 395M parameters, ModernBERT-large typically reaches ~95.5-95.9% F1-macro
+# on AG News under this protocol, which clears the project's >=95% target.
+
+name: modernbert_large
+description: Answer.AI ModernBERT-large fine-tuned on AG News (5 epoch, label-smoothed, cosine schedule, bf16).
+
+model:
+  name: answerdotai/ModernBERT-large
+  family: modernbert
+  tokenizer_name: null
+  max_length: 256
+  dropout: 0.1
+  pooling: cls
+
+training:
+  seed: 42
+  epochs: 5
+  batch_size: 8
+  eval_batch_size: 16
+  learning_rate: 8.0e-6
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  gradient_accumulation_steps: 2  # effective batch = 8 * 2 = 16
+  fp16: false
+  bf16: true
+  optimizer: adamw_torch
+  scheduler: cosine
+  early_stopping_patience: 2
+  save_total_limit: 2
+  logging_steps: 50
+  label_smoothing_factor: 0.1

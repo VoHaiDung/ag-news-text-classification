@@ -1,0 +1,39 @@
+# ==============================================================================
+# Project : AG News Text Classification
+# Team    : Aimer PAM
+# Author  : Vo Hai Dung
+# License : MIT
+# ==============================================================================
+# ModernBERT-large seed 73 + R-Drop (Liang et al., 2021).
+# Used as one of three seeds in the R-Drop ensemble cell of the
+# 2x2 ablation grid in Section 3.3.2.5.
+
+name: modernbert_large_seed73_rdrop
+description: ModernBERT-large + R-Drop regularisation, seed=73.
+
+model:
+  name: answerdotai/ModernBERT-large
+  family: modernbert
+  tokenizer_name: null
+  max_length: 256
+  dropout: 0.1
+  pooling: cls
+
+training:
+  seed: 73
+  epochs: 5
+  batch_size: 8
+  eval_batch_size: 16
+  learning_rate: 8.0e-6
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  gradient_accumulation_steps: 2
+  fp16: false
+  bf16: true
+  optimizer: adamw_torch
+  scheduler: cosine
+  early_stopping_patience: 2
+  save_total_limit: 2
+  logging_steps: 50
+  label_smoothing_factor: 0.1
+  r_drop_alpha: 1.0

@@ -1,0 +1,25 @@
+# ==============================================================================
+# Project : AG News Text Classification
+# Team    : Aimer PAM
+# Author  : Vo Hai Dung
+# License : MIT
+# ==============================================================================
+# French AG News configuration.
+# Used after Phase 5B generates the translated dataset under
+# ``data/processed/ag_news_fr``.
+
+name: ag_news_fr
+description: French AG News, machine-translated from the English original.
+
+data:
+  name: ag_news_fr
+  hf_path: data/processed/ag_news_fr  # local datasets folder produced by Phase 5B
+  text_column: text_fr
+  label_column: label
+  num_labels: 4
+  label_names: [Monde, Sport, Affaires, Sciences et Technologies]
+  train_split: train
+  test_split: test
+  validation_size: 0.1
+  max_length: 256
+  language: fr
