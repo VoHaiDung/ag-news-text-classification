@@ -9,10 +9,10 @@ description = "State-of-the-art framework for AG News text classification with a
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
-    {name = "AG News Research Team", email = "team@agnews-research.ai"},
+    {name = "Võ Hải Dũng", email = "vohaidung.work@gmail.com"},
 ]
 maintainers = [
-    {name = "AG News ML Engineering Team", email = "ml-team@agnews-research.ai"},
+    {name = "Võ Hải Dũng", email = "vohaidung.work@gmail.com"},
 ]
 keywords = [
     "nlp", "natural-language-processing", "text-classification",
@@ -83,18 +83,18 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/agnews-research/ag-news-text-classification"
+Homepage = "https://github.com/VoHaiDung/ag-news-text-classification"
 Documentation = "https://ag-news-text-classification.readthedocs.io"
-Repository = "https://github.com/agnews-research/ag-news-text-classification.git"
-"Bug Tracker" = "https://github.com/agnews-research/ag-news-text-classification/issues"
+Repository = "https://github.com/VoHaiDung/ag-news-text-classification.git"
+"Bug Tracker" = "https://github.com/VoHaiDung/ag-news-text-classification/issues"
 "Research Paper" = "https://arxiv.org/abs/2024.agnews"
-"Model Hub" = "https://huggingface.co/agnews-research"
-Demo = "https://huggingface.co/spaces/agnews-research/demo"
-Changelog = "https://github.com/agnews-research/ag-news-text-classification/blob/main/CHANGELOG.md"
+"Model Hub" = "https://huggingface.co/VoHaiDung"
+Demo = "https://huggingface.co/spaces/VoHaiDung/ag-news-demo"
+Changelog = "https://github.com/VoHaiDung/ag-news-text-classification/blob/main/CHANGELOG.md"
 Benchmarks = "https://agnews-benchmarks.github.io"
-"CI/CD" = "https://github.com/agnews-research/ag-news-text-classification/actions"
-Discussions = "https://github.com/agnews-research/ag-news-text-classification/discussions"
-Wiki = "https://github.com/agnews-research/ag-news-text-classification/wiki"
+"CI/CD" = "https://github.com/VoHaiDung/ag-news-text-classification/actions"
+Discussions = "https://github.com/VoHaiDung/ag-news-text-classification/discussions"
+Wiki = "https://github.com/VoHaiDung/ag-news-text-classification/wiki"
 
 [project.optional-dependencies]
 ml = [
@@ -581,11 +581,11 @@ annotated_tag = true
 name = "ag-news-text-classification"
 version = "1.0.0"
 description = "State-of-the-art AG News text classification framework"
-authors = ["AG News Research Team <team@agnews-research.ai>"]
+authors = ["Võ Hải Dũng <vohaidung.work@gmail.com>"]
 license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/agnews-research/ag-news-text-classification"
-repository = "https://github.com/agnews-research/ag-news-text-classification"
+homepage = "https://github.com/VoHaiDung/ag-news-text-classification"
+repository = "https://github.com/VoHaiDung/ag-news-text-classification"
 documentation = "https://ag-news-text-classification.readthedocs.io"
 
 [tool.semantic_release]
