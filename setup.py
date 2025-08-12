@@ -192,12 +192,12 @@ SHARED_CONFIG = get_shared_config()
 # Project metadata
 METADATA = {
     "name": SHARED_CONFIG["project_name"],
-    "author": "AG News Research Team",
-    "author_email": "team@agnews-research.ai",
-    "maintainer": "AG News ML Engineering Team",
-    "maintainer_email": "ml-team@agnews-research.ai",
+    "author": "Võ Hải Dũng",
+    "author_email": "vohaidung.work@gmail.com",
+    "maintainer": "Võ Hải Dũng",
+    "maintainer_email": "vohaidung.work@gmail.com",
     "license": "MIT",
-    "url": "https://github.com/agnews-research/ag-news-text-classification",
+    "url": "https://github.com/VoHaiDung/ag-news-text-classification",
 }
 
 # Get version from __version__.py file or git tags
@@ -861,20 +861,20 @@ class PostInstallCommand(install):
         print("  3. Download data: ag-news data download")
         print("  4. Train baseline: ag-news train --config configs/models/single/deberta_v3_xlarge.yaml")
         print("  5. Evaluate: ag-news evaluate --model outputs/models/fine_tuned/best_model.pt")
-        
+    
         print("\nEnvironment Setup Commands:")
         print("  - Research: pip install -e '.[research]'")
         print("  - Production: pip install '.[prod]'")
         print("  - Development: pip install -e '.[dev]'")
         print("  - GPU Support: pip install -e '.[gpu]'")
         print("  - Complete: pip install -e '.[all]'")
-        
+    
         print("\nDocumentation:")
         print("  - Online: https://ag-news-text-classification.readthedocs.io")
         print("  - Local: ag-news docs serve")
-        
-        print("\nModel Hub: https://huggingface.co/agnews-research")
-        print("Community: https://github.com/agnews-research/ag-news-text-classification/discussions")
+    
+        print("\nModel Hub: https://huggingface.co/VoHaiDung")
+        print("Community: https://github.com/VoHaiDung/ag-news-text-classification/discussions")
         print("="*80 + "\n")
 
 # Development mode setup command
