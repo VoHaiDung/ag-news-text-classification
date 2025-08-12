@@ -1179,7 +1179,14 @@ setup(
         "Bug Tracker": f"{METADATA['url']}/issues",
         "Documentation": "https://ag-news-text-classification.readthedocs.io",
         "Source Code": METADATA["url"],
-        # Add more project URLs...
+        "Research Paper": "https://arxiv.org/abs/2024.agnews",
+        "Model Hub": "https://huggingface.co/VoHaiDung",
+        "Demo": "https://huggingface.co/spaces/VoHaiDung/ag-news-demo",
+        "Changelog": f"{METADATA['url']}/blob/main/CHANGELOG.md",
+        "Benchmarks": "https://agnews-benchmarks.github.io",
+        "CI/CD": f"{METADATA['url']}/actions",
+        "Discussions": f"{METADATA['url']}/discussions",
+        "Wiki": f"{METADATA['url']}/wiki",
     },
     
     # Package configuration
