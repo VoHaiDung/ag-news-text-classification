@@ -1,10 +1,3 @@
-"""
-AG News Text Classification Framework
-
-A state-of-the-art framework for news text classification using advanced ML/DL techniques,
-ensemble methods, and production-ready deployment solutions.
-"""
-
 __version__ = "1.0.0"
 __author__ = "Võ Hải Dũng"
 __email__ = "vohaidung.work@gmail.com"
