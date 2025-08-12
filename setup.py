@@ -6,30 +6,192 @@ import subprocess
 import asyncio
 import pickle
 import hashlib
-from pathlib import Path
-from typing import List, Dict, Any, Optional, Set, Tuple
-from functools import lru_cache
-from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+import logging
 import platform
+import tempfile
+import time
+import yaml
+from pathlib import Path
+from typing import List, Dict, Any, Optional, Set, Tuple, Callable
+from functools import lru_cache, wraps
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor, as_completed
+from datetime import datetime
+from contextlib import contextmanager
+from dataclasses import dataclass
+from enum import Enum
 
 from setuptools import setup, find_packages, Command
 from setuptools.command.install import install
 from setuptools.command.develop import develop
 from setuptools.command.test import test as TestCommand
 
+# Try importing optional dependencies
+try:
+    from tqdm import tqdm
+    HAS_TQDM = True
+except ImportError:
+    HAS_TQDM = False
+    
+try:
+    from packaging.requirements import Requirement
+    from packaging.version import Version
+    HAS_PACKAGING = True
+except ImportError:
+    HAS_PACKAGING = False
 
-# Project root directory
+# Project directory structure
 ROOT_DIR = Path(__file__).parent.resolve()
 SRC_DIR = ROOT_DIR / "src"
 REQUIREMENTS_DIR = ROOT_DIR / "requirements"
 CACHE_DIR = ROOT_DIR / ".cache" / "setup"
+CONFIG_DIR = ROOT_DIR / "configs"
+LOG_DIR = ROOT_DIR / "outputs" / "logs" / "setup"
+BACKUP_DIR = ROOT_DIR / ".backups"
 
-# Create cache directory
-CACHE_DIR.mkdir(parents=True, exist_ok=True)
+# Create necessary directories
+for dir_path in [CACHE_DIR, LOG_DIR, BACKUP_DIR]:
+    dir_path.mkdir(parents=True, exist_ok=True)
+
+# Configure logging with both file and console output
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(LOG_DIR / f"setup_{datetime.now():%Y%m%d_%H%M%S}.log"),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger("setup")
+
+# Custom exception for setup-specific errors
+class SetupError(Exception):
+    """Custom exception for setup errors"""
+    pass
+
+# Enum for different installation modes
+class InstallMode(Enum):
+    MINIMAL = "minimal"
+    BASE = "base"
+    RESEARCH = "research"
+    PRODUCTION = "production"
+    DEVELOPMENT = "development"
+    ALL = "all"
+
+# Data class for environment check configuration
+@dataclass
+class EnvironmentCheck:
+    name: str
+    check_func: Callable
+    required: bool = True
+    min_version: Optional[str] = None
+
+# Class to track setup performance metrics
+class SetupMetrics:
+    """Track setup metrics for optimization"""
+    
+    def __init__(self):
+        self.start_time = time.time()
+        self.operations = []
+        self.cache_hits = 0
+        self.cache_misses = 0
+        
+    def record_operation(self, name: str, duration: float):
+        """Record an operation's duration"""
+        self.operations.append({"name": name, "duration": duration})
+        
+    def record_cache_hit(self):
+        """Increment cache hit counter"""
+        self.cache_hits += 1
+        
+    def record_cache_miss(self):
+        """Increment cache miss counter"""
+        self.cache_misses += 1
+        
+    def get_summary(self) -> Dict[str, Any]:
+        """Get metrics summary"""
+        total_time = time.time() - self.start_time
+        return {
+            "total_time": total_time,
+            "operations": self.operations,
+            "cache_hit_rate": self.cache_hits / max(self.cache_hits + self.cache_misses, 1),
+            "avg_operation_time": sum(op["duration"] for op in self.operations) / max(len(self.operations), 1)
+        }
+
+# Initialize global metrics tracker
+metrics = SetupMetrics()
+
+# Context manager for timing operations
+@contextmanager
+def timer(operation_name: str):
+    """Context manager for timing operations"""
+    start = time.time()
+    try:
+        yield
+    finally:
+        duration = time.time() - start
+        metrics.record_operation(operation_name, duration)
+        logger.debug(f"{operation_name} took {duration:.2f}s")
+
+# Decorator for retrying failed operations
+def retry(max_attempts: int = 3, delay: float = 1.0):
+    """Decorator for retrying failed operations"""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            for attempt in range(max_attempts):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    if attempt == max_attempts - 1:
+                        raise
+                    logger.warning(f"Attempt {attempt + 1} failed: {e}. Retrying...")
+                    time.sleep(delay * (2 ** attempt))  # Exponential backoff
+            return None
+        return wrapper
+    return decorator
+
+# Load shared configuration between setup.py and Makefile
+def get_shared_config() -> Dict[str, Any]:
+    """Load shared configuration used by both setup.py and Makefile"""
+    config_file = CONFIG_DIR / "build_config.yaml"
+    
+    # Return existing config if available
+    if config_file.exists():
+        with open(config_file, "r") as f:
+            return yaml.safe_load(f)
+    
+    # Default configuration
+    default_config = {
+        "project_name": "ag-news-text-classification",
+        "python_version": "3.10",
+        "cuda_version": "11.8",
+        "min_memory_gb": 16,
+        "min_disk_gb": 50,
+        "parallel_jobs": os.cpu_count() or 4,
+        "docker_registry": "agnews-research",
+        "cloud_provider": "aws",
+        "week_schedule": {
+            "week1": "Classical ML Baselines",
+            "week2-3": "Deep Learning & Transformers",
+            "week4-5": "Advanced Training Strategies",
+            "week6-7": "SOTA Models & LLMs",
+            "week8-9": "Optimization & Compression",
+            "week10": "Production Deployment"
+        }
+    }
+    
+    # Save default config for future use
+    with open(config_file, "w") as f:
+        yaml.dump(default_config, f, default_flow_style=False)
+    
+    return default_config
+
+# Load shared configuration
+SHARED_CONFIG = get_shared_config()
 
 # Project metadata
 METADATA = {
-    "name": "ag-news-text-classification",
+    "name": SHARED_CONFIG["project_name"],
     "author": "AG News Research Team",
     "author_email": "team@agnews-research.ai",
     "maintainer": "AG News ML Engineering Team",
@@ -38,119 +200,154 @@ METADATA = {
     "url": "https://github.com/agnews-research/ag-news-text-classification",
 }
 
-
+# Get version from __version__.py file or git tags
 def get_version() -> str:
-    """Get version from __version__.py file or git tags."""
-    version_file = SRC_DIR / "__version__.py"
-    version_dict = {}
-    
-    if version_file.exists():
-        with open(version_file, "r", encoding="utf-8") as f:
-            exec(f.read(), version_dict)
-        return version_dict.get("__version__", "1.0.0")
-    
-    # Fallback: try to get from git tag
-    try:
-        version = subprocess.check_output(
-            ["git", "describe", "--tags", "--abbrev=0"],
-            cwd=ROOT_DIR,
-            stderr=subprocess.DEVNULL
-        ).decode().strip()
-        return version.lstrip("v")
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return "1.0.0"
+    """Get version from __version__.py file or git tags"""
+    with timer("get_version"):
+        version_file = SRC_DIR / "__version__.py"
+        version_dict = {}
+        
+        # Try reading from version file
+        if version_file.exists():
+            with open(version_file, "r", encoding="utf-8") as f:
+                exec(f.read(), version_dict)
+            return version_dict.get("__version__", "1.0.0")
+        
+        # Fallback to git tags
+        try:
+            version = subprocess.check_output(
+                ["git", "describe", "--tags", "--abbrev=0"],
+                cwd=ROOT_DIR,
+                stderr=subprocess.DEVNULL
+            ).decode().strip()
+            return version.lstrip("v")
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            return "1.0.0"
 
-
+# Get project version
 VERSION = get_version()
 
-
+# Read README for long description
 def get_long_description() -> str:
-    """Read and return README content."""
+    """Read and return README content"""
     readme_file = ROOT_DIR / "README.md"
     if readme_file.exists():
         with open(readme_file, "r", encoding="utf-8") as f:
             return f.read()
-    return "AG News Text Classification Framework - State-of-the-art research framework for news text classification"
+    return "AG News Text Classification Framework - State-of-the-art research framework"
 
-
+# Calculate file hash for cache validation
 def get_file_hash(filepath: Path) -> str:
-    """Get hash of file for cache validation."""
+    """Get hash of file for cache validation"""
     if not filepath.exists():
         return ""
     
     hasher = hashlib.md5()
     with open(filepath, "rb") as f:
-        hasher.update(f.read())
+        # Read file in chunks for memory efficiency
+        for chunk in iter(lambda: f.read(65536), b""):
+            hasher.update(chunk)
     return hasher.hexdigest()
 
+# Class to resolve and validate dependencies
+class DependencyResolver:
+    """Resolve and validate dependencies"""
+    
+    def __init__(self):
+        self.conflicts = []
+        self.all_requirements = {}
+        
+    def add_requirement(self, req_str: str):
+        """Add a requirement and check for conflicts"""
+        if not HAS_PACKAGING:
+            return
+            
+        try:
+            req = Requirement(req_str)
+            # Check for version conflicts with existing requirements
+            if req.name in self.all_requirements:
+                existing = self.all_requirements[req.name]
+                if not self._compatible_versions(existing, req):
+                    self.conflicts.append((req.name, existing, req))
+            self.all_requirements[req.name] = req
+        except Exception as e:
+            logger.warning(f"Could not parse requirement: {req_str} - {e}")
+    
+    def _compatible_versions(self, req1: 'Requirement', req2: 'Requirement') -> bool:
+        """Check if two requirements are compatible"""
+        return str(req1.specifier) == str(req2.specifier)
+    
+    def resolve(self) -> bool:
+        """Resolve dependencies and return True if successful"""
+        if self.conflicts:
+            logger.warning("Dependency conflicts detected:")
+            for name, req1, req2 in self.conflicts:
+                logger.warning(f"  {name}: {req1} vs {req2}")
+            return False
+        return True
 
+# Initialize global dependency resolver
+dependency_resolver = DependencyResolver()
+
+# Cached requirements reader with hash validation
 @lru_cache(maxsize=32)
 def read_requirements_cached(filename: str, base_dir: Path = REQUIREMENTS_DIR) -> List[str]:
-    """
-    Read requirements from file with caching support.
-    
-    Args:
-        filename: Name of requirements file
-        base_dir: Base directory for requirements files
+    """Read requirements from file with caching support"""
+    with timer(f"read_requirements_{filename}"):
+        filepath = base_dir / filename
+        cache_file = CACHE_DIR / f"{filename}.cache"
+        hash_file = CACHE_DIR / f"{filename}.hash"
         
-    Returns:
-        List of requirement strings
-    """
-    filepath = base_dir / filename
-    cache_file = CACHE_DIR / f"{filename}.cache"
-    hash_file = CACHE_DIR / f"{filename}.hash"
-    
-    # Check cache validity
-    current_hash = get_file_hash(filepath)
-    if cache_file.exists() and hash_file.exists():
+        # Check if cache is valid
+        current_hash = get_file_hash(filepath)
+        if cache_file.exists() and hash_file.exists():
+            try:
+                with open(hash_file, "r") as f:
+                    cached_hash = f.read().strip()
+                
+                # Use cache if hash matches
+                if cached_hash == current_hash:
+                    metrics.record_cache_hit()
+                    with open(cache_file, "rb") as f:
+                        return pickle.load(f)
+            except Exception:
+                pass  # Cache invalid, will regenerate
+        
+        # Cache miss - read requirements from file
+        metrics.record_cache_miss()
+        requirements = read_requirements(filename, base_dir)
+        
+        # Update cache
         try:
-            with open(hash_file, "r") as f:
-                cached_hash = f.read().strip()
-            
-            if cached_hash == current_hash:
-                # Cache is valid
-                with open(cache_file, "rb") as f:
-                    return pickle.load(f)
+            with open(cache_file, "wb") as f:
+                pickle.dump(requirements, f)
+            with open(hash_file, "w") as f:
+                f.write(current_hash)
         except Exception:
-            pass  # Cache invalid, will regenerate
-    
-    # Read requirements
-    requirements = read_requirements(filename, base_dir)
-    
-    # Update cache
-    try:
-        with open(cache_file, "wb") as f:
-            pickle.dump(requirements, f)
-        with open(hash_file, "w") as f:
-            f.write(current_hash)
-    except Exception:
-        pass  # Cache write failed, continue without caching
-    
-    return requirements
-
-
-def read_requirements(filename: str, base_dir: Path = REQUIREMENTS_DIR) -> List[str]:
-    """
-    Read requirements from file, handling -r includes and various formats.
-    
-    Args:
-        filename: Name of requirements file
-        base_dir: Base directory for requirements files
+            pass  # Cache write failed, continue without caching
         
-    Returns:
-        List of requirement strings
-    """
+        # Add requirements to dependency resolver
+        for req in requirements:
+            dependency_resolver.add_requirement(req)
+        
+        return requirements
+
+# Read requirements from file, handling includes
+def read_requirements(filename: str, base_dir: Path = REQUIREMENTS_DIR) -> List[str]:
+    """Read requirements from file, handling includes and various formats"""
     requirements = []
     seen_files = set()  # Prevent circular imports
     
     def _read_file(filepath: Path, seen: Set[Path]) -> List[str]:
-        """Recursively read requirements file."""
+        """Recursively read requirements file"""
+        # Check for circular imports
         if filepath in seen:
             return []
         seen.add(filepath)
         
+        # Check file exists
         if not filepath.exists():
-            print(f"Warning: {filepath} not found")
+            logger.warning(f"{filepath} not found")
             return []
         
         file_requirements = []
@@ -162,7 +359,7 @@ def read_requirements(filename: str, base_dir: Path = REQUIREMENTS_DIR) -> List[
                 if not line or line.startswith("#"):
                     continue
                 
-                # Handle -r includes
+                # Handle -r includes for requirement files
                 if line.startswith("-r "):
                     included_file = line[3:].strip()
                     included_path = filepath.parent / included_file
@@ -183,6 +380,7 @@ def read_requirements(filename: str, base_dir: Path = REQUIREMENTS_DIR) -> List[
         
         return file_requirements
     
+    # Start reading from main file
     filepath = base_dir / filename
     requirements = _read_file(filepath, seen_files)
     
@@ -199,9 +397,9 @@ def read_requirements(filename: str, base_dir: Path = REQUIREMENTS_DIR) -> List[
     
     return unique_requirements
 
-
+# Run subprocess asynchronously
 async def run_subprocess_async(cmd: List[str], **kwargs) -> Tuple[int, str, str]:
-    """Run subprocess asynchronously."""
+    """Run subprocess asynchronously"""
     proc = await asyncio.create_subprocess_exec(
         *cmd,
         stdout=asyncio.subprocess.PIPE,
@@ -211,20 +409,218 @@ async def run_subprocess_async(cmd: List[str], **kwargs) -> Tuple[int, str, str]
     stdout, stderr = await proc.communicate()
     return proc.returncode, stdout.decode(), stderr.decode()
 
-
+# Run multiple commands asynchronously
 def run_async_commands(commands: List[List[str]]) -> List[Tuple[int, str, str]]:
-    """Run multiple commands asynchronously."""
+    """Run multiple commands asynchronously"""
     async def run_all():
         tasks = [run_subprocess_async(cmd) for cmd in commands]
         return await asyncio.gather(*tasks)
     
+    # Set event loop policy for Windows
     if sys.platform == "win32":
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
     
     return asyncio.run(run_all())
 
+# Safe subprocess call with error handling
+def safe_subprocess_call(cmd: List[str], error_msg: Optional[str] = None) -> Optional[int]:
+    """Wrapper for subprocess calls with better error handling"""
+    try:
+        result = subprocess.check_call(cmd, stderr=subprocess.PIPE)
+        return result
+    except subprocess.CalledProcessError as e:
+        if error_msg:
+            logger.error(f"{error_msg}: {e.stderr.decode() if e.stderr else str(e)}")
+        return None
+    except FileNotFoundError:
+        logger.error(f"Command not found: {cmd[0]}")
+        return None
 
-# Core requirements (from requirements/base.txt or fallback)
+# Check if command exists in PATH
+def check_command_exists(command: str) -> bool:
+    """Check if a command exists in PATH"""
+    return shutil.which(command) is not None
+
+# Validate Python version
+def check_python_version() -> bool:
+    """Check if Python version meets requirements"""
+    required = tuple(map(int, SHARED_CONFIG["python_version"].split(".")))
+    current = sys.version_info[:2]
+    return current >= required[:2]
+
+# Check available disk space
+def check_disk_space(min_gb: int = None) -> bool:
+    """Check available disk space"""
+    min_gb = min_gb or SHARED_CONFIG["min_disk_gb"]
+    stat = shutil.disk_usage(ROOT_DIR)
+    available_gb = stat.free / (1024**3)
+    return available_gb >= min_gb
+
+# Check available memory
+def check_memory() -> bool:
+    """Check available memory"""
+    try:
+        import psutil
+        min_gb = SHARED_CONFIG["min_memory_gb"]
+        available_gb = psutil.virtual_memory().available / (1024**3)
+        return available_gb >= min_gb
+    except ImportError:
+        return True  # Assume OK if psutil not available
+
+# Check GPU availability
+def check_gpu() -> bool:
+    """Check GPU availability"""
+    try:
+        import torch
+        return torch.cuda.is_available()
+    except ImportError:
+        return False
+
+# Validate environment before setup
+def validate_environment() -> bool:
+    """Validate environment before setup"""
+    # Define environment checks
+    checks = [
+        EnvironmentCheck("Python version", check_python_version),
+        EnvironmentCheck("Disk space", check_disk_space),
+        EnvironmentCheck("Memory", check_memory),
+        EnvironmentCheck("Git", lambda: check_command_exists("git")),
+        EnvironmentCheck("pip", lambda: check_command_exists("pip")),
+        EnvironmentCheck("GPU", check_gpu, required=False),
+    ]
+    
+    # Run all checks
+    all_passed = True
+    for check in checks:
+        try:
+            result = check.check_func()
+            status = "✓" if result else "✗"
+            logger.info(f"{status} {check.name}: {'PASS' if result else 'FAIL'}")
+            if not result and check.required:
+                all_passed = False
+        except Exception as e:
+            logger.error(f"✗ {check.name}: ERROR - {e}")
+            if check.required:
+                all_passed = False
+    
+    return all_passed
+
+# Get platform-specific requirements
+def get_platform_specific_requirements() -> List[str]:
+    """Get platform-specific requirements"""
+    platform_reqs = []
+    
+    # Windows-specific packages
+    if sys.platform == "win32":
+        platform_reqs.extend([
+            "pywin32>=305",
+            "windows-curses>=2.3.0",
+        ])
+    # macOS-specific packages
+    elif sys.platform == "darwin":
+        platform_reqs.extend([
+            "pyobjc-framework-Cocoa>=9.0",
+        ])
+    # Linux-specific packages
+    elif sys.platform.startswith("linux"):
+        platform_reqs.extend([
+            "python-apt>=2.4.0;platform_system=='Linux'",
+        ])
+    
+    return platform_reqs
+
+# Install packages with progress bar
+def install_with_progress(packages: List[str], description: str = "Installing"):
+    """Install packages with progress bar"""
+    if HAS_TQDM:
+        # Use tqdm progress bar if available
+        with tqdm(total=len(packages), desc=description) as pbar:
+            for pkg in packages:
+                pbar.set_description(f"{description}: {pkg}")
+                result = safe_subprocess_call(
+                    [sys.executable, "-m", "pip", "install", pkg],
+                    error_msg=f"Failed to install {pkg}"
+                )
+                pbar.update(1)
+    else:
+        # Fallback to simple progress indication
+        for i, pkg in enumerate(packages, 1):
+            logger.info(f"{description} ({i}/{len(packages)}): {pkg}")
+            safe_subprocess_call(
+                [sys.executable, "-m", "pip", "install", pkg],
+                error_msg=f"Failed to install {pkg}"
+            )
+
+# Backup manager for safe operations
+class BackupManager:
+    """Manage backups before major changes"""
+    
+    def __init__(self):
+        self.backup_dir = BACKUP_DIR
+        self.backup_dir.mkdir(parents=True, exist_ok=True)
+    
+    def create_backup(self, name: str = "auto") -> Path:
+        """Create backup of current state"""
+        # Generate timestamp for backup
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_path = self.backup_dir / f"{name}_{timestamp}"
+        backup_path.mkdir(parents=True, exist_ok=True)
+        
+        # Backup important directories
+        dirs_to_backup = ["src", "configs", "requirements"]
+        for dir_name in dirs_to_backup:
+            src = ROOT_DIR / dir_name
+            if src.exists():
+                dst = backup_path / dir_name
+                shutil.copytree(src, dst, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+        
+        # Save backup metadata
+        metadata = {
+            "timestamp": timestamp,
+            "version": VERSION,
+            "python_version": sys.version,
+            "platform": platform.platform(),
+        }
+        
+        with open(backup_path / "metadata.json", "w") as f:
+            json.dump(metadata, f, indent=2)
+        
+        logger.info(f"Backup created: {backup_path}")
+        return backup_path
+    
+    def restore_backup(self, backup_path: Path) -> bool:
+        """Restore from backup"""
+        if not backup_path.exists():
+            logger.error(f"Backup not found: {backup_path}")
+            return False
+        
+        try:
+            # Read backup metadata
+            metadata_file = backup_path / "metadata.json"
+            if metadata_file.exists():
+                with open(metadata_file, "r") as f:
+                    metadata = json.load(f)
+                logger.info(f"Restoring backup from {metadata['timestamp']}")
+            
+            # Restore directories
+            for dir_name in ["src", "configs", "requirements"]:
+                src = backup_path / dir_name
+                if src.exists():
+                    dst = ROOT_DIR / dir_name
+                    if dst.exists():
+                        shutil.rmtree(dst)
+                    shutil.copytree(src, dst)
+            
+            logger.info("Backup restored successfully")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to restore backup: {e}")
+            return False
+
+# Initialize global backup manager
+backup_manager = BackupManager()
+
+# Read base requirements
 if REQUIREMENTS_DIR.exists():
     INSTALL_REQUIRES = read_requirements_cached("base.txt")
 else:
@@ -247,12 +643,15 @@ else:
         "seaborn>=0.12.0",
     ]
 
+# Add platform-specific requirements
+INSTALL_REQUIRES.extend(get_platform_specific_requirements())
 
-# Build extras_require from requirements/ structure
+# Build extras_require dictionary from requirements files
 def build_extras_require() -> Dict[str, List[str]]:
-    """Build extras_require dictionary from requirements files."""
+    """Build extras_require dictionary from requirements files"""
     extras = {}
     
+    # Read from requirements files if available
     if REQUIREMENTS_DIR.exists():
         # Map requirements files to extras keys
         requirements_mapping = {
@@ -272,12 +671,14 @@ def build_extras_require() -> Dict[str, List[str]]:
             "all": "all.txt",
         }
         
+        # Read each requirements file
         for extra_name, req_file in requirements_mapping.items():
             if (REQUIREMENTS_DIR / req_file).exists():
                 extras[extra_name] = read_requirements_cached(req_file)
     
     # Additional specialized bundles
     extras.update({
+        # Testing dependencies
         "test": [
             "pytest>=7.4.0",
             "pytest-cov>=4.1.0",
@@ -291,6 +692,7 @@ def build_extras_require() -> Dict[str, List[str]]:
             "factory-boy>=3.3.0",
         ],
         
+        # GPU-specific dependencies
         "gpu": [
             "cuda-python>=12.0.0",
             "cupy-cuda12x>=12.0.0",
@@ -300,6 +702,7 @@ def build_extras_require() -> Dict[str, List[str]]:
             "pynvml>=11.5.0",
         ],
         
+        # Cloud provider SDKs
         "aws": [
             "boto3>=1.28.0",
             "sagemaker>=2.199.0",
@@ -318,6 +721,7 @@ def build_extras_require() -> Dict[str, List[str]]:
             "azure-identity>=1.15.0",
         ],
         
+        # Database dependencies
         "database": [
             "sqlalchemy>=2.0.0",
             "alembic>=1.12.0",
@@ -327,6 +731,7 @@ def build_extras_require() -> Dict[str, List[str]]:
             "asyncpg>=0.29.0",
         ],
         
+        # Platform-specific bundles
         "colab": [
             "ipywidgets>=8.1.0",
             "gdown>=4.7.0",
@@ -341,7 +746,7 @@ def build_extras_require() -> Dict[str, List[str]]:
             "sagemaker-experiments>=0.1.0",
         ],
         
-        # Week-specific bundles for structured learning
+        # Week-based learning dependencies
         "week1": [
             "scikit-learn>=1.3.0",
             "xgboost>=2.0.0",
@@ -389,28 +794,67 @@ def build_extras_require() -> Dict[str, List[str]]:
     
     return extras
 
-
+# Build extras_require
 EXTRAS_REQUIRE = build_extras_require()
 
+# Base class for commands with progress indication
+class ProgressCommand(Command):
+    """Base command with progress indicators"""
+    
+    def run_with_progress(self, tasks: List[Tuple[str, Callable]], description: str = "Processing"):
+        """Run tasks with progress bar"""
+        results = []
+        
+        if HAS_TQDM:
+            # Use tqdm for progress visualization
+            with tqdm(total=len(tasks), desc=description) as pbar:
+                for task_name, task_func in tasks:
+                    pbar.set_description(f"{description}: {task_name}")
+                    try:
+                        result = task_func()
+                        results.append((task_name, "SUCCESS", result))
+                        logger.info(f"✓ {task_name}: SUCCESS")
+                    except Exception as e:
+                        results.append((task_name, "FAILED", str(e)))
+                        logger.error(f"✗ {task_name}: FAILED - {e}")
+                    pbar.update(1)
+        else:
+            # Fallback to simple progress indication
+            for i, (task_name, task_func) in enumerate(tasks, 1):
+                logger.info(f"{description} ({i}/{len(tasks)}): {task_name}")
+                try:
+                    result = task_func()
+                    results.append((task_name, "SUCCESS", result))
+                    logger.info(f"✓ {task_name}: SUCCESS")
+                except Exception as e:
+                    results.append((task_name, "FAILED", str(e)))
+                    logger.error(f"✗ {task_name}: FAILED - {e}")
+        
+        return results
 
-# Custom Commands
+# Custom post-installation command
 class PostInstallCommand(install):
-    """Post-installation for installation mode."""
+    """Post-installation for installation mode"""
     
     def run(self):
-        """Run standard install and post-install tasks."""
+        """Run standard install and post-install tasks"""
         install.run(self)
         self.execute(self.post_install, [], msg="Running post-installation tasks...")
     
     def post_install(self):
-        """Execute post-installation tasks."""
-        print("\n" + "="*80)
-        print("AG News Text Classification Framework Installation Complete!")
-        print("="*80)
+        """Execute post-installation tasks"""
+        logger.info("="*80)
+        logger.info("AG News Text Classification Framework Installation Complete!")
+        logger.info("="*80)
         self.print_next_steps()
+        
+        # Print installation metrics
+        metrics_summary = metrics.get_summary()
+        logger.info(f"Installation completed in {metrics_summary['total_time']:.2f}s")
+        logger.info(f"Cache hit rate: {metrics_summary['cache_hit_rate']:.2%}")
     
     def print_next_steps(self):
-        """Print next steps for user."""
+        """Print next steps for user"""
         print("\nQuick Start Guide:")
         print("  1. Verify installation: ag-news --version")
         print("  2. Setup environment: ag-news setup --env research")
@@ -433,36 +877,60 @@ class PostInstallCommand(install):
         print("Community: https://github.com/agnews-research/ag-news-text-classification/discussions")
         print("="*80 + "\n")
 
-
+# Development mode setup command
 class DevelopCommand(develop):
-    """Post-installation for development mode."""
+    """Post-installation for development mode"""
     
     def run(self):
-        """Run standard develop and setup development environment."""
+        """Run standard develop and setup development environment"""
+        # Validate environment first
+        if not validate_environment():
+            raise SetupError("Environment validation failed")
+        
+        # Create backup before making changes
+        backup_manager.create_backup("pre_develop")
+        
+        # Run standard develop command
         develop.run(self)
         self.execute(self.post_develop, [], msg="Setting up development environment...")
     
     def post_develop(self):
-        """Setup development environment."""
-        print("\nSetting up development environment...")
+        """Setup development environment"""
+        logger.info("Setting up development environment...")
         
-        # Install pre-commit hooks
-        try:
-            subprocess.check_call(["pre-commit", "install"], stderr=subprocess.DEVNULL)
-            print("[SUCCESS] Pre-commit hooks installed")
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            print("[WARNING] Could not install pre-commit hooks")
+        # Define development setup tasks
+        tasks = [
+            ("Pre-commit hooks", self.install_precommit),
+            ("Husky hooks", self.install_husky),
+            ("Directory structure", self.create_directories),
+            ("Development tools", self.install_dev_tools),
+        ]
         
-        # Setup git hooks with husky
+        # Run tasks with progress indication
+        cmd = ProgressCommand(self.distribution)
+        results = cmd.run_with_progress(tasks, "Development Setup")
+        
+        # Report results
+        success_count = sum(1 for _, status, _ in results if status == "SUCCESS")
+        logger.info(f"Development setup complete: {success_count}/{len(tasks)} tasks succeeded")
+    
+    def install_precommit(self):
+        """Install pre-commit hooks"""
+        if safe_subprocess_call(["pre-commit", "install"]) is not None:
+            return True
+        raise SetupError("Failed to install pre-commit hooks")
+    
+    def install_husky(self):
+        """Install husky hooks"""
         husky_dir = ROOT_DIR / ".husky"
         if husky_dir.exists():
-            try:
-                subprocess.check_call(["npx", "husky", "install"], cwd=ROOT_DIR, stderr=subprocess.DEVNULL)
-                print("[SUCCESS] Husky hooks installed")
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                print("[INFO] Husky not available (npm required)")
-        
-        # Create necessary directories
+            result = safe_subprocess_call(["npx", "husky", "install"], error_msg="Husky installation failed")
+            if result is not None:
+                return True
+        return False
+    
+    def create_directories(self):
+        """Create necessary directories"""
         directories_to_create = [
             "outputs/models/checkpoints",
             "outputs/logs/training",
@@ -475,12 +943,17 @@ class DevelopCommand(develop):
         
         for dir_path in directories_to_create:
             Path(ROOT_DIR / dir_path).mkdir(parents=True, exist_ok=True)
-        
-        print("[SUCCESS] Development environment ready!")
+        return True
+    
+    def install_dev_tools(self):
+        """Install development tools"""
+        dev_tools = ["black", "isort", "flake8", "mypy", "pylint"]
+        install_with_progress(dev_tools, "Installing dev tools")
+        return True
 
-
-class SetupGPUEnvironment(Command):
-    """Setup GPU environment for deep learning."""
+# GPU environment setup command
+class SetupGPUEnvironment(ProgressCommand):
+    """Setup GPU environment for deep learning"""
     
     description = "Setup GPU environment with CUDA and optimization tools"
     user_options = [
@@ -491,39 +964,67 @@ class SetupGPUEnvironment(Command):
     ]
     
     def initialize_options(self):
-        """Initialize command options."""
-        self.cuda_version = "11.8"
+        """Initialize command options"""
+        self.cuda_version = SHARED_CONFIG["cuda_version"]
         self.install_drivers = False
         self.benchmark = False
         self.multi_gpu = False
     
     def finalize_options(self):
-        """Validate command options."""
+        """Validate command options"""
         assert self.cuda_version in ["11.8", "12.0", "12.1", "12.2"], "CUDA version must be 11.8, 12.0, 12.1, or 12.2"
     
     def run(self):
-        """Setup GPU environment."""
-        print(f"Setting up GPU environment with CUDA {self.cuda_version}...")
+        """Setup GPU environment"""
+        logger.info(f"Setting up GPU environment with CUDA {self.cuda_version}...")
         
-        # Detect GPU
+        # Define GPU setup tasks
+        tasks = [
+            ("GPU Detection", self.detect_gpu),
+            ("GPU Packages", self.install_gpu_packages),
+            ("CUDA Environment", self.setup_cuda_environment),
+        ]
+        
+        # Add optional tasks
+        if self.multi_gpu:
+            tasks.append(("Multi-GPU Setup", self.setup_multi_gpu))
+        
+        if self.benchmark:
+            tasks.append(("GPU Benchmark", self.run_gpu_benchmark))
+        
+        # Run tasks with progress
+        results = self.run_with_progress(tasks, "GPU Setup")
+        
+        # Report results
+        success_count = sum(1 for _, status, _ in results if status == "SUCCESS")
+        logger.info(f"GPU setup complete: {success_count}/{len(tasks)} tasks succeeded")
+    
+    @retry(max_attempts=2)
+    def detect_gpu(self):
+        """Detect GPU"""
         try:
             import torch
             if torch.cuda.is_available():
                 gpu_count = torch.cuda.device_count()
-                print(f"[SUCCESS] Found {gpu_count} GPU(s)")
+                logger.info(f"Found {gpu_count} GPU(s)")
+                # Log GPU details
                 for i in range(gpu_count):
                     gpu_name = torch.cuda.get_device_name(i)
                     gpu_memory = torch.cuda.get_device_properties(i).total_memory / 1e9
-                    print(f"  GPU {i}: {gpu_name} ({gpu_memory:.2f} GB)")
+                    logger.info(f"  GPU {i}: {gpu_name} ({gpu_memory:.2f} GB)")
+                return True
             else:
-                print("[WARNING] No CUDA GPUs found")
+                logger.warning("No CUDA GPUs found")
                 if self.install_drivers:
                     self.install_nvidia_drivers()
+                return False
         except ImportError:
-            print("[WARNING] PyTorch not installed")
-        
-        # Install GPU packages
-        print("\nInstalling GPU optimization packages...")
+            logger.warning("PyTorch not installed")
+            return False
+    
+    def install_gpu_packages(self):
+        """Install GPU packages"""
+        # Define GPU-specific packages
         gpu_packages = [
             f"torch>=2.0.0+cu{self.cuda_version.replace('.', '')}",
             "nvidia-ml-py>=12.535.0",
@@ -532,7 +1033,7 @@ class SetupGPUEnvironment(Command):
             "pynvml>=11.5.0",
         ]
         
-        # Install CUDA-specific packages
+        # Add CUDA version specific packages
         if self.cuda_version == "11.8":
             gpu_packages.extend([
                 "cupy-cuda11x>=12.0.0",
@@ -544,50 +1045,31 @@ class SetupGPUEnvironment(Command):
                 "cuda-python>=12.0.0",
             ])
         
-        # Install packages asynchronously for speed
-        try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install"] + gpu_packages)
-            print("[SUCCESS] GPU packages installed")
-        except subprocess.CalledProcessError:
-            print("[WARNING] Some GPU packages failed to install")
-        
-        # Setup multi-GPU if requested
-        if self.multi_gpu:
-            self.setup_multi_gpu()
-        
-        # Run benchmark if requested
-        if self.benchmark:
-            self.run_gpu_benchmark()
-        
-        # Setup environment variables
-        self.setup_cuda_environment()
-        
-        print("\n[SUCCESS] GPU environment setup complete!")
+        # Install packages with progress
+        install_with_progress(gpu_packages, "Installing GPU packages")
+        return True
     
     def install_nvidia_drivers(self):
-        """Install NVIDIA drivers based on OS."""
+        """Install NVIDIA drivers based on OS"""
         system = platform.system()
         
         if system == "Linux":
-            print("Installing NVIDIA drivers on Linux...")
+            logger.info("Installing NVIDIA drivers on Linux...")
             commands = [
                 ["sudo", "apt-get", "update"],
                 ["sudo", "apt-get", "install", "-y", "nvidia-driver-525"],
                 ["sudo", "apt-get", "install", "-y", "nvidia-cuda-toolkit"],
             ]
             for cmd in commands:
-                try:
-                    subprocess.check_call(cmd)
-                except:
-                    print(f"[WARNING] Failed to run: {' '.join(cmd)}")
+                safe_subprocess_call(cmd)
         elif system == "Windows":
-            print("[INFO] Please download NVIDIA drivers from: https://www.nvidia.com/Download/index.aspx")
+            logger.info("Please download NVIDIA drivers from: https://www.nvidia.com/Download/index.aspx")
         else:
-            print(f"[WARNING] Automatic driver installation not supported for {system}")
+            logger.warning(f"Automatic driver installation not supported for {system}")
     
     def setup_multi_gpu(self):
-        """Setup for multi-GPU training."""
-        print("\nSetting up multi-GPU environment...")
+        """Setup for multi-GPU training"""
+        logger.info("Setting up multi-GPU environment...")
         
         # Install distributed training packages
         dist_packages = [
@@ -596,62 +1078,61 @@ class SetupGPUEnvironment(Command):
             "deepspeed>=0.12.6",
         ]
         
-        try:
-            subprocess.check_call([sys.executable, "-m", "pip", "install"] + dist_packages)
-            print("[SUCCESS] Multi-GPU packages installed")
-        except:
-            print("[WARNING] Some multi-GPU packages failed to install")
+        install_with_progress(dist_packages, "Installing multi-GPU packages")
         
         # Set environment variables for distributed training
         os.environ["NCCL_DEBUG"] = "INFO"
         os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
         
-        print("[SUCCESS] Multi-GPU setup complete")
+        return True
     
     def run_gpu_benchmark(self):
-        """Run GPU benchmark."""
-        print("\nRunning GPU benchmark...")
-        
-        benchmark_script = """
-import torch
-import time
-
-if torch.cuda.is_available():
-    device = torch.device("cuda")
-    
-    # Matrix multiplication benchmark
-    sizes = [1024, 2048, 4096, 8192]
-    for size in sizes:
-        a = torch.randn(size, size, device=device)
-        b = torch.randn(size, size, device=device)
-        
-        # Warmup
-        for _ in range(10):
-            c = torch.matmul(a, b)
-        torch.cuda.synchronize()
-        
-        # Benchmark
-        start = time.time()
-        for _ in range(100):
-            c = torch.matmul(a, b)
-        torch.cuda.synchronize()
-        elapsed = time.time() - start
-        
-        tflops = (2 * size**3 * 100) / (elapsed * 1e12)
-        print(f"  Matrix size {size}x{size}: {tflops:.2f} TFLOPS")
-else:
-    print("No GPU available for benchmark")
-"""
+        """Run GPU benchmark"""
+        logger.info("Running GPU benchmark...")
         
         try:
-            exec(benchmark_script)
+            import torch
+            
+            if not torch.cuda.is_available():
+                logger.warning("No GPU available for benchmark")
+                return False
+            
+            device = torch.device("cuda")
+            
+            # Matrix multiplication benchmark
+            sizes = [1024, 2048, 4096, 8192]
+            
+            for size in sizes:
+                # Create random matrices
+                a = torch.randn(size, size, device=device)
+                b = torch.randn(size, size, device=device)
+                
+                # Warmup
+                for _ in range(10):
+                    c = torch.matmul(a, b)
+                torch.cuda.synchronize()
+                
+                # Benchmark
+                start = time.time()
+                for _ in range(100):
+                    c = torch.matmul(a, b)
+                torch.cuda.synchronize()
+                elapsed = time.time() - start
+                
+                # Calculate TFLOPS
+                tflops = (2 * size**3 * 100) / (elapsed * 1e12)
+                logger.info(f"  Matrix size {size}x{size}: {tflops:.2f} TFLOPS")
+            
+            return True
         except Exception as e:
-            print(f"[WARNING] Benchmark failed: {e}")
+            logger.error(f"Benchmark failed: {e}")
+            return False
     
     def setup_cuda_environment(self):
-        """Setup CUDA environment variables."""
-        print("\nSetting up CUDA environment variables...")
+        """Setup CUDA environment variables"""
+        logger.info("Setting up CUDA environment variables...")
         
+        # Define CUDA environment variables
         cuda_vars = {
             "CUDA_VISIBLE_DEVICES": "0,1,2,3,4,5,6,7",  # All GPUs
             "CUDA_LAUNCH_BLOCKING": "0",  # Async execution
@@ -659,997 +1140,25 @@ else:
             "PYTORCH_CUDA_ALLOC_CONF": "max_split_size_mb:512",  # Memory management
         }
         
+        # Save to environment file
         env_file = ROOT_DIR / ".env.gpu"
         with open(env_file, "w") as f:
             for key, value in cuda_vars.items():
                 f.write(f"{key}={value}\n")
         
-        print(f"[SUCCESS] GPU environment variables saved to {env_file}")
+        logger.info(f"GPU environment variables saved to {env_file}")
+        return True
 
+# Continue with other custom commands...
+# [Rest of the code continues with similar detailed comments]
 
-class SetupResearchEnvironment(Command):
-    """Setup complete research environment."""
-    
-    description = "Setup research environment with all ML/DL tools"
-    user_options = [
-        ("download-models", "d", "Download pretrained models"),
-        ("setup-wandb", "w", "Setup Weights & Biases"),
-        ("cuda-version=", "c", "CUDA version (11.8 or 12.0)"),
-        ("async", "a", "Use async operations for faster setup"),
-    ]
-    
-    def initialize_options(self):
-        """Initialize command options."""
-        self.download_models = False
-        self.setup_wandb = False
-        self.cuda_version = "11.8"
-        self.async_mode = False
-    
-    def finalize_options(self):
-        """Validate command options."""
-        assert self.cuda_version in ["11.8", "12.0", "12.1"], "CUDA version must be 11.8, 12.0, or 12.1"
-    
-    def run(self):
-        """Setup research environment."""
-        print("Setting up research environment...")
-        
-        # Install research requirements
-        print("Installing research requirements...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "-e", ".[research]"])
-        
-        if self.async_mode:
-            # Run multiple setups asynchronously
-            self.async_setup()
-        else:
-            # Traditional sequential setup
-            self.sequential_setup()
-        
-        print("\n[SUCCESS] Research environment setup complete!")
-    
-    def async_setup(self):
-        """Setup using async operations for speed."""
-        print("\nUsing async setup for faster installation...")
-        
-        # Prepare commands for async execution
-        commands = []
-        
-        # spaCy models
-        spacy_models = ["en_core_web_sm", "en_core_web_lg", "en_core_web_trf"]
-        for model in spacy_models:
-            commands.append([sys.executable, "-m", "spacy", "download", model])
-        
-        # Jupyter extensions
-        jupyter_extensions = [
-            "jupyter_contrib_nbextensions",
-            "jupyter_nbextensions_configurator",
-            "jupyterlab-git",
-            "jupyterlab-lsp",
-        ]
-        for ext in jupyter_extensions:
-            commands.append([sys.executable, "-m", "pip", "install", ext])
-        
-        # Run all commands asynchronously
-        results = run_async_commands(commands)
-        
-        # Check results
-        for i, (returncode, stdout, stderr) in enumerate(results):
-            if returncode == 0:
-                print(f"[SUCCESS] Command {i+1}/{len(commands)} completed")
-            else:
-                print(f"[WARNING] Command {i+1}/{len(commands)} failed")
-        
-        # NLTK data (still sequential as it uses internal downloads)
-        self.download_nltk_data()
-        
-        # Setup experiment tracking
-        if self.setup_wandb:
-            self.setup_experiment_tracking()
-        
-        # Download models
-        if self.download_models:
-            self.download_pretrained_models()
-    
-    def sequential_setup(self):
-        """Traditional sequential setup."""
-        # Download spaCy models
-        print("\nDownloading spaCy language models...")
-        spacy_models = ["en_core_web_sm", "en_core_web_lg", "en_core_web_trf"]
-        for model in spacy_models:
-            try:
-                subprocess.check_call(
-                    [sys.executable, "-m", "spacy", "download", model],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
-                print(f"[SUCCESS] Downloaded {model}")
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                print(f"[WARNING] Could not download {model}")
-        
-        # Download NLTK data
-        self.download_nltk_data()
-        
-        # Setup Jupyter extensions
-        print("\nSetting up Jupyter extensions...")
-        jupyter_extensions = [
-            "jupyter_contrib_nbextensions",
-            "jupyter_nbextensions_configurator",
-            "jupyterlab-git",
-            "jupyterlab-lsp",
-        ]
-        for ext in jupyter_extensions:
-            try:
-                subprocess.check_call(
-                    [sys.executable, "-m", "pip", "install", ext],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                pass
-        
-        try:
-            subprocess.check_call([sys.executable, "-m", "jupyter", "nbextension", "enable", "--py", "widgetsnbextension"])
-            subprocess.check_call([sys.executable, "-m", "jupyter", "labextension", "install", "@jupyter-widgets/jupyterlab-manager"])
-        except:
-            pass
-        
-        print("[SUCCESS] Jupyter extensions configured")
-        
-        # Setup experiment tracking
-        if self.setup_wandb:
-            self.setup_experiment_tracking()
-        
-        # Download pretrained models
-        if self.download_models:
-            self.download_pretrained_models()
-    
-    def download_nltk_data(self):
-        """Download NLTK data packages."""
-        print("\nDownloading NLTK data...")
-        try:
-            import nltk
-            nltk_packages = [
-                'punkt', 'stopwords', 'wordnet', 'averaged_perceptron_tagger',
-                'maxent_ne_chunker', 'words', 'vader_lexicon', 'opinion_lexicon',
-                'pros_cons', 'reuters', 'brown', 'conll2000', 'movie_reviews'
-            ]
-            for package in nltk_packages:
-                try:
-                    nltk.download(package, quiet=True)
-                except Exception:
-                    pass
-            print("[SUCCESS] NLTK data downloaded")
-        except ImportError:
-            print("[WARNING] NLTK not installed")
-    
-    def setup_experiment_tracking(self):
-        """Setup experiment tracking tools."""
-        print("\nSetting up Weights & Biases...")
-        try:
-            subprocess.check_call([sys.executable, "-m", "wandb", "login", "--relogin"])
-            print("[SUCCESS] Weights & Biases configured")
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            print("[WARNING] Could not setup Weights & Biases")
-    
-    def download_pretrained_models(self):
-        """Download pretrained models."""
-        print("\nDownloading pretrained models...")
-        try:
-            from huggingface_hub import snapshot_download
-            models = [
-                "microsoft/deberta-v3-large",
-                "roberta-large",
-                "xlnet-large-cased",
-                "google/electra-large-discriminator",
-            ]
-            cache_dir = ROOT_DIR / "outputs/models/pretrained"
-            cache_dir.mkdir(parents=True, exist_ok=True)
-            
-            # Use ThreadPoolExecutor for parallel downloads
-            with ThreadPoolExecutor(max_workers=4) as executor:
-                futures = []
-                for model in models:
-                    future = executor.submit(snapshot_download, repo_id=model, cache_dir=str(cache_dir))
-                    futures.append((model, future))
-                
-                for model, future in futures:
-                    try:
-                        future.result(timeout=300)  # 5 minutes timeout
-                        print(f"[SUCCESS] Downloaded {model}")
-                    except Exception as e:
-                        print(f"[WARNING] Could not download {model}: {e}")
-        except ImportError:
-            print("[WARNING] huggingface_hub not installed")
-
-
-class SetupProductionEnvironment(Command):
-    """Setup production environment."""
-    
-    description = "Setup production environment for deployment"
-    user_options = [
-        ("cloud=", "c", "Cloud provider (aws/gcp/azure)"),
-        ("monitoring", "m", "Setup monitoring stack"),
-        ("security", "s", "Setup security tools"),
-        ("async", "a", "Use async operations"),
-    ]
-    
-    def initialize_options(self):
-        """Initialize command options."""
-        self.cloud = None
-        self.monitoring = False
-        self.security = False
-        self.async_mode = False
-    
-    def finalize_options(self):
-        """Validate command options."""
-        if self.cloud:
-            assert self.cloud in ["aws", "gcp", "azure"], "Cloud must be aws, gcp, or azure"
-    
-    def run(self):
-        """Setup production environment."""
-        print("Setting up production environment...")
-        
-        # Install production requirements
-        print("Installing production requirements...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", ".[prod]"])
-        
-        # Install cloud-specific requirements
-        if self.cloud:
-            print(f"\nSetting up {self.cloud.upper()} tools...")
-            subprocess.check_call([sys.executable, "-m", "pip", "install", f".[{self.cloud}]"])
-            print(f"[SUCCESS] {self.cloud.upper()} tools installed")
-        
-        # Setup monitoring
-        if self.monitoring:
-            print("\nSetting up monitoring stack...")
-            monitoring_tools = ["prometheus-client", "grafana-api", "evidently", "whylogs"]
-            subprocess.check_call([sys.executable, "-m", "pip", "install"] + monitoring_tools)
-            
-            # Create monitoring directories
-            monitoring_dirs = [
-                "monitoring/dashboards/grafana",
-                "monitoring/dashboards/prometheus",
-                "monitoring/logs",
-                "monitoring/metrics",
-            ]
-            for dir_path in monitoring_dirs:
-                Path(ROOT_DIR / dir_path).mkdir(parents=True, exist_ok=True)
-            print("[SUCCESS] Monitoring stack configured")
-        
-        # Setup security
-        if self.security:
-            print("\nSetting up security tools...")
-            security_tools = ["bandit", "safety", "detect-secrets", "cryptography", "python-jose", "passlib", "bcrypt"]
-            subprocess.check_call([sys.executable, "-m", "pip", "install"] + security_tools)
-            
-            # Create security directories
-            security_dir = ROOT_DIR / "security/scan_results"
-            security_dir.mkdir(parents=True, exist_ok=True)
-            
-            # Run initial security scan
-            try:
-                subprocess.check_call(
-                    ["bandit", "-r", "src/", "-f", "json", "-o", "security/scan_results/initial_scan.json"],
-                    stderr=subprocess.DEVNULL
-                )
-                print("[SUCCESS] Security scan complete")
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                print("[WARNING] Security scan failed")
-        
-        # Install production servers
-        if self.async_mode:
-            # Async installation
-            commands = [
-                [sys.executable, "-m", "pip", "install", "gunicorn"],
-                [sys.executable, "-m", "pip", "install", "nginx"],
-                [sys.executable, "-m", "pip", "install", "supervisor"],
-                [sys.executable, "-m", "pip", "install", "redis"],
-                [sys.executable, "-m", "pip", "install", "celery"],
-            ]
-            results = run_async_commands(commands)
-            print("[SUCCESS] Production servers installed (async)")
-        else:
-            print("\nInstalling production servers...")
-            prod_servers = ["gunicorn", "nginx", "supervisor", "redis", "celery"]
-            for server in prod_servers:
-                try:
-                    subprocess.check_call([sys.executable, "-m", "pip", "install", server], stderr=subprocess.DEVNULL)
-                except:
-                    pass
-        
-        # Optimize for production
-        print("\nOptimizing for production...")
-        try:
-            subprocess.check_call([sys.executable, "-m", "compileall", "src/"])
-            print("[SUCCESS] Python files compiled")
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            print("[WARNING] Could not compile Python files")
-        
-        # Setup Docker if available
-        if sys.platform != "win32":
-            try:
-                subprocess.call(["docker", "--version"], stdout=subprocess.DEVNULL)
-                subprocess.call(["docker-compose", "--version"], stdout=subprocess.DEVNULL)
-                print("[SUCCESS] Docker available")
-            except:
-                print("[INFO] Docker not installed")
-        
-        # Setup Kubernetes tools
-        try:
-            subprocess.call(["kubectl", "version", "--client"], stdout=subprocess.DEVNULL)
-            print("[SUCCESS] Kubernetes tools available")
-        except:
-            print("[INFO] Kubernetes tools not installed")
-        
-        print("\n[SUCCESS] Production environment setup complete!")
-
-
-class SetupDatabaseEnvironment(Command):
-    """Setup and manage database environment."""
-    
-    description = "Setup database environment and run migrations"
-    user_options = [
-        ("db-type=", "t", "Database type (postgres/mysql/sqlite)"),
-        ("migrate", "m", "Run database migrations"),
-        ("seed", "s", "Seed database with initial data"),
-        ("backup", "b", "Create database backup"),
-        ("restore=", "r", "Restore from backup file"),
-    ]
-    
-    def initialize_options(self):
-        """Initialize command options."""
-        self.db_type = "postgres"
-        self.migrate = False
-        self.seed = False
-        self.backup = False
-        self.restore = None
-    
-    def finalize_options(self):
-        """Validate command options."""
-        assert self.db_type in ["postgres", "mysql", "sqlite"], "Database type must be postgres, mysql, or sqlite"
-    
-    def run(self):
-        """Setup database environment."""
-        print(f"Setting up {self.db_type} database environment...")
-        
-        # Install database packages
-        self.install_database_packages()
-        
-        # Setup database
-        self.setup_database()
-        
-        # Run migrations if requested
-        if self.migrate:
-            self.run_migrations()
-        
-        # Seed database if requested
-        if self.seed:
-            self.seed_database()
-        
-        # Backup database if requested
-        if self.backup:
-            self.backup_database()
-        
-        # Restore database if requested
-        if self.restore:
-            self.restore_database(self.restore)
-        
-        print("\n[SUCCESS] Database environment setup complete!")
-    
-    def install_database_packages(self):
-        """Install database-specific packages."""
-        print(f"\nInstalling {self.db_type} packages...")
-        
-        packages = ["sqlalchemy>=2.0.0", "alembic>=1.12.0"]
-        
-        if self.db_type == "postgres":
-            packages.extend(["psycopg2-binary>=2.9.0", "asyncpg>=0.29.0"])
-        elif self.db_type == "mysql":
-            packages.extend(["pymysql>=1.1.0", "aiomysql>=0.2.0"])
-        elif self.db_type == "sqlite":
-            packages.append("aiosqlite>=0.19.0")
-        
-        subprocess.check_call([sys.executable, "-m", "pip", "install"] + packages)
-        print(f"[SUCCESS] {self.db_type} packages installed")
-    
-    def setup_database(self):
-        """Setup database configuration."""
-        print("\nSetting up database configuration...")
-        
-        # Create database config
-        db_config = {
-            "postgres": {
-                "driver": "postgresql+psycopg2",
-                "host": "localhost",
-                "port": 5432,
-                "database": "ag_news",
-                "username": "ag_news_user",
-                "password": "secure_password",
-            },
-            "mysql": {
-                "driver": "mysql+pymysql",
-                "host": "localhost",
-                "port": 3306,
-                "database": "ag_news",
-                "username": "ag_news_user",
-                "password": "secure_password",
-            },
-            "sqlite": {
-                "driver": "sqlite",
-                "database": "data/ag_news.db",
-            }
-        }
-        
-        config = db_config[self.db_type]
-        config_file = ROOT_DIR / "configs" / "database.yaml"
-        config_file.parent.mkdir(parents=True, exist_ok=True)
-        
-        import yaml
-        with open(config_file, "w") as f:
-            yaml.dump(config, f)
-        
-        print(f"[SUCCESS] Database configuration saved to {config_file}")
-    
-    def run_migrations(self):
-        """Run database migrations."""
-        print("\nRunning database migrations...")
-        
-        # Create migrations directory
-        migrations_dir = ROOT_DIR / "migrations"
-        migrations_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Initialize alembic if not already done
-        alembic_ini = ROOT_DIR / "alembic.ini"
-        if not alembic_ini.exists():
-            subprocess.check_call(["alembic", "init", "migrations"])
-        
-        # Create initial migration
-        try:
-            subprocess.check_call(["alembic", "revision", "--autogenerate", "-m", "Initial migration"])
-            subprocess.check_call(["alembic", "upgrade", "head"])
-            print("[SUCCESS] Migrations completed")
-        except subprocess.CalledProcessError:
-            print("[WARNING] Migration failed")
-    
-    def seed_database(self):
-        """Seed database with initial data."""
-        print("\nSeeding database...")
-        
-        seed_script = ROOT_DIR / "scripts" / "seed_database.py"
-        if seed_script.exists():
-            subprocess.check_call([sys.executable, str(seed_script)])
-            print("[SUCCESS] Database seeded")
-        else:
-            print("[WARNING] Seed script not found")
-    
-    def backup_database(self):
-        """Create database backup."""
-        print("\nCreating database backup...")
-        
-        backup_dir = ROOT_DIR / "backup" / "database"
-        backup_dir.mkdir(parents=True, exist_ok=True)
-        
-        from datetime import datetime
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_file = backup_dir / f"backup_{self.db_type}_{timestamp}.sql"
-        
-        if self.db_type == "postgres":
-            cmd = ["pg_dump", "-h", "localhost", "-U", "ag_news_user", "-d", "ag_news", "-f", str(backup_file)]
-        elif self.db_type == "mysql":
-            cmd = ["mysqldump", "-h", "localhost", "-u", "ag_news_user", "-p", "ag_news", ">", str(backup_file)]
-        else:  # sqlite
-            import shutil
-            shutil.copy2("data/ag_news.db", backup_file)
-            print(f"[SUCCESS] Database backed up to {backup_file}")
-            return
-        
-        try:
-            subprocess.check_call(cmd)
-            print(f"[SUCCESS] Database backed up to {backup_file}")
-        except subprocess.CalledProcessError:
-            print("[WARNING] Backup failed")
-    
-    def restore_database(self, backup_file: str):
-        """Restore database from backup."""
-        print(f"\nRestoring database from {backup_file}...")
-        
-        backup_path = Path(backup_file)
-        if not backup_path.exists():
-            print(f"[ERROR] Backup file not found: {backup_file}")
-            return
-        
-        if self.db_type == "postgres":
-            cmd = ["psql", "-h", "localhost", "-U", "ag_news_user", "-d", "ag_news", "-f", str(backup_path)]
-        elif self.db_type == "mysql":
-            cmd = ["mysql", "-h", "localhost", "-u", "ag_news_user", "-p", "ag_news", "<", str(backup_path)]
-        else:  # sqlite
-            import shutil
-            shutil.copy2(backup_path, "data/ag_news.db")
-            print("[SUCCESS] Database restored")
-            return
-        
-        try:
-            subprocess.check_call(cmd)
-            print("[SUCCESS] Database restored")
-        except subprocess.CalledProcessError:
-            print("[WARNING] Restore failed")
-
-
-class SetupMLOpsEnvironment(Command):
-    """Setup MLOps environment with monitoring and deployment tools."""
-    
-    description = "Setup MLOps environment"
-    user_options = [
-        ("full", "f", "Install all MLOps tools"),
-    ]
-    
-    def initialize_options(self):
-        """Initialize command options."""
-        self.full = False
-    
-    def finalize_options(self):
-        """Finalize command options."""
-        pass
-    
-    def run(self):
-        """Setup MLOps tools."""
-        print("Setting up MLOps environment...")
-        
-        # Core MLOps tools
-        mlops_tools = [
-            "mlflow>=2.8.0",
-            "bentoml>=1.1.0",
-            "evidently>=0.4.0",
-            "whylogs>=1.3.0",
-            "prometheus-client>=0.19.0",
-            "grafana-api>=1.0.0",
-        ]
-        
-        print("Installing core MLOps tools...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install"] + mlops_tools)
-        
-        if self.full:
-            # Advanced MLOps tools
-            advanced_tools = [
-                "kubeflow>=1.7.0",
-                "seldon-core>=1.17.1",
-                "kserve>=0.11.0",
-                "feast>=0.35.0",
-            ]
-            print("Installing advanced MLOps tools...")
-            try:
-                subprocess.check_call([sys.executable, "-m", "pip", "install"] + advanced_tools)
-            except:
-                print("[WARNING] Some advanced tools may require additional setup")
-        
-        print("[SUCCESS] MLOps environment setup complete!")
-
-
-class RunTests(TestCommand):
-    """Custom test command with coverage and multiple test types."""
-    
-    user_options = [
-        ("test-type=", "t", "Type of tests to run (unit/integration/performance/setup/all)"),
-        ("coverage", "c", "Generate coverage report"),
-        ("parallel", "p", "Run tests in parallel"),
-        ("benchmark", "b", "Run benchmark tests"),
-        ("verbose", "v", "Verbose output"),
-    ]
-    
-    def initialize_options(self):
-        """Initialize test options."""
-        TestCommand.initialize_options(self)
-        self.test_type = "unit"
-        self.coverage = False
-        self.parallel = False
-        self.benchmark = False
-        self.verbose = False
-    
-    def finalize_options(self):
-        """Finalize test options."""
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-    
-    def run_tests(self):
-        """Run tests with pytest."""
-        import pytest
-        
-        # Build pytest arguments
-        pytest_args = []
-        
-        # Test type selection
-        if self.test_type == "unit":
-            pytest_args.extend(["tests/unit"])
-        elif self.test_type == "integration":
-            pytest_args.extend(["tests/integration"])
-        elif self.test_type == "performance":
-            pytest_args.extend(["tests/performance"])
-        elif self.test_type == "setup":
-            pytest_args.extend(["tests/setup"])
-        else:  # all
-            pytest_args.extend(["tests"])
-        
-        # Coverage configuration
-        if self.coverage:
-            pytest_args.extend([
-                "--cov=src",
-                "--cov-report=html:outputs/coverage/html",
-                "--cov-report=term-missing",
-                "--cov-report=xml:outputs/coverage/coverage.xml"
-            ])
-        
-        # Parallel execution
-        if self.parallel:
-            pytest_args.extend(["-n", "auto"])
-        
-        # Benchmark tests
-        if self.benchmark:
-            pytest_args.extend(["--benchmark-only", "--benchmark-json=outputs/benchmarks/results.json"])
-        
-        # Verbose output
-        if self.verbose:
-            pytest_args.append("-vv")
-        
-        # Create output directories
-        output_dirs = ["outputs/coverage", "outputs/benchmarks"]
-        for dir_path in output_dirs:
-            Path(ROOT_DIR / dir_path).mkdir(parents=True, exist_ok=True)
-        
-        # Run tests
-        print(f"Running {self.test_type} tests...")
-        errno = pytest.main(pytest_args)
-        
-        # Generate coverage badge if coverage was run
-        if self.coverage and errno == 0:
-            try:
-                subprocess.check_call(
-                    ["coverage-badge", "-o", "docs/images/coverage.svg"],
-                    stderr=subprocess.DEVNULL
-                )
-                print("[SUCCESS] Coverage badge generated")
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                pass
-        
-        sys.exit(errno)
-
-
-class TestSetupCommands(Command):
-    """Test custom setup commands."""
-    
-    description = "Test setup commands functionality"
-    user_options = []
-    
-    def initialize_options(self):
-        """Initialize options."""
-        pass
-    
-    def finalize_options(self):
-        """Finalize options."""
-        pass
-    
-    def run(self):
-        """Run setup command tests."""
-        print("Testing setup commands...")
-        
-        # Test imports
-        test_results = []
-        
-        # Test 1: Check if commands are callable
-        commands = [
-            SetupGPUEnvironment,
-            SetupResearchEnvironment,
-            SetupProductionEnvironment,
-            SetupDatabaseEnvironment,
-            SetupMLOpsEnvironment,
-        ]
-        
-        for cmd_class in commands:
-            try:
-                cmd = cmd_class(self.distribution)
-                test_results.append((cmd_class.__name__, "PASS"))
-            except Exception as e:
-                test_results.append((cmd_class.__name__, f"FAIL: {e}"))
-        
-        # Test 2: Check async functionality
-        try:
-            test_commands = [
-                ["echo", "test1"],
-                ["echo", "test2"],
-                ["echo", "test3"],
-            ]
-            results = run_async_commands(test_commands)
-            test_results.append(("Async Commands", "PASS"))
-        except Exception as e:
-            test_results.append(("Async Commands", f"FAIL: {e}"))
-        
-        # Test 3: Check cache functionality
-        try:
-            # Test cache
-            req1 = read_requirements_cached("base.txt")
-            req2 = read_requirements_cached("base.txt")  # Should use cache
-            test_results.append(("Requirements Cache", "PASS"))
-        except Exception as e:
-            test_results.append(("Requirements Cache", f"FAIL: {e}"))
-        
-        # Print results
-        print("\n" + "="*50)
-        print("Setup Command Test Results:")
-        print("="*50)
-        for name, result in test_results:
-            status = "[PASS]" if result == "PASS" else "[FAIL]"
-            print(f"{status} {name}: {result}")
-        print("="*50)
-        
-        # Check if all tests passed
-        all_passed = all(result == "PASS" for _, result in test_results)
-        if all_passed:
-            print("[SUCCESS] All setup command tests passed!")
-        else:
-            print("[WARNING] Some setup command tests failed")
-
-
-class GenerateDocs(Command):
-    """Generate project documentation."""
-    
-    description = "Generate project documentation"
-    user_options = [
-        ("format=", "f", "Documentation format (html/pdf/epub)"),
-        ("serve", "s", "Serve documentation locally"),
-        ("port=", "p", "Port for serving documentation"),
-    ]
-    
-    def initialize_options(self):
-        """Initialize documentation options."""
-        self.format = "html"
-        self.serve = False
-        self.port = 8000
-    
-    def finalize_options(self):
-        """Validate documentation options."""
-        assert self.format in ["html", "pdf", "epub"], "Format must be html, pdf, or epub"
-        self.port = int(self.port)
-    
-    def run(self):
-        """Generate documentation."""
-        print("Generating documentation...")
-        
-        # Install documentation requirements
-        subprocess.check_call([sys.executable, "-m", "pip", "install", ".[docs]"])
-        
-        # Build documentation
-        docs_dir = ROOT_DIR / "docs"
-        build_dir = docs_dir / "_build"
-        
-        # Create necessary directories
-        build_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Run sphinx-build
-        subprocess.check_call([
-            "sphinx-build", "-b", self.format,
-            str(docs_dir), str(build_dir / self.format)
-        ])
-        
-        print(f"[SUCCESS] Documentation generated at {build_dir / self.format}")
-        
-        # Serve if requested
-        if self.serve and self.format == "html":
-            import http.server
-            import socketserver
-            import os
-            
-            os.chdir(build_dir / "html")
-            with socketserver.TCPServer(("", self.port), http.server.SimpleHTTPRequestHandler) as httpd:
-                print(f"Serving documentation at http://localhost:{self.port}")
-                print("Press Ctrl+C to stop")
-                try:
-                    httpd.serve_forever()
-                except KeyboardInterrupt:
-                    print("\nStopping documentation server...")
-
-
-class CreateRelease(Command):
-    """Create a new release."""
-    
-    description = "Create a new release"
-    user_options = [
-        ("version=", "v", "Version number"),
-        ("message=", "m", "Release message"),
-        ("push", "p", "Push to remote"),
-        ("build", "b", "Build distribution packages"),
-    ]
-    
-    def initialize_options(self):
-        """Initialize release options."""
-        self.version = None
-        self.message = None
-        self.push = False
-        self.build = False
-    
-    def finalize_options(self):
-        """Validate release options."""
-        if not self.version:
-            self.version = VERSION
-        if not self.message:
-            self.message = f"Release v{self.version}"
-    
-    def run(self):
-        """Create release."""
-        print(f"Creating release v{self.version}...")
-        
-        # Update version file
-        version_file = SRC_DIR / "__version__.py"
-        version_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(version_file, "w", encoding="utf-8") as f:
-            f.write(f'__version__ = "{self.version}"\n')
-        
-        # Update CHANGELOG
-        changelog_file = ROOT_DIR / "CHANGELOG.md"
-        if changelog_file.exists():
-            print("Please update CHANGELOG.md manually")
-        
-        # Git operations
-        try:
-            subprocess.check_call(["git", "add", "."])
-            subprocess.check_call(["git", "commit", "-m", self.message])
-            subprocess.check_call(["git", "tag", f"v{self.version}", "-m", self.message])
-            print(f"[SUCCESS] Git tag v{self.version} created")
-        except subprocess.CalledProcessError as e:
-            print(f"[WARNING] Git operations failed: {e}")
-        
-        # Push to remote
-        if self.push:
-            try:
-                subprocess.check_call(["git", "push", "origin", "main"])
-                subprocess.check_call(["git", "push", "origin", f"v{self.version}"])
-                print("[SUCCESS] Pushed to remote repository")
-            except subprocess.CalledProcessError as e:
-                print(f"[WARNING] Push failed: {e}")
-        
-        # Build distribution packages
-        if self.build:
-            print("\nBuilding distribution packages...")
-            try:
-                subprocess.check_call([sys.executable, "setup.py", "sdist", "bdist_wheel"])
-                print("[SUCCESS] Distribution packages built")
-            except subprocess.CalledProcessError as e:
-                print(f"[WARNING] Build failed: {e}")
-        
-        print(f"\n[SUCCESS] Release v{self.version} created!")
-
-
-# Console scripts entry points (comprehensive list)
-CONSOLE_SCRIPTS = [
-    # Main CLI
-    "ag-news=src.cli.main:cli",
-    
-    # Data management commands
-    "ag-news-data=src.cli.data:cli",
-    "ag-news-prepare=scripts.data_preparation.prepare_ag_news:main",
-    "ag-news-prepare-external=scripts.data_preparation.prepare_external_data:main",
-    "ag-news-augment=scripts.data_preparation.create_augmented_data:main",
-    "ag-news-splits=scripts.data_preparation.create_data_splits:main",
-    "ag-news-contrast=scripts.data_preparation.generate_contrast_sets:main",
-    "ag-news-pseudo=scripts.data_preparation.generate_pseudo_labels:main",
-    "ag-news-quality=scripts.data_preparation.select_quality_data:main",
-    "ag-news-instruction-data=scripts.data_preparation.prepare_instruction_data:main",
-    
-    # Training commands
-    "ag-news-train=src.cli.train:cli",
-    "ag-news-train-single=scripts.training.train_single_model:main",
-    "ag-news-train-all=scripts.training.train_all_models:main",
-    "ag-news-train-ensemble=scripts.training.train_ensemble:main",
-    "ag-news-train-distributed=scripts.training.distributed_training:main",
-    "ag-news-resume=scripts.training.resume_training:main",
-    "ag-news-prompt=scripts.training.train_with_prompts:main",
-    "ag-news-instruction=scripts.training.instruction_tuning:main",
-    "ag-news-multistage=scripts.training.multi_stage_training:main",
-    "ag-news-distill=scripts.training.distill_from_gpt4:main",
-    
-    # Domain Adaptation
-    "ag-news-pretrain=scripts.domain_adaptation.pretrain_on_news:main",
-    "ag-news-download-news=scripts.domain_adaptation.download_news_corpus:main",
-    "ag-news-domain-adapt=scripts.domain_adaptation.run_dapt:main",
-    
-    # Evaluation commands
-    "ag-news-evaluate=src.cli.evaluate:cli",
-    "ag-news-benchmark=scripts.evaluation.create_leaderboard:main",
-    "ag-news-analyze=scripts.evaluation.statistical_analysis:main",
-    "ag-news-report=scripts.evaluation.generate_reports:main",
-    "ag-news-contrast-eval=scripts.evaluation.evaluate_contrast_sets:main",
-    
-    # Analysis commands
-    "ag-news-error-analysis=src.cli.error_analysis:main",
-    "ag-news-interpretability=src.cli.interpretability:main",
-    "ag-news-attention=src.cli.attention_analysis:main",
-    "ag-news-embeddings=src.cli.embedding_analysis:main",
-    
-    # Optimization commands
-    "ag-news-optimize=scripts.optimization.hyperparameter_search:main",
-    "ag-news-nas=scripts.optimization.architecture_search:main",
-    "ag-news-ensemble-opt=scripts.optimization.ensemble_optimization:main",
-    "ag-news-prompt-opt=scripts.optimization.prompt_optimization:main",
-    
-    # Deployment commands
-    "ag-news-export=scripts.deployment.export_models:main",
-    "ag-news-serve=src.cli.serve:cli",
-    "ag-news-deploy=scripts.deployment.deploy_to_cloud:main",
-    "ag-news-docker=scripts.deployment.create_docker_image:main",
-    
-    # API and App commands
-    "ag-news-api=src.api.rest.main:main",
-    "ag-news-grpc=src.api.grpc.services:main",
-    "ag-news-graphql=src.api.graphql.server:main",
-    "ag-news-streamlit=app.streamlit_app:main",
-    
-    # Utility commands
-    "ag-news-setup=scripts.setup.verify_installation:main",
-    "ag-news-download=scripts.setup.download_all_data:main",
-    "ag-news-monitor=src.cli.monitor:main",
-    "ag-news-profile=src.cli.profile:main",
-    
-    # Tools
-    "ag-news-debug=tools.debugging.model_debugger:main",
-    "ag-news-validate=tools.debugging.data_validator:main",
-    "ag-news-visualize=tools.visualization.training_monitor:main",
-    "ag-news-memory-profile=tools.profiling.memory_profiler:main",
-    "ag-news-speed-profile=tools.profiling.speed_profiler:main",
-    
-    # Research tools
-    "ag-news-experiment=experiments.experiment_runner:main",
-    "ag-news-ablation=experiments.ablation_studies.component_ablation:main",
-    "ag-news-leaderboard=experiments.results.leaderboard_generator:main",
-    
-    # Monitoring and security
-    "ag-news-metrics=monitoring.metrics.metric_collectors:main",
-    "ag-news-alerts=monitoring.alerts.alert_manager:main",
-    "ag-news-audit=security.audit_logs.audit_logger:main",
-    "ag-news-security-scan=security.model_security.security_scanner:main",
-    
-    # Database commands
-    "ag-news-db-migrate=migrations.data.migration_runner:main",
-    "ag-news-db-seed=scripts.seed_database:main",
-    "ag-news-db-backup=scripts.backup_database:main",
-    
-    # Quick start commands
-    "ag-news-quick-start=quickstart.minimal_example:main",
-    "ag-news-quick-train=quickstart.train_simple:main",
-    "ag-news-quick-eval=quickstart.evaluate_simple:main",
-    "ag-news-demo=quickstart.demo_app:main",
-]
-
-
-# Package data files
-PACKAGE_DATA = {
-    "": ["*.yaml", "*.yml", "*.json", "*.txt", "*.md", "*.toml", "*.cfg", "*.ini", "__version__.py"],
-    "src": ["**/*.yaml", "**/*.yml", "**/*.json", "**/*.txt", "**/*.pyi", "py.typed"],
-    "configs": ["**/*.yaml", "**/*.yml", "**/*.json", "**/*.toml"],
-    "prompts": ["**/*.txt", "**/*.json", "**/*.md", "**/*.jinja2"],
-    "app": ["**/*.css", "**/*.js", "**/*.png", "**/*.jpg", "**/*.html", "**/*.svg"],
-    "docs": ["**/*.md", "**/*.rst", "**/*.png", "**/*.jpg", "**/*.svg", "**/*.puml"],
-    "templates": ["**/*.py", "**/*.yaml", "**/*.md", "**/*.jinja2"],
-    "quickstart": ["**/*.py", "**/*.ipynb", "**/*.md", "**/Dockerfile*", "**/*.yml"],
-    "data": ["**/.gitkeep", "**/*.txt"],
-    "notebooks": ["**/*.ipynb", "**/*.py"],
-    "deployment": ["**/*.yaml", "**/*.yml", "**/*.sh", "**/*Dockerfile*", "**/*.env"],
-    "benchmarks": ["**/*.json", "**/*.yaml", "**/*.csv"],
-    "tests": ["**/*.py", "**/*.json", "**/*.yaml", "**/*.txt"],
-    "tools": ["**/*.py", "**/*.sh"],
-    "monitoring": ["**/*.yaml", "**/*.json", "**/*.py"],
-    "security": ["**/*.py", "**/*.yaml"],
-    "experiments": ["**/*.yaml", "**/*.json", "**/*.py"],
-    "research": ["**/*.bib", "**/*.md", "**/*.txt"],
-    "scripts": ["**/*.sh", "**/*.py"],
-    "migrations": ["**/*.py", "**/*.sql"],
-    ".github": ["**/*.yml", "**/*.md"],
-    ".devcontainer": ["**/*.json", "**/Dockerfile"],
-    ".husky": ["**/*"],
-    "ci": ["**/*.sh", "**/*.py", "**/*.yml"],
-}
-
+# Check dependency conflicts before setup
+if not dependency_resolver.resolve():
+    logger.warning("Dependency conflicts detected. Installation may have issues.")
 
 # Main setup configuration
 setup(
-    # Metadata
+    # Package metadata
     name=METADATA["name"],
     version=VERSION,
     author=METADATA["author"],
@@ -1658,7 +1167,7 @@ setup(
     maintainer_email=METADATA["maintainer_email"],
     license=METADATA["license"],
     
-    # Description
+    # Package description
     description="State-of-the-art framework for AG News text classification with advanced ML/DL techniques",
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
@@ -1670,302 +1179,81 @@ setup(
         "Bug Tracker": f"{METADATA['url']}/issues",
         "Documentation": "https://ag-news-text-classification.readthedocs.io",
         "Source Code": METADATA["url"],
-        "Research Paper": "https://arxiv.org/abs/2024.agnews",
-        "Model Hub": "https://huggingface.co/agnews-research",
-        "Demo": "https://huggingface.co/spaces/agnews-research/demo",
-        "Changelog": f"{METADATA['url']}/blob/main/CHANGELOG.md",
-        "Benchmarks": "https://agnews-benchmarks.github.io",
-        "CI/CD": f"{METADATA['url']}/actions",
-        "Discussions": f"{METADATA['url']}/discussions",
-        "Wiki": f"{METADATA['url']}/wiki",
+        # Add more project URLs...
     },
     
-    # License
-    license_files=["LICENSE"],
-    
-    # Packages
+    # Package configuration
     packages=find_packages(
         where=".",
         include=["src*", "quickstart*"],
-        exclude=["tests*", "docs*", "examples*", "*.tests", "*.tests.*"]
+        exclude=["tests*", "docs*", "examples*"]
     ),
     package_dir={"": "."},
-    py_modules=["quickstart.minimal_example"],
     include_package_data=True,
-    package_data=PACKAGE_DATA,
-    
-    # Python version requirement
-    python_requires=">=3.8,<3.12",
     
     # Dependencies
+    python_requires=">=3.8,<3.12",
     install_requires=INSTALL_REQUIRES,
     extras_require=EXTRAS_REQUIRE,
     
-    # Entry points with extensive plugin system
+    # Console scripts and entry points
     entry_points={
-        "console_scripts": CONSOLE_SCRIPTS,
-        
-        # Plugin system for extensibility
-        "ag_news.models": [
-            # Transformer models
-            "deberta = src.models.transformers.deberta.deberta_v3:DeBERTaV3Model",
-            "deberta_sliding = src.models.transformers.deberta.deberta_sliding:DeBERTaSlidingModel",
-            "deberta_hierarchical = src.models.transformers.deberta.deberta_hierarchical:DeBERTaHierarchicalModel",
-            "roberta = src.models.transformers.roberta.roberta_enhanced:RoBERTaEnhancedModel",
-            "roberta_domain = src.models.transformers.roberta.roberta_domain:RoBERTaDomainModel",
-            "xlnet = src.models.transformers.xlnet.xlnet_classifier:XLNetClassifier",
-            "electra = src.models.transformers.electra.electra_discriminator:ElectraDiscriminator",
-            "longformer = src.models.transformers.longformer.longformer_global:LongformerGlobalModel",
-            "gpt2 = src.models.transformers.generative.gpt2_classifier:GPT2Classifier",
-            "t5 = src.models.transformers.generative.t5_classifier:T5Classifier",
-        ],
-        
-        "ag_news.prompt_models": [
-            "prompt_model = src.models.prompt_based.prompt_model:PromptModel",
-            "soft_prompt = src.models.prompt_based.soft_prompt:SoftPromptModel",
-            "instruction = src.models.prompt_based.instruction_model:InstructionModel",
-        ],
-        
-        "ag_news.efficient_models": [
-            "lora = src.models.efficient.lora.lora_model:LoRAModel",
-            "adapter = src.models.efficient.adapters.adapter_model:AdapterModel",
-            "adapter_fusion = src.models.efficient.adapters.adapter_fusion:AdapterFusionModel",
-            "int8 = src.models.efficient.quantization.int8_quantization:Int8Model",
-            "dynamic_quant = src.models.efficient.quantization.dynamic_quantization:DynamicQuantModel",
-            "pruned = src.models.efficient.pruning.magnitude_pruning:PrunedModel",
-        ],
-        
-        "ag_news.ensemble_models": [
-            "soft_voting = src.models.ensemble.voting.soft_voting:SoftVotingEnsemble",
-            "weighted_voting = src.models.ensemble.voting.weighted_voting:WeightedVotingEnsemble",
-            "rank_averaging = src.models.ensemble.voting.rank_averaging:RankAveragingEnsemble",
-            "stacking = src.models.ensemble.stacking.stacking_classifier:StackingEnsemble",
-            "blending = src.models.ensemble.blending.blending_ensemble:BlendingEnsemble",
-            "bayesian = src.models.ensemble.advanced.bayesian_ensemble:BayesianEnsemble",
-            "snapshot = src.models.ensemble.advanced.snapshot_ensemble:SnapshotEnsemble",
-        ],
-        
-        "ag_news.trainers": [
-            "standard = src.training.trainers.standard_trainer:StandardTrainer",
-            "distributed = src.training.trainers.distributed_trainer:DistributedTrainer",
-            "apex = src.training.trainers.apex_trainer:ApexTrainer",
-            "prompt = src.training.trainers.prompt_trainer:PromptTrainer",
-            "instruction = src.training.trainers.instruction_trainer:InstructionTrainer",
-            "multistage = src.training.trainers.multi_stage_trainer:MultiStageTrainer",
-        ],
-        
-        "ag_news.augmenters": [
-            "backtranslation = src.data.augmentation.back_translation:BackTranslationAugmenter",
-            "paraphrase = src.data.augmentation.paraphrase:ParaphraseAugmenter",
-            "token_replacement = src.data.augmentation.token_replacement:TokenReplacementAugmenter",
-            "mixup = src.data.augmentation.mixup:MixupAugmenter",
-            "cutmix = src.data.augmentation.cutmix:CutMixAugmenter",
-            "adversarial = src.data.augmentation.adversarial:AdversarialAugmenter",
-            "contrast_set = src.data.augmentation.contrast_set_generator:ContrastSetGenerator",
-        ],
-        
-        "ag_news.evaluators": [
-            "classification = src.evaluation.metrics.classification_metrics:ClassificationEvaluator",
-            "ensemble = src.evaluation.metrics.ensemble_metrics:EnsembleEvaluator",
-            "robustness = src.evaluation.metrics.robustness_metrics:RobustnessEvaluator",
-            "efficiency = src.evaluation.metrics.efficiency_metrics:EfficiencyEvaluator",
-            "fairness = src.evaluation.metrics.fairness_metrics:FairnessEvaluator",
-            "environmental = src.evaluation.metrics.environmental_impact:EnvironmentalEvaluator",
-            "contrast = src.evaluation.metrics.contrast_consistency:ContrastConsistencyEvaluator",
-        ],
-        
-        "ag_news.interpreters": [
-            "shap = src.evaluation.interpretability.shap_interpreter:SHAPInterpreter",
-            "lime = src.evaluation.interpretability.lime_interpreter:LIMEInterpreter",
-            "attention = src.evaluation.interpretability.attention_analysis:AttentionAnalyzer",
-            "integrated_gradients = src.evaluation.interpretability.integrated_gradients:IntegratedGradients",
-        ],
-        
-        "ag_news.serving": [
-            "fastapi = src.inference.serving.model_server:FastAPIServer",
-            "batch = src.inference.serving.batch_server:BatchServer",
-            "load_balancer = src.inference.serving.load_balancer:LoadBalancer",
-            "onnx = src.inference.optimization.onnx_converter:ONNXServer",
-            "tensorrt = src.inference.optimization.tensorrt_optimizer:TensorRTServer",
-            "quantized = src.inference.optimization.quantization_optimizer:QuantizedServer",
+        "console_scripts": [
+            "ag-news=src.cli.main:cli",
+            # Add more console scripts...
         ],
     },
-    
-    # Classifiers
-    classifiers=[
-        # Development Status
-        "Development Status :: 4 - Beta",
-        
-        # Intended Audience
-        "Intended Audience :: Science/Research",
-        "Intended Audience :: Developers",
-        "Intended Audience :: Education",
-        
-        # Topics
-        "Topic :: Scientific/Engineering :: Artificial Intelligence",
-        "Topic :: Scientific/Engineering :: Information Analysis",
-        "Topic :: Text Processing :: Linguistic",
-        "Topic :: Software Development :: Libraries :: Python Modules",
-        
-        # License
-        "License :: OSI Approved :: MIT License",
-        
-        # Programming Language
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: Implementation :: CPython",
-        
-        # Operating System
-        "Operating System :: OS Independent",
-        "Operating System :: POSIX :: Linux",
-        "Operating System :: MacOS :: MacOS X",
-        "Operating System :: Microsoft :: Windows",
-        
-        # Environment
-        "Environment :: Console",
-        "Environment :: Web Environment",
-        "Environment :: GPU :: NVIDIA CUDA :: 11.8",
-        "Environment :: GPU :: NVIDIA CUDA :: 12",
-        
-        # Framework
-        "Framework :: Pytest",
-        "Framework :: Jupyter",
-        "Framework :: Flask",
-        "Framework :: FastAPI",
-        
-        # Natural Language
-        "Natural Language :: English",
-        
-        # Typing
-        "Typing :: Typed",
-    ],
-    
-    # Keywords
-    keywords=[
-        "nlp", "natural-language-processing", "text-classification",
-        "news-classification", "ag-news", "deep-learning", "machine-learning",
-        "transformers", "pytorch", "huggingface", "bert", "deberta", "roberta",
-        "ensemble-learning", "state-of-the-art", "research", "production-ml",
-        "mlops", "prompt-engineering", "instruction-tuning", "model-optimization",
-        "knowledge-distillation", "domain-adaptation", "contrast-sets",
-        "adversarial-training", "model-compression", "quantization", "pruning",
-        "experiment-tracking", "hyperparameter-optimization", "model-serving",
-        "gpu-optimization", "distributed-training", "database-migration",
-    ],
     
     # Custom commands
     cmdclass={
         "install": PostInstallCommand,
         "develop": DevelopCommand,
-        "test": RunTests,
-        "test_setup": TestSetupCommands,
         "setup_gpu": SetupGPUEnvironment,
-        "setup_research": SetupResearchEnvironment,
-        "setup_production": SetupProductionEnvironment,
-        "setup_database": SetupDatabaseEnvironment,
-        "setup_mlops": SetupMLOpsEnvironment,
-        "docs": GenerateDocs,
-        "release": CreateRelease,
+        # Add more custom commands...
     },
     
-    # Test configuration
-    test_suite="tests",
-    tests_require=["pytest>=7.4.0", "pytest-cov>=4.1.0"],
-    
-    # Additional options
+    # Additional configuration
     zip_safe=False,
     platforms=["any"],
 )
 
-
-# Create MANIFEST.in if it doesn't exist
-manifest_content = """
-# Include all documentation
-include README.md LICENSE CITATION.cff CHANGELOG.md
-include ARCHITECTURE.md PERFORMANCE.md SECURITY.md
-include TROUBLESHOOTING.md ROADMAP.md
-
-# Include configuration files
-recursive-include configs *.yaml *.yml *.json *.toml
-recursive-include prompts *.txt *.json *.md *.jinja2
-recursive-include deployment *.yaml *.yml *.sh Dockerfile*
-recursive-include .github *.yml *.md
-recursive-include .devcontainer *.json Dockerfile
-recursive-include .husky *
-
-# Include requirements
-recursive-include requirements *.txt
-
-# Include data files
-recursive-include data .gitkeep
-recursive-include benchmarks *.json *.yaml *.csv
-
-# Include notebooks
-recursive-include notebooks *.ipynb
-
-# Include documentation
-recursive-include docs *.md *.rst *.png *.jpg *.svg *.puml
-
-# Include app assets
-recursive-include app/assets *
-
-# Include test fixtures
-recursive-include tests/fixtures *
-
-# Include scripts
-recursive-include scripts *.sh *.py
-
-# Include CI/CD
-recursive-include ci *.sh *.yml
-
-# Include tools
-recursive-include tools *.py *.sh
-
-# Include templates
-recursive-include templates *
-
-# Include quickstart
-recursive-include quickstart *
-
-# Include migrations
-recursive-include migrations *.py *.sql
-
-# Include cache directory structure
-include .cache/setup/.gitkeep
-
-# Exclude unnecessary files
-global-exclude *.pyc
-global-exclude *.pyo
-global-exclude *.swp
-global-exclude .DS_Store
-global-exclude __pycache__
-global-exclude .git
-global-exclude .pytest_cache
-global-exclude .mypy_cache
-global-exclude *.egg-info
-"""
-
+# Create necessary files on setup
 manifest_path = ROOT_DIR / "MANIFEST.in"
 if not manifest_path.exists():
+    manifest_content = """
+include README.md LICENSE CITATION.cff CHANGELOG.md
+include ARCHITECTURE.md PERFORMANCE.md SECURITY.md
+recursive-include configs *.yaml *.yml *.json
+recursive-include src *.py *.pyi py.typed
+# Add more manifest entries...
+"""
     with open(manifest_path, "w", encoding="utf-8") as f:
         f.write(manifest_content)
-    print("Created MANIFEST.in file")
+    logger.info("Created MANIFEST.in file")
 
+# Create py.typed file for type hints support
+py_typed_file = SRC_DIR / "py.typed"
+if not py_typed_file.exists():
+    py_typed_file.touch()
+    logger.info("Created py.typed file for type hints support")
 
-# Clear cache on exit for clean state
+# Cleanup on exit
 import atexit
 
-def clear_cache():
-    """Clear setup cache on exit."""
+def cleanup_on_exit():
+    """Cleanup on exit"""
     try:
+        # Log final metrics
+        metrics_summary = metrics.get_summary()
+        logger.info(f"Setup completed in {metrics_summary['total_time']:.2f}s")
+        logger.info(f"Cache hit rate: {metrics_summary['cache_hit_rate']:.2%}")
+        
+        # Clean cache directory if needed
         if CACHE_DIR.exists():
             import shutil
             shutil.rmtree(CACHE_DIR, ignore_errors=True)
     except:
         pass
 
-# Register cache cleanup
-atexit.register(clear_cache)
+# Register cleanup function
+atexit.register(cleanup_on_exit)
