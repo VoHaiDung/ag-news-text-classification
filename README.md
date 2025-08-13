@@ -257,6 +257,7 @@ ag-news-text-classification/
 │
 ├── src/
 │   ├── __init__.py
+|   ├── __version__.py
 │   ├── core/
 │   │   ├── __init__.py
 │   │   ├── registry.py
