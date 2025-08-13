@@ -104,7 +104,7 @@ ag-news-text-classification/
 ├── .pre-commit-config.yaml
 ├── commitlint.config.js
 │
-├── requirements.txt
+├── requirements/
 │   ├── base.txt
 │   ├── ml.txt
 │   ├── research.txt
