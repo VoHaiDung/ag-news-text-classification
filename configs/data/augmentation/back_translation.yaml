@@ -1,0 +1,329 @@
+# Back Translation Data Augmentation Configuration
+# Generate paraphrases through translation
+
+name: back_translation
+type: augmentation
+description: "Back translation augmentation for diversity"
+
+# Translation settings
+translation:
+  # Translation service
+  service: "googletrans"  # Options: googletrans, marian, opus, api
+  
+  # API settings (if using API)
+  api:
+    provider: "google"  # Options: google, deepl, microsoft
+    api_key: "${TRANSLATION_API_KEY}"
+    rate_limit: 100  # Requests per minute
+    
+  # Local models (if using local)
+  local_models:
+    use_local: true
+    model_type: "marian"
+    cache_dir: "./.cache/translation_models"
+    device: "cuda"
+    batch_size: 32
+
+# Language chains
+language_chains:
+  # Single-hop translation
+  single_hop:
+    - source: "en"
+      intermediate: "de"
+      target: "en"
+    - source: "en"
+      intermediate: "fr"
+      target: "en"
+    - source: "en"
+      intermediate: "es"
+      target: "en"
+    - source: "en"
+      intermediate: "zh"
+      target: "en"
+    - source: "en"
+      intermediate: "ja"
+      target: "en"
+    - source: "en"
+      intermediate: "ru"
+      target: "en"
+      
+  # Multi-hop translation (more variation)
+  multi_hop:
+    - chain: ["en", "de", "fr", "en"]
+      weight: 0.3
+    - chain: ["en", "es", "it", "en"]
+      weight: 0.3
+    - chain: ["en", "zh", "ja", "en"]
+      weight: 0.2
+    - chain: ["en", "ru", "de", "en"]
+      weight: 0.2
+
+# Augmentation parameters
+augmentation:
+  # Number of augmentations per sample
+  num_augmentations: 2
+  
+  # Augmentation probability
+  augmentation_probability: 0.5
+  
+  # Selection strategy
+  selection_strategy: "random"  # Options: random, confidence, diversity
+  
+  # Preserve important information
+  preserve_entities: true
+  preserve_numbers: true
+  preserve_dates: true
+  
+  # Length constraints
+  min_length_ratio: 0.8
+  max_length_ratio: 1.2
+
+# Quality control
+quality_control:
+  # Semantic similarity check
+  check_semantic_similarity: true
+  similarity_threshold: 0.85
+  similarity_model: "sentence-transformers/all-mpnet-base-v2"
+  
+  # Language detection
+  check_language: true
+  target_language: "en"
+  
+  # Grammar check
+  check_grammar: false
+  grammar_tool: "language_tool"
+  
+  # Fluency check
+  check_fluency: true
+  fluency_threshold: 0.8
+  
+  # Diversity check
+  ensure_diversity: true
+  min_edit_distance: 5
+  max_overlap_ratio: 0.9
+
+# Filtering
+filtering:
+  # Remove low-quality translations
+  filter_by_quality: true
+  quality_threshold: 0.7
+  
+  # Remove identical translations
+  remove_identical: true
+  
+  # Remove too similar translations
+  remove_similar: true
+  similarity_threshold: 0.95
+  
+  # Label preservation
+  preserve_label_relevance: true
+  label_preservation_threshold: 0.9
+
+# Advanced techniques
+advanced:
+  # Paraphrase ranking
+  rank_paraphrases: true
+  ranking_criteria:
+    - semantic_similarity
+    - diversity
+    - fluency
+    - grammaticality
+    
+  # Ensemble back-translation
+  ensemble_translation: true
+  ensemble_voting: "weighted"
+  
+  # Contextual translation
+  use_context: true
+  context_window: 2  # Sentences before/after
+  
+  # Domain-specific translation
+  use_domain_models: false
+  domain: "news"
+  
+  # Style preservation
+  preserve_style: true
+  style_features:
+    - formality
+    - sentiment
+    - complexity
+
+# Optimization
+optimization:
+  # Batch processing
+  batch_size: 64
+  max_batch_size: 128
+  
+  # Caching
+  cache_translations: true
+  cache_size: 100000
+  cache_dir: "./.cache/back_translation"
+  
+  # Parallel processing
+  num_workers: 4
+  use_multiprocessing: true
+  
+  # GPU optimization
+  use_gpu: true
+  mixed_precision: true
+
+# Post-processing
+post_processing:
+  # Text cleaning
+  clean_artifacts: true
+  fix_punctuation: true
+  fix_capitalization: true
+  
+  # Deduplication
+  deduplicate: true
+  deduplication_threshold: 0.95
+  
+  # Length normalization
+  normalize_length: false
+  target_length: null
+
+# Sampling strategy
+sampling:
+  # Sample selection for augmentation
+  strategy: "uncertainty"  # Options: random, uncertainty, diversity, difficulty
+  
+  # Class-balanced augmentation
+  balance_classes: true
+  
+  # Prioritize minority classes
+  minority_oversampling: 1.5
+  
+  # Difficulty-based sampling
+  difficulty_weights:
+    easy: 0.2
+    medium: 0.3
+    hard: 0.5
+
+# Integration with training
+training_integration:
+  # When to apply augmentation
+  augment_online: false  # During training
+  augment_offline: true  # Before training
+  
+  # Curriculum augmentation
+  curriculum_augmentation: true
+  augmentation_schedule:
+    - epoch: 0
+      languages: ["de", "fr"]
+      num_augmentations: 1
+    - epoch: 3
+      languages: ["de", "fr", "es", "zh"]
+      num_augmentations: 2
+    - epoch: 6
+      languages: ["all"]
+      num_augmentations: 3
+      
+  # Augmentation weight in loss
+  augmentation_weight: 0.5
+  weight_decay_schedule: "linear"
+
+# Evaluation
+evaluation:
+  # Evaluate augmentation quality
+  evaluate_quality: true
+  quality_metrics:
+    - bleu
+    - meteor
+    - rouge
+    - bertscore
+    
+  # Evaluate diversity
+  evaluate_diversity: true
+  diversity_metrics:
+    - unique_ngrams
+    - self_bleu
+    - edit_distance
+    
+  # Evaluate preservation
+  evaluate_preservation: true
+  preservation_metrics:
+    - entity_preservation
+    - number_preservation
+    - label_consistency
+
+# Storage
+storage:
+  # Save augmented data
+  save_augmented: true
+  output_dir: "./data/augmented/back_translated"
+  
+  # File format
+  output_format: "jsonl"
+  include_metadata: true
+  
+  # Versioning
+  version_augmented_data: true
+  keep_n_versions: 3
+
+# Monitoring
+monitoring:
+  # Track augmentation statistics
+  track_stats: true
+  stats_to_track:
+    - num_augmented
+    - avg_similarity
+    - avg_diversity
+    - translation_time
+    - cache_hit_rate
+    
+  # Log examples
+  log_examples: true
+  num_examples: 10
+  
+  # Visualization
+  visualize_augmentations: true
+  visualization_samples: 100
+
+# Expected impact
+expected_impact:
+  data_increase: 2.0  # 2x data size
+  accuracy_improvement: 0.015  # 1.5% improvement
+  robustness_improvement: 0.03  # 3% on perturbed data
+  training_time_increase: 1.5  # 1.5x training time
+
+# Notes
+notes: |
+  Back translation augmentation strategy:
+  
+  1. Language Selection:
+     - Germanic (German): Structural similarity
+     - Romance (French, Spanish): Vocabulary diversity
+     - Asian (Chinese, Japanese): Different grammar
+     - Slavic (Russian): Case system differences
+     
+  2. Quality Control:
+     - Semantic similarity > 0.85 ensures meaning preservation
+     - Diversity check prevents near-duplicates
+     - Grammar and fluency checks ensure quality
+     
+  3. Advanced Techniques:
+     - Multi-hop translation for more variation
+     - Ensemble translation for robustness
+     - Context-aware translation for coherence
+     
+  4. Expected Benefits:
+     - 1.5% accuracy improvement
+     - Better generalization
+     - Reduced overfitting
+     - Improved robustness
+     
+  5. Best Practices:
+     - Use multiple intermediate languages
+     - Filter low-quality translations
+     - Balance augmentation across classes
+     - Cache translations for efficiency
+     
+  6. Computational Cost:
+     - ~2-3 seconds per sample (with caching)
+     - ~6 hours for full dataset augmentation
+     - Storage: ~500MB for augmented data
+
+references:
+  - back_translation: "https://arxiv.org/abs/1511.06709"
+  - unsupervised_mt: "https://arxiv.org/abs/1711.00043"
+  - data_augmentation_nlp: "https://arxiv.org/abs/1901.11196"
