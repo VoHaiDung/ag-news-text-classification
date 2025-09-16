@@ -1,0 +1,358 @@
+# Continuous Integration Workflow
+# ================================
+#
+# This workflow implements CI/CD best practices from:
+# - Humble & Farley (2010): "Continuous Delivery"
+# - Kim et al. (2016): "The DevOps Handbook"
+# - Forsgren et al. (2018): "Accelerate"
+#
+# Author: Võ Hải Dũng
+
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.10'
+  POETRY_VERSION: '1.6.0'
+  CUDA_VERSION: '11.8'
+  
+jobs:
+  # Code quality checks
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Full history for better analysis
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/pre-commit
+          key: ${{ runner.os }}-quality-${{ hashFiles('**/requirements*.txt') }}
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/dev.txt
+      
+      - name: Run black
+        run: black --check src/ tests/ scripts/
+      
+      - name: Run isort
+        run: isort --check-only src/ tests/ scripts/
+      
+      - name: Run flake8
+        run: flake8 src/ tests/ scripts/
+      
+      - name: Run mypy
+        run: mypy src/
+      
+      - name: Run pylint
+        run: pylint src/
+      
+      - name: Security scan with bandit
+        run: bandit -r src/ -f json -o security_report.json
+      
+      - name: Upload security report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-report
+          path: security_report.json
+
+  # Unit tests
+  test-unit:
+    name: Unit Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+      fail-fast: false
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-test-${{ matrix.python-version }}-${{ hashFiles('**/requirements*.txt') }}
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/base.txt
+          pip install -r requirements/dev.txt
+          pip install -e .
+      
+      - name: Run unit tests
+        run: |
+          pytest tests/unit/ \
+            --cov=src \
+            --cov-report=xml \
+            --cov-report=html \
+            --junitxml=test-results-${{ matrix.os }}-${{ matrix.python-version }}.xml
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-${{ matrix.os }}-${{ matrix.python-version }}
+      
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
+          path: test-results-*.xml
+
+  # Integration tests
+  test-integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [quality, test-unit]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/base.txt
+          pip install -r requirements/ml.txt
+          pip install -r requirements/dev.txt
+          pip install -e .
+      
+      - name: Download sample data
+        run: |
+          python scripts/setup/download_all_data.py --sources ag_news
+      
+      - name: Run integration tests
+        run: |
+          pytest tests/integration/ \
+            --maxfail=5 \
+            --tb=short
+
+  # Performance tests
+  test-performance:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: [test-unit]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/base.txt
+          pip install -r requirements/dev.txt
+          pip install -e .
+      
+      - name: Run performance tests
+        run: |
+          pytest tests/performance/ \
+            --benchmark-only \
+            --benchmark-json=benchmark.json
+      
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v3
+        with:
+          name: benchmark-results
+          path: benchmark.json
+
+  # Documentation build
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/docs.txt
+      
+      - name: Build documentation
+        run: |
+          cd docs
+          make html
+      
+      - name: Upload documentation
+        uses: actions/upload-artifact@v3
+        with:
+          name: documentation
+          path: docs/_build/html/
+
+  # Docker build
+  docker:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    needs: [quality]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Build Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: deployment/docker/Dockerfile
+          push: false
+          tags: ag-news-classifier:ci-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Model training smoke test
+  training-smoke-test:
+    name: Training Smoke Test
+    runs-on: ubuntu-latest
+    needs: [test-unit]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Cache models
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/huggingface
+          key: ${{ runner.os }}-models-${{ hashFiles('**/requirements*.txt') }}
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/base.txt
+          pip install -r requirements/ml.txt
+          pip install -e .
+      
+      - name: Download sample data
+        run: |
+          python scripts/setup/download_all_data.py --sources ag_news
+      
+      - name: Prepare data
+        run: |
+          python scripts/data_preparation/prepare_ag_news.py
+      
+      - name: Run training smoke test
+        run: |
+          python quickstart/minimal_example.py
+        env:
+          WANDB_MODE: offline
+
+  # Dependency check
+  dependency-check:
+    name: Dependency Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Check for security vulnerabilities
+        run: |
+          pip install safety
+          safety check -r requirements/base.txt
+          safety check -r requirements/ml.txt
+      
+      - name: Check for outdated packages
+        run: |
+          pip install pip-outdated
+          pip-outdated -r requirements/base.txt
+
+  # License check
+  license-check:
+    name: License Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Check licenses
+        run: |
+          pip install pip-licenses
+          pip-licenses --summary
+
+  # Final status check
+  ci-success:
+    name: CI Success
+    runs-on: ubuntu-latest
+    needs: [
+      quality,
+      test-unit,
+      test-integration,
+      test-performance,
+      docs,
+      docker,
+      training-smoke-test,
+      dependency-check,
+      license-check
+    ]
+    
+    steps:
+      - name: CI Pipeline Success
+        run: |
+          echo "All CI checks passed successfully!"
+          echo "Ready for deployment or merge."
