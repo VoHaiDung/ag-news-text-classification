@@ -1,191 +1,31 @@
-# pyproject.toml - Project configuration
-# =======================================
-#
-# Modern Python project configuration following PEP 518, PEP 621
-# References:
-# - PEP 518: https://www.python.org/dev/peps/pep-0518/
-# - PEP 621: https://www.python.org/dev/peps/pep-0621/
-#
+# Project Configuration
+# =====================
+# Python project metadata
 # Author: Võ Hải Dũng
 
 [build-system]
-requires = ["setuptools>=65.0", "wheel"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "ag-news-classification"
 version = "1.0.0"
-description = "State-of-the-art text classification framework for AG News dataset"
+description = "AG News Text Classification Framework"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
-authors = [
-    {name = "Võ Hải Dũng", email = "contact@example.com"},
-]
-maintainers = [
-    {name = "Võ Hải Dũng", email = "contact@example.com"},
-]
-keywords = [
-    "nlp",
-    "text-classification", 
-    "ag-news",
-    "transformers",
-    "deep-learning",
-    "machine-learning"
-]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
-]
-
-[project.urls]
-Homepage = "https://github.com/yourusername/ag-news-classification"
-Documentation = "https://github.com/yourusername/ag-news-classification/docs"
-Repository = "https://github.com/yourusername/ag-news-classification"
-Issues = "https://github.com/yourusername/ag-news-classification/issues"
-
-[project.scripts]
-ag-news-train = "src.cli.train:main"
-ag-news-evaluate = "src.cli.evaluate:main"
-ag-news-predict = "src.cli.predict:main"
+authors = [{name = "Võ Hải Dũng"}]
+keywords = ["nlp", "text-classification", "ag-news"]
 
 [tool.black]
 line-length = 100
-target-version = ['py38', 'py39', 'py310', 'py311']
-include = '\.pyi?$'
-extend-exclude = '''
-/(
-    \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-  | data
-)/
-'''
+target-version = ['py38', 'py39', 'py310']
 
 [tool.isort]
 profile = "black"
 line_length = 100
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-ensure_newline_before_comments = true
-skip_gitignore = true
-skip = ["venv", ".venv", "build", "dist"]
-
-[tool.mypy]
-python_version = "3.10"
-warn_return_any = true
-warn_unused_configs = true
-ignore_missing_imports = true
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-warn_unreachable = true
-strict_equality = true
-pretty = true
-show_error_codes = true
-show_error_context = true
-show_traceback = true
 
 [tool.pytest.ini_options]
-minversion = "7.0"
-addopts = [
-    "-ra",
-    "--strict-markers",
-    "--cov=src",
-    "--cov-report=term-missing",
-    "--cov-report=html",
-    "--cov-report=xml",
-    "--junitxml=reports/junit.xml",
-]
 testpaths = ["tests"]
-python_files = ["test_*.py", "*_test.py"]
-python_classes = ["Test*", "*Tests"]
-python_functions = ["test_*"]
-markers = [
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-    "integration: marks tests as integration tests",
-    "unit: marks tests as unit tests",
-]
-
-[tool.coverage.run]
-source = ["src"]
-branch = true
-parallel = true
-omit = [
-    "*/tests/*",
-    "*/test_*.py",
-    "*/__init__.py",
-]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "def __str__",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if __name__ == .__main__.:",
-    "if TYPE_CHECKING:",
-    "class .*\\bProtocol\KATEX_INLINE_CLOSE:",
-    "@abstractmethod",
-]
-precision = 2
-show_missing = true
-skip_covered = false
-
-[tool.pylint.messages_control]
-disable = [
-    "C0103",  # Invalid name
-    "C0114",  # Missing module docstring  
-    "C0115",  # Missing class docstring
-    "C0116",  # Missing function docstring
-    "R0903",  # Too few public methods
-    "R0913",  # Too many arguments
-    "W0511",  # TODO/FIXME comments
-]
-
-[tool.pylint.format]
-max-line-length = 100
-
-[tool.ruff]
-line-length = 100
-target-version = "py310"
-select = [
-    "E",  # pycodestyle errors
-    "W",  # pycodestyle warnings
-    "F",  # pyflakes
-    "I",  # isort
-    "B",  # flake8-bugbear
-    "C4", # flake8-comprehensions
-    "UP", # pyupgrade
-]
-ignore = [
-    "E501",  # line too long
-    "B008",  # do not perform function calls in argument defaults
-    "C901",  # too complex
-]
-exclude = [
-    ".git",
-    ".ruff_cache",
-    "__pycache__",
-    "dist",
-    "build",
-    "*.egg-info",
-]
+python_files = ["test_*.py"]
+addopts = "-v"
