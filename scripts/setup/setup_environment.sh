@@ -1,18 +1,17 @@
 #!/bin/bash
 # -*- coding: utf-8 -*-
 
-################################################################################
-# AG News Text Classification - Environment Setup Script
-################################################################################
-#
-# This script sets up the complete development/research environment following
-# best practices from:
-# - Wilson et al. (2017): "Good enough practices in scientific computing"
-# - Taschuk & Wilson (2017): "Ten simple rules for making research software more robust"
-#
-# Author: Võ Hải Dũng
-# License: MIT
-################################################################################
+"""
+AG News Text Classification - Environment Setup Script
+======================================================
+
+This script sets up the complete development/research environment following best practices from:
+- Wilson et al. (2017): "Good enough practices in scientific computing"
+- Taschuk & Wilson (2017): "Ten simple rules for making research software more robust"
+
+Author: Võ Hải Dũng
+License: MIT
+"""
 
 set -euo pipefail  # Exit on error, undefined variables, pipe failures
 IFS=$'\n\t'       # Set Internal Field Separator
