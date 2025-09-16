@@ -1,0 +1,288 @@
+# Active Learning Selection Configuration
+# ========================================
+#
+# Active learning strategies for data selection following:
+# - Settles (2009): "Active Learning Literature Survey"
+# - Ren et al. (2021): "A Survey of Deep Active Learning"
+# - Sener & Savarese (2018): "Active Learning for Convolutional Neural Networks"
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: active_selection
+type: data_selection
+description: "Active learning strategies for intelligent data selection"
+
+# Query strategy
+query_strategy:
+  # Main strategy
+  method: "uncertainty"  # uncertainty, diversity, hybrid, badge, bald
+  
+  # Available strategies
+  strategies:
+    # Uncertainty sampling
+    uncertainty:
+      method: "entropy"  # entropy, least_confidence, margin, variation_ratio
+      mc_dropout: true
+      mc_iterations: 10
+      temperature: 1.0
+      
+    # Diversity sampling
+    diversity:
+      method: "coreset"  # coreset, clustering, representative
+      distance_metric: "euclidean"
+      
+    # Hybrid approach
+    hybrid:
+      uncertainty_weight: 0.7
+      diversity_weight: 0.3
+      balance_method: "linear"  # linear, adaptive, learned
+      
+    # BADGE (Batch Active learning by Diverse Gradient Embeddings)
+    badge:
+      use_gradients: true
+      gradient_embedding: "last_layer"
+      clustering_method: "kmeans++"
+      
+    # BALD (Bayesian Active Learning by Disagreement)
+    bald:
+      mc_iterations: 20
+      aggregate_method: "mean"
+      entropy_weighting: true
+
+# Initialization
+initialization:
+  # Initial pool
+  initial_strategy: "random"  # random, stratified, clustering
+  initial_samples: 100
+  
+  # Stratified initialization
+  stratified:
+    ensure_all_classes: true
+    min_per_class: 10
+    
+  # Clustering initialization
+  clustering:
+    n_clusters: 20
+    samples_per_cluster: 5
+
+# Query parameters
+query:
+  # Batch size
+  batch_size: 50
+  adaptive_batch_size: false
+  
+  # Query rounds
+  num_rounds: 20
+  samples_per_round: 50
+  
+  # Budget
+  total_budget: 1000
+  budget_allocation: "uniform"  # uniform, increasing, decreasing
+  
+  # Stopping criteria
+  stopping:
+    min_uncertainty: 0.1
+    max_rounds: 50
+    performance_plateau: 0.001
+
+# Uncertainty estimation
+uncertainty:
+  # Methods
+  methods:
+    # Entropy-based
+    entropy:
+      normalized: true
+      base: 2  # log base
+      
+    # Least confidence
+    least_confidence:
+      normalized: true
+      
+    # Margin sampling
+    margin:
+      top_k: 2
+      normalized: true
+      
+    # Variation ratio
+    variation_ratio:
+      aggregate: "mean"
+  
+  # Monte Carlo Dropout
+  mc_dropout:
+    enabled: true
+    dropout_rate: 0.1
+    iterations: 10
+    aggregate: "mean"  # mean, vote
+    
+  # Deep Ensembles
+  ensemble:
+    enabled: false
+    num_models: 5
+    aggregate: "vote"  # vote, mean, entropy
+
+# Diversity criteria
+diversity:
+  # Clustering-based
+  clustering:
+    algorithm: "kmeans"  # kmeans, dbscan, hierarchical
+    n_clusters: "auto"
+    distance_threshold: 0.5
+    
+  # Representative sampling
+  representative:
+    similarity_metric: "cosine"
+    coverage_weight: 0.5
+    
+  # Core-set approach
+  coreset:
+    greedy: true
+    distance_metric: "euclidean"
+    update_distances: true
+
+# Query by Committee (QBC)
+committee:
+  # Committee composition
+  num_members: 5
+  member_types: ["random_forest", "svm", "neural_net"]
+  
+  # Disagreement measure
+  disagreement: "vote_entropy"  # vote_entropy, kl_divergence, consensus
+  
+  # Training
+  bootstrap_sampling: true
+  member_subset_ratio: 0.8
+
+# Expected Model Change (EMC)
+emc:
+  # Gradient-based
+  gradient_norm: true
+  gradient_embedding: "full"  # full, last_layer, projected
+  
+  # Fisher information
+  fisher_information: false
+  fisher_approximation: "diagonal"
+
+# Batch mode active learning
+batch_mode:
+  # Selection strategy
+  strategy: "diverse_uncertain"  # diverse_uncertain, pure_exploration, pure_exploitation
+  
+  # Diversity enforcement
+  diversity_lambda: 0.5
+  similarity_threshold: 0.8
+  
+  # Submodular optimization
+  submodular:
+    enabled: false
+    function: "facility_location"  # facility_location, graph_cut
+    lazy_greedy: true
+
+# Deep active learning
+deep_learning:
+  # Learning loss approach
+  learning_loss:
+    enabled: false
+    loss_prediction_module: "mlp"
+    joint_training: true
+    
+  # Adversarial active learning
+  adversarial:
+    enabled: false
+    discriminator_weight: 0.5
+    
+  # VAAL (Variational Adversarial Active Learning)
+  vaal:
+    enabled: false
+    latent_dim: 100
+    beta: 1.0
+
+# Cost-sensitive active learning
+cost_sensitive:
+  # Annotation costs
+  variable_costs: false
+  cost_per_class: [1.0, 1.0, 1.0, 1.0]
+  
+  # Cost-benefit analysis
+  consider_difficulty: true
+  difficulty_weight: 0.3
+
+# Online active learning
+online:
+  # Stream-based
+  stream_based: false
+  decision_threshold: 0.5
+  
+  # Memory constraints
+  memory_budget: 1000
+  forgetting_strategy: "fifo"  # fifo, uncertainty, random
+
+# Performance monitoring
+monitoring:
+  # Metrics to track
+  track_metrics:
+    - "accuracy_vs_samples"
+    - "uncertainty_distribution"
+    - "diversity_score"
+    - "annotation_efficiency"
+    
+  # Baselines
+  compare_with:
+    - "random_sampling"
+    - "stratified_sampling"
+    - "full_dataset"
+    
+  # Visualization
+  plot_learning_curve: true
+  plot_selection_distribution: true
+
+# Integration with training
+training_integration:
+  # Retraining strategy
+  retrain_from_scratch: false
+  fine_tune_epochs: 5
+  
+  # Model update
+  update_frequency: "after_each_query"  # after_each_query, batch, final
+  
+  # Warm start
+  warm_start: true
+  warm_start_checkpoint: null
+
+# Hyperparameters
+hyperparameters:
+  # Query batch size
+  batch_size:
+    type: "int"
+    range: [10, 100]
+    
+  # Uncertainty weight (for hybrid)
+  uncertainty_weight:
+    type: "float"
+    range: [0.0, 1.0]
+    
+  # MC dropout iterations
+  mc_iterations:
+    type: "int"
+    range: [5, 50]
+
+# Expected results
+expected_results:
+  label_efficiency: "70% reduction"
+  final_accuracy: "95% of full dataset"
+  convergence_speed: "3x faster"
+  annotation_cost: "60% reduction"
+
+# References
+references:
+  - paper: "Settles (2009)"
+    title: "Active Learning Literature Survey"
+    url: "https://burrsettles.com/pub/settles.activelearning.pdf"
+    
+  - paper: "Ash et al. (2020)"
+    title: "Deep Batch Active Learning by Diverse, Uncertain Gradient Lower Bounds"
+    url: "https://arxiv.org/abs/1906.03671"
+    
+  - paper: "Sinha et al. (2019)"
+    title: "Variational Adversarial Active Learning"
+    url: "https://arxiv.org/abs/1904.00370"
