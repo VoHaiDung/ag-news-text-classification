@@ -1,0 +1,251 @@
+# Wikipedia External Data Configuration
+# ======================================
+#
+# Wikipedia data for pretraining and knowledge augmentation following:
+# - Devlin et al. (2019): "BERT: Pre-training of Deep Bidirectional Transformers"
+# - Petroni et al. (2019): "Language Models as Knowledge Bases?"
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: wikipedia
+type: external_data
+description: "Wikipedia articles for knowledge-enhanced training"
+
+# Data source
+source:
+  # Wikipedia dump
+  dump:
+    language: "en"
+    date: "latest"  # latest or specific date like "20231201"
+    mirror: "https://dumps.wikimedia.org/"
+    
+  # Wikipedia API
+  api:
+    enabled: false
+    endpoint: "https://en.wikipedia.org/w/api.php"
+    rate_limit: 200  # requests per minute
+    
+  # Preprocessed sources
+  preprocessed:
+    use_huggingface: true
+    dataset: "wikipedia"
+    config: "20220301.en"
+
+# Article selection
+selection:
+  # Categories to include
+  categories:
+    include:
+      - "News"
+      - "Current events"
+      - "Politics"
+      - "Sports"
+      - "Business"
+      - "Technology"
+      - "Science"
+    
+    exclude:
+      - "Disambiguation pages"
+      - "Lists"
+      - "Redirects"
+      
+  # Article quality
+  quality:
+    min_length: 100  # words
+    min_sections: 2
+    min_references: 3
+    featured_only: false
+    good_articles: true
+    
+  # Temporal filtering
+  temporal:
+    min_year: 2015
+    include_recent: true
+    recency_weight: 0.3
+
+# Content extraction
+extraction:
+  # Sections to extract
+  sections:
+    include_intro: true
+    include_body: true
+    include_infobox: false
+    include_references: false
+    
+    # Section filtering
+    exclude_sections:
+      - "See also"
+      - "External links"
+      - "References"
+      - "Further reading"
+      
+  # Text extraction
+  text:
+    preserve_structure: true
+    preserve_links: false
+    resolve_templates: true
+    expand_abbreviations: true
+    
+  # Metadata extraction
+  metadata:
+    extract_categories: true
+    extract_links: true
+    extract_entities: true
+    extract_dates: true
+
+# Processing
+processing:
+  # Cleaning
+  cleaning:
+    remove_markup: true
+    remove_citations: true
+    remove_tables: false
+    normalize_lists: true
+    
+  # Sentence splitting
+  sentence_splitting:
+    method: "nltk"
+    preserve_paragraphs: true
+    min_sentence_length: 10
+    
+  # Chunking for long articles
+  chunking:
+    method: "sliding_window"  # paragraph, sliding_window, semantic
+    chunk_size: 512
+    overlap: 64
+
+# Filtering
+filtering:
+  # Content filtering
+  content:
+    remove_stubs: true
+    remove_disambiguation: true
+    remove_non_articles: true
+    
+  # Quality filtering
+  quality:
+    min_quality_score: 0.6
+    check_completeness: true
+    check_neutrality: false
+    
+  # Relevance filtering
+  relevance:
+    use_keywords: true
+    keywords: ["news", "event", "report", "announce"]
+    min_relevance_score: 0.3
+
+# Knowledge extraction
+knowledge:
+  # Entity extraction
+  entities:
+    extract: true
+    link_to_wikidata: true
+    types: ["PERSON", "ORG", "GPE", "EVENT"]
+    
+  # Fact extraction
+  facts:
+    extract_triples: true
+    triple_format: "subject-predicate-object"
+    confidence_threshold: 0.7
+    
+  # Temporal information
+  temporal:
+    extract_dates: true
+    extract_events: true
+    create_timeline: true
+
+# Sampling
+sampling:
+  # Sample size
+  total_articles: 100000
+  per_category_limit: 20000
+  
+  # Sampling strategy
+  strategy: "stratified"  # random, stratified, importance
+  
+  # Importance weights
+  importance:
+    page_views: 0.3
+    quality_score: 0.3
+    recency: 0.2
+    length: 0.2
+
+# Output format
+output:
+  # File format
+  format: "jsonl"
+  
+  # Fields to include
+  fields:
+    - "title"
+    - "text"
+    - "categories"
+    - "entities"
+    - "metadata"
+    
+  # Organization
+  output_dir: "./data/external/wikipedia"
+  split_by_category: true
+
+# Integration
+integration:
+  # Use cases
+  use_for:
+    - "pretraining"
+    - "knowledge_augmentation"
+    - "fact_verification"
+    
+  # Knowledge distillation
+  knowledge_distillation:
+    extract_facts: true
+    create_qa_pairs: true
+    generate_summaries: false
+    
+  # Retrieval augmentation
+  retrieval:
+    build_index: true
+    index_type: "dense"  # dense, sparse, hybrid
+    embedding_model: "sentence-transformers/all-mpnet-base-v2"
+
+# Performance
+performance:
+  # Processing
+  batch_size: 100
+  num_workers: 8
+  cache_processed: true
+  
+  # Memory management
+  max_memory_gb: 16
+  streaming: true
+  
+  # Storage
+  compression: "gzip"
+  estimated_size: "10GB"
+
+# Quality assurance
+quality:
+  # Validation
+  validate_extraction: true
+  sample_validation_size: 1000
+  
+  # Metrics
+  compute_coverage: true
+  compute_diversity: true
+  compute_factuality: false
+
+# Expected results
+expected_results:
+  num_articles: "~100K"
+  avg_article_length: "~500 words"
+  unique_entities: "~1M"
+  knowledge_triples: "~5M"
+
+# References
+references:
+  - source: "Wikipedia Dumps"
+    url: "https://dumps.wikimedia.org/"
+    
+  - paper: "Petroni et al. (2019)"
+    title: "Language Models as Knowledge Bases?"
+    url: "https://arxiv.org/abs/1909.01066"
