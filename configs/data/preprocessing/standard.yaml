@@ -1,0 +1,286 @@
+# Standard Data Preprocessing Configuration
+# Text preprocessing pipeline for AG News
+
+name: standard_preprocessing
+type: preprocessing
+description: "Standard text preprocessing for news classification"
+
+# Text cleaning
+text_cleaning:
+  # Basic cleaning
+  remove_html_tags: true
+  remove_urls: true
+  remove_emails: true
+  remove_phone_numbers: true
+  remove_special_characters: false  # Keep punctuation for context
+  remove_extra_whitespace: true
+  remove_accents: false  # Keep for multilingual names
+  
+  # Unicode handling
+  normalize_unicode: true
+  unicode_form: "NFKC"
+  
+  # Special patterns
+  expand_contractions: true
+  fix_encoding_errors: true
+  remove_control_characters: true
+  
+  # Numbers
+  replace_numbers: false  # Keep numbers for news context
+  number_placeholder: "<NUM>"
+
+# Tokenization
+tokenization:
+  # Tokenizer settings
+  tokenizer_type: "transformers"  # Options: transformers, spacy, nltk
+  pretrained_tokenizer: "microsoft/deberta-v3-xlarge"
+  use_fast_tokenizer: true
+  
+  # Tokenization parameters
+  max_length: 512
+  truncation: true
+  truncation_strategy: "longest_first"
+  padding: "max_length"
+  pad_to_multiple_of: 8
+  
+  # Special tokens
+  add_special_tokens: true
+  return_token_type_ids: false
+  return_attention_mask: true
+  return_offsets_mapping: false
+  return_length: false
+  
+  # Advanced tokenization
+  stride: 128  # For sliding window
+  return_overflowing_tokens: false
+  return_special_tokens_mask: false
+
+# Text normalization
+normalization:
+  # Case normalization
+  lowercase: false  # Keep original case for names
+  
+  # Punctuation
+  standardize_punctuation: true
+  remove_punctuation: false
+  
+  # Whitespace
+  normalize_whitespace: true
+  remove_tabs: true
+  remove_newlines: false  # Keep paragraph structure
+  
+  # Special characters
+  normalize_quotes: true
+  normalize_dashes: true
+  normalize_ellipsis: true
+
+# Feature extraction
+feature_extraction:
+  # Length features
+  compute_length_features: true
+  length_features:
+    - char_count
+    - word_count
+    - sentence_count
+    - avg_word_length
+    
+  # Linguistic features
+  compute_linguistic_features: true
+  linguistic_features:
+    - pos_tags
+    - named_entities
+    - dependency_parse
+    - sentiment_score
+    
+  # Statistical features
+  compute_statistical_features: true
+  statistical_features:
+    - tfidf_vectors
+    - word_frequency
+    - rare_word_count
+    - vocabulary_diversity
+
+# Data validation
+validation:
+  # Length validation
+  min_length: 10  # Minimum words
+  max_length: 1000  # Maximum words
+  
+  # Content validation
+  check_empty: true
+  check_duplicates: true
+  check_language: true
+  target_language: "en"
+  
+  # Label validation
+  check_labels: true
+  valid_labels: [0, 1, 2, 3]
+  
+  # Quality checks
+  min_unique_words: 5
+  max_repetition_ratio: 0.5
+  min_alphabet_ratio: 0.5
+
+# Filtering
+filtering:
+  # Remove samples
+  remove_empty: true
+  remove_duplicates: true
+  remove_too_short: true
+  remove_too_long: true
+  remove_non_english: false  # Keep for international news
+  
+  # Quality filtering
+  min_quality_score: 0.3
+  quality_metrics:
+    - readability
+    - coherence
+    - informativeness
+
+# Text augmentation preparation
+augmentation_prep:
+  # Identify augmentable tokens
+  mark_entities: true
+  mark_numbers: true
+  mark_dates: true
+  
+  # Create augmentation masks
+  create_synonym_candidates: true
+  create_paraphrase_segments: true
+  
+  # Store metadata for augmentation
+  store_pos_tags: true
+  store_dependency_tree: true
+
+# Caching
+caching:
+  # Cache processed data
+  cache_processed: true
+  cache_dir: "./.cache/preprocessing"
+  
+  # Cache tokenization
+  cache_tokenization: true
+  tokenization_cache_size: 100000
+  
+  # Cache features
+  cache_features: true
+  feature_cache_size: 50000
+
+# Batch processing
+batch_processing:
+  batch_size: 1000
+  num_workers: 4
+  use_multiprocessing: true
+  
+  # Memory management
+  max_memory_gb: 8
+  clear_cache_frequency: 10000
+
+# Pipeline configuration
+pipeline:
+  # Pipeline steps order
+  steps:
+    - text_cleaning
+    - normalization
+    - validation
+    - filtering
+    - tokenization
+    - feature_extraction
+    - augmentation_prep
+    
+  # Parallel processing
+  parallel_steps: ["feature_extraction", "augmentation_prep"]
+  
+  # Error handling
+  skip_errors: false
+  log_errors: true
+  error_file: "preprocessing_errors.log"
+
+# Output format
+output:
+  # Format
+  format: "pytorch"  # Options: pytorch, tensorflow, numpy, pandas
+  
+  # Fields to include
+  include_fields:
+    - input_ids
+    - attention_mask
+    - labels
+    - original_text
+    - processed_text
+    - features
+    
+  # Compression
+  compress_output: false
+  compression_format: "gzip"
+
+# Statistics collection
+statistics:
+  # Collect statistics
+  collect_stats: true
+  
+  # Statistics to collect
+  stats_to_collect:
+    - text_length_distribution
+    - label_distribution
+    - vocabulary_size
+    - token_frequency
+    - processing_time
+    
+  # Save statistics
+  save_stats: true
+  stats_file: "preprocessing_stats.json"
+
+# Quality assurance
+quality_assurance:
+  # Sample validation
+  validate_sample_percent: 0.1
+  
+  # Manual review
+  save_samples_for_review: true
+  num_review_samples: 100
+  
+  # Consistency checks
+  check_consistency: true
+  consistency_metrics:
+    - tokenization_consistency
+    - feature_consistency
+    - label_consistency
+
+# Notes
+notes: |
+  Standard preprocessing pipeline optimized for AG News:
+  
+  1. Text Cleaning:
+     - Preserve punctuation and case for context
+     - Clean HTML, URLs, but keep numbers
+     - Fix encoding issues common in web scraping
+     
+  2. Tokenization:
+     - Use DeBERTa-v3 tokenizer for consistency
+     - 512 max length covers 99.9% of articles
+     - Padding to multiple of 8 for efficiency
+     
+  3. Feature Extraction:
+     - Linguistic features for ensemble models
+     - Statistical features for classical baselines
+     - Length features for filtering
+     
+  4. Quality Control:
+     - Remove too short/long articles
+     - Check for duplicates
+     - Validate language (English)
+     
+  5. Performance:
+     - Batch processing for efficiency
+     - Caching for repeated experiments
+     - Multiprocessing for speed
+     
+  Expected outcomes:
+  - Processing speed: ~10,000 samples/minute
+  - Cache hit rate: >80% after first run
+  - Data quality improvement: 5-10% accuracy gain
+
+references:
+  - text_preprocessing: "https://arxiv.org/abs/2103.15316"
+  - tokenization: "https://huggingface.co/docs/transformers/tokenizer_summary"
