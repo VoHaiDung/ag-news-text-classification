@@ -1,0 +1,269 @@
+# ================================================
+# Docker Ignore File
+# ================================================
+#
+# Files and directories to exclude from Docker context
+# Following Docker best practices from:
+# - Docker Documentation (https://docs.docker.com/engine/reference/builder/#dockerignore-file)
+# - Dockerfile Best Practices (https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
+#
+# Author: Võ Hải Dũng
+# Project: AG News Text Classification
+
+# ===== Version Control =====
+.git/
+.gitignore
+.gitattributes
+.github/
+.gitlab/
+.bitbucket/
+
+# ===== Development Files =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+.env
+.env.*
+!.env.example
+.editorconfig
+
+# ===== Python Files =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.manifest
+*.spec
+
+# ===== Virtual Environments =====
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+pipenv/
+.pipenv/
+poetry.lock
+.poetry/
+
+# ===== Testing =====
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+test-results/
+test-reports/
+.benchmarks/
+
+# ===== Documentation =====
+docs/_build/
+docs/.doctrees/
+site/
+.mkdocs/
+
+# ===== Jupyter Notebooks =====
+.ipynb_checkpoints/
+*.ipynb
+!notebooks/tutorials/*.ipynb
+notebooks/scratch/
+notebooks/experiments/
+
+# ===== Data Files =====
+# Exclude large data files but keep structure
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/external/*
+!data/external/.gitkeep
+data/augmented/*
+!data/augmented/.gitkeep
+*.csv
+*.tsv
+*.json
+!configs/**/*.json
+*.parquet
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+
+# ===== Model Files =====
+models/*
+!models/.gitkeep
+*.pt
+*.pth
+*.onnx
+*.pb
+*.tflite
+*.safetensors
+*.bin
+!models/README.md
+checkpoints/
+*.ckpt
+
+# ===== Logs and Outputs =====
+logs/
+*.log
+outputs/
+results/
+reports/
+wandb/
+mlruns/
+tensorboard/
+
+# ===== Cache =====
+.cache/
+*.cache
+.mypy_cache/
+.ruff_cache/
+.pip_cache/
+pip-cache/
+.npm/
+node_modules/
+
+# ===== CI/CD =====
+.github/workflows/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+azure-pipelines.yml
+Jenkinsfile
+
+# ===== Deployment =====
+kubernetes/
+k8s/
+helm/
+terraform/
+ansible/
+*.tfstate
+*.tfvars
+
+# ===== Temporary Files =====
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# ===== OS Files =====
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ===== IDE Files =====
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+*.iml
+
+# ===== Security =====
+*.pem
+*.key
+*.crt
+*.p12
+.env*
+!.env.example
+secrets/
+credentials/
+tokens/
+
+# ===== Package Managers =====
+package-lock.json
+yarn.lock
+Pipfile.lock
+poetry.lock
+composer.lock
+
+# ===== Database =====
+*.db
+*.sqlite
+*.sqlite3
+postgres-data/
+mysql-data/
+mongodb-data/
+
+# ===== Backup Files =====
+backup/
+backups/
+*.backup
+*.dump
+
+# ===== Media Files =====
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.mp3
+*.wav
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.svg
+!docs/images/*.png
+!app/assets/images/*.png
+
+# ===== Archives =====
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# ===== Specific Project Files =====
+# Exclude large experiment results
+experiments/results/
+experiments/runs/
+experiments/outputs/
+
+# Exclude benchmarks
+benchmarks/results/
+benchmarks/outputs/
+
+# Keep important config files
+!Dockerfile
+!docker-compose.yml
+!requirements.txt
+!requirements/*.txt
+!setup.py
+!pyproject.toml
+!Makefile
+
+# ===== Notes =====
+# This file ensures Docker builds are efficient by excluding
+# unnecessary files from the build context.
+# Smaller contexts = faster builds and smaller images.
