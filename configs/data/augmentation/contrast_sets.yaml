@@ -1,0 +1,120 @@
+# Contrast Sets Configuration
+# ============================
+#
+# Contrast set generation following:
+# - Gardner et al. (2020): "Evaluating Models' Local Decision Boundaries via Contrast Sets"
+# - Kaushik et al. (2020): "Learning The Difference That Makes A Difference"
+#
+# Author: Võ Hải Dũng
+
+name: contrast_sets
+type: augmentation
+description: "Generate contrast sets for robust evaluation"
+
+# Contrast generation methods
+generation:
+  # Manual templates
+  template_based:
+    enabled: true
+    templates:
+      - original: "The company reported strong earnings"
+        contrast: "The company reported weak earnings"
+        label_change: true
+        
+      - original: "Scientists discovered a new species"
+        contrast: "Scientists rediscovered a known species"
+        label_change: false
+  
+  # Rule-based perturbations
+  rule_based:
+    enabled: true
+    rules:
+      - type: "negation"
+        apply_to: ["sentiment_words", "factual_claims"]
+        
+      - type: "entity_swap"
+        preserve_type: true
+        
+      - type: "temporal_shift"
+        shifts: ["past_to_future", "present_to_past"]
+  
+  # Model-based generation
+  model_based:
+    enabled: true
+    model: "gpt-3.5-turbo"
+    prompt: "Create a minimal edit that changes the label"
+
+# Perturbation strategies
+perturbations:
+  # Minimal edits
+  minimal_edit:
+    max_token_changes: 3
+    max_char_changes: 20
+    preserve_length: true
+  
+  # Semantic preserving
+  semantic_preserving:
+    min_similarity: 0.85
+    check_entailment: true
+    
+  # Label flipping
+  label_flip:
+    target_flip_rate: 0.5
+    verify_flip: true
+
+# Validation
+validation:
+  # Human agreement simulation
+  agreement_threshold: 0.8
+  
+  # Naturalness
+  check_fluency: true
+  min_fluency_score: 0.9
+  
+  # Difficulty
+  target_difficulty: "medium"  # easy, medium, hard
+
+# Coverage
+coverage:
+  # Phenomena to cover
+  phenomena:
+    - "negation"
+    - "quantifiers"
+    - "temporal_reasoning"
+    - "entity_tracking"
+    - "comparison"
+  
+  # Minimum coverage per phenomenon
+  min_examples_per_phenomenon: 100
+
+# Integration
+integration:
+  # Use for training
+  use_for_training: false
+  
+  # Use for evaluation
+  use_for_evaluation: true
+  
+  # Use for analysis
+  use_for_analysis: true
+
+# Metrics
+metrics:
+  # Consistency
+  consistency_score: true
+  
+  # Contrast accuracy
+  contrast_accuracy: true
+  
+  # Decision boundary smoothness
+  boundary_smoothness: true
+
+# Expected impact
+impact:
+  evaluation_rigor: "High"
+  model_robustness: "+5-10%"
+  interpretability: "Improved"
+
+references:
+  - "https://arxiv.org/abs/2004.02709"
+  - "https://arxiv.org/abs/1909.12434"
