@@ -1,10 +1,8 @@
 # Minimal Requirements
 # ====================
-# Absolute minimum to run basic functionality
-#
+# Absolute minimum packages
 # Author: Võ Hải Dũng
 
-# Core only
 torch>=2.0.0
 transformers>=4.35.0
 numpy>=1.24.0
