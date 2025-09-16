@@ -1,0 +1,266 @@
+# ================================================
+# EditorConfig Configuration
+# ================================================
+#
+# EditorConfig helps maintain consistent coding styles
+# across different editors and IDEs
+#
+# References:
+# - EditorConfig Specification (https://editorconfig.org/)
+# - PEP 8 – Style Guide for Python Code
+# - Google Python Style Guide
+#
+# Author: Võ Hải Dũng
+# Project: AG News Text Classification
+
+# Top-most EditorConfig file
+root = true
+
+# ===== Universal Settings =====
+[*]
+# Character encoding
+charset = utf-8
+
+# End of line character
+end_of_line = lf
+
+# Ensure file ends with a newline
+insert_final_newline = true
+
+# Remove trailing whitespace
+trim_trailing_whitespace = true
+
+# Indentation
+indent_style = space
+indent_size = 4
+
+# Maximum line length
+max_line_length = 100
+
+# ===== Python Files =====
+[*.{py,pyi}]
+indent_style = space
+indent_size = 4
+max_line_length = 100
+
+# Follow PEP 8
+# - 4 spaces for indentation
+# - 100 characters max line length (relaxed from 79)
+# - UTF-8 encoding
+
+# ===== YAML Files =====
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+max_line_length = 120
+
+# YAML requires spaces, not tabs
+# 2 spaces is standard for YAML
+
+# ===== JSON Files =====
+[*.json]
+indent_style = space
+indent_size = 2
+insert_final_newline = false
+
+# JSON should not have trailing newline
+# 2 spaces for readability
+
+# ===== JavaScript/TypeScript =====
+[*.{js,jsx,ts,tsx}]
+indent_style = space
+indent_size = 2
+max_line_length = 100
+quote_type = single
+
+# Modern JS/TS convention: 2 spaces
+
+# ===== Markdown Files =====
+[*.{md,markdown}]
+indent_style = space
+indent_size = 2
+max_line_length = 80
+trim_trailing_whitespace = false
+
+# Preserve trailing spaces in Markdown (for line breaks)
+# 80 chars for better readability in documentation
+
+# ===== Shell Scripts =====
+[*.{sh,bash,zsh}]
+indent_style = space
+indent_size = 2
+max_line_length = 100
+
+# Shell scripts typically use 2 spaces
+
+# ===== Dockerfile =====
+[{Dockerfile,Dockerfile.*}]
+indent_style = space
+indent_size = 4
+max_line_length = 100
+
+# ===== Makefile =====
+[{Makefile,makefile,GNUmakefile}]
+indent_style = tab
+indent_size = 4
+
+# Makefiles require tabs
+
+# ===== Configuration Files =====
+[*.{ini,cfg,conf}]
+indent_style = space
+indent_size = 4
+max_line_length = 120
+
+# ===== TOML Files =====
+[*.toml]
+indent_style = space
+indent_size = 2
+max_line_length = 100
+
+# ===== CSS/SCSS Files =====
+[*.{css,scss,sass,less}]
+indent_style = space
+indent_size = 2
+max_line_length = 100
+
+# ===== HTML Files =====
+[*.{html,htm}]
+indent_style = space
+indent_size = 2
+max_line_length = 120
+
+# ===== XML Files =====
+[*.xml]
+indent_style = space
+indent_size = 2
+max_line_length = 120
+
+# ===== SQL Files =====
+[*.sql]
+indent_style = space
+indent_size = 2
+max_line_length = 100
+
+# ===== C/C++ Files =====
+[*.{c,cpp,h,hpp,cc,cxx}]
+indent_style = space
+indent_size = 4
+max_line_length = 100
+
+# ===== Java Files =====
+[*.java]
+indent_style = space
+indent_size = 4
+max_line_length = 100
+
+# ===== Go Files =====
+[*.go]
+indent_style = tab
+indent_size = 4
+max_line_length = 100
+
+# Go uses tabs by convention
+
+# ===== Rust Files =====
+[*.rs]
+indent_style = space
+indent_size = 4
+max_line_length = 100
+
+# ===== Ruby Files =====
+[*.rb]
+indent_style = space
+indent_size = 2
+max_line_length = 100
+
+# ===== R Files =====
+[*.R]
+indent_style = space
+indent_size = 2
+max_line_length = 80
+
+# ===== Jupyter Notebooks =====
+[*.ipynb]
+indent_style = space
+indent_size = 4
+max_line_length = 100
+
+# ===== Git Files =====
+[.gitignore]
+indent_style = space
+indent_size = 2
+
+[.gitattributes]
+indent_style = space
+indent_size = 2
+
+# ===== GitHub Actions =====
+[.github/workflows/*.yml]
+indent_style = space
+indent_size = 2
+
+# ===== Environment Files =====
+[.env*]
+indent_style = space
+indent_size = 0
+insert_final_newline = false
+
+# No indentation in .env files
+
+# ===== Package Files =====
+[{package.json,package-lock.json}]
+indent_style = space
+indent_size = 2
+
+[{Pipfile,Pipfile.lock}]
+indent_style = space
+indent_size = 4
+
+[poetry.lock]
+indent_style = space
+indent_size = 4
+
+[requirements*.txt]
+indent_style = space
+indent_size = 0
+max_line_length = 200
+
+# ===== Test Files =====
+[test_*.py]
+max_line_length = 120
+
+# Allow longer lines in tests for readability
+
+[*.test.{js,ts}]
+max_line_length = 120
+
+# ===== Documentation =====
+[docs/*.rst]
+indent_style = space
+indent_size = 3
+max_line_length = 80
+
+# reStructuredText convention
+
+# ===== Special Files =====
+[LICENSE]
+insert_final_newline = false
+
+[VERSION]
+insert_final_newline = false
+
+# ===== Project-Specific Overrides =====
+# AG News specific configurations
+
+[src/models/*.py]
+max_line_length = 120
+# Allow longer lines for model definitions
+
+[configs/*.{yml,yaml}]
+max_line_length = 150
+# Configuration files may have long values
+
+[notebooks/*.ipynb]
+max_line_length = 120
+# Notebooks can have longer lines for exploration
