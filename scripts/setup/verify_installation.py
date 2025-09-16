@@ -808,21 +808,21 @@ class InstallationVerifier:
         print("INSTALLATION VERIFICATION SUMMARY")
         print("=" * 80)
         print(f"Total checks: {report['summary']['total_checks']}")
-        print(f"✓ Passed: {report['summary']['passed']}")
-        print(f"⚠ Warnings: {report['summary']['warnings']}")
-        print(f"✗ Failures: {report['summary']['failures']}")
-        print(f"🔴 Critical failures: {report['summary']['critical_failures']}")
+        print(f"Passed: {report['summary']['passed']}")
+        print(f"Warnings: {report['summary']['warnings']}")
+        print(f"Failures: {report['summary']['failures']}")
+        print(f"Critical failures: {report['summary']['critical_failures']}")
         print(f"\nDetailed report saved to: {report_path}")
         print("=" * 80)
         
         if self.critical_failures > 0:
-            print("\n❌ Installation verification FAILED")
+            print("\nInstallation verification FAILED")
             print("Please address critical issues before proceeding.")
         elif self.warnings > 0:
-            print("\n⚠️ Installation verified with WARNINGS")
+            print("\nInstallation verified with WARNINGS")
             print("The system should work but some features may be limited.")
         else:
-            print("\n✅ Installation verification PASSED")
+            print("\nInstallation verification PASSED")
             print("Your environment is ready for AG News classification!")
 
 def main():
