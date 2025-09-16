@@ -1,0 +1,240 @@
+# News Corpus External Data Configuration
+# ========================================
+#
+# Configuration for external news corpus following:
+# - Liu et al. (2019): "RoBERTa: A Robustly Optimized BERT Pretraining Approach"
+# - Baevski et al. (2020): "wav2vec 2.0: A Framework for Self-Supervised Learning"
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: news_corpus
+type: external_data
+description: "External news corpus for domain-adaptive pretraining"
+
+# Data sources
+sources:
+  # WMT News Crawl
+  wmt_news_crawl:
+    enabled: true
+    url: "https://data.statmt.org/news-crawl/en/"
+    years: [2020, 2021, 2022, 2023]
+    languages: ["en"]
+    
+    # Download settings
+    download:
+      max_files: 10
+      file_pattern: "news.*.en.shuffled.deduped.gz"
+      chunk_size: 8192
+      
+  # Common Crawl News
+  cc_news:
+    enabled: true
+    source: "commoncrawl"
+    subset: "cc_news"
+    date_range: "2020-01-01:2023-12-31"
+    
+  # GDELT Project
+  gdelt:
+    enabled: false
+    api_endpoint: "https://api.gdeltproject.org/api/v2/"
+    themes: ["news", "media"]
+    
+  # NewsAPI
+  newsapi:
+    enabled: false
+    api_key: "${NEWSAPI_KEY}"
+    categories: ["general", "business", "technology", "sports"]
+    countries: ["us", "gb", "ca", "au"]
+
+# Data filtering
+filtering:
+  # Language filtering
+  language:
+    target: "en"
+    min_confidence: 0.95
+    detector: "langdetect"  # langdetect, fasttext
+    
+  # Content filtering
+  content:
+    min_length: 50  # words
+    max_length: 2000
+    min_sentences: 3
+    max_sentences: 100
+    
+  # Quality filtering
+  quality:
+    min_quality_score: 0.7
+    check_coherence: true
+    check_factuality: false
+    remove_duplicates: true
+    
+  # Domain filtering
+  domain:
+    keywords: ["news", "report", "announce", "update"]
+    min_keyword_match: 1
+    exclude_keywords: ["advertisement", "sponsored", "promoted"]
+
+# Preprocessing
+preprocessing:
+  # Text cleaning
+  cleaning:
+    remove_html: true
+    remove_urls: true
+    normalize_whitespace: true
+    fix_encoding: true
+    
+  # Sentence segmentation
+  segmentation:
+    method: "nltk"  # nltk, spacy, custom
+    merge_short: true
+    min_sentence_length: 5
+    
+  # Deduplication
+  deduplication:
+    method: "minhash"  # exact, minhash, simhash
+    threshold: 0.9
+    ngram_size: 5
+
+# Sampling strategy
+sampling:
+  # Sampling method
+  method: "stratified"  # random, stratified, importance
+  
+  # Sample size
+  total_samples: 1000000
+  samples_per_source: 250000
+  
+  # Stratification
+  stratify_by: "month"  # source, date, category
+  
+  # Importance sampling
+  importance:
+    weights: "inverse_frequency"
+    temperature: 1.0
+
+# Storage format
+storage:
+  # Output format
+  format: "jsonl"  # jsonl, parquet, tfrecord
+  
+  # Compression
+  compression: "gzip"  # none, gzip, bz2, lz4
+  
+  # Sharding
+  shard_size: 100000  # samples per shard
+  
+  # Directory structure
+  output_dir: "./data/external/news_corpus"
+  organize_by: "year_month"  # flat, year, year_month
+
+# Processing pipeline
+pipeline:
+  # Steps
+  steps:
+    - name: "download"
+      enabled: true
+      parallel: true
+      
+    - name: "filter_language"
+      enabled: true
+      
+    - name: "clean_text"
+      enabled: true
+      
+    - name: "deduplicate"
+      enabled: true
+      batch_size: 10000
+      
+    - name: "sample"
+      enabled: true
+      
+    - name: "save"
+      enabled: true
+  
+  # Pipeline configuration
+  num_workers: 8
+  batch_size: 1000
+  checkpoint_frequency: 10000
+
+# Quality metrics
+metrics:
+  # Diversity metrics
+  diversity:
+    compute_vocab_size: true
+    compute_ngram_diversity: true
+    compute_sentence_diversity: true
+    
+  # Coverage metrics
+  coverage:
+    compute_topic_coverage: true
+    compute_entity_coverage: true
+    compute_temporal_coverage: true
+    
+  # Statistics
+  statistics:
+    compute_length_distribution: true
+    compute_source_distribution: true
+    compute_date_distribution: true
+
+# Integration with training
+training_integration:
+  # Purpose
+  use_for: "pretraining"  # pretraining, augmentation, curriculum
+  
+  # MLM pretraining
+  mlm:
+    mask_probability: 0.15
+    whole_word_masking: true
+    
+  # Domain adaptation
+  domain_adaptation:
+    adapt_tokenizer: false
+    continue_pretraining: true
+    adaptation_steps: 10000
+
+# Resource management
+resources:
+  # Memory limits
+  max_memory_gb: 32
+  
+  # Disk space
+  max_disk_gb: 100
+  temp_dir: "/tmp/news_corpus"
+  
+  # Network
+  max_concurrent_downloads: 4
+  download_timeout: 3600
+
+# Monitoring
+monitoring:
+  # Progress tracking
+  track_progress: true
+  log_frequency: 1000
+  
+  # Error handling
+  continue_on_error: true
+  max_errors: 100
+  
+  # Reporting
+  generate_report: true
+  report_format: "html"  # txt, html, json
+
+# Expected output
+expected_output:
+  total_samples: "~1M"
+  total_size: "~5GB"
+  vocabulary_size: "~500K"
+  processing_time: "~4 hours"
+
+# References
+references:
+  - source: "WMT News Crawl"
+    url: "http://data.statmt.org/news-crawl/"
+    
+  - source: "Common Crawl"
+    url: "https://commoncrawl.org/"
+    
+  - paper: "Liu et al. (2019)"
+    title: "RoBERTa: A Robustly Optimized BERT Pretraining Approach"
+    url: "https://arxiv.org/abs/1907.11692"
