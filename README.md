@@ -95,6 +95,7 @@ ag-news-text-classification/
 ├── ROADMAP.md
 ├── setup.py
 ├── setup.cfg
+├── MANIFEST.in
 ├── pyproject.toml
 ├── Makefile
 ├── .env.example
@@ -103,6 +104,7 @@ ag-news-text-classification/
 ├── .dockerignore
 ├── .editorconfig
 ├── .pre-commit-config.yaml
+├── .flake8
 ├── commitlint.config.js
 │
 ├── requirements/
