@@ -1,8 +1,22 @@
 """
 Model and Component Registry System
+====================================
 
-Implements a centralized registry pattern for managing models, trainers,
+This module implements a centralized registry pattern for managing models, trainers,
 data processors, and other components in a pluggable architecture.
+
+The registry pattern is based on design principles from:
+- Gamma et al. (1994): "Design Patterns: Elements of Reusable Object-Oriented Software"
+- Martin (2003): "Agile Software Development, Principles, Patterns, and Practices"
+- Fowler (2002): "Patterns of Enterprise Application Architecture"
+
+The implementation follows dependency injection principles for testability and
+modularity as described in:
+- Seemann (2011): "Dependency Injection in .NET"
+- Prasanna (2009): "Dependency Injection: Design Patterns Using Spring and Guice"
+
+Author: Võ Hải Dũng
+License: MIT
 """
 
 import inspect
@@ -19,8 +33,26 @@ class Registry:
     """
     A registry for storing and retrieving components by name.
     
-    This implements the Registry pattern for dependency injection and
-    plugin architecture support.
+    This implements the Registry pattern (Fowler, 2002) for dependency injection
+    and plugin architecture support. The pattern provides:
+    
+    1. Decoupling: Components don't need to know about concrete implementations
+    2. Extensibility: New components can be added without modifying existing code
+    3. Testability: Components can be easily mocked for testing
+    
+    The design follows the Open/Closed Principle (Meyer, 1988) and 
+    Dependency Inversion Principle (Martin, 2003).
+    
+    Example:
+        >>> registry = Registry("models")
+        >>> @registry.register("bert")
+        ... class BertModel:
+        ...     pass
+        >>> model = registry.create("bert")
+    
+    References:
+        Fowler (2002): "Patterns of Enterprise Application Architecture", Chapter 18
+        Martin (2003): "Agile Software Development", Chapter 11
     """
     
     def __init__(self, name: str):
