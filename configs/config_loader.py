@@ -1,8 +1,22 @@
 """
-Configuration loader for AG News Text Classification Framework.
+Configuration Loader for AG News Text Classification Framework
+===============================================================
 
-Provides utilities for loading, merging, and validating configuration files
-with support for environment variable substitution and inheritance.
+This module provides utilities for loading, merging, and validating configuration
+files with support for environment variable substitution and inheritance.
+
+The configuration system is designed following principles from:
+- Hunt & Thomas (1999): "The Pragmatic Programmer" - DRY principle
+- Fowler (2010): "Domain-Specific Languages" - Configuration as code
+- Humble & Farley (2010): "Continuous Delivery" - Configuration management
+
+Research reproducibility aspects follow guidelines from:
+- Crane (2018): "Questionable Answers in Question Answering Research"
+- Dodge et al. (2019): "Show Your Work: Improved Reporting of Experimental Results"
+- Pineau et al. (2021): "Improving Reproducibility in Machine Learning Research"
+
+Author: Võ Hải Dũng
+License: MIT
 """
 
 import os
@@ -23,7 +37,8 @@ from pydantic import BaseModel, validator, Field
 
 logger = logging.getLogger(__name__)
 
-# Configuration directory structure
+# Configuration directory structure following separation of concerns
+# (Martin, 2008 - Clean Code: A Handbook of Agile Software Craftsmanship)
 CONFIG_DIR = Path(__file__).parent
 ENVIRONMENTS_DIR = CONFIG_DIR / "environments"
 MODELS_DIR = CONFIG_DIR / "models"
