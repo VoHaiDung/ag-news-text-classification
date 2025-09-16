@@ -1,0 +1,283 @@
+# Adversarial Training Configuration
+# Enhances model robustness and generalization
+
+name: adversarial_training
+type: advanced
+inherit: training/standard/base_training.yaml
+
+description: "Adversarial training with multiple perturbation methods"
+
+# Adversarial configuration
+adversarial:
+  enabled: true
+  
+  # Primary method
+  method: freelb  # Options: fgm, pgd, freelb, smart
+  
+  # Attack parameters
+  epsilon: 1.0
+  alpha: 0.3
+  attack_steps: 3
+  
+  # Method-specific settings
+  fgm:
+    epsilon: 1.0
+    normalize: true
+    
+  pgd:
+    epsilon: 1.0
+    alpha: 0.3
+    steps: 3
+    random_start: true
+    
+  freelb:
+    adv_steps: 3
+    adv_lr: 1e-1
+    adv_init_mag: 1e-1
+    adv_max_norm: 1.0
+    gradient_accumulation_steps: 3
+    
+  smart:
+    epsilon: 1e-2
+    step_size: 1e-3
+    noise_var: 1e-5
+    norm_p: inf
+    k: 1
+    alpha: 0.01
+    
+  # Adversarial weight scheduling
+  adversarial_warmup: true
+  warmup_steps: 1000
+  adversarial_weight: 0.5
+  
+  # Target layers for perturbation
+  perturb_layers: ["embeddings", "encoder.layer.0", "encoder.layer.11", "encoder.layer.23"]
+  
+  # Gradient masking prevention
+  gradient_masking_check: true
+  
+  # Virtual adversarial training
+  use_vat: false
+  vat_epsilon: 1e-2
+  vat_xi: 1e-6
+  vat_iterations: 1
+
+# Training modifications
+training:
+  # Increased epochs for adversarial training
+  num_train_epochs: 12
+  
+  # Smaller learning rate for stability
+  learning_rate: 1e-5
+  
+  # Gradient accumulation for FreeLB
+  gradient_accumulation_steps: 3
+  
+  # More frequent evaluation
+  eval_steps: 300
+  
+  # Disable mixed precision for better gradients
+  fp16: false
+  
+  # Increased gradient clipping
+  max_grad_norm: 0.5
+
+# Loss configuration
+loss:
+  # Adversarial loss weight
+  adversarial_loss_weight: 0.5
+  
+  # KL divergence for consistency
+  use_kl_divergence: true
+  kl_weight: 0.1
+  
+  # Symmetric KL
+  symmetric_kl: true
+
+# Regularization enhancements
+regularization:
+  # Increased dropout for robustness
+  dropout_rate: 0.2
+  attention_dropout_rate: 0.15
+  hidden_dropout_rate: 0.2
+  
+  # R-Drop
+  r_drop:
+    enabled: true
+    alpha: 0.5
+    
+  # Token cutoff
+  token_cutoff:
+    enabled: false
+    cutoff_length: 128
+    
+  # Feature cutoff
+  feature_cutoff:
+    enabled: false
+    cutoff_prob: 0.1
+
+# Data augmentation (complementary to adversarial)
+augmentation:
+  # Text-level augmentation
+  synonym_replacement: true
+  random_insertion: true
+  random_swap: true
+  random_deletion: true
+  
+  # Embedding-level augmentation
+  embedding_dropout: 0.1
+  embedding_noise: 0.05
+
+# Evaluation settings
+evaluation:
+  # Robustness evaluation
+  evaluate_robustness: true
+  
+  # Attack evaluation
+  attack_evaluation:
+    enabled: true
+    methods: ["textfooler", "bert-attack", "pwws"]
+    
+  # Perturbation analysis
+  perturbation_analysis: true
+  perturbation_budget: [0.1, 0.2, 0.5, 1.0]
+  
+  # Certified robustness
+  certified_robustness: false
+  certification_radius: 0.1
+
+# Model-specific adversarial settings
+model_specific:
+  deberta:
+    # DeBERTa-specific adversarial training
+    perturb_attention: true
+    perturb_position_embeddings: true
+    disentangled_attention_perturbation: true
+    
+  roberta:
+    # RoBERTa-specific settings
+    perturb_token_type_embeddings: false
+    layer_wise_perturbation: true
+    
+  xlnet:
+    # XLNet-specific settings
+    perturb_memory: true
+    two_stream_perturbation: true
+
+# Advanced adversarial techniques
+advanced_techniques:
+  # Adversarial training with multiple perturbations
+  multi_perturbation:
+    enabled: true
+    perturbations: ["fgm", "pgd"]
+    combination: "random"  # Options: random, sequential, weighted
+    
+  # Curriculum adversarial training
+  curriculum:
+    enabled: true
+    schedule: "linear"  # Options: linear, exponential, step
+    initial_epsilon: 0.1
+    final_epsilon: 1.0
+    
+  # Adversarial distillation
+  adversarial_distillation:
+    enabled: false
+    teacher_model: "outputs/models/fine_tuned/deberta_best.pt"
+    temperature: 3.0
+    
+  # Ensemble adversarial training
+  ensemble_adversarial:
+    enabled: false
+    models: ["deberta", "roberta"]
+    aggregate_gradients: true
+
+# Monitoring and logging
+monitoring:
+  # Track adversarial metrics
+  track_adversarial_loss: true
+  track_perturbation_norm: true
+  track_gradient_norm: true
+  
+  # Visualization
+  visualize_perturbations: true
+  visualize_attention_changes: true
+  
+  # Logging frequency
+  adversarial_logging_steps: 100
+
+# Hardware optimization
+hardware:
+  # Gradient checkpointing for memory efficiency
+  gradient_checkpointing: true
+  
+  # Reduce batch size for adversarial steps
+  adversarial_batch_size_reduction: 2
+  
+  # CPU offloading for large perturbations
+  offload_perturbations: false
+
+# Checkpointing
+checkpointing:
+  # Save adversarial checkpoints separately
+  save_adversarial_checkpoints: true
+  adversarial_checkpoint_dir: "outputs/models/adversarial"
+  
+  # Keep best adversarial model
+  save_best_adversarial: true
+  adversarial_metric: "robustness_score"
+
+# Post-training
+post_training:
+  # Adversarial fine-tuning
+  adversarial_finetune: true
+  finetune_epochs: 2
+  finetune_epsilon: 0.5
+  
+  # Robustness certification
+  certify_robustness: false
+  certification_samples: 1000
+
+# Expected results
+expected_results:
+  clean_accuracy: 0.958
+  adversarial_accuracy: 0.925
+  robustness_improvement: 0.15
+  
+# Notes
+notes: |
+  Adversarial training configuration for improved robustness:
+  
+  1. FreeLB (Free Large-Batch) adversarial training:
+     - Multiple adversarial steps within single forward-backward pass
+     - Efficient gradient accumulation
+     - Better convergence than PGD
+  
+  2. Multi-level perturbations:
+     - Embedding-level perturbations
+     - Attention-level perturbations
+     - Hidden state perturbations
+  
+  3. Curriculum adversarial training:
+     - Gradually increase perturbation strength
+     - Better stability and convergence
+  
+  4. Expected improvements:
+     - 2-3% accuracy drop on clean data
+     - 15-20% improvement on adversarial examples
+     - Better generalization to OOD data
+  
+  5. Computational overhead:
+     - 2-3x training time increase
+     - 1.5x memory usage
+     
+  Best practices:
+  - Start with small epsilon and gradually increase
+  - Use gradient accumulation for stability
+  - Monitor both clean and adversarial accuracy
+  - Combine with other regularization techniques
+
+references:
+  - freelb: "https://arxiv.org/abs/1909.11764"
+  - pgd: "https://arxiv.org/abs/1706.06083"
+  - smart: "https://arxiv.org/abs/1911.03437"
+  - adversarial_training: "https://arxiv.org/abs/1412.6572"
