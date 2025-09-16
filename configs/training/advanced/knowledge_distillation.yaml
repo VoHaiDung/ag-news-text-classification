@@ -1,0 +1,328 @@
+# Knowledge Distillation Configuration
+# Transfer knowledge from teacher models to student
+
+name: knowledge_distillation
+type: advanced
+inherit: training/standard/base_training.yaml
+
+description: "Knowledge distillation from ensemble teacher to efficient student"
+
+# Teacher model configuration
+teacher:
+  # Single teacher
+  single_teacher:
+    enabled: false
+    model_path: "outputs/models/fine_tuned/deberta_v3_xlarge_best.pt"
+    model_config: "configs/models/single/deberta_v3_xlarge.yaml"
+    
+  # Ensemble teacher (better performance)
+  ensemble_teacher:
+    enabled: true
+    ensemble_config: "configs/models/ensemble/voting_ensemble.yaml"
+    models:
+      - path: "outputs/models/fine_tuned/deberta_v3_xlarge_best.pt"
+        weight: 0.4
+      - path: "outputs/models/fine_tuned/roberta_large_best.pt"
+        weight: 0.3
+      - path: "outputs/models/fine_tuned/xlnet_large_best.pt"
+        weight: 0.3
+    
+  # Teacher inference settings
+  teacher_batch_size: 32
+  use_teacher_cache: true
+  cache_dir: "./.cache/teacher_predictions"
+  
+  # Teacher augmentation
+  teacher_augmentation:
+    enabled: true
+    num_augmentations: 3
+    temperature_range: [1.0, 5.0]
+
+# Student model configuration
+student:
+  model_name: "distilroberta-base"
+  model_config: "configs/models/efficient/distilroberta_base.yaml"
+  
+  # Student architecture modifications
+  hidden_size: 768
+  num_hidden_layers: 6
+  num_attention_heads: 12
+  intermediate_size: 3072
+  
+  # Initialization from teacher
+  initialize_from_teacher: true
+  initialization_strategy: "layer_mapping"  # Options: layer_mapping, truncation, interpolation
+  layer_mapping:
+    0: 0
+    1: 4
+    2: 8
+    3: 12
+    4: 16
+    5: 20
+
+# Distillation settings
+distillation:
+  # Loss configuration
+  alpha: 0.7  # Weight for distillation loss
+  temperature: 4.0  # Distillation temperature
+  
+  # Loss types
+  use_soft_targets: true
+  use_hard_targets: true
+  use_feature_distillation: true
+  use_attention_distillation: true
+  
+  # Feature distillation
+  feature_distillation:
+    layers: [2, 4, 5]  # Student layers to match
+    teacher_layers: [8, 16, 23]  # Corresponding teacher layers
+    feature_loss_weight: 0.1
+    use_mse_loss: true
+    normalize_features: true
+    
+  # Attention distillation
+  attention_distillation:
+    attention_loss_weight: 0.1
+    use_all_heads: false
+    selected_heads: [0, 5, 11]
+    
+  # Relational knowledge distillation
+  relational_kd:
+    enabled: true
+    angle_loss_weight: 0.05
+    distance_loss_weight: 0.05
+    
+  # Progressive distillation
+  progressive_distillation:
+    enabled: true
+    stages: 3
+    stage_epochs: [3, 3, 4]
+    temperature_schedule: [6.0, 4.0, 2.0]
+    alpha_schedule: [0.9, 0.7, 0.5]
+
+# Training configuration
+training:
+  num_train_epochs: 15
+  learning_rate: 5e-5
+  warmup_ratio: 0.1
+  
+  # Batch sizes
+  per_device_train_batch_size: 64
+  gradient_accumulation_steps: 1
+  
+  # Optimization
+  optimizer: adamw
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+  
+  # Learning rate schedule
+  lr_scheduler_type: cosine
+  
+  # Mixed precision
+  fp16: true
+  fp16_opt_level: O2
+
+# Data configuration
+data:
+  # Use original training data
+  use_original_data: true
+  original_data_weight: 0.5
+  
+  # Augmented data from teacher
+  use_teacher_augmented: true
+  teacher_augmented_weight: 0.3
+  
+  # Pseudo-labeled data
+  use_pseudo_labeled: true
+  pseudo_labeled_weight: 0.2
+  pseudo_label_threshold: 0.95
+  
+  # Data mixing strategy
+  mixing_strategy: "weighted"  # Options: weighted, interleave, curriculum
+
+# Advanced distillation techniques
+advanced_techniques:
+  # Born-again networks
+  born_again:
+    enabled: false
+    generations: 3
+    
+  # Self-distillation
+  self_distillation:
+    enabled: true
+    num_iterations: 2
+    
+  # Online distillation
+  online_distillation:
+    enabled: false
+    co_teaching: true
+    
+  # Noisy student
+  noisy_student:
+    enabled: true
+    noise_type: "dropout"
+    noise_level: 0.1
+    iterations: 2
+    
+  # Adversarial distillation
+  adversarial_distillation:
+    enabled: false
+    adversarial_weight: 0.1
+    
+  # Contrastive distillation
+  contrastive_distillation:
+    enabled: true
+    temperature: 0.07
+    queue_size: 65536
+
+# Curriculum learning for distillation
+curriculum:
+  enabled: true
+  
+  # Data curriculum
+  data_curriculum:
+    strategy: "easy_to_hard"
+    difficulty_metric: "teacher_confidence"
+    stages: 4
+    
+  # Temperature curriculum
+  temperature_curriculum:
+    strategy: "high_to_low"
+    initial_temperature: 8.0
+    final_temperature: 1.0
+    
+  # Loss weight curriculum
+  alpha_curriculum:
+    strategy: "distillation_to_task"
+    initial_alpha: 0.9
+    final_alpha: 0.3
+
+# Evaluation
+evaluation:
+  # Compare with teacher
+  compare_with_teacher: true
+  
+  # Distillation metrics
+  track_distillation_loss: true
+  track_feature_similarity: true
+  track_attention_similarity: true
+  
+  # Performance metrics
+  metrics:
+    - accuracy
+    - f1_macro
+    - inference_time
+    - model_size
+    - compression_ratio
+    
+  # Efficiency metrics
+  measure_speedup: true
+  measure_memory_reduction: true
+
+# Model compression
+compression:
+  # Quantization after distillation
+  quantize_after_distillation: true
+  quantization_method: "dynamic"
+  quantization_bits: 8
+  
+  # Pruning after distillation
+  prune_after_distillation: false
+  pruning_sparsity: 0.5
+  
+  # ONNX export
+  export_onnx: true
+  optimize_onnx: true
+
+# Hardware optimization
+hardware:
+  # Use teacher on GPU, student on CPU for memory
+  teacher_device: "cuda:0"
+  student_device: "cuda:1"
+  
+  # Gradient checkpointing
+  teacher_gradient_checkpointing: true
+  student_gradient_checkpointing: false
+  
+  # Memory optimization
+  clear_teacher_cache_frequency: 100
+  offload_teacher_to_cpu: false
+
+# Monitoring
+monitoring:
+  # Track distillation progress
+  log_teacher_predictions: true
+  log_student_predictions: true
+  log_prediction_differences: true
+  
+  # Visualization
+  plot_loss_curves: true
+  plot_feature_similarity: true
+  plot_attention_maps: false
+  
+  # Checkpointing
+  save_best_student: true
+  save_teacher_cache: true
+
+# Expected results
+expected_results:
+  student_accuracy: 0.945  # ~2% drop from teacher
+  teacher_accuracy: 0.965
+  compression_ratio: 3.5
+  speedup: 2.8
+  
+# Post-distillation
+post_distillation:
+  # Fine-tuning
+  finetune_student: true
+  finetune_epochs: 2
+  finetune_lr: 1e-5
+  
+  # Ensemble student with teacher
+  create_student_teacher_ensemble: false
+  ensemble_weight_student: 0.3
+  ensemble_weight_teacher: 0.7
+
+# Notes
+notes: |
+  Knowledge distillation configuration for model compression:
+  
+  1. Teacher-Student Setup:
+     - Teacher: Ensemble of DeBERTa-v3-xlarge, RoBERTa-large, XLNet-large
+     - Student: DistilRoBERTa-base (40% size of teacher)
+     
+  2. Multi-level Distillation:
+     - Soft targets (logits) distillation
+     - Feature-level distillation
+     - Attention matrix distillation
+     - Relational knowledge distillation
+     
+  3. Advanced Techniques:
+     - Progressive distillation with curriculum
+     - Noisy student training
+     - Contrastive distillation
+     - Self-distillation iterations
+     
+  4. Expected Outcomes:
+     - Student accuracy: ~94.5%
+     - 3.5x model compression
+     - 2.8x inference speedup
+     - Maintains 98% of teacher performance
+     
+  5. Best Practices:
+     - Use ensemble teacher for better knowledge
+     - Progressive temperature annealing
+     - Combine multiple distillation objectives
+     - Fine-tune after distillation
+     
+  6. Computational Requirements:
+     - 2x memory for teacher + student
+     - 1.5x training time
+     - Can cache teacher predictions
+
+references:
+  - hinton_distillation: "https://arxiv.org/abs/1503.02531"
+  - feature_distillation: "https://arxiv.org/abs/1412.5403"
+  - attention_distillation: "https://arxiv.org/abs/1612.03928"
+  - born_again: "https://arxiv.org/abs/1805.04770"
+  - noisy_student: "https://arxiv.org/abs/1911.04252"
