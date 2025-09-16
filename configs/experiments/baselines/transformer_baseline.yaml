@@ -1,0 +1,388 @@
+# Transformer Baseline Experiment Configuration
+# ==============================================
+#
+# This configuration establishes baseline performance metrics using
+# standard transformer models, following experimental methodology from:
+# - Dodge et al. (2019): "Show Your Work: Improved Reporting of Experimental Results"
+# - Reimers & Gurevych (2017): "Reporting Score Distributions Makes a Difference"
+# - Dror et al. (2018): "The Hitchhiker's Guide to Testing Statistical Significance in NLP"
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: transformer_baseline
+type: experiment
+phase: baseline
+description: "Establish transformer baseline performance for AG News classification"
+
+# Experimental methodology (Dodge et al., 2019)
+methodology:
+  # Reproducibility settings (Pineau et al., 2021)
+  reproducibility:
+    seeds: [42, 123, 456, 789, 2024]  # Multiple seeds for robustness
+    deterministic: true
+    log_environment: true
+    save_configs: true
+    
+  # Statistical significance (Dror et al., 2018)
+  statistical_testing:
+    enabled: true
+    test: "bootstrap"  # Options: bootstrap, permutation, mcnemar
+    confidence_level: 0.95
+    num_bootstrap_samples: 10000
+    
+  # Score reporting (Reimers & Gurevych, 2017)
+  score_reporting:
+    report_mean: true
+    report_std: true
+    report_confidence_interval: true
+    report_min_max: true
+    report_median: true
+
+# Models to evaluate
+models:
+  # BERT baseline (Devlin et al., 2019)
+  bert_base:
+    name: "bert-base-uncased"
+    config: "configs/models/baselines/bert_base.yaml"
+    
+    hyperparameters:
+      learning_rate: [2e-5, 3e-5, 5e-5]
+      batch_size: [16, 32]
+      num_epochs: 5
+      warmup_ratio: 0.1
+      weight_decay: 0.01
+      
+    expected_performance:
+      accuracy: 0.94
+      f1_macro: 0.935
+      
+  # RoBERTa baseline (Liu et al., 2019)
+  roberta_base:
+    name: "roberta-base"
+    config: "configs/models/baselines/roberta_base.yaml"
+    
+    hyperparameters:
+      learning_rate: [2e-5, 3e-5]
+      batch_size: [32]
+      num_epochs: 5
+      
+    expected_performance:
+      accuracy: 0.945
+      f1_macro: 0.942
+      
+  # DistilBERT baseline (Sanh et al., 2019)
+  distilbert:
+    name: "distilbert-base-uncased"
+    config: "configs/models/baselines/distilbert_base.yaml"
+    
+    hyperparameters:
+      learning_rate: [5e-5]
+      batch_size: [64]
+      num_epochs: 5
+      
+    expected_performance:
+      accuracy: 0.935
+      f1_macro: 0.93
+      
+  # ALBERT baseline (Lan et al., 2020)
+  albert_base:
+    name: "albert-base-v2"
+    config: "configs/models/baselines/albert_base.yaml"
+    
+    hyperparameters:
+      learning_rate: [3e-5]
+      batch_size: [32]
+      num_epochs: 5
+      
+    expected_performance:
+      accuracy: 0.938
+      f1_macro: 0.933
+
+# Data configuration
+data:
+  dataset: "ag_news"
+  
+  # Data splits (stratified)
+  splits:
+    train: 0.8
+    validation: 0.1
+    test: 0.1
+    
+  # Preprocessing
+  preprocessing:
+    max_length: 256  # Shorter for baselines
+    truncation: true
+    padding: "max_length"
+    
+  # No augmentation for baselines
+  augmentation:
+    enabled: false
+
+# Training configuration
+training:
+  # Standard training settings
+  optimizer: "adamw"
+  scheduler: "linear"
+  
+  # Training parameters
+  gradient_accumulation_steps: 1
+  max_grad_norm: 1.0
+  
+  # Mixed precision
+  fp16: true
+  fp16_opt_level: "O1"
+  
+  # Early stopping
+  early_stopping:
+    enabled: true
+    patience: 3
+    metric: "eval_f1_macro"
+    mode: "max"
+    
+  # Checkpointing
+  save_strategy: "best"
+  save_total_limit: 1
+  load_best_model_at_end: true
+
+# Evaluation protocol
+evaluation:
+  # Metrics to compute (following sklearn conventions)
+  metrics:
+    - accuracy
+    - precision_macro
+    - precision_micro
+    - precision_weighted
+    - recall_macro
+    - recall_micro
+    - recall_weighted
+    - f1_macro
+    - f1_micro
+    - f1_weighted
+    - matthews_corrcoef
+    - cohen_kappa_score
+    
+  # Primary metric for comparison
+  primary_metric: "f1_macro"
+  
+  # Evaluation settings
+  per_device_eval_batch_size: 64
+  eval_accumulation_steps: null
+  
+  # Cross-validation (Kohavi, 1995)
+  cross_validation:
+    enabled: false  # Use fixed split for speed
+    n_folds: 5
+    stratified: true
+
+# Hyperparameter search
+hyperparameter_search:
+  enabled: false  # Manual grid for baselines
+  
+  # Search space (if enabled)
+  search_space:
+    learning_rate:
+      type: "float"
+      low: 1e-5
+      high: 5e-5
+      log: true
+      
+    batch_size:
+      type: "categorical"
+      choices: [16, 32, 64]
+      
+    warmup_ratio:
+      type: "float"
+      low: 0.0
+      high: 0.2
+      
+  # Search strategy
+  strategy: "grid"  # Options: grid, random, bayesian
+  n_trials: 20
+  
+  # Optimization metric
+  optimize_metric: "eval_f1_macro"
+  direction: "maximize"
+
+# Ablation studies
+ablations:
+  # Component ablations
+  components:
+    - name: "no_pretrained"
+      description: "Random initialization"
+      modifications:
+        use_pretrained: false
+        
+    - name: "frozen_encoder"
+      description: "Freeze encoder layers"
+      modifications:
+        freeze_encoder: true
+        
+    - name: "no_warmup"
+      description: "No learning rate warmup"
+      modifications:
+        warmup_ratio: 0.0
+        
+  # Data ablations
+  data_ablations:
+    - name: "half_data"
+      description: "50% training data"
+      train_subset: 0.5
+      
+    - name: "quarter_data"
+      description: "25% training data"
+      train_subset: 0.25
+
+# Resource tracking
+resources:
+  # Track computational resources
+  track_carbon: true  # Using CodeCarbon
+  track_energy: true
+  track_gpu_memory: true
+  track_training_time: true
+  
+  # Resource limits
+  max_gpu_memory_gb: 16
+  timeout_hours: 24
+
+# Comparison baselines
+comparison:
+  # Classical ML baselines (from phase 1)
+  classical_baselines:
+    - name: "svm"
+      accuracy: 0.925
+      f1_macro: 0.92
+      
+    - name: "logistic_regression"
+      accuracy: 0.918
+      f1_macro: 0.912
+      
+    - name: "random_forest"
+      accuracy: 0.905
+      f1_macro: 0.898
+      
+  # Previous SOTA
+  previous_sota:
+    name: "Zhang et al. (2015)"
+    accuracy: 0.926
+    f1_macro: null  # Not reported
+
+# Experiment tracking
+tracking:
+  # Platforms
+  use_wandb: true
+  use_mlflow: false
+  use_tensorboard: true
+  
+  # W&B configuration
+  wandb:
+    project: "ag-news-baselines"
+    entity: "ag-news-team"
+    tags: ["baseline", "transformer", "reproducibility"]
+    group: "transformer_baselines"
+    
+  # Logging
+  log_frequency: 100
+  log_predictions: true
+  log_confusion_matrix: true
+  log_learning_curves: true
+
+# Output configuration
+output:
+  # Results storage
+  results_dir: "./outputs/results/experiments/baselines"
+  
+  # Save formats
+  save_predictions: true
+  save_metrics: true
+  save_model: true
+  save_tokenizer: true
+  
+  # Report generation
+  generate_report: true
+  report_format: ["html", "pdf", "latex"]
+  
+  # Artifacts
+  artifacts:
+    - confusion_matrix.png
+    - learning_curves.png
+    - roc_curves.png
+    - metric_distributions.png
+
+# Analysis
+analysis:
+  # Error analysis
+  error_analysis:
+    enabled: true
+    save_errors: true
+    analyze_patterns: true
+    
+  # Model interpretation
+  interpretation:
+    enabled: false  # Skip for baselines
+    methods: ["attention", "gradients"]
+    
+  # Statistical analysis
+  statistical_analysis:
+    compare_models: true
+    significance_test: "bootstrap"
+    effect_size: "cohen_d"
+
+# Expected timeline
+timeline:
+  estimated_hours: 8
+  
+  phases:
+    - name: "Data preparation"
+      hours: 0.5
+    - name: "Model training"
+      hours: 6
+    - name: "Evaluation"
+      hours: 1
+    - name: "Analysis"
+      hours: 0.5
+
+# Notes
+notes: |
+  Transformer baseline experiment following best practices:
+  
+  1. Experimental Design (Dodge et al., 2019):
+     - Multiple random seeds for robustness
+     - Fixed hyperparameters from literature
+     - Consistent evaluation protocol
+     - Statistical significance testing
+  
+  2. Models Evaluated:
+     - BERT-base: Original transformer baseline
+     - RoBERTa-base: Improved pretraining
+     - DistilBERT: Efficient alternative
+     - ALBERT-base: Parameter sharing
+  
+  3. Expected Results:
+     - BERT-base: ~94% accuracy
+     - RoBERTa-base: ~94.5% accuracy (best baseline)
+     - DistilBERT: ~93.5% accuracy
+     - ALBERT-base: ~93.8% accuracy
+  
+  4. Comparison Points:
+     - vs Classical ML: +1.5-2% improvement
+     - vs Random: ~70% improvement
+     - vs Previous SOTA (2015): +1.5% improvement
+  
+  5. Resource Requirements:
+     - GPU: 16GB (V100 or better)
+     - Training time: ~1.5 hours per model
+     - Total time: ~8 hours
+  
+  6. Key Insights Expected:
+     - RoBERTa > BERT due to better pretraining
+     - Larger models generally perform better
+     - Warmup and weight decay important
+     - 256 max length sufficient for AG News
+
+references:
+  - experimental_design: "https://arxiv.org/abs/1909.03004"
+  - statistical_testing: "https://arxiv.org/abs/1809.01448"
+  - score_reporting: "https://arxiv.org/abs/1707.01145"
+  - bert: "https://arxiv.org/abs/1810.04805"
+  - roberta: "https://arxiv.org/abs/1907.11692"
