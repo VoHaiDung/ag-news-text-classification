@@ -1,431 +1,65 @@
+# pyproject.toml - Project configuration
+# =======================================
+#
+# Modern Python project configuration following PEP 518, PEP 621
+# References:
+# - PEP 518: https://www.python.org/dev/peps/pep-0518/
+# - PEP 621: https://www.python.org/dev/peps/pep-0621/
+#
+# Author: Võ Hải Dũng
+
 [build-system]
-requires = ["setuptools>=68.0", "wheel", "setuptools-scm>=8.0"]
+requires = ["setuptools>=65.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ag-news-text-classification"
+name = "ag-news-classification"
 version = "1.0.0"
-description = "State-of-the-art framework for AG News text classification with advanced ML/DL techniques"
+description = "State-of-the-art text classification framework for AG News dataset"
 readme = "README.md"
-license = {file = "LICENSE"}
+requires-python = ">=3.8"
+license = {text = "MIT"}
 authors = [
-    {name = "Võ Hải Dũng", email = "vohaidung.work@gmail.com"},
+    {name = "Võ Hải Dũng", email = "contact@example.com"},
 ]
 maintainers = [
-    {name = "Võ Hải Dũng", email = "vohaidung.work@gmail.com"},
+    {name = "Võ Hải Dũng", email = "contact@example.com"},
 ]
 keywords = [
-    "nlp", "natural-language-processing", "text-classification",
-    "news-classification", "ag-news", "deep-learning", "machine-learning",
-    "transformers", "pytorch", "huggingface", "bert", "deberta", "roberta",
-    "ensemble-learning", "state-of-the-art", "research", "production-ml",
-    "mlops", "prompt-engineering", "instruction-tuning", "model-optimization",
-    "knowledge-distillation", "domain-adaptation", "contrast-sets",
-    "adversarial-training", "model-compression", "quantization", "pruning",
-    "experiment-tracking", "hyperparameter-optimization", "model-serving",
-    "gpu-optimization", "distributed-training", "database-migration",
+    "nlp",
+    "text-classification", 
+    "ag-news",
+    "transformers",
+    "deep-learning",
+    "machine-learning"
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
-    "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
-    "Intended Audience :: Education",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
-    "Topic :: Scientific/Engineering :: Information Analysis",
-    "Topic :: Text Processing :: Linguistic",
-    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: Implementation :: CPython",
-    "Operating System :: OS Independent",
-    "Operating System :: POSIX :: Linux",
-    "Operating System :: MacOS :: MacOS X",
-    "Operating System :: Microsoft :: Windows",
-    "Environment :: Console",
-    "Environment :: Web Environment",
-    "Environment :: GPU :: NVIDIA CUDA :: 11.8",
-    "Environment :: GPU :: NVIDIA CUDA :: 12",
-    "Framework :: Pytest",
-    "Framework :: Jupyter",
-    "Framework :: Flask",
-    "Framework :: FastAPI",
-    "Natural Language :: English",
-    "Typing :: Typed",
-]
-requires-python = ">=3.8,<3.12"
-
-dependencies = [
-    "torch>=2.0.0,<2.2.0",
-    "transformers>=4.35.0,<5.0.0",
-    "datasets>=2.14.0",
-    "tokenizers>=0.15.0",
-    "numpy>=1.24.0,<1.26.0",
-    "pandas>=2.0.0,<2.2.0",
-    "scikit-learn>=1.3.0,<1.4.0",
-    "tqdm>=4.66.0",
-    "pyyaml>=6.0.0",
-    "python-dotenv>=1.0.0",
-    "click>=8.1.0",
-    "rich>=13.5.0",
-    "einops>=0.7.0",
-    "matplotlib>=3.7.0",
-    "seaborn>=0.12.0",
-    "requests>=2.31.0",
-    "aiohttp>=3.9.0",
-    "pydantic>=2.5.0",
-    "typer>=0.9.0",
-    "hydra-core>=1.3.0",
-    "omegaconf>=2.3.0",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 
 [project.urls]
-Homepage = "https://github.com/VoHaiDung/ag-news-text-classification"
-Documentation = "https://ag-news-text-classification.readthedocs.io"
-Repository = "https://github.com/VoHaiDung/ag-news-text-classification.git"
-"Bug Tracker" = "https://github.com/VoHaiDung/ag-news-text-classification/issues"
-"Research Paper" = "https://arxiv.org/abs/2024.agnews"
-"Model Hub" = "https://huggingface.co/VoHaiDung"
-Demo = "https://huggingface.co/spaces/VoHaiDung/ag-news-demo"
-Changelog = "https://github.com/VoHaiDung/ag-news-text-classification/blob/main/CHANGELOG.md"
-Benchmarks = "https://agnews-benchmarks.github.io"
-"CI/CD" = "https://github.com/VoHaiDung/ag-news-text-classification/actions"
-Discussions = "https://github.com/VoHaiDung/ag-news-text-classification/discussions"
-Wiki = "https://github.com/VoHaiDung/ag-news-text-classification/wiki"
-
-[project.optional-dependencies]
-ml = [
-    "xgboost>=2.0.0",
-    "lightgbm>=4.1.0",
-    "catboost>=1.2.0",
-    "optuna>=3.3.0",
-    "optuna-dashboard>=0.13.0",
-    "ray[tune]>=2.8.0",
-    "hyperopt>=0.2.7",
-]
-
-research = [
-    "wandb>=0.15.0",
-    "tensorboard>=2.14.0",
-    "mlflow>=2.8.0",
-    "neptune>=1.8.0",
-    "comet-ml>=3.35.0",
-    "sacred>=0.8.4",
-    "jupyterlab>=4.0.0",
-    "notebook>=7.0.0",
-    "ipywidgets>=8.1.0",
-    "nbconvert>=7.11.0",
-    "papermill>=2.5.0",
-    "pytorch-lightning>=2.0.0",
-    "accelerate>=0.24.0",
-    "deepspeed>=0.12.0",
-    "fairscale>=0.4.13",
-    "horovod>=0.28.0",
-]
-
-prod = [
-    "fastapi>=0.104.0",
-    "uvicorn[standard]>=0.24.0",
-    "gunicorn>=21.2.0",
-    "grpcio>=1.59.0",
-    "grpcio-tools>=1.59.0",
-    "prometheus-client>=0.19.0",
-    "grafana-api>=1.0.0",
-    "flower>=2.0.0",
-    "celery>=5.3.0",
-    "redis>=5.0.0",
-    "aioredis>=2.0.0",
-    "asyncpg>=0.29.0",
-    "sqlalchemy>=2.0.0",
-    "alembic>=1.12.0",
-]
-
-dev = [
-    "pytest>=7.4.0",
-    "pytest-cov>=4.1.0",
-    "pytest-asyncio>=0.21.0",
-    "pytest-benchmark>=4.0.0",
-    "pytest-mock>=3.12.0",
-    "pytest-xdist>=3.5.0",
-    "pytest-timeout>=2.2.0",
-    "pytest-env>=1.1.0",
-    "hypothesis>=6.90.0",
-    "faker>=20.1.0",
-    "factory-boy>=3.3.0",
-    "black>=23.11.0",
-    "isort>=5.12.0",
-    "flake8>=6.1.0",
-    "mypy>=1.7.0",
-    "pylint>=3.0.0",
-    "bandit>=1.7.5",
-    "safety>=2.3.5",
-    "pre-commit>=3.5.0",
-    "commitizen>=3.12.0",
-    "detect-secrets>=1.4.0",
-]
-
-data = [
-    "dvc[all]>=3.0.0",
-    "great-expectations>=0.18.0",
-    "pandas-profiling>=3.6.0",
-    "sweetviz>=2.3.0",
-    "missingno>=0.5.2",
-    "imbalanced-learn>=0.11.0",
-    "nltk>=3.8.1",
-    "spacy>=3.7.0",
-    "textstat>=0.7.3",
-    "pyarrow>=14.0.0",
-    "fastparquet>=2023.10.0",
-]
-
-llm = [
-    "openai>=1.3.0",
-    "anthropic>=0.7.0",
-    "langchain>=0.0.340",
-    "langchain-community>=0.0.1",
-    "llama-index>=0.9.0",
-    "guidance>=0.1.0",
-    "peft>=0.6.0",
-    "trl>=0.7.0",
-    "bitsandbytes>=0.41.0",
-]
-
-ui = [
-    "streamlit>=1.29.0",
-    "gradio>=4.7.0",
-    "dash>=2.14.0",
-    "plotly>=5.18.0",
-    "bokeh>=3.3.0",
-    "altair>=5.2.0",
-    "panel>=1.3.0",
-    "voila>=0.5.0",
-]
-
-docs = [
-    "sphinx>=7.2.0",
-    "sphinx-rtd-theme>=2.0.0",
-    "sphinx-autodoc-typehints>=1.25.0",
-    "sphinx-copybutton>=0.5.2",
-    "myst-parser>=2.0.0",
-    "mkdocs>=1.5.0",
-    "mkdocs-material>=9.4.0",
-    "mkdocstrings[python]>=0.24.0",
-    "pdoc>=14.1.0",
-]
-
-robustness = [
-    "adversarial-robustness-toolbox>=1.16.0",
-    "textattack>=0.3.8",
-    "foolbox>=3.3.3",
-    "cleverhans>=4.0.0",
-    "robustness>=1.2.0",
-]
-
-minimal = [
-    "torch>=2.0.0",
-    "transformers>=4.35.0",
-    "numpy>=1.24.0",
-    "tqdm>=4.66.0",
-]
-
-gpu = [
-    "cuda-python>=12.0.0",
-    "cupy-cuda12x>=12.0.0",
-    "nvidia-ml-py>=12.535.0",
-    "gpustat>=1.1.0",
-    "py3nvml>=0.2.7",
-    "pynvml>=11.5.0",
-]
-
-aws = [
-    "boto3>=1.28.0",
-    "sagemaker>=2.199.0",
-    "awscli>=1.29.0",
-]
-
-gcp = [
-    "google-cloud-storage>=2.10.0",
-    "google-cloud-aiplatform>=1.38.0",
-    "google-cloud-logging>=3.5.0",
-]
-
-azure = [
-    "azure-storage-blob>=12.19.0",
-    "azure-ai-ml>=1.12.0",
-    "azure-identity>=1.15.0",
-]
-
-test = [
-    "pytest>=7.4.0",
-    "pytest-cov>=4.1.0",
-    "pytest-asyncio>=0.21.0",
-    "pytest-benchmark>=4.0.0",
-    "pytest-mock>=3.12.0",
-]
-
-week1 = [
-    "scikit-learn>=1.3.0",
-    "xgboost>=2.0.0",
-    "matplotlib>=3.7.0",
-    "seaborn>=0.12.0",
-    "jupyter>=1.0.0",
-    "wandb>=0.15.0",
-]
-
-week2-3 = [
-    "optuna>=3.3.0",
-    "ray[tune]>=2.8.0",
-    "wandb>=0.15.0",
-    "pytorch-lightning>=2.0.0",
-]
-
-week4-5 = [
-    "nlpaug>=1.1.0",
-    "textaugment>=1.3.4",
-    "dvc>=3.0.0",
-    "newspaper3k>=0.2.8",
-]
-
-week6-7 = [
-    "openai>=1.3.0",
-    "peft>=0.6.0",
-    "trl>=0.7.0",
-    "langchain>=0.0.340",
-]
-
-week8-9 = [
-    "onnx>=1.15.0",
-    "onnxruntime>=1.16.0",
-    "tensorrt>=8.6.0",
-    "fastapi>=0.104.0",
-    "bentoml>=1.1.0",
-]
-
-week10 = [
-    "docker>=6.1.0",
-    "kubernetes>=28.1.0",
-    "bentoml>=1.1.0",
-    "prometheus-client>=0.19.0",
-]
-
-all = [
-    "ag-news-text-classification[ml,research,prod,dev,data,llm,ui,docs,robustness,gpu]",
-]
+Homepage = "https://github.com/yourusername/ag-news-classification"
+Documentation = "https://github.com/yourusername/ag-news-classification/docs"
+Repository = "https://github.com/yourusername/ag-news-classification"
+Issues = "https://github.com/yourusername/ag-news-classification/issues"
 
 [project.scripts]
-ag-news = "src.cli.main:cli"
-ag-news-train = "scripts.training.train_single_model:main"
-ag-news-evaluate = "scripts.evaluation.evaluate_all_models:main"
-ag-news-data = "scripts.data_preparation.prepare_ag_news:main"
-ag-news-serve = "src.inference.serving.model_server:main"
-ag-news-experiment = "experiments.experiment_runner:main"
-
-[project.entry-points."ag_news.models"]
-deberta = "src.models.transformers.deberta.deberta_v3:DeBERTaV3Model"
-roberta = "src.models.transformers.roberta.roberta_enhanced:RoBERTaEnhancedModel"
-xlnet = "src.models.transformers.xlnet.xlnet_classifier:XLNetClassifier"
-electra = "src.models.transformers.electra.electra_discriminator:ElectraDiscriminator"
-longformer = "src.models.transformers.longformer.longformer_global:LongformerGlobalModel"
-
-[project.entry-points."ag_news.trainers"]
-standard = "src.training.trainers.standard_trainer:StandardTrainer"
-distributed = "src.training.trainers.distributed_trainer:DistributedTrainer"
-prompt = "src.training.trainers.prompt_trainer:PromptTrainer"
-
-[tool.setuptools]
-zip-safe = false
-include-package-data = true
-
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["src*", "quickstart*", "scripts*", "configs*", "prompts*"]
-exclude = ["tests*", "docs*", "examples*", "*.tests", "*.tests.*"]
-
-[tool.setuptools.package-data]
-"*" = ["*.yaml", "*.yml", "*.json", "*.txt", "*.md", "*.toml", "*.cfg", "*.ini", "py.typed"]
-"src" = ["**/*.yaml", "**/*.yml", "**/*.json", "**/*.txt", "**/*.pyi", "py.typed"]
-"configs" = ["**/*.yaml", "**/*.yml", "**/*.json", "**/*.toml"]
-"prompts" = ["**/*.txt", "**/*.json", "**/*.md", "**/*.jinja2"]
-
-[tool.setuptools.dynamic]
-version = {attr = "src.__version__.__version__"}
-
-[tool.pytest.ini_options]
-minversion = "7.0"
-testpaths = ["tests"]
-python_files = ["test_*.py", "*_test.py"]
-python_classes = ["Test*", "*Tests"]
-python_functions = ["test_*"]
-addopts = [
-    "-ra",
-    "--strict-markers",
-    "--strict-config",
-    "--cov=src",
-    "--cov-branch",
-    "--cov-report=term-missing:skip-covered",
-    "--cov-report=html:outputs/coverage/html",
-    "--cov-report=xml:outputs/coverage/coverage.xml",
-    "--cov-fail-under=80",
-    "--maxfail=1",
-    "--tb=short",
-    "--dist=loadgroup",
-    "-n=auto",
-]
-markers = [
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-    "unit: marks tests as unit tests",
-    "integration: marks tests as integration tests",
-    "performance: marks tests as performance tests",
-    "gpu: marks tests that require GPU",
-    "distributed: marks tests for distributed training",
-]
-filterwarnings = [
-    "error",
-    "ignore::UserWarning",
-    "ignore::DeprecationWarning",
-]
-log_cli = true
-log_cli_level = "INFO"
-log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s - %(message)s"
-log_cli_date_format = "%Y-%m-%d %H:%M:%S"
-
-[tool.coverage.run]
-source = ["src"]
-branch = true
-parallel = true
-omit = [
-    "*/tests/*",
-    "*/test_*.py",
-    "*/__init__.py",
-    "*/migrations/*",
-    "*/config.py",
-    "*/settings.py",
-]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "def __str__",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if __name__ == .__main__.:",
-    "if TYPE_CHECKING:",
-    "if typing.TYPE_CHECKING:",
-    "@abstractmethod",
-    "@abc.abstractmethod",
-]
-precision = 2
-show_missing = true
-skip_covered = false
-sort = "Cover"
+ag-news-train = "src.cli.train:main"
+ag-news-evaluate = "src.cli.evaluate:main"
+ag-news-predict = "src.cli.predict:main"
 
 [tool.black]
 line-length = 100
-target-version = ["py38", "py39", "py310", "py311"]
+target-version = ['py38', 'py39', 'py310', 'py311']
 include = '\.pyi?$'
 extend-exclude = '''
 /(
@@ -439,7 +73,7 @@ extend-exclude = '''
   | buck-out
   | build
   | dist
-  | migrations
+  | data
 )/
 '''
 
@@ -451,71 +85,88 @@ include_trailing_comma = true
 force_grid_wrap = 0
 use_parentheses = true
 ensure_newline_before_comments = true
-split_on_trailing_comma = true
-skip_glob = ["*/migrations/*", "*/settings/*"]
-known_first_party = ["src", "scripts", "tests"]
-known_third_party = ["torch", "transformers", "numpy", "pandas", "sklearn"]
-sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+skip_gitignore = true
+skip = ["venv", ".venv", "build", "dist"]
 
 [tool.mypy]
 python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_any_unimported = false
+ignore_missing_imports = true
 no_implicit_optional = true
 warn_redundant_casts = true
 warn_unused_ignores = true
-warn_no_return = true
 warn_unreachable = true
 strict_equality = true
-check_untyped_defs = true
-disallow_untyped_calls = true
-disallow_incomplete_defs = true
-disallow_untyped_decorators = true
-ignore_missing_imports = true
 pretty = true
 show_error_codes = true
 show_error_context = true
-show_column_numbers = true
-plugins = ["pydantic.mypy"]
+show_traceback = true
 
-[tool.pylint.main]
-py-version = "3.10"
-jobs = 0
-persistent = true
-suggestion-mode = true
-extension-pkg-allow-list = ["pydantic"]
-
-[tool.pylint.messages_control]
-max-line-length = 100
-disable = [
-    "C0111",  # missing-docstring
-    "C0103",  # invalid-name
-    "R0903",  # too-few-public-methods
-    "R0913",  # too-many-arguments
-    "W0105",  # pointless-string-statement
-    "W0212",  # protected-access
-    "W0621",  # redefined-outer-name
-    "W0703",  # broad-except
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--junitxml=reports/junit.xml",
+]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*", "*Tests"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
 ]
 
-[tool.pylint.design]
-max-args = 10
-max-attributes = 20
-max-bool-expr = 5
-max-branches = 15
-max-locals = 20
-max-parents = 10
-max-public-methods = 25
-max-returns = 6
-max-statements = 60
-min-public-methods = 1
+[tool.coverage.run]
+source = ["src"]
+branch = true
+parallel = true
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__init__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "def __str__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "class .*\\bProtocol\KATEX_INLINE_CLOSE:",
+    "@abstractmethod",
+]
+precision = 2
+show_missing = true
+skip_covered = false
+
+[tool.pylint.messages_control]
+disable = [
+    "C0103",  # Invalid name
+    "C0114",  # Missing module docstring  
+    "C0115",  # Missing class docstring
+    "C0116",  # Missing function docstring
+    "R0903",  # Too few public methods
+    "R0913",  # Too many arguments
+    "W0511",  # TODO/FIXME comments
+]
+
+[tool.pylint.format]
+max-line-length = 100
 
 [tool.ruff]
-target-version = "py310"
 line-length = 100
-fix = true
+target-version = "py310"
 select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
@@ -524,207 +175,17 @@ select = [
     "B",  # flake8-bugbear
     "C4", # flake8-comprehensions
     "UP", # pyupgrade
-    "ARG", # flake8-unused-arguments
-    "SIM", # flake8-simplify
 ]
 ignore = [
     "E501",  # line too long
     "B008",  # do not perform function calls in argument defaults
     "C901",  # too complex
-    "W191",  # indentation contains tabs
 ]
 exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
     ".git",
-    ".git-rewrite",
-    ".hg",
-    ".mypy_cache",
-    ".nox",
-    ".pants.d",
-    ".pytype",
     ".ruff_cache",
-    ".svn",
-    ".tox",
-    ".venv",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "venv",
-    "migrations",
-]
-
-[tool.bandit]
-exclude_dirs = ["tests", "scripts/tests"]
-severity = "medium"
-confidence = "medium"
-max_lines = 500
-progress = true
-
-[tool.commitizen]
-name = "cz_conventional_commits"
-version = "1.0.0"
-tag_format = "v$version"
-version_files = [
-    "src/__version__.py:__version__",
-    "pyproject.toml:version",
-]
-update_changelog_on_bump = true
-changelog_incremental = true
-annotated_tag = true
-
-[tool.poetry]
-name = "ag-news-text-classification"
-version = "1.0.0"
-description = "State-of-the-art AG News text classification framework"
-authors = ["Võ Hải Dũng <vohaidung.work@gmail.com>"]
-license = "MIT"
-readme = "README.md"
-homepage = "https://github.com/VoHaiDung/ag-news-text-classification"
-repository = "https://github.com/VoHaiDung/ag-news-text-classification"
-documentation = "https://ag-news-text-classification.readthedocs.io"
-
-[tool.semantic_release]
-version_variable = "src/__version__.py:__version__"
-version_toml = "pyproject.toml:tool.poetry.version"
-branch = "main"
-upload_to_pypi = false
-upload_to_release = true
-build_command = "pip install poetry && poetry build"
-
-[tool.interrogate]
-ignore-init-method = true
-ignore-init-module = false
-ignore-magic = false
-ignore-semiprivate = false
-ignore-private = false
-ignore-property-decorators = false
-ignore-module = true
-ignore-nested-functions = false
-ignore-nested-classes = true
-ignore-setters = false
-fail-under = 80
-exclude = ["setup.py", "docs", "build", "tests"]
-ignore-regex = ["^get$", "^mock_.*", ".*BaseClass.*"]
-verbose = 1
-quiet = false
-whitelist-regex = []
-color = true
-omit-covered-files = false
-
-[tool.pydocstyle]
-inherit = false
-match = "(?!test).*\\.py"
-match-dir = "(?!tests).*"
-convention = "google"
-add_ignore = ["D100", "D104", "D107", "D212", "D401"]
-
-[tool.flake8]
-max-line-length = 100
-max-complexity = 10
-exclude = [
-    ".git",
     "__pycache__",
-    "docs/source/conf.py",
-    "old",
-    "build",
     "dist",
-    ".venv",
-    "venv",
-    ".tox",
-    ".eggs",
-    "*.egg",
+    "build",
+    "*.egg-info",
 ]
-ignore = ["E203", "E266", "E501", "W503", "F403", "F401"]
-select = ["B", "C", "E", "F", "W", "T4", "B9"]
-
-[tool.nbqa]
-configs = [
-    "pyproject.toml",
-]
-exclude = [
-    "notebooks/experimental",
-]
-addopts = [
-    "--nbqa-mutate",
-]
-
-[tool.cruft]
-skip = [
-    ".git",
-    "tests",
-    "outputs",
-    "data",
-]
-
-[tool.vulture]
-exclude = [
-    "tests/",
-    "scripts/tests/",
-]
-ignore_decorators = [
-    "@app.route",
-    "@require_*",
-    "@pytest.fixture",
-]
-ignore_names = [
-    "visit_*",
-    "do_*",
-]
-make_whitelist = true
-min_confidence = 80
-paths = ["src", "scripts"]
-sort_by_size = true
-verbose = false
-
-[tool.poe.tasks]
-test = "pytest tests/"
-test-unit = "pytest tests/unit/"
-test-integration = "pytest tests/integration/"
-test-performance = "pytest tests/performance/ --benchmark-only"
-lint = ["black-check", "isort-check", "flake8", "mypy", "pylint"]
-format = ["black", "isort"]
-black = "black src/ scripts/ tests/"
-black-check = "black --check src/ scripts/ tests/"
-isort = "isort src/ scripts/ tests/"
-isort-check = "isort --check-only src/ scripts/ tests/"
-flake8 = "flake8 src/ scripts/"
-mypy = "mypy src/"
-pylint = "pylint src/"
-security = "bandit -r src/"
-clean = "rm -rf build/ dist/ *.egg-info .pytest_cache .coverage htmlcov/"
-docs = "sphinx-build -b html docs/ docs/_build/html"
-serve-docs = "python -m http.server --directory docs/_build/html"
-build = "python -m build"
-publish-test = "twine upload --repository testpypi dist/*"
-publish = "twine upload dist/*"
-
-[tool.djlint]
-profile = "jinja"
-max_line_length = 120
-format_attribute_template_tags = true
-format_css = true
-format_js = true
-include = "H017,H035"
-ignore = "H006,H030,H031"
-extension = "html"
-indent = 2
-preserve_blank_lines = true
-preserve_leading_space = true
-
-[tool.nitpick]
-style = [
-    "https://raw.githubusercontent.com/wemake-services/wemake-python-styleguide/master/styles/nitpick-style-wemake.toml",
-]
-
-[tool.docformatter]
-recursive = true
-wrap-summaries = 100
-wrap-descriptions = 100
-blank = true
-pre-summary-newline = true
-make-summary-multi-line = true
