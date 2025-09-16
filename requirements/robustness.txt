@@ -1,14 +1,46 @@
-# Include base
--r base.txt
+# Robustness Testing Requirements
+# ================================
+# Tools for testing model robustness
+#
+# Author: Võ Hải Dũng
 
-# Robustness testing
-checklist>=0.0.11
-textattack>=0.3.0
-nlp-test>=1.0.0
+# Include ML requirements
+-r ml.txt
 
-# Fairness
-fairlearn>=0.10.0
-aif360>=0.5.0
+# Adversarial testing
+cleverhans>=4.0.0,<4.1.0
+foolbox>=3.3.0,<3.4.0
+adversarial-robustness-toolbox>=1.16.0,<1.17.0
+textattack>=0.3.0,<0.4.0
 
-# Text statistics
-textstat>=0.7.3
+# Fairness testing
+fairlearn>=0.9.0,<0.10.0
+aif360>=0.5.0,<0.6.0
+fairness-indicators>=0.44.0,<0.45.0
+
+# Robustness metrics
+robustness-metrics>=0.2.0,<0.3.0
+uncertainty-toolbox>=0.1.0,<0.2.0
+
+# Data validation
+deepchecks>=0.17.0,<0.18.0
+evidently>=0.4.0,<0.5.0
+
+# Model monitoring
+alibi-detect>=0.11.0,<0.12.0
+whylogs>=1.3.0,<1.4.0
+
+# Stress testing
+locust>=2.17.0,<2.18.0
+pytest-stress>=1.0.0,<1.1.0
+
+# Edge cases
+hypothesis>=6.90.0,<6.91.0
+pytest-randomly>=3.15.0,<3.16.0
+
+# Differential privacy
+opacus>=1.4.0,<1.5.0
+tensorflow-privacy>=0.9.0,<0.10.0
+
+# Model cards
+model-card-toolkit>=2.0.0,<2.1.0
