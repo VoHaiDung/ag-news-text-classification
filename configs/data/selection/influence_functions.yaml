@@ -1,0 +1,280 @@
+# Influence Functions Configuration
+# ==================================
+#
+# Data selection using influence functions following:
+# - Koh & Liang (2017): "Understanding Black-box Predictions via Influence Functions"
+# - Pruthi et al. (2020): "Estimating Training Data Influence by Tracing Gradient Descent"
+# - Feldman & Zhang (2020): "What Neural Networks Memorize and Why"
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: influence_functions
+type: data_selection
+description: "Select influential training samples using influence functions"
+
+# Influence computation method
+computation:
+  # Method selection
+  method: "explicit_hessian"  # explicit_hessian, implicit_hessian, tracin, fisher
+  
+  # Alternative methods
+  alternatives:
+    - "implicit_hessian"  # More memory efficient
+    - "tracin"  # Tracing gradient descent
+    - "fisher_kernel"  # Fisher information
+    - "representer_point"  # Representer point method
+    - "datamodel"  # Data model predictions
+  
+  # Hessian computation
+  hessian:
+    # Approximation method
+    approximation: "lissa"  # lissa, conjugate_gradient, neumann
+    
+    # LISSA parameters (Linear time Stochastic Second-Order Algorithm)
+    lissa:
+      recursion_depth: 100
+      batch_size: 10
+      scale: 10
+      
+    # Conjugate gradient parameters
+    conjugate_gradient:
+      max_iterations: 100
+      tolerance: 1e-5
+      
+    # Neumann series approximation
+    neumann:
+      num_terms: 10
+      scaling_factor: 0.1
+  
+  # Gradient computation
+  gradient:
+    compute_per_sample: true
+    accumulate_batches: false
+    checkpoint_gradients: true  # Save memory
+
+# Stability parameters
+stability:
+  # Damping for numerical stability
+  damping: 0.01
+  damping_adaptive: true
+  
+  # Scaling
+  scale: 25.0
+  auto_scale: true
+  
+  # Regularization
+  l2_regularization: 0.001
+  
+  # Numerical precision
+  dtype: "float32"  # float32, float64
+  epsilon: 1e-8
+
+# Selection criteria
+selection:
+  # What to select
+  target: "helpful"  # helpful, harmful, influential, memorized
+  
+  # Selection strategy
+  strategy:
+    helpful:
+      select_top_k: 1000
+      threshold: 0.01
+      
+    harmful:
+      remove_top_k: 100
+      threshold: -0.01
+      
+    influential:
+      select_absolute_top_k: 1000
+      
+    memorized:
+      self_influence_threshold: 0.5
+  
+  # Per-class selection
+  per_class: true
+  balance_classes: true
+
+# TracIn specific settings
+tracin:
+  # Checkpoints to use
+  checkpoints: "all"  # all, last_k, specific
+  num_checkpoints: 10
+  
+  # Gradient accumulation
+  accumulate_gradients: true
+  
+  # Loss reduction
+  reduction: "sum"  # sum, mean
+  
+  # Projections
+  use_projections: false
+  projection_dim: 100
+
+# Representer point settings
+representer:
+  # Layer to use
+  layer: -2  # Second to last layer
+  
+  # Regularization
+  alpha: 0.01
+  
+  # Kernel
+  kernel: "linear"  # linear, rbf
+
+# Computational efficiency
+efficiency:
+  # Batch processing
+  batch_size: 32
+  gradient_batch_size: 1
+  
+  # Parallelization
+  num_workers: 4
+  use_multiprocessing: true
+  
+  # GPU usage
+  use_cuda: true
+  mixed_precision: false
+  
+  # Memory management
+  max_memory_gb: 16
+  gradient_checkpointing: true
+  
+  # Caching
+  cache_gradients: true
+  cache_dir: "./cache/influence"
+
+# Influence types
+influence_types:
+  # Training influence
+  training:
+    compute: true
+    subset: "all"  # all, random_subset, class_balanced
+    
+  # Test influence
+  test:
+    compute: true
+    test_samples: 100
+    
+  # Self-influence (memorization)
+  self:
+    compute: true
+    detect_memorization: true
+    
+  # Group influence
+  group:
+    compute: false
+    group_size: 10
+
+# Validation
+validation:
+  # Validate influence scores
+  validate_scores: true
+  
+  # Validation methods
+  methods:
+    - "leave_one_out"  # Expensive but accurate
+    - "gradient_correlation"
+    - "loss_correlation"
+    
+  # Correlation thresholds
+  min_correlation: 0.7
+  
+  # Sanity checks
+  sanity_checks:
+    - "self_influence_positive"  # Self-influence should be positive
+    - "influence_sum_bounded"  # Sum of influences bounded
+
+# Application strategies
+application:
+  # Data cleaning
+  data_cleaning:
+    remove_harmful: true
+    harmful_threshold: -0.01
+    
+  # Data debugging
+  debugging:
+    identify_mislabeled: true
+    confidence_threshold: 0.9
+    
+  # Active learning
+  active_learning:
+    select_influential: true
+    update_frequency: 100
+    
+  # Domain adaptation
+  domain_adaptation:
+    weight_by_influence: true
+    source_weight: 0.5
+
+# Integration with training
+training_integration:
+  # Influence-weighted loss
+  weighted_loss: false
+  weight_function: "sigmoid"  # sigmoid, linear, exponential
+  
+  # Curriculum learning
+  curriculum:
+    use_influence: true
+    start_easy: true  # Start with low influence samples
+    
+  # Data pruning
+  pruning:
+    prune_percentage: 10
+    prune_harmful: true
+
+# Monitoring and analysis
+monitoring:
+  # Track influence over time
+  track_evolution: true
+  checkpoint_frequency: 5  # epochs
+  
+  # Visualizations
+  visualize:
+    influence_distribution: true
+    influential_samples: true
+    influence_heatmap: true
+    
+  # Statistics
+  compute_statistics:
+    - "mean_influence"
+    - "std_influence"
+    - "influence_percentiles"
+    - "class_influence_balance"
+
+# Hyperparameters
+hyperparameters:
+  # Key hyperparameters
+  damping:
+    type: "float"
+    range: [0.001, 0.1]
+    log_scale: true
+    
+  scale:
+    type: "float"
+    range: [1, 100]
+    
+  recursion_depth:
+    type: "int"
+    range: [10, 1000]
+
+# Expected impact
+expected_impact:
+  data_quality: "Significant improvement"
+  training_efficiency: "20-30% faster"
+  model_interpretability: "High"
+  debugging_capability: "Enhanced"
+
+# References
+references:
+  - paper: "Koh & Liang (2017)"
+    title: "Understanding Black-box Predictions via Influence Functions"
+    url: "https://arxiv.org/abs/1703.04730"
+    
+  - paper: "Pruthi et al. (2020)"
+    title: "Estimating Training Data Influence by Tracing Gradient Descent"
+    url: "https://arxiv.org/abs/2002.08484"
+    
+  - paper: "Yeh et al. (2018)"
+    title: "Representer Point Selection for Explaining Deep Neural Networks"
+    url: "https://arxiv.org/abs/1811.09720"
