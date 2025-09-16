@@ -94,6 +94,7 @@ ag-news-text-classification/
 ├── TROUBLESHOOTING.md
 ├── ROADMAP.md
 ├── setup.py
+├── setup.cfg
 ├── pyproject.toml
 ├── Makefile
 ├── .env.example
