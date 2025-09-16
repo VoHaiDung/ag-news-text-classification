@@ -1,0 +1,35 @@
+# Advanced Preprocessing Configuration
+# =====================================
+# Author: Võ Hải Dũng
+
+name: advanced_preprocessing
+type: preprocessing
+
+text_cleaning:
+  lowercase: false
+  remove_urls: true
+  remove_emails: true
+  normalize_unicode: true
+  normalize_whitespace: true
+  remove_special_chars: false
+  min_length: 10
+  max_length: 1000
+
+tokenization:
+  tokenizer: "microsoft/deberta-v3-base"
+  max_length: 512
+  padding: "max_length"
+  truncation: true
+  stride: 128
+
+feature_extraction:
+  use_tfidf: true
+  use_embeddings: true
+  use_statistical: true
+  embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+
+sliding_window:
+  enabled: true
+  window_size: 512
+  stride: 128
+  aggregation: "mean"
