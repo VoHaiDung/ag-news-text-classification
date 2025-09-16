@@ -1,0 +1,64 @@
+# Flake8 Configuration
+# ====================
+#
+# Code style configuration for flake8 linter
+# Following PEP 8 and Google Python Style Guide
+#
+# Author: Võ Hải Dũng
+
+[flake8]
+# Maximum line length
+max-line-length = 100
+
+# Maximum complexity
+max-complexity = 10
+
+# Exclude paths
+exclude = 
+    .git,
+    __pycache__,
+    build,
+    dist,
+    venv,
+    .venv,
+    *.egg-info,
+    .tox,
+    .mypy_cache,
+    .pytest_cache,
+    data,
+    outputs,
+    notebooks/.ipynb_checkpoints
+
+# Ignore specific errors
+ignore = 
+    # E203: whitespace before ':' (conflicts with black)
+    E203,
+    # W503: line break before binary operator (conflicts with black)
+    W503,
+    # E501: line too long (handled by max-line-length)
+    E501,
+    # F401: imported but unused (handled separately)
+    F401,
+
+# Per-file ignores
+per-file-ignores =
+    # Allow unused imports in __init__.py
+    __init__.py:F401,
+    # Allow long lines in configs
+    configs/*.py:E501,
+    # Allow complex code in tests
+    tests/*.py:C901,
+
+# Enable/disable specific plugins
+enable-extensions = 
+    # Type annotations
+    ANN,
+    # Docstrings
+    D,
+
+# Docstring convention
+docstring-convention = google
+
+# Statistics
+statistics = True
+count = True
