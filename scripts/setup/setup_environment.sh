@@ -427,7 +427,7 @@ main() {
     echo ""
     echo "For more information, see README.md"
     
-    log_success "Happy researching! 🚀"
+    log_success "Happy researching!"
 }
 
 # Run main function
