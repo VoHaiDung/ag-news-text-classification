@@ -32,6 +32,10 @@ Our work makes several technical contributions to the field:
 
 The remainder of this paper is structured as follows: Section 2 provides a detailed analysis of the AG News dataset and our data processing pipeline. Section 3 describes the architectural components and modeling strategies. Section 4 presents our training methodologies and optimization techniques. Section 5 discusses the evaluation framework and experimental results. Section 6 addresses deployment considerations and production optimization. Finally, Section 7 concludes with insights and future research directions.
 
+## Model Architecture
+
+![Pipeline Diagram](images/pipeline.png)
+
 ## Dataset Description and Analysis
 
 ### AG News Corpus Characteristics
@@ -105,51 +109,6 @@ The data management system ensures:
 - **Accessibility**: Multiple access interfaces including [HuggingFace Datasets API](https://huggingface.co/datasets/ag_news), [PyTorch DataLoaders](https://pytorch.org/text/stable/datasets.html#ag-news), [TensorFlow Datasets](https://www.tensorflow.org/datasets/catalog/ag_news_subset), and direct CSV access via the [original source](http://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html)
 
 This comprehensive data infrastructure, detailed in the project structure under `data/` and `src/data/`, provides the empirical foundation for systematic investigation of text classification methodologies while ensuring reproducibility and extensibility for future research endeavors.
-
-
-
-=========
-# AG News Text Classification
-
-## Introduction
-
-The effective classification of news articles, a fundamental task in Natural Language Processing (NLP), is increasingly challenged by a **methodological gap**: while individual techniques advance rapidly, the lack of a unified experimental environment hinders fair comparison and a holistic understanding of their interactive effects. To address this, our project directly confronts the task of multi-class text classification on the **AG News dataset - a collection of English-language articles categorized into four distinct topics: World, Sports, Business, and Sci/Tech**. Rather than treating AG News as a mere performance benchmark, we utilize it as a **case study environment** to engineer a **holistic framework**, designed to systematically investigate how a wide spectrum of state-of-the-art methodologies interact and contribute to addressing the specific challenges of news classification.
-
-Our framework is designed as a laboratory to **deconstruct** the news classification problem. It facilitates a systematic inquiry into key axes of performance, such as: the interplay between **model architecture** and text format; the comparative efficacy of **data-centric strategies** like domain adaptation versus synthetic augmentation; the impact of **advanced training paradigms** on model robustness against linguistic variance; and the verifiability of the model's **internal reasoning mechanisms** through interpretability methods. **In this project, we present not only the architecture of this platform but also report the initial empirical findings from these investigations**.
-
-Our framework facilitates these investigations through four methodological pillars, each demonstrated directly on the AG News task:
-
-1. **Modeling News Structure with Architectural Flexibility**: To handle the varied length and structure of news content, from short briefs to in-depth analyses, the framework integrates both standard Transformers (e.g., DeBERTa) and long-context architectures (e.g., Longformer). Advanced ensemble methods are employed to aggregate signals from these different architectures, aiming to resolve ambiguity in articles that reside at the intersection of categories like "Business" and "World."
-
-2. **Adapting Large Language Models to the News Corpus**: To efficiently fine-tune large language models on the AG News corpus, we deeply integrate **Parameter-Efficient Fine-Tuning (PEFT)** techniques. **Advanced training** strategies are applied to address domain-specific challenges; for instance, Adversarial Training is leveraged to enhance model resilience against the subtle yet meaningful phrasal variations common in journalism, while **Knowledge Distillation** from models like GPT-4 enables the generation of nuanced, news-specific training labels or rationales.
-
-3. **Enhancing Performance with External News Data**: In line with **Data-Centric AI** principles, we investigate the impact of enriching the AG News dataset. The framework facilitates **Domain-Adaptive Pretraining (DAPT)** on other large news corpora (e.g., Reuters, BBC News) to imbue the model with a broader understanding of journalistic language. Data augmentation is also used to address potential imbalances across news categories.
-
-4. **Evaluation and Interpretability in the Context of News Classification**: To ensure that the classification of news articles is transparent and trustworthy, our evaluation protocol extends beyond standard metrics. We assess model **robustness** against journalistic paraphrasing and measure **efficiency** for real-world viability. Critically, **Explainable AI (XAI)** tools are used to pinpoint the specific keywords or sentences that drive a classification—for example, identifying financial terminology in a "Business" article.
-
-In essence, this project transcends a singular solution for AG News to become a **structured experimental platform** for the community. By providing the means to conduct reproducible research, we hope to empower the field to move beyond a singular focus on leaderboards towards a more **principled**, **mechanistic understanding** of text classification systems. The completeness of this platform is demonstrated by its extension beyond research workflows to a **full MLOps pipeline**, thereby addressing the **research-to-production gap**.
-
-## Model Architecture
-
-![Pipeline Diagram](images/pipeline.png)
-
-## Dataset
-
-This project is centered on the **AG News (AG's Corpus of News Articles)** dataset, a canonical benchmark for topic classification first introduced by Zhang et al. (2015). The corpus consists of 120,000 training and 7,600 test samples, each comprising a concatenated title and description from news articles. These instances are distributed evenly across four high-level categories: **World, Sports, Business, and Science/Technology**.
-
-Beyond its scale and balanced nature, the AG News dataset presents several salient challenges that make it a compelling testbed for advanced NLP methodologies. For instance:
-
-- The inherent **semantic overlap** between categories (e.g., a technology article about a business merger) necessitates the sophisticated disambiguation capabilities of our proposed **ensemble models** and **contrastive learning** strategies.
-- The stylistic variance and presence of concise, often ambiguous, text snippets motivate our investigation into **data augmentation** techniques and the robustness conferred by **adversarial training**.
-- The standard instance length makes it a suitable baseline, but also highlights the need to evaluate how models like **DeBERTa** and **Longformer** generalize when exposed to longer, more context-rich documents.
-
-Crucially, our project treats the AG News dataset not as an isolated resource, but as the **core component of a broader data ecosystem** designed to rigorously test our framework. This ecosystem is extended with:
-
-1. **External News Corpora**: Large-scale datasets such as Reuters and BBC News are leveraged for **Domain-Adaptive Pretraining (DAPT)**, allowing models to acquire a richer understanding of journalistic language prior to fine-tuning on AG News.
-2. **Systematic Data Augmentation**: A suite of augmentation techniques, from **back-translation** to **GPT-4-based paraphrasing**, is employed to create diverse training sets aimed at improving model generalization and data efficiency.
-3. **Contrast and Adversarial Sets**: To move beyond standard I.I.D. evaluation, we generate specialized test sets to systematically measure model robustness and diagnose failure modes under controlled linguistic perturbations.
-
-This multi-faceted data strategy, with AG News at its center, provides the empirical foundation for our systematic investigation. To ensure the reproducibility of this work, the core AG News dataset is made publicly accessible through multiple established channels, including the [Hugging Face Datasets library](https://huggingface.co/datasets/ag_news), the [TorchText loader](https://pytorch.org/text/stable/datasets.html#AG_NEWS), and the [original CSV source](http://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html). This accessibility ensures ready integration with modern deep learning frameworks such as **PyTorch** and **TensorFlow**.
 
 ## Installation
 
