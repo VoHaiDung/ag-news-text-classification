@@ -10,7 +10,7 @@ Text classification constitutes a cornerstone task in Natural Language Processin
 
 This research presents a comprehensive framework for multi-class text classification, utilizing the AG News dataset as a primary experimental testbed. Our objectives encompass three dimensions:
 
-**Methodological Integration**: We develop a modular architecture that seamlessly integrates diverse modeling paradigms-from traditional transformers (DeBERTa-v3-XLarge, RoBERTa-Large) to specialized architectures (Longformer, XLNet), and from single-model approaches to sophisticated ensemble strategies (voting, stacking, blending, Bayesian ensembles). This integration enables systematic ablation studies and component-wise performance analysis.
+**Methodological Integration**: We develop a modular architecture that seamlessly integrates diverse modeling paradigms—from traditional transformers (DeBERTa-v3-XLarge, RoBERTa-Large) to specialized architectures (Longformer, XLNet), and from single-model approaches to sophisticated ensemble strategies (voting, stacking, blending, Bayesian ensembles). This integration enables systematic ablation studies and component-wise performance analysis.
 
 **Advanced Training Paradigms**: The framework implements state-of-the-art training strategies including Parameter-Efficient Fine-Tuning (PEFT) methods (LoRA, QLoRA, Adapter Fusion), adversarial training protocols (FGM, PGD, FreeLB), and knowledge distillation techniques. These approaches are orchestrated through configurable pipelines that support multi-stage training, curriculum learning, and instruction tuning, facilitating investigation of their individual and combined effects on model performance.
 
