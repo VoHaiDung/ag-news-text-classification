@@ -1,4 +1,4 @@
-# AG News Text Classification: A Comprehensive Framework for Multi-class News Categorization
+# AG News Text Classification
 
 ## Introduction
 
