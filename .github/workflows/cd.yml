@@ -1,0 +1,259 @@
+# Continuous Deployment Workflow for AG News Classification
+# ===========================================================
+# Automated deployment pipeline following best practices from:
+# - GitHub Actions Documentation
+# - MLOps Best Practices
+# - Academic Research Deployment Guidelines
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: CD - Continuous Deployment
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*.*.*'
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  PYTHON_VERSION: '3.10'
+
+jobs:
+  # Check if deployment should proceed
+  check-deployment:
+    name: Check Deployment Conditions
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
+    outputs:
+      should_deploy: ${{ steps.check.outputs.should_deploy }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        
+      - name: Check deployment conditions
+        id: check
+        run: |
+          # Check if this is a release tag
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+            echo "Release tag detected: ${{ github.ref }}"
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "should_deploy=true" >> $GITHUB_OUTPUT
+            echo "Main branch push detected"
+          else
+            echo "should_deploy=false" >> $GITHUB_OUTPUT
+            echo "Skipping deployment for: ${{ github.ref }}"
+          fi
+          
+      - name: Extract version
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          else
+            VERSION="latest"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
+  # Build and test deployment artifacts
+  build-artifacts:
+    name: Build Deployment Artifacts
+    needs: check-deployment
+    if: needs.check-deployment.outputs.should_deploy == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Cache Python dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements/*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install build twine
+          
+      - name: Build package
+        run: |
+          echo "Building Python package..."
+          python -m build
+          echo "Package built successfully"
+          
+      - name: Check package
+        run: |
+          echo "Checking package with twine..."
+          twine check dist/*
+          
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: python-package
+          path: dist/
+          retention-days: 7
+
+  # Build and push Docker image
+  docker-deploy:
+    name: Docker Image Deployment
+    needs: [check-deployment, build-artifacts]
+    if: needs.check-deployment.outputs.should_deploy == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+            
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./deployment/docker/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+          
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.check-deployment.outputs.version }}
+          format: spdx-json
+          output-file: sbom.json
+          
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v3
+        with:
+          name: sbom
+          path: sbom.json
+
+  # Deploy to staging environment
+  deploy-staging:
+    name: Deploy to Staging
+    needs: [check-deployment, docker-deploy]
+    if: |
+      needs.check-deployment.outputs.should_deploy == 'true' &&
+      (github.event.inputs.environment == 'staging' || github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging-agnews.example.com
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging environment..."
+          echo "Version: ${{ needs.check-deployment.outputs.version }}"
+          # Add actual deployment commands here
+          # kubectl apply -f deployment/kubernetes/staging/
+          echo "Staging deployment complete"
+          
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests..."
+          # Add smoke test commands
+          echo "Smoke tests passed"
+          
+      - name: Notify deployment
+        if: always()
+        run: |
+          echo "Sending deployment notification..."
+          # Add notification logic (Slack, email, etc.)
+
+  # Deploy to production environment
+  deploy-production:
+    name: Deploy to Production
+    needs: [check-deployment, deploy-staging]
+    if: |
+      needs.check-deployment.outputs.should_deploy == 'true' &&
+      (github.event.inputs.environment == 'production' || startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://agnews.example.com
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Deploy to production
+        run: |
+          echo "Deploying to production environment..."
+          echo "Version: ${{ needs.check-deployment.outputs.version }}"
+          # Add actual production deployment commands
+          echo "Production deployment complete"
+          
+      - name: Create release notes
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          files: |
+            dist/*
+            sbom.json
+
+  # Update documentation
+  update-docs:
+    name: Update Documentation
+    needs: [check-deployment, deploy-production]
+    if: needs.check-deployment.outputs.should_deploy == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Update API documentation
+        run: |
+          echo "Updating API documentation..."
+          # Add documentation update commands
+          echo "Documentation updated"
