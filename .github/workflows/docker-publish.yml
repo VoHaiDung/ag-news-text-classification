@@ -223,7 +223,7 @@ jobs:
         if: |
           github.event_name != 'pull_request' &&
           steps.build-test.outputs.status == 'success'
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
@@ -302,7 +302,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Build and push GPU image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile.gpu
