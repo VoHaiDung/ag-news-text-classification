@@ -1,0 +1,124 @@
+# Dependabot Configuration for AG News Classification
+# ====================================================
+# Automated dependency updates following:
+# - GitHub Dependabot Documentation
+# - Security Best Practices
+# - Academic Software Maintenance Guidelines
+#
+# Author: Võ Hải Dũng
+# License: MIT
+# Version: 2
+
+version: 2
+
+updates:
+  # Python dependencies - pip
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    # Update strategy
+    versioning-strategy: "increase"
+    # Commit message configuration
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    # Labels for PRs
+    labels:
+      - "dependencies"
+      - "python"
+      - "automated"
+    # Reviewers
+    reviewers:
+      - "VoHaiDung"
+    # Milestone
+    milestone: 1
+    # Allow specific dependency updates
+    allow:
+      # Production dependencies
+      - dependency-name: "numpy"
+        dependency-type: "direct"
+      - dependency-name: "torch"
+        dependency-type: "direct"
+      - dependency-name: "transformers"
+        dependency-type: "direct"
+      - dependency-name: "pyyaml"
+        dependency-type: "direct"
+      # Security updates
+      - dependency-type: "all"
+        update-types: ["version-update:semver-patch"]
+    # Ignore specific dependencies
+    ignore:
+      # Ignore major version updates for stability
+      - dependency-name: "torch"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "transformers"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "04:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "automated"
+    reviewers:
+      - "VoHaiDung"
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/deployment/docker"
+    schedule:
+      interval: "monthly"
+      day: "monday"
+      time: "05:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "docker"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "automated"
+    reviewers:
+      - "VoHaiDung"
+    # Update base images
+    allow:
+      - dependency-type: "direct"
+    ignore:
+      # Don't update CUDA images automatically
+      - dependency-name: "nvidia/cuda"
+        update-types: ["version-update:semver-major"]
+
+  # NPM dependencies (if any)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "deps-npm"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "npm"
+      - "automated"
+    # Only security updates for npm
+    allow:
+      - dependency-type: "all"
+        update-types: ["version-update:semver-patch"]
