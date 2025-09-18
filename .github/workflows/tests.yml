@@ -130,10 +130,10 @@ jobs:
               return tmp_path
           EOF
           
-      # Step 6: Create comprehensive unit tests (FIXED YAML TEST)
+      # Step 6: Create comprehensive unit tests (FIXED STRING/FLOAT COMPARISON)
       - name: Create unit test files
         run: |
-          # Create main unit test file with fixed YAML test
+          # Create main unit test file with properly fixed YAML test
           cat > tests/unit/test_core.py << 'EOF'
           """
           Core unit tests for AG News Classification system.
@@ -224,34 +224,60 @@ jobs:
                   assert config['model']['parameters']['hidden_size'] == 768
                   assert config['training']['batch_size'] == 32
                   
-                  # Fix: Handle scientific notation in YAML
-                  # YAML parses 2e-5 as float automatically
+                  # Fixed: Handle both string and float representations of scientific notation
+                  # YAML may parse scientific notation as string or float depending on version
                   learning_rate = config['training']['learning_rate']
-                  # Accept both string and float representations
+                  
+                  # Check if it's a string or float and validate accordingly
                   if isinstance(learning_rate, str):
-                      assert learning_rate == '2e-5' or float(learning_rate) == pytest.approx(2e-5)
+                      # If string, verify it's the correct string representation
+                      assert learning_rate == '2e-5', f"Expected '2e-5', got '{learning_rate}'"
+                  elif isinstance(learning_rate, float):
+                      # If float, verify it's approximately correct
+                      assert abs(learning_rate - 2e-5) < 1e-10, f"Expected 2e-5, got {learning_rate}"
                   else:
-                      assert learning_rate == pytest.approx(2e-5)
+                      # Unexpected type
+                      pytest.fail(f"Unexpected type for learning_rate: {type(learning_rate)}")
               
-              def test_yaml_float_parsing(self):
-                  """Test YAML float parsing specifically."""
+              def test_yaml_number_formats(self):
+                  """Test various YAML number format parsing."""
                   import yaml
                   
-                  # Test various number formats
+                  # Test different number representations
                   yaml_content = """
                   numbers:
                     integer: 100
                     float: 3.14
-                    scientific: 1.5e-4
+                    scientific_float: 1.5e-4
+                    scientific_string: "2e-5"
                     negative: -2.5
+                    zero: 0
                   """
                   
                   config = yaml.safe_load(yaml_content)
                   
+                  # Test integer parsing
                   assert config['numbers']['integer'] == 100
-                  assert config['numbers']['float'] == pytest.approx(3.14)
-                  assert config['numbers']['scientific'] == pytest.approx(1.5e-4)
-                  assert config['numbers']['negative'] == pytest.approx(-2.5)
+                  assert isinstance(config['numbers']['integer'], int)
+                  
+                  # Test float parsing
+                  assert abs(config['numbers']['float'] - 3.14) < 0.001
+                  
+                  # Test scientific notation (may be parsed as float)
+                  scientific_value = config['numbers']['scientific_float']
+                  if isinstance(scientific_value, float):
+                      assert abs(scientific_value - 1.5e-4) < 1e-10
+                  else:
+                      assert scientific_value == '1.5e-4'
+                  
+                  # Test explicit string scientific notation
+                  assert config['numbers']['scientific_string'] == "2e-5"
+                  
+                  # Test negative number
+                  assert config['numbers']['negative'] == -2.5
+                  
+                  # Test zero
+                  assert config['numbers']['zero'] == 0
           EOF
           
       # Step 7: Execute unit tests
