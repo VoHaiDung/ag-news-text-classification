@@ -964,7 +964,7 @@ main() {
     
     # Final status report
     if [[ ${exit_code} -eq 0 ]]; then
-        log_success "All tests passed successfully!"
+        log_success "All tests passed successfully"
         log_info "Test reports available at: ${TEST_REPORT_DIR}"
         if [[ "${COVERAGE_ENABLED}" == true ]]; then
             log_info "Coverage reports available at: ${COVERAGE_DIR}"
