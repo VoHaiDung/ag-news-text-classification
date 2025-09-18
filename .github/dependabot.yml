@@ -7,12 +7,11 @@
 #
 # Author: Võ Hải Dũng
 # License: MIT
-# Version: 2
 
 version: 2
 
 updates:
-  # Python dependencies - pip
+  # Python dependencies - pip ecosystem
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
@@ -28,19 +27,20 @@ updates:
       prefix: "deps"
       prefix-development: "deps-dev"
       include: "scope"
-    # Labels for PRs
+    # Labels for pull requests
     labels:
       - "dependencies"
       - "python"
       - "automated"
-    # Reviewers
+    # Reviewers for automated PRs
     reviewers:
       - "VoHaiDung"
-    # Milestone
+    # Milestone assignment
     milestone: 1
     # Allow specific dependency updates
+    # Note: 'allow' entries should only specify dependency patterns
     allow:
-      # Production dependencies
+      # Allow all production dependencies
       - dependency-name: "numpy"
         dependency-type: "direct"
       - dependency-name: "torch"
@@ -49,18 +49,23 @@ updates:
         dependency-type: "direct"
       - dependency-name: "pyyaml"
         dependency-type: "direct"
-      # Security updates
-      - dependency-type: "all"
-        update-types: ["version-update:semver-patch"]
-    # Ignore specific dependencies
+      # Allow all patch updates for any dependency
+      - dependency-name: "*"
+        dependency-type: "all"
+    # Ignore specific dependencies or update types
     ignore:
-      # Ignore major version updates for stability
+      # Ignore major version updates for critical packages
       - dependency-name: "torch"
         update-types: ["version-update:semver-major"]
       - dependency-name: "transformers"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "numpy"
+        update-types: ["version-update:semver-major"]
+      # Ignore specific versions if needed
+      - dependency-name: "pytest"
+        versions: ["8.x", "9.x"]
 
-  # GitHub Actions
+  # GitHub Actions workflow dependencies
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -78,8 +83,16 @@ updates:
       - "automated"
     reviewers:
       - "VoHaiDung"
+    # Allow all GitHub Actions updates
+    allow:
+      - dependency-type: "all"
+    # Ignore specific actions if needed
+    ignore:
+      # Example: Ignore major updates for checkout action
+      - dependency-name: "actions/checkout"
+        update-types: ["version-update:semver-major"]
 
-  # Docker dependencies
+  # Docker base image dependencies
   - package-ecosystem: "docker"
     directory: "/deployment/docker"
     schedule:
@@ -97,19 +110,24 @@ updates:
       - "automated"
     reviewers:
       - "VoHaiDung"
-    # Update base images
+    # Allow all Docker updates
     allow:
       - dependency-type: "direct"
+    # Ignore CUDA images major updates for stability
     ignore:
-      # Don't update CUDA images automatically
       - dependency-name: "nvidia/cuda"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "python"
+        update-types: ["version-update:semver-major"]
 
-  # NPM dependencies (if any)
+  # NPM dependencies (if frontend exists)
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "monthly"
+      day: "monday"
+      time: "06:00"
+      timezone: "UTC"
     open-pull-requests-limit: 3
     commit-message:
       prefix: "deps-npm"
@@ -118,7 +136,10 @@ updates:
       - "dependencies"
       - "npm"
       - "automated"
-    # Only security updates for npm
+    # Security updates only for npm
     allow:
       - dependency-type: "all"
-        update-types: ["version-update:semver-patch"]
+    # Only allow patch updates
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
