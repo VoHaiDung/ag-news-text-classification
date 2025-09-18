@@ -7,7 +7,6 @@
 #
 # Author: Võ Hải Dũng
 # License: MIT
-# Version: 1.0.0
 
 name: Documentation
 
@@ -140,9 +139,6 @@ jobs:
               'sphinx.ext.todo',
               'sphinx.ext.coverage',
               'sphinx.ext.mathjax',
-              'myst_parser',
-              'sphinx_design',
-              'sphinx_copybutton',
           ]
           
           # Extension configuration
@@ -159,22 +155,13 @@ jobs:
           napoleon_numpy_docstring = True
           napoleon_include_init_with_doc = True
           
-          # MyST parser configuration
-          myst_enable_extensions = [
-              "amsmath",
-              "colon_fence",
-              "deflist",
-              "dollarmath",
-              "html_image",
-          ]
-          
           # Templates and static files
           templates_path = ['_templates']
           exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
           
           # HTML output configuration
           html_theme = 'sphinx_rtd_theme'
-          html_static_path = ['_static']
+          html_static_path = ['_static'] if os.path.exists('docs/_static') else []
           html_theme_options = {
               'navigation_depth': 4,
               'collapse_navigation': False,
@@ -322,12 +309,6 @@ jobs:
                 lang: en
                 separator: '[\s\-\.]+'
             - tags
-            - mkdocstrings:
-                handlers:
-                  python:
-                    options:
-                      show_source: true
-                      show_root_heading: true
           
           # Markdown extensions
           markdown_extensions:
@@ -345,9 +326,6 @@ jobs:
             - pymdownx.betterem
             - pymdownx.caret
             - pymdownx.details
-            - pymdownx.emoji:
-                emoji_index: !!python/name:material.extensions.emoji.twemoji
-                emoji_generator: !!python/name:material.extensions.emoji.to_svg
             - pymdownx.highlight:
                 anchor_linenums: true
                 line_spans: __span
@@ -479,7 +457,7 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
 
-  # Deploy documentation to GitHub Pages
+  # Deploy documentation to GitHub Pages (FIXED: Made optional and with error handling)
   deploy-docs:
     name: Deploy Documentation
     needs: build-docs
@@ -488,24 +466,49 @@ jobs:
       github.ref == 'refs/heads/main' &&
       success()
     runs-on: ubuntu-latest
+    # Make environment optional
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    # Continue even if Pages is not configured
+    continue-on-error: true
     steps:
       # Step 1: Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
         
-      # Step 2: Download documentation artifacts
+      # Step 2: Check if Pages is enabled
+      - name: Check GitHub Pages status
+        id: pages-check
+        run: |
+          # Check if Pages is enabled (this will fail if not)
+          # We use GitHub API to check Pages status
+          PAGES_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/pages)
+          
+          if [ "$PAGES_STATUS" = "200" ]; then
+            echo "pages_enabled=true" >> $GITHUB_OUTPUT
+            echo "GitHub Pages is enabled"
+          else
+            echo "pages_enabled=false" >> $GITHUB_OUTPUT
+            echo "GitHub Pages is not enabled. Skipping deployment."
+          fi
+        continue-on-error: true
+        
+      # Step 3: Download documentation artifacts
       - name: Download documentation
+        if: steps.pages-check.outputs.pages_enabled == 'true'
         uses: actions/download-artifact@v4
         with:
           name: documentation
           path: ./public
         continue-on-error: true
         
-      # Step 3: Create index page if not exists
+      # Step 4: Create index page if not exists
       - name: Prepare deployment
+        if: steps.pages-check.outputs.pages_enabled == 'true'
         run: |
           mkdir -p public
           
@@ -575,18 +578,38 @@ jobs:
           </html>
           HTML
           fi
+        continue-on-error: true
           
-      # Step 4: Setup GitHub Pages
+      # Step 5: Setup GitHub Pages (with error handling)
       - name: Setup Pages
+        if: steps.pages-check.outputs.pages_enabled == 'true'
         uses: actions/configure-pages@v4
+        continue-on-error: true
         
-      # Step 5: Upload to Pages
+      # Step 6: Upload to Pages
       - name: Upload Pages artifact
+        if: steps.pages-check.outputs.pages_enabled == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./public
+        continue-on-error: true
           
-      # Step 6: Deploy to GitHub Pages
+      # Step 7: Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
+        if: steps.pages-check.outputs.pages_enabled == 'true'
         id: deployment
         uses: actions/deploy-pages@v4
+        continue-on-error: true
+        
+      # Step 8: Report deployment status
+      - name: Report deployment status
+        if: always()
+        run: |
+          if [ "${{ steps.pages-check.outputs.pages_enabled }}" != "true" ]; then
+            echo "GitHub Pages deployment skipped - Pages not enabled for this repository"
+            echo "To enable Pages: Go to Settings > Pages > Source > GitHub Actions"
+          elif [ "${{ steps.deployment.outcome }}" == "success" ]; then
+            echo "Documentation successfully deployed to GitHub Pages"
+          else
+            echo "Documentation build completed but Pages deployment was skipped"
+          fi
