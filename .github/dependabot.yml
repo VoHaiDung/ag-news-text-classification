@@ -63,7 +63,7 @@ updates:
         update-types: ["version-update:semver-major"]
       # Ignore specific versions if needed
       - dependency-name: "pytest"
-        versions: ["8.x", "9.x"]
+        versions: [">=8.0.0, <9.0.0", ">=9.0.0, <10.0.0"]
 
   # GitHub Actions workflow dependencies
   - package-ecosystem: "github-actions"
