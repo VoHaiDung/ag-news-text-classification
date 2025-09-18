@@ -500,7 +500,7 @@ jobs:
       # Step 3: Download documentation artifacts
       - name: Download documentation
         if: steps.pages-check.outputs.pages_enabled == 'true'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: documentation
           path: ./public
