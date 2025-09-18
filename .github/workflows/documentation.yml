@@ -589,7 +589,7 @@ jobs:
       # Step 6: Upload to Pages
       - name: Upload Pages artifact
         if: steps.pages-check.outputs.pages_enabled == 'true'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: ./public
         continue-on-error: true
