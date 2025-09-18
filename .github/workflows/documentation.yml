@@ -583,7 +583,7 @@ jobs:
       # Step 5: Setup GitHub Pages (with error handling)
       - name: Setup Pages
         if: steps.pages-check.outputs.pages_enabled == 'true'
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
         continue-on-error: true
         
       # Step 6: Upload to Pages
