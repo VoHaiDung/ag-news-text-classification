@@ -3,6 +3,7 @@
 # A minimal CI that actually works without all dependencies
 #
 # Author: Võ Hải Dũng
+# License: MIT
 
 name: CI
 
