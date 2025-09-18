@@ -46,7 +46,7 @@ jobs:
       
       # Step 2: Python environment setup
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
@@ -321,7 +321,7 @@ jobs:
       
       # Step 2: Python environment setup
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           
