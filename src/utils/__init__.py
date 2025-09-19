@@ -12,7 +12,7 @@ This package provides essential utilities for:
 - Prompt engineering and template management
 
 Author: Võ Hải Dũng
-Email: vohaidung.work@gmail.co
+Email: vohaidung.work@gmail.com
 License: MIT
 """
 
