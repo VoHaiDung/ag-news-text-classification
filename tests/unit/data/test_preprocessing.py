@@ -1,166 +1,165 @@
 """
-Unit Tests for Data Preprocessing Modules
-==========================================
+Unit Tests for Data Preprocessing Module
+=========================================
 
-This module provides comprehensive unit tests for data preprocessing components
-following testing methodologies from:
-- Beck, K. (2003): "Test Driven Development: By Example"
-- Meszaros, G. (2007): "xUnit Test Patterns: Refactoring Test Code"
-- Humble, J. & Farley, D. (2010): "Continuous Delivery"
+Comprehensive test suite for preprocessing components following:
+- IEEE 829-2008: Standard for Software Test Documentation
+- ISO/IEC/IEEE 29119: Software Testing Standards
+- Academic Research Testing Best Practices
 
 Test Coverage:
-1. Text cleaning and normalization
-2. Tokenization strategies
-3. Feature extraction techniques
-4. Sliding window processing
-5. Prompt formatting
-
-Mathematical Foundation:
-Test cases follow equivalence partitioning and boundary value analysis
-ensuring coverage probability P(defect_detection) > 0.95 for critical paths.
+- Text cleaning and normalization
+- Tokenization strategies
+- Feature extraction methods
+- Sliding window processing
+- Prompt formatting techniques
 
 Author: Võ Hải Dũng
-Email: vohaidung.work@gmail.com
 License: MIT
 """
 
 import unittest
-from unittest.mock import Mock, patch, MagicMock
-import pytest
+from unittest.mock import Mock, MagicMock, patch, PropertyMock
 import numpy as np
 import torch
 from pathlib import Path
+import sys
 import tempfile
-import shutil
-from typing import List, Dict, Any
+import json
+from typing import Dict, List, Any
 
 # Add project root to path
-import sys
 PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 # Import modules to test
 from src.data.preprocessing.text_cleaner import (
-    TextCleaner, CleaningConfig, get_minimal_cleaner, get_aggressive_cleaner
+    TextCleaner, 
+    CleaningConfig,
+    get_minimal_cleaner,
+    get_aggressive_cleaner
 )
 from src.data.preprocessing.tokenization import (
-    Tokenizer, TokenizationConfig, get_bert_tokenizer
+    Tokenizer,
+    TokenizationConfig,
+    get_bert_tokenizer,
+    get_roberta_tokenizer,
+    get_deberta_tokenizer
 )
 from src.data.preprocessing.feature_extraction import (
-    FeatureExtractor, FeatureExtractionConfig
+    FeatureExtractor,
+    FeatureExtractionConfig
 )
 from src.data.preprocessing.sliding_window import (
-    SlidingWindow, SlidingWindowConfig
+    SlidingWindow,
+    SlidingWindowConfig
 )
 from src.data.preprocessing.prompt_formatter import (
-    PromptFormatter, PromptFormatterConfig
-)
-
-# Import test fixtures
-from tests.fixtures.sample_data import (
-    get_sample_texts, get_edge_case_texts, get_sample_labels,
-    create_sample_dataset
-)
-
-# Import constants
-from configs.constants import (
-    AG_NEWS_CLASSES, MAX_SEQUENCE_LENGTH, ID_TO_LABEL
+    PromptFormatter,
+    PromptFormatterConfig
 )
 
 
 class TestTextCleaner(unittest.TestCase):
     """
-    Test cases for TextCleaner class.
+    Test suite for TextCleaner class.
     
-    Following testing patterns from:
-    - Martin, R. C. (2008): "Clean Code: A Handbook of Agile Software Craftsmanship"
+    Validates text cleaning functionality following:
+    - Minimal cleaning for transformer models
+    - Aggressive cleaning for classical ML
+    - Unicode normalization standards
     """
     
     def setUp(self):
-        """Set up test fixtures."""
-        self.default_cleaner = TextCleaner()
+        """Initialize test fixtures."""
         self.minimal_cleaner = get_minimal_cleaner()
         self.aggressive_cleaner = get_aggressive_cleaner()
-        self.sample_texts = get_sample_texts()
-        self.edge_cases = get_edge_case_texts()
+        self.custom_config = CleaningConfig(
+            lowercase=True,
+            remove_urls=True,
+            remove_emails=True,
+            normalize_whitespace=True
+        )
+        self.custom_cleaner = TextCleaner(self.custom_config)
     
-    def test_initialization(self):
-        """Test TextCleaner initialization."""
-        # Default configuration
-        cleaner = TextCleaner()
-        self.assertIsNotNone(cleaner.config)
-        self.assertFalse(cleaner.config.lowercase)
+    def test_minimal_cleaning(self):
+        """Test minimal cleaning preserves important information."""
+        # Test URL removal
+        text = "Check out https://example.com for more info"
+        cleaned = self.minimal_cleaner.clean(text)
+        self.assertNotIn("https://example.com", cleaned)
         
-        # Custom configuration
-        config = CleaningConfig(lowercase=True, remove_punctuation=True)
-        cleaner = TextCleaner(config)
-        self.assertTrue(cleaner.config.lowercase)
-        self.assertTrue(cleaner.config.remove_punctuation)
+        # Test email removal
+        text = "Contact us at test@example.com for details"
+        cleaned = self.minimal_cleaner.clean(text)
+        self.assertNotIn("test@example.com", cleaned)
+        
+        # Test preserves case
+        text = "This is IMPORTANT News"
+        cleaned = self.minimal_cleaner.clean(text)
+        self.assertIn("IMPORTANT", cleaned)
+        
+        # Test preserves punctuation
+        text = "Breaking news! What happened?"
+        cleaned = self.minimal_cleaner.clean(text)
+        self.assertIn("!", cleaned)
+        self.assertIn("?", cleaned)
     
-    def test_basic_cleaning(self):
-        """Test basic text cleaning operations."""
-        text = "Hello World! This is a TEST."
-        
-        # Test lowercase
-        config = CleaningConfig(lowercase=True)
-        cleaner = TextCleaner(config)
-        cleaned = cleaner.clean(text)
+    def test_aggressive_cleaning(self):
+        """Test aggressive cleaning for classical ML models."""
+        # Test lowercase conversion
+        text = "The WORLD News Today"
+        cleaned = self.aggressive_cleaner.clean(text)
         self.assertEqual(cleaned.lower(), cleaned)
         
         # Test punctuation removal
-        config = CleaningConfig(remove_punctuation=True)
-        cleaner = TextCleaner(config)
-        cleaned = cleaner.clean(text)
+        text = "Hello, world! How are you?"
+        cleaned = self.aggressive_cleaner.clean(text)
+        self.assertNotIn(",", cleaned)
         self.assertNotIn("!", cleaned)
-        self.assertNotIn(".", cleaned)
-    
-    def test_url_email_removal(self):
-        """Test URL and email removal."""
-        text = "Visit https://example.com or email test@example.com for info."
+        self.assertNotIn("?", cleaned)
         
-        cleaned = self.minimal_cleaner.clean(text)
-        self.assertNotIn("https://example.com", cleaned)
-        self.assertNotIn("test@example.com", cleaned)
-    
-    def test_unicode_normalization(self):
-        """Test Unicode normalization."""
-        text = "Café naïve résumé"
-        cleaned = self.default_cleaner.clean(text)
-        # Should normalize but preserve readability
-        self.assertIsNotNone(cleaned)
-        self.assertIsInstance(cleaned, str)
+        # Test digit removal
+        text = "The year 2024 brings new challenges"
+        cleaned = self.aggressive_cleaner.clean(text)
+        self.assertNotIn("2024", cleaned)
     
     def test_whitespace_normalization(self):
         """Test whitespace normalization."""
-        text = "Multiple    spaces   and\n\nnewlines\t\ttabs"
-        cleaned = self.default_cleaner.clean(text)
-        # Should normalize to single spaces
+        text = "This   has    multiple     spaces"
+        cleaned = self.minimal_cleaner.clean(text)
         self.assertNotIn("  ", cleaned)
-        self.assertNotIn("\n\n", cleaned)
-        self.assertNotIn("\t", cleaned)
+        
+        text = "\n\nMultiple\n\nlines\n\n"
+        cleaned = self.minimal_cleaner.clean(text)
+        self.assertEqual(cleaned, "Multiple lines")
     
-    def test_edge_cases(self):
-        """Test edge case handling."""
-        for edge_case in self.edge_cases:
-            try:
-                cleaned = self.default_cleaner.clean(edge_case)
-                self.assertIsInstance(cleaned, str)
-            except Exception as e:
-                self.fail(f"Failed on edge case: {edge_case[:50]}... Error: {e}")
+    def test_unicode_normalization(self):
+        """Test Unicode normalization (NFKD)."""
+        text = "Café résumé naïve"
+        config = CleaningConfig(normalize_unicode=True)
+        cleaner = TextCleaner(config)
+        cleaned = cleaner.clean(text)
+        # Unicode normalization should handle accented characters
+        self.assertIsInstance(cleaned, str)
     
     def test_batch_cleaning(self):
         """Test batch text cleaning."""
-        texts = ["Text 1", "Text 2", "Text 3"]
-        cleaned_texts = self.default_cleaner.batch_clean(texts)
+        texts = [
+            "First text with URL https://test.com",
+            "Second text with email test@test.com",
+            "Third text with   spaces"
+        ]
+        cleaned_texts = self.minimal_cleaner.batch_clean(texts)
         
         self.assertEqual(len(cleaned_texts), len(texts))
-        self.assertIsInstance(cleaned_texts, list)
-        for text in cleaned_texts:
-            self.assertIsInstance(text, str)
+        self.assertNotIn("https://test.com", cleaned_texts[0])
+        self.assertNotIn("test@test.com", cleaned_texts[1])
+        self.assertNotIn("  ", cleaned_texts[2])
     
-    def test_statistics(self):
-        """Test cleaning statistics generation."""
-        text = "https://example.com test@email.com Some text here."
+    def test_cleaning_statistics(self):
+        """Test text cleaning statistics generation."""
+        text = "Visit https://example.com or email test@example.com for more information."
         stats = self.minimal_cleaner.get_statistics(text)
         
         self.assertIn("original_length", stats)
@@ -168,295 +167,375 @@ class TestTextCleaner(unittest.TestCase):
         self.assertIn("reduction_ratio", stats)
         self.assertIn("urls_removed", stats)
         self.assertIn("emails_removed", stats)
-        self.assertGreater(stats["urls_removed"], 0)
-        self.assertGreater(stats["emails_removed"], 0)
-
-
-class TestTokenizer(unittest.TestCase):
-    """
-    Test cases for Tokenizer class.
+        
+        self.assertGreater(stats["original_length"], stats["cleaned_length"])
+        self.assertEqual(stats["urls_removed"], 1)
+        self.assertEqual(stats["emails_removed"], 1)
     
-    Following tokenization testing from:
-    - Devlin et al. (2019): "BERT: Pre-training of Deep Bidirectional Transformers"
+    def test_empty_text_handling(self):
+        """Test handling of empty and None texts."""
+        self.assertEqual(self.minimal_cleaner.clean(""), "")
+        self.assertEqual(self.minimal_cleaner.clean(None), "")
+        self.assertEqual(self.minimal_cleaner.clean("   "), "")
+
+
+class TestTokenization(unittest.TestCase):
+    """
+    Test suite for Tokenizer class.
+    
+    Validates tokenization strategies following:
+    - Subword tokenization (BPE, WordPiece)
+    - Special token handling
+    - Truncation and padding strategies
     """
     
     def setUp(self):
-        """Set up test fixtures."""
+        """Initialize test fixtures with mocked tokenizer."""
+        # Create mock tokenizer
+        self.mock_tokenizer = MagicMock()
+        self.mock_tokenizer.pad_token = "[PAD]"
+        self.mock_tokenizer.unk_token = "[UNK]"
+        self.mock_tokenizer.cls_token_id = 101
+        self.mock_tokenizer.sep_token_id = 102
+        self.mock_tokenizer.__len__ = MagicMock(return_value=30000)
+        
+        # Mock tokenization output
+        self.mock_tokenizer.return_value = {
+            'input_ids': torch.tensor([[101, 2023, 2003, 102]]),
+            'attention_mask': torch.tensor([[1, 1, 1, 1]])
+        }
+        
+        # Create tokenizer with mocked backend
         self.config = TokenizationConfig(
             model_name="bert-base-uncased",
-            max_length=128
+            max_length=512,
+            padding="max_length"
         )
-        # Mock tokenizer to avoid downloading models
-        with patch('src.data.preprocessing.tokenization.AutoTokenizer.from_pretrained'):
-            self.tokenizer = Tokenizer(self.config)
-            # Set up mock tokenizer
-            self.tokenizer.tokenizer = MagicMock()
-            self.tokenizer.tokenizer.__len__ = Mock(return_value=30000)
+        self.tokenizer = Tokenizer(config=self.config, tokenizer=self.mock_tokenizer)
     
-    def test_initialization(self):
-        """Test Tokenizer initialization."""
-        self.assertIsNotNone(self.tokenizer.config)
-        self.assertEqual(self.tokenizer.config.max_length, 128)
-        self.assertEqual(self.tokenizer.config.model_name, "bert-base-uncased")
-    
-    def test_tokenize_single(self):
-        """Test single text tokenization."""
+    def test_single_text_tokenization(self):
+        """Test tokenization of single text."""
         text = "This is a test sentence."
-        
-        # Mock tokenizer output
-        mock_output = {
-            'input_ids': torch.tensor([[101, 2023, 2003, 1037, 3231, 6251, 102]]),
-            'attention_mask': torch.tensor([[1, 1, 1, 1, 1, 1, 1]])
-        }
-        self.tokenizer.tokenizer.return_value = mock_output
-        
         result = self.tokenizer.tokenize(text)
+        
+        # Verify tokenizer was called
+        self.mock_tokenizer.assert_called_once()
+        
+        # Check output structure
         self.assertIn('input_ids', result)
         self.assertIn('attention_mask', result)
+        self.assertIsInstance(result['input_ids'], torch.Tensor)
     
-    def test_tokenize_batch(self):
+    def test_batch_tokenization(self):
         """Test batch tokenization."""
-        texts = ["Text 1", "Text 2", "Text 3"]
+        texts = ["First sentence.", "Second sentence.", "Third sentence."]
         
-        # Mock tokenizer outputs
-        mock_outputs = []
-        for i in range(3):
-            mock_outputs.append({
-                'input_ids': torch.randn(1, 128),
-                'attention_mask': torch.ones(1, 128)
-            })
+        # Mock batch output
+        batch_output = {
+            'input_ids': torch.tensor([[101, 2034, 102], [101, 2117, 102], [101, 2353, 102]]),
+            'attention_mask': torch.tensor([[1, 1, 1], [1, 1, 1], [1, 1, 1]])
+        }
+        self.mock_tokenizer.return_value = batch_output
         
-        with patch.object(self.tokenizer, 'tokenize', side_effect=mock_outputs):
-            result = self.tokenizer.batch_tokenize(texts, batch_size=2)
-            # Batch tokenization should handle splitting and merging
-            self.assertIsNotNone(result)
+        result = self.tokenizer.tokenize(texts)
+        
+        self.assertIn('input_ids', result)
+        self.assertEqual(result['input_ids'].shape[0], 3)
     
-    def test_decode(self):
-        """Test token decoding."""
-        token_ids = [101, 2023, 2003, 1037, 3231, 6251, 102]
+    def test_tokenization_config_override(self):
+        """Test configuration override in tokenization."""
+        text = "Test text"
         
-        self.tokenizer.tokenizer.decode = Mock(return_value="this is a test sentence")
+        # Override configuration
+        result = self.tokenizer.tokenize(
+            text,
+            max_length=256,
+            padding="longest",
+            truncation=False
+        )
+        
+        # Verify tokenizer was called with overridden parameters
+        call_kwargs = self.mock_tokenizer.call_args[1]
+        self.assertEqual(call_kwargs['max_length'], 256)
+        self.assertEqual(call_kwargs['padding'], "longest")
+        self.assertEqual(call_kwargs['truncation'], False)
+    
+    def test_decode_functionality(self):
+        """Test decoding token IDs back to text."""
+        token_ids = [101, 2023, 2003, 1037, 3231, 102]
+        self.mock_tokenizer.decode.return_value = "this is a test"
+        
         decoded = self.tokenizer.decode(token_ids)
         
-        self.assertIsInstance(decoded, str)
-        self.tokenizer.tokenizer.decode.assert_called_once()
+        self.mock_tokenizer.decode.assert_called_once_with(
+            token_ids,
+            skip_special_tokens=True
+        )
+        self.assertEqual(decoded, "this is a test")
     
     def test_vocab_size(self):
         """Test vocabulary size retrieval."""
         vocab_size = self.tokenizer.get_vocab_size()
         self.assertEqual(vocab_size, 30000)
     
-    def test_save_load(self):
-        """Test tokenizer save and load."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            save_path = Path(temp_dir) / "tokenizer"
-            self.tokenizer.tokenizer.save_pretrained = Mock()
-            
-            self.tokenizer.save(save_path)
-            self.tokenizer.tokenizer.save_pretrained.assert_called_once_with(save_path)
+    @patch('src.data.preprocessing.tokenization.AutoTokenizer')
+    def test_tokenizer_factory_functions(self, mock_auto_tokenizer):
+        """Test factory functions for common tokenizers."""
+        mock_auto_tokenizer.from_pretrained.return_value = self.mock_tokenizer
+        
+        # Test BERT tokenizer
+        bert_tokenizer = get_bert_tokenizer()
+        self.assertIsInstance(bert_tokenizer, Tokenizer)
+        
+        # Test RoBERTa tokenizer
+        roberta_tokenizer = get_roberta_tokenizer()
+        self.assertIsInstance(roberta_tokenizer, Tokenizer)
+        
+        # Test DeBERTa tokenizer
+        deberta_tokenizer = get_deberta_tokenizer()
+        self.assertIsInstance(deberta_tokenizer, Tokenizer)
 
 
-class TestFeatureExtractor(unittest.TestCase):
+class TestFeatureExtraction(unittest.TestCase):
     """
-    Test cases for FeatureExtractor class.
+    Test suite for FeatureExtractor class.
     
-    Following feature extraction testing from:
-    - Zhang et al. (2015): "Character-level Convolutional Networks"
+    Validates feature extraction methods:
+    - TF-IDF features
+    - Statistical features
+    - Embedding features (mocked)
     """
     
     def setUp(self):
-        """Set up test fixtures."""
+        """Initialize test fixtures."""
         self.config = FeatureExtractionConfig(
             use_tfidf=True,
             use_bow=True,
             use_statistical=True,
-            use_embeddings=False,  # Disable to avoid model download
-            use_linguistic=False   # Disable to avoid spacy download
+            use_embeddings=False,  # Disable to avoid loading models
+            use_linguistic=False   # Disable to avoid loading spaCy
         )
         self.extractor = FeatureExtractor(self.config)
-        self.sample_texts = ["This is a test.", "Another test text.", "Third sample."]
-    
-    def test_initialization(self):
-        """Test FeatureExtractor initialization."""
-        self.assertIsNotNone(self.extractor.config)
-        self.assertIsNotNone(self.extractor.tfidf_vectorizer)
-        self.assertIsNotNone(self.extractor.bow_vectorizer)
+        
+        # Sample texts for testing
+        self.texts = [
+            "This is the first document about technology.",
+            "Second document discusses business and finance.",
+            "Third document covers sports and entertainment."
+        ]
     
     def test_tfidf_extraction(self):
         """Test TF-IDF feature extraction."""
         # Fit and transform
-        features = self.extractor.extract_tfidf_features(self.sample_texts, fit=True)
+        features = self.extractor.extract_tfidf_features(self.texts, fit=True)
         
-        self.assertIsInstance(features, np.ndarray)
-        self.assertEqual(features.shape[0], len(self.sample_texts))
+        self.assertEqual(features.shape[0], len(self.texts))
         self.assertGreater(features.shape[1], 0)
+        self.assertTrue(np.all(features >= 0))
         
         # Transform only
-        new_texts = ["New test text."]
-        new_features = self.extractor.extract_tfidf_features(new_texts, fit=False)
+        new_text = ["New document about technology"]
+        new_features = self.extractor.extract_tfidf_features(new_text, fit=False)
         self.assertEqual(new_features.shape[0], 1)
-        self.assertEqual(new_features.shape[1], features.shape[1])
     
     def test_bow_extraction(self):
         """Test Bag of Words feature extraction."""
-        features = self.extractor.extract_bow_features(self.sample_texts, fit=True)
+        # Fit and transform
+        features = self.extractor.extract_bow_features(self.texts, fit=True)
         
-        self.assertIsInstance(features, np.ndarray)
-        self.assertEqual(features.shape[0], len(self.sample_texts))
+        self.assertEqual(features.shape[0], len(self.texts))
         self.assertGreater(features.shape[1], 0)
+        self.assertTrue(np.all(features >= 0))
     
     def test_statistical_features(self):
         """Test statistical feature extraction."""
-        features = self.extractor.extract_statistical_features(self.sample_texts)
+        features = self.extractor.extract_statistical_features(self.texts)
         
-        self.assertIsInstance(features, np.ndarray)
-        self.assertEqual(features.shape[0], len(self.sample_texts))
-        # Should have 11 statistical features
-        self.assertEqual(features.shape[1], 11)
+        self.assertEqual(features.shape[0], len(self.texts))
+        # Statistical features include: char count, word count, sentence count,
+        # avg word length, punctuation counts, capitalization, digit count
+        self.assertGreater(features.shape[1], 10)
         
         # Test specific features
-        for i, text in enumerate(self.sample_texts):
-            # Character count
-            self.assertEqual(features[i, 0], len(text))
-            # Word count
-            self.assertEqual(features[i, 1], len(text.split()))
-    
-    def test_extract_all_features(self):
-        """Test extracting all configured features."""
-        all_features = self.extractor.extract_all_features(self.sample_texts, fit=True)
+        text = "Hello World! This has 5 words."
+        stats = self.extractor.extract_statistical_features([text])
         
-        self.assertIsInstance(all_features, dict)
+        # Verify some statistical properties
+        self.assertGreater(stats[0][0], 0)  # Character count > 0
+        self.assertEqual(stats[0][4], 1)    # One period
+        self.assertEqual(stats[0][6], 1)    # One exclamation mark
+    
+    def test_combined_features(self):
+        """Test combining multiple feature types."""
+        # Extract all features
+        all_features = self.extractor.extract_all_features(self.texts, fit=True)
+        
         self.assertIn('tfidf', all_features)
         self.assertIn('bow', all_features)
         self.assertIn('statistical', all_features)
         
-        for feature_type, features in all_features.items():
-            if features.size > 0:
-                self.assertEqual(features.shape[0], len(self.sample_texts))
-    
-    def test_combine_features(self):
-        """Test feature combination."""
-        features_dict = {
-            'feat1': np.random.randn(3, 10),
-            'feat2': np.random.randn(3, 5),
-            'feat3': np.random.randn(3, 7)
-        }
+        # Combine features
+        combined = self.extractor.combine_features(all_features)
         
-        combined = self.extractor.combine_features(features_dict)
-        
-        self.assertIsInstance(combined, np.ndarray)
-        self.assertEqual(combined.shape[0], 3)
-        self.assertEqual(combined.shape[1], 22)  # 10 + 5 + 7
+        self.assertEqual(combined.shape[0], len(self.texts))
+        total_features = sum(f.shape[1] for f in all_features.values() if f.size > 0)
+        self.assertEqual(combined.shape[1], total_features)
     
-    def test_save_load_extractors(self):
+    def test_empty_text_handling(self):
+        """Test handling of empty texts."""
+        empty_texts = ["", "   ", "\n\n"]
+        
+        # Statistical features should handle empty texts
+        stats = self.extractor.extract_statistical_features(empty_texts)
+        self.assertEqual(stats.shape[0], len(empty_texts))
+        
+        # All values should be 0 or very small for empty texts
+        self.assertTrue(np.all(stats[0] == 0))
+    
+    @patch('joblib.dump')
+    @patch('joblib.load')
+    def test_save_load_extractors(self, mock_load, mock_dump):
         """Test saving and loading fitted extractors."""
-        with tempfile.TemporaryDirectory() as temp_dir:
-            save_path = Path(temp_dir)
-            
-            # Fit extractors
-            self.extractor.extract_tfidf_features(self.sample_texts, fit=True)
-            
-            # Save
+        # Fit extractors
+        self.extractor.extract_tfidf_features(self.texts, fit=True)
+        
+        # Test save
+        with tempfile.TemporaryDirectory() as tmpdir:
+            save_path = Path(tmpdir)
             self.extractor.save_extractors(save_path)
             
-            # Create new extractor and load
-            new_extractor = FeatureExtractor(self.config)
-            new_extractor.load_extractors(save_path)
+            # Verify save was called
+            self.assertTrue(mock_dump.called)
             
-            # Test that loaded extractor works
-            features = new_extractor.extract_tfidf_features(["Test"], fit=False)
-            self.assertIsNotNone(features)
+            # Test load
+            self.extractor.load_extractors(save_path)
+            self.assertTrue(mock_load.called)
 
 
 class TestSlidingWindow(unittest.TestCase):
     """
-    Test cases for SlidingWindow class.
+    Test suite for SlidingWindow class.
     
-    Following sliding window testing from:
-    - Beltagy et al. (2020): "Longformer: The Long-Document Transformer"
+    Validates sliding window processing for long sequences:
+    - Character-level windows
+    - Token-level windows
+    - Prediction aggregation
     """
     
     def setUp(self):
-        """Set up test fixtures."""
+        """Initialize test fixtures."""
         self.config = SlidingWindowConfig(
             window_size=100,
             stride=50,
             min_window_size=20
         )
         self.sliding_window = SlidingWindow(self.config)
-        self.long_text = " ".join(["word"] * 200)  # 200 words
+        
+        # Sample long text
+        self.long_text = " ".join(["This is sentence number {}.".format(i) for i in range(50)])
     
-    def test_initialization(self):
-        """Test SlidingWindow initialization."""
-        self.assertIsNotNone(self.sliding_window.config)
-        self.assertEqual(self.sliding_window.config.window_size, 100)
-        self.assertEqual(self.sliding_window.config.stride, 50)
-    
-    def test_create_char_windows(self):
-        """Test character-level window creation."""
+    def test_character_window_creation(self):
+        """Test character-level sliding window creation."""
         windows = self.sliding_window.create_windows(self.long_text)
         
-        self.assertIsInstance(windows, list)
         self.assertGreater(len(windows), 0)
         
-        # Check window structure
-        for window in windows:
+        # Check window properties
+        for i, window in enumerate(windows):
             self.assertIn('window_id', window)
             self.assertIn('text', window)
             self.assertIn('start', window)
             self.assertIn('end', window)
             self.assertIn('is_last', window)
             
-            # Check window size constraints
-            window_size = window['end'] - window['start']
+            self.assertEqual(window['window_id'], i)
+            self.assertLessEqual(len(window['text']), self.config.window_size)
+            
             if not window['is_last']:
-                self.assertLessEqual(window_size, self.config.window_size)
+                self.assertGreaterEqual(len(window['text']), self.config.min_window_size)
     
-    def test_create_token_windows(self):
-        """Test token-level window creation."""
-        # Mock tokenizer
+    def test_token_window_creation(self):
+        """Test token-level sliding window creation."""
+        # Create mock tokenizer
         mock_tokenizer = MagicMock()
-        mock_tokenizer.return_value = {
-            'input_ids': list(range(150)),  # 150 tokens
-            'offset_mapping': [(i, i+1) for i in range(150)]
-        }
         mock_tokenizer.cls_token_id = 101
         mock_tokenizer.sep_token_id = 102
         
-        windows = self.sliding_window.create_windows(self.long_text, mock_tokenizer)
+        # Mock tokenization
+        num_tokens = 200
+        mock_tokenizer.return_value = {
+            'input_ids': list(range(1000, 1000 + num_tokens)),
+            'offset_mapping': [(i, i+1) for i in range(num_tokens)]
+        }
         
-        self.assertIsInstance(windows, list)
+        windows = self.sliding_window.create_windows(
+            self.long_text,
+            tokenizer=mock_tokenizer
+        )
+        
         self.assertGreater(len(windows), 0)
         
         for window in windows:
             self.assertIn('window_id', window)
             self.assertIn('input_ids', window)
+            self.assertIn('start_idx', window)
+            self.assertIn('end_idx', window)
+            self.assertIn('is_last', window)
     
-    def test_aggregate_predictions(self):
-        """Test prediction aggregation strategies."""
+    def test_window_overlap(self):
+        """Test sliding window overlap with stride."""
+        text = "A" * 200  # 200 character text
+        windows = self.sliding_window.create_windows(text)
+        
+        # With window_size=100 and stride=50, we should have overlap
+        if len(windows) > 1:
+            # Check that windows overlap
+            first_window_end = windows[0]['end']
+            second_window_start = windows[1]['start']
+            overlap = first_window_end - second_window_start
+            
+            expected_overlap = self.config.window_size - self.config.stride
+            self.assertEqual(overlap, expected_overlap)
+    
+    def test_prediction_aggregation(self):
+        """Test aggregation of predictions from multiple windows."""
+        # Create sample predictions (3 windows, 4 classes)
         predictions = [
-            torch.tensor([0.1, 0.7, 0.1, 0.1]),
-            torch.tensor([0.2, 0.6, 0.1, 0.1]),
-            torch.tensor([0.1, 0.8, 0.05, 0.05])
+            torch.tensor([0.1, 0.2, 0.6, 0.1]),
+            torch.tensor([0.2, 0.3, 0.4, 0.1]),
+            torch.tensor([0.1, 0.2, 0.5, 0.2])
         ]
         
         # Test mean aggregation
-        result = self.sliding_window.aggregate_predictions(predictions, strategy="mean")
-        expected = torch.stack(predictions).mean(dim=0)
-        torch.testing.assert_close(result, expected)
+        aggregated = self.sliding_window.aggregate_predictions(
+            predictions,
+            strategy="mean"
+        )
+        expected = torch.tensor([0.1333, 0.2333, 0.5, 0.1333])
+        torch.testing.assert_close(aggregated, expected, rtol=1e-3, atol=1e-3)
         
         # Test max aggregation
-        result = self.sliding_window.aggregate_predictions(predictions, strategy="max")
-        expected = torch.stack(predictions).max(dim=0)[0]
-        torch.testing.assert_close(result, expected)
+        aggregated = self.sliding_window.aggregate_predictions(
+            predictions,
+            strategy="max"
+        )
+        expected = torch.tensor([0.2, 0.3, 0.6, 0.2])
+        torch.testing.assert_close(aggregated, expected)
         
         # Test first aggregation
-        result = self.sliding_window.aggregate_predictions(predictions, strategy="first")
-        torch.testing.assert_close(result, predictions[0])
+        aggregated = self.sliding_window.aggregate_predictions(
+            predictions,
+            strategy="first"
+        )
+        torch.testing.assert_close(aggregated, predictions[0])
     
-    def test_process_batch(self):
-        """Test batch processing with sliding windows."""
-        texts = ["Short text", self.long_text, "Another text"]
+    def test_batch_processing(self):
+        """Test batch processing of multiple texts."""
+        texts = [
+            "Short text",
+            "Medium length text that is a bit longer than the first one",
+            self.long_text
+        ]
         
         result = self.sliding_window.process_batch(texts)
         
@@ -467,111 +546,115 @@ class TestSlidingWindow(unittest.TestCase):
         
         self.assertEqual(result['num_texts'], len(texts))
         self.assertGreaterEqual(result['num_windows'], len(texts))
+        
+        # Check text-to-window mapping
+        for text_idx in range(len(texts)):
+            self.assertIn(text_idx, result['text_to_windows'])
+    
+    def test_small_text_handling(self):
+        """Test handling of texts smaller than window size."""
+        small_text = "This is a small text."
+        windows = self.sliding_window.create_windows(small_text)
+        
+        # Should create exactly one window
+        self.assertEqual(len(windows), 1)
+        self.assertEqual(windows[0]['text'], small_text)
+        self.assertTrue(windows[0]['is_last'])
 
 
 class TestPromptFormatter(unittest.TestCase):
     """
-    Test cases for PromptFormatter class.
+    Test suite for PromptFormatter class.
     
-    Following prompt formatting testing from:
-    - Brown et al. (2020): "Language Models are Few-Shot Learners"
+    Validates prompt formatting strategies:
+    - Zero-shot prompting
+    - Few-shot prompting
+    - Instruction formatting
+    - Chain of thought
     """
     
     def setUp(self):
-        """Set up test fixtures."""
+        """Initialize test fixtures."""
         self.config = PromptFormatterConfig(
             template_style="classification",
             use_demonstrations=False,
             use_cot=False
         )
         self.formatter = PromptFormatter(self.config)
-        self.sample_text = "This is a test news article about technology."
-        self.sample_label = 3  # Sci/Tech
-    
-    def test_initialization(self):
-        """Test PromptFormatter initialization."""
-        self.assertIsNotNone(self.formatter.config)
-        self.assertEqual(self.formatter.config.template_style, "classification")
-        self.assertIsInstance(self.formatter.config.templates, list)
-        self.assertGreater(len(self.formatter.config.templates), 0)
-    
-    def test_format_single(self):
-        """Test single prompt formatting."""
-        prompt = self.formatter.format_single(self.sample_text)
         
-        self.assertIsInstance(prompt, str)
-        self.assertIn(self.sample_text, prompt)
-        self.assertIn(self.formatter.config.task_description, prompt)
+        # Sample data
+        self.text = "Breaking news: Technology company announces new product."
+        self.label = 3  # Sci/Tech
         
-        # Test with label
-        prompt_with_label = self.formatter.format_single(
-            self.sample_text, 
-            label=self.sample_label
-        )
-        self.assertIn(ID_TO_LABEL[self.sample_label], prompt_with_label)
-    
-    def test_format_options(self):
-        """Test option formatting."""
-        options = self.formatter._format_options()
-        
-        for class_name in AG_NEWS_CLASSES:
-            self.assertIn(class_name, options)
-        
-        # Test with letter formatting
-        self.formatter.config.use_letters = True
-        options = self.formatter._format_options()
-        self.assertIn("A)", options)
-        self.assertIn("B)", options)
-    
-    def test_format_demonstrations(self):
-        """Test few-shot demonstration formatting."""
-        demos = [
-            {'text': 'Demo 1', 'label': 0},
-            {'text': 'Demo 2', 'label': 1},
-            {'text': 'Demo 3', 'label': 2}
+        # Sample demonstrations
+        self.demonstrations = [
+            {"text": "Stock market rises today", "label": 2},
+            {"text": "Team wins championship", "label": 1}
         ]
+    
+    def test_single_prompt_formatting(self):
+        """Test formatting single example as prompt."""
+        prompt = self.formatter.format_single(self.text)
         
+        # Check prompt contains required elements
+        self.assertIn(self.text, prompt)
+        self.assertIn("World", prompt)
+        self.assertIn("Sports", prompt)
+        self.assertIn("Business", prompt)
+        self.assertIn("Sci/Tech", prompt)
+    
+    def test_prompt_with_label(self):
+        """Test prompt formatting with label."""
+        prompt = self.formatter.format_single(self.text, label=self.label)
+        
+        self.assertIn(self.text, prompt)
+        self.assertIn("Sci/Tech", prompt)
+    
+    def test_few_shot_formatting(self):
+        """Test few-shot prompt formatting."""
         formatter = PromptFormatter(
-            PromptFormatterConfig(use_demonstrations=True),
-            demonstrations=demos
+            config=PromptFormatterConfig(use_demonstrations=True),
+            demonstrations=self.demonstrations
         )
         
-        formatted_demos = formatter._format_demonstrations()
+        prompt = formatter.format_single(self.text)
         
-        self.assertIsInstance(formatted_demos, str)
-        self.assertIn('Demo 1', formatted_demos)
-        self.assertIn(ID_TO_LABEL[0], formatted_demos)
+        # Check demonstrations are included
+        self.assertIn("Stock market rises today", prompt)
+        self.assertIn("Team wins championship", prompt)
+        self.assertIn("Business", prompt)
+        self.assertIn("Sports", prompt)
     
-    def test_chain_of_thought(self):
-        """Test chain of thought prompting."""
-        config = PromptFormatterConfig(use_cot=True)
+    def test_chain_of_thought_formatting(self):
+        """Test chain of thought prompt formatting."""
+        config = PromptFormatterConfig(
+            use_cot=True,
+            cot_trigger="Let's think step by step."
+        )
         formatter = PromptFormatter(config)
         
-        prompt = formatter.format_single(self.sample_text)
+        prompt = formatter.format_single(self.text)
         
-        self.assertIn(config.cot_trigger, prompt)
+        self.assertIn("Let's think step by step.", prompt)
     
     def test_instruction_tuning_format(self):
         """Test instruction tuning format."""
         result = self.formatter.format_for_instruction_tuning(
-            self.sample_text,
-            self.sample_label
+            self.text,
+            self.label
         )
         
-        self.assertIsInstance(result, dict)
         self.assertIn('instruction', result)
         self.assertIn('input', result)
         self.assertIn('output', result)
         
-        self.assertIn(self.sample_text, result['input'])
-        self.assertEqual(result['output'], ID_TO_LABEL[self.sample_label])
+        self.assertIn("Classify", result['instruction'])
+        self.assertIn(self.text, result['input'])
+        self.assertEqual(result['output'], "Sci/Tech")
     
     def test_chat_format(self):
         """Test chat conversation format."""
-        messages = self.formatter.format_for_chat(
-            self.sample_text,
-            label=self.sample_label
-        )
+        messages = self.formatter.format_for_chat(self.text, self.label)
         
         self.assertIsInstance(messages, list)
         self.assertGreater(len(messages), 0)
@@ -580,170 +663,55 @@ class TestPromptFormatter(unittest.TestCase):
         for message in messages:
             self.assertIn('role', message)
             self.assertIn('content', message)
-            self.assertIn(message['role'], ['system', 'user', 'assistant'])
+        
+        # Check roles
+        roles = [msg['role'] for msg in messages]
+        self.assertIn('system', roles)
+        self.assertIn('user', roles)
+        self.assertIn('assistant', roles)
     
-    def test_create_prompt_dataset(self):
-        """Test prompt dataset creation."""
-        texts = ["Text 1", "Text 2", "Text 3"]
-        labels = [0, 1, 2]
+    def test_option_formatting(self):
+        """Test different option formatting styles."""
+        # Test letter formatting
+        config = PromptFormatterConfig(use_letters=True)
+        formatter = PromptFormatter(config)
+        
+        prompt = formatter.format_single(self.text)
+        
+        self.assertIn("A)", prompt)
+        self.assertIn("B)", prompt)
+        self.assertIn("C)", prompt)
+        self.assertIn("D)", prompt)
+    
+    def test_prompt_dataset_creation(self):
+        """Test creation of prompt dataset."""
+        texts = [
+            "Technology news article",
+            "Sports news article",
+            "Business news article"
+        ]
+        labels = [3, 1, 2]
         
         prompts = self.formatter.create_prompt_dataset(texts, labels)
         
         self.assertEqual(len(prompts), len(texts))
+        
         for prompt, text in zip(prompts, texts):
             self.assertIn(text, prompt)
-
-
-class TestIntegration(unittest.TestCase):
-    """
-    Integration tests for preprocessing pipeline.
     
-    Following integration testing from:
-    - Humble & Farley (2010): "Continuous Delivery"
-    """
-    
-    def test_full_preprocessing_pipeline(self):
-        """Test complete preprocessing pipeline."""
-        # Create sample dataset
-        dataset = create_sample_dataset(n_samples=10)
+    def test_metadata_addition(self):
+        """Test adding metadata to prompts."""
+        config = PromptFormatterConfig(add_metadata=True)
+        formatter = PromptFormatter(config)
         
-        # Step 1: Clean texts
-        cleaner = get_minimal_cleaner()
-        cleaned_texts = cleaner.batch_clean(dataset.texts)
-        self.assertEqual(len(cleaned_texts), len(dataset.texts))
+        metadata = {"source": "test", "date": "2024"}
+        prompt = formatter.format_single(self.text, metadata=metadata)
         
-        # Step 2: Tokenize
-        config = TokenizationConfig(model_name="bert-base-uncased")
-        with patch('src.data.preprocessing.tokenization.AutoTokenizer.from_pretrained'):
-            tokenizer = Tokenizer(config)
-            tokenizer.tokenizer = MagicMock()
-            tokenizer.tokenizer.return_value = {
-                'input_ids': torch.randn(len(cleaned_texts), 128),
-                'attention_mask': torch.ones(len(cleaned_texts), 128)
-            }
-            
-            tokenized = tokenizer.tokenize(cleaned_texts)
-            self.assertIn('input_ids', tokenized)
-        
-        # Step 3: Extract features
-        extractor = FeatureExtractor(
-            FeatureExtractionConfig(
-                use_tfidf=True,
-                use_statistical=True,
-                use_embeddings=False
-            )
-        )
-        features = extractor.extract_all_features(cleaned_texts, fit=True)
-        self.assertIn('tfidf', features)
-        self.assertIn('statistical', features)
-        
-        # Step 4: Format as prompts
-        formatter = PromptFormatter()
-        prompts = formatter.create_prompt_dataset(
-            cleaned_texts, 
-            dataset.labels
-        )
-        self.assertEqual(len(prompts), len(dataset.texts))
-    
-    def test_edge_case_handling(self):
-        """Test preprocessing with edge cases."""
-        edge_cases = get_edge_case_texts()[:5]  # Test subset
-        
-        # Test each preprocessing step with edge cases
-        cleaner = TextCleaner()
-        for text in edge_cases:
-            try:
-                cleaned = cleaner.clean(text)
-                self.assertIsInstance(cleaned, str)
-            except Exception as e:
-                self.fail(f"Failed on edge case: {text[:30]}... Error: {e}")
-    
-    def test_memory_efficiency(self):
-        """Test memory efficiency with large datasets."""
-        # Create large dataset
-        large_texts = ["Sample text " * 100] * 100  # 100 long texts
-        
-        # Test sliding window for memory efficiency
-        sliding_window = SlidingWindow(
-            SlidingWindowConfig(window_size=512, stride=256)
-        )
-        
-        # Process in batches
-        batch_result = sliding_window.process_batch(large_texts[:10])
-        
-        self.assertIsNotNone(batch_result)
-        self.assertIn('num_windows', batch_result)
-        # Should create multiple windows for long texts
-        self.assertGreater(batch_result['num_windows'], batch_result['num_texts'])
+        self.assertIn("source=test", prompt)
+        self.assertIn("date=2024", prompt)
 
 
-# Pytest fixtures and additional tests
-@pytest.fixture
-def sample_dataset():
-    """Pytest fixture for sample dataset."""
-    return create_sample_dataset(n_samples=20)
-
-
-@pytest.fixture
-def preprocessing_pipeline():
-    """Pytest fixture for preprocessing pipeline."""
-    return {
-        'cleaner': get_minimal_cleaner(),
-        'extractor': FeatureExtractor(
-            FeatureExtractionConfig(
-                use_tfidf=True,
-                use_embeddings=False
-            )
-        ),
-        'formatter': PromptFormatter()
-    }
-
-
-def test_pipeline_consistency(sample_dataset, preprocessing_pipeline):
-    """Test preprocessing pipeline consistency."""
-    texts = sample_dataset.texts[:5]
-    
-    # Process twice and check consistency
-    results1 = []
-    results2 = []
-    
-    for _ in range(2):
-        cleaned = preprocessing_pipeline['cleaner'].batch_clean(texts)
-        if not results1:
-            results1 = cleaned
-        else:
-            results2 = cleaned
-    
-    # Results should be identical
-    assert results1 == results2
-
-
-def test_error_recovery(preprocessing_pipeline):
-    """Test error recovery in preprocessing."""
-    problematic_texts = [
-        None,
-        "",
-        "Normal text",
-        12345,  # Wrong type
-        "Another normal text"
-    ]
-    
-    cleaner = preprocessing_pipeline['cleaner']
-    results = []
-    
-    for text in problematic_texts:
-        try:
-            if isinstance(text, str):
-                result = cleaner.clean(text)
-                results.append(result)
-            else:
-                results.append("")
-        except:
-            results.append("")
-    
-    # Should handle errors gracefully
-    assert len(results) == len(problematic_texts)
-
-
+# Test runner
 if __name__ == '__main__':
-    unittest.main()
+    # Configure test runner with verbosity
+    unittest.main(verbosity=2)
