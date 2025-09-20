@@ -2,45 +2,32 @@
 Pytest Configuration and Shared Fixtures
 =========================================
 
-This module provides centralized test configuration following established
-testing frameworks and academic standards:
-
-Standards and Methodologies:
-----------------------------
+Centralized test configuration for AG News Classification system following:
+- IEEE 829-2008: Standard for Software Test Documentation
+- ISO/IEC/IEEE 29119: Software Testing Standards
 - Meszaros (2007): "xUnit Test Patterns: Refactoring Test Code"
-  Defines test fixture patterns and test doubles taxonomy
 - Fowler (2018): "Refactoring: Improving the Design of Existing Code"
-  Guides test structure and organization principles
-- Beck (2002): "Test Driven Development: By Example"
-  Informs test-first methodology and fixture design
+
+This module provides:
+- Test environment configuration
+- Shared fixtures and test doubles
+- Resource management and cleanup
+- Custom assertion helpers
+- Test data generators
 
 Fixture Architecture:
---------------------
-The fixture system implements Dependency Injection pattern (Martin, 2017)
-to provide:
-1. Test isolation through mock objects
-2. Shared test data and utilities
-3. Resource management and cleanup
-4. Performance optimization through caching
+- Dependency Injection pattern for test isolation
+- Test Double patterns (Mock, Stub, Fake, Dummy)
+- Factory patterns for data generation
+- RAII pattern for resource management
 
-Mock Strategy:
--------------
-Following the Test Double patterns (Meszaros, 2007):
-- Dummy objects: Simple placeholders
-- Stub objects: Provide canned responses
-- Mock objects: Verify interactions
-- Fake objects: Simplified implementations
-
-Academic Context:
-----------------
-Testing methodology aligned with empirical software engineering research:
+Testing Methodology:
 - Runeson & Höst (2009): "Guidelines for conducting and reporting case study research"
 - Wohlin et al. (2012): "Experimentation in Software Engineering"
+- Beck (2002): "Test Driven Development: By Example"
 
 Author: Võ Hải Dũng
-Institution: Academic Research Laboratory
 License: MIT
-Version: 1.0.0
 """
 
 import sys
@@ -51,9 +38,8 @@ import pytest
 import numpy as np
 
 # ============================================================================
-# Section 1: Path Configuration
+# Path Configuration for Test Environment Isolation
 # ============================================================================
-# Establishing test environment isolation
 
 PROJECT_ROOT = Path(__file__).parent.parent
 
@@ -62,9 +48,8 @@ PROJECT_ROOT = Path(__file__).parent.parent
 # Each test module should handle its own imports as needed.
 
 # ============================================================================
-# Section 2: Pytest Configuration Hooks
+# Pytest Configuration Hooks Following Best Practices
 # ============================================================================
-# Following pytest best practices documentation
 
 def pytest_configure(config):
     """
@@ -157,9 +142,8 @@ def pytest_collection_modifyitems(config, items):
 
 
 # ============================================================================
-# Section 3: Shared Fixtures
+# Shared Fixtures Implementing Meszaros (2007) Patterns
 # ============================================================================
-# Implementing fixture patterns from Meszaros (2007)
 
 @pytest.fixture(scope="session")
 def project_root():
@@ -278,9 +262,8 @@ def sample_config():
 
 
 # ============================================================================
-# Section 4: Mock Objects and Test Doubles
+# Mock Objects and Test Doubles Following Meszaros (2007)
 # ============================================================================
-# Implementing test double patterns from Meszaros (2007)
 
 @pytest.fixture
 def mock_model():
@@ -347,9 +330,8 @@ def mock_config_file(temp_dir):
 
 
 # ============================================================================
-# Section 5: Assertion Helpers
+# Custom Assertion Helpers Following Myers et al. (2011)
 # ============================================================================
-# Custom assertions following assertion pattern guidelines
 
 @pytest.fixture
 def assert_shape():
@@ -425,9 +407,8 @@ def assert_close():
 
 
 # ============================================================================
-# Section 6: Test Data Generators
+# Test Data Generators with Factory Pattern
 # ============================================================================
-# Factory fixtures for test data generation
 
 @pytest.fixture
 def create_random_data():
@@ -464,9 +445,8 @@ def create_random_data():
 
 
 # ============================================================================
-# Section 7: Resource Management
+# Resource Management Following RAII Pattern
 # ============================================================================
-# Cleanup and resource management following RAII pattern
 
 @pytest.fixture(autouse=True)
 def cleanup_after_test():
