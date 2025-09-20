@@ -8,18 +8,15 @@ Comprehensive test suite for augmentation components following:
 - Wei & Zou (2019): "EDA: Easy Data Augmentation Techniques"
 - Shorten & Khoshgoftaar (2019): "A survey on Image Data Augmentation"
 
-Test Coverage:
+This module tests:
 - Base augmenter functionality
 - Back translation augmentation
 - Adversarial augmentation  
 - MixUp and CutMix strategies
 - Paraphrase generation
 - Token replacement techniques
-
-Testing Methodology:
-- Meszaros (2007): "xUnit Test Patterns"
-- Beck (2002): "Test Driven Development"
-- Fowler (2018): "Refactoring"
+- Composite augmentation patterns
+- Caching and statistics tracking
 
 Author: Võ Hải Dũng
 License: MIT
@@ -450,6 +447,7 @@ class TokenReplacementAugmenter(BaseAugmenter):
     
     def __init__(self, config=None):
         """Initialize token replacement augmenter."""
+        # Important: Use TokenReplacementConfig, not base AugmentationConfig
         super().__init__(config or TokenReplacementConfig(), name="token_replacement")
     
     def augment_single(self, text, label=None, **kwargs):
@@ -460,15 +458,18 @@ class TokenReplacementAugmenter(BaseAugmenter):
         words = text.split()
         augmented = words.copy()
         
-        # Random deletion
-        if self.rng.random() < self.config.random_deletion_prob and len(augmented) > 1:
-            idx = self.rng.randint(0, len(augmented))
-            del augmented[idx]
+        # Check if config has the required attributes (for safety)
+        if hasattr(self.config, 'random_deletion_prob'):
+            # Random deletion
+            if self.rng.random() < self.config.random_deletion_prob and len(augmented) > 1:
+                idx = self.rng.randint(0, len(augmented))
+                del augmented[idx]
         
-        # Random swap
-        if self.rng.random() < self.config.random_swap_prob and len(augmented) > 1:
-            idx1, idx2 = self.rng.choice(len(augmented), 2, replace=False)
-            augmented[idx1], augmented[idx2] = augmented[idx2], augmented[idx1]
+        if hasattr(self.config, 'random_swap_prob'):
+            # Random swap
+            if self.rng.random() < self.config.random_swap_prob and len(augmented) > 1:
+                idx1, idx2 = self.rng.choice(len(augmented), 2, replace=False)
+                augmented[idx1], augmented[idx2] = augmented[idx2], augmented[idx1]
         
         return [" ".join(augmented)]
 
@@ -1029,9 +1030,12 @@ class TestAugmentationIntegration:
         
         Validates deterministic behavior for research reproducibility.
         """
-        config = AugmentationConfig(seed=42)
+        # Use proper config for TokenReplacementAugmenter
+        config = TokenReplacementConfig(seed=42)
         aug1 = TokenReplacementAugmenter(config)
-        aug2 = TokenReplacementAugmenter(config)
+        
+        config2 = TokenReplacementConfig(seed=42)
+        aug2 = TokenReplacementAugmenter(config2)
         
         result1 = aug1.augment_single(sample_texts[0])
         result2 = aug2.augment_single(sample_texts[0])
