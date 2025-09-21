@@ -28,7 +28,7 @@ License: MIT
 
 import logging
 import time
-from typing import Dict, List, Optional, Tuple, Union, Any, Callable
+from typing import Dict, List, Optional, Tuple, Union, Any, Callable, TypeVar
 from pathlib import Path
 from dataclasses import dataclass, field
 from contextlib import contextmanager
@@ -43,26 +43,64 @@ import torch.nn.functional as F
 from torch.cuda.amp import autocast, GradScaler
 from torch.nn.parallel import DataParallel, DistributedDataParallel
 
-from src.core.types import (
-    ModelOutput,
-    BatchData,
-    ModelConfig,
-    PathLike,
-    ModelInfo
-)
-from src.core.exceptions import (
-    ModelError,
-    ModelInitializationError,
-    ModelLoadError,
-    ModelSaveError,
-    OptimizationError
-)
+# Import from available files with proper function names
 from src.models.base.base_model import AGNewsBaseModel, ModelOutputs
-from src.utils.logging_config import get_logger
-from src.utils.memory_utils import get_memory_info, optimize_memory
-from src.utils.profiling_utils import profile_model
+from src.core.registry import MODELS
+from src.core.factory import factory
+from src.utils.logging_config import setup_logging
+from src.utils.memory_utils import get_memory_usage, optimize_memory_usage
+from src.utils.profiling_utils import profile_function, ProfileResult
 
-logger = get_logger(__name__)
+# Type definitions - Fallback if not in src.core.types
+try:
+    from src.core.types import (
+        ModelOutput,
+        BatchData,
+        ModelConfig,
+        PathLike,
+        ModelInfo
+    )
+except ImportError:
+    # Fallback type definitions
+    PathLike = Union[str, Path]
+    ModelInfo = Dict[str, Any]
+    BatchData = Dict[str, torch.Tensor]
+    ModelOutput = Any
+    ModelConfig = Dict[str, Any]
+
+# Exception definitions - Fallback if not in src.core.exceptions
+try:
+    from src.core.exceptions import (
+        ModelError,
+        ModelInitializationError,
+        ModelLoadError,
+        ModelSaveError,
+        OptimizationError
+    )
+except (ImportError, AttributeError):
+    # Fallback exception definitions
+    class ModelError(Exception):
+        """Base exception for model errors."""
+        pass
+    
+    class ModelInitializationError(ModelError):
+        """Exception for model initialization errors."""
+        pass
+    
+    class ModelLoadError(ModelError):
+        """Exception for model loading errors."""
+        pass
+    
+    class ModelSaveError(ModelError):
+        """Exception for model saving errors."""
+        pass
+    
+    class OptimizationError(ModelError):
+        """Exception for optimization errors."""
+        pass
+
+# Setup logger with correct function
+logger = setup_logging(__name__)
 
 
 @dataclass
@@ -129,27 +167,34 @@ class ModelWrapper(nn.Module):
         Args:
             model: Base model to wrap
             config: Wrapper configuration
+            
+        Raises:
+            ModelInitializationError: If initialization fails
         """
         super().__init__()
         
-        self.wrapped_model = model
-        self.config = config or WrapperConfig()
-        
-        # Initialize components
-        self._init_optimization()
-        self._init_monitoring()
-        self._init_metadata()
-        
-        # Training state
-        self.training_state = {
-            "global_step": 0,
-            "epoch": 0,
-            "best_metric": float("-inf"),
-            "training_time": 0.0,
-            "inference_calls": 0
-        }
-        
-        logger.info(f"Initialized ModelWrapper for {model.__class__.__name__}")
+        try:
+            self.wrapped_model = model
+            self.config = config or WrapperConfig()
+            
+            # Initialize components
+            self._init_optimization()
+            self._init_monitoring()
+            self._init_metadata()
+            
+            # Training state
+            self.training_state = {
+                "global_step": 0,
+                "epoch": 0,
+                "best_metric": float("-inf"),
+                "training_time": 0.0,
+                "inference_calls": 0
+            }
+            
+            logger.info(f"Initialized ModelWrapper for {model.__class__.__name__}")
+            
+        except Exception as e:
+            raise ModelInitializationError(f"Failed to initialize wrapper: {e}")
     
     def _init_optimization(self):
         """Initialize optimization components."""
@@ -282,15 +327,15 @@ class ModelWrapper(nn.Module):
         forward_time = time.perf_counter() - start_time
         self.performance_metrics["forward_time"].append(forward_time)
         
-        # Memory usage
+        # Memory usage - use actual function from memory_utils
         if torch.cuda.is_available():
-            memory_info = get_memory_info()
+            memory_info = get_memory_usage()
             self.resource_usage["gpu_memory_mb"].append(
-                memory_info["allocated"] / 1024 / 1024
+                memory_info.get("allocated_mb", 0)
             )
         
         # Loss tracking
-        if outputs.loss is not None:
+        if hasattr(outputs, 'loss') and outputs.loss is not None:
             self.performance_metrics["loss"].append(outputs.loss.item())
         
         # Log periodically
@@ -406,6 +451,11 @@ class ModelWrapper(nn.Module):
         example_input = torch.randint(0, 1000, (1, 512))
         example_mask = torch.ones(1, 512)
         
+        # Move to same device as model
+        device = self.device
+        example_input = example_input.to(device)
+        example_mask = example_mask.to(device)
+        
         # Trace model
         traced = torch.jit.trace(
             self.wrapped_model,
@@ -501,7 +551,13 @@ class ModelWrapper(nn.Module):
             with torch.no_grad():
                 _ = self(dummy_input, dummy_mask)
         
-        # Profile
+        # Profile using utility function
+        @profile_function
+        def forward_pass():
+            with torch.no_grad():
+                return self(dummy_input, dummy_mask)
+        
+        # Collect metrics
         torch.cuda.synchronize() if torch.cuda.is_available() else None
         
         forward_times = []
@@ -510,14 +566,14 @@ class ModelWrapper(nn.Module):
         for _ in range(num_iterations):
             start = time.perf_counter()
             
-            with torch.no_grad():
-                _ = self(dummy_input, dummy_mask)
+            forward_pass()
             
             torch.cuda.synchronize() if torch.cuda.is_available() else None
             forward_times.append(time.perf_counter() - start)
             
             if torch.cuda.is_available():
-                memory_usage.append(torch.cuda.memory_allocated() / 1024 / 1024)
+                memory_info = get_memory_usage()
+                memory_usage.append(memory_info.get("allocated_mb", 0))
         
         # Compute statistics
         import numpy as np
@@ -556,48 +612,55 @@ class ModelWrapper(nn.Module):
             save_optimizer: Optimizer state to save
             save_scheduler: Scheduler state to save
             **kwargs: Additional items to save
+            
+        Raises:
+            ModelSaveError: If save fails
         """
-        checkpoint_path = Path(checkpoint_path)
-        checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
-        
-        # Prepare checkpoint
-        checkpoint = {
-            "model_state_dict": self.wrapped_model.state_dict(),
-            "wrapper_config": self.config,
-            "training_state": self.training_state,
-            "metadata": self.metadata,
-            "timestamp": datetime.now().isoformat(),
-        }
-        
-        # Add optimizer state
-        if save_optimizer and self.config.save_optimizer_state:
-            checkpoint["optimizer_state_dict"] = save_optimizer.state_dict()
-        
-        # Add scheduler state
-        if save_scheduler:
-            checkpoint["scheduler_state_dict"] = save_scheduler.state_dict()
-        
-        # Add additional items
-        checkpoint.update(kwargs)
-        
-        # Save checkpoint
-        torch.save(checkpoint, checkpoint_path)
-        
-        # Save metadata separately
-        metadata_path = checkpoint_path.parent / "checkpoint_metadata.json"
-        with open(metadata_path, "w") as f:
-            json.dump(
-                {
-                    "checkpoint_path": str(checkpoint_path),
-                    "timestamp": checkpoint["timestamp"],
-                    "training_state": self.training_state,
-                    "metadata": self.metadata
-                },
-                f,
-                indent=2
-            )
-        
-        logger.info(f"Saved checkpoint to {checkpoint_path}")
+        try:
+            checkpoint_path = Path(checkpoint_path)
+            checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            # Prepare checkpoint
+            checkpoint = {
+                "model_state_dict": self.wrapped_model.state_dict(),
+                "wrapper_config": self.config,
+                "training_state": self.training_state,
+                "metadata": self.metadata,
+                "timestamp": datetime.now().isoformat(),
+            }
+            
+            # Add optimizer state
+            if save_optimizer and self.config.save_optimizer_state:
+                checkpoint["optimizer_state_dict"] = save_optimizer.state_dict()
+            
+            # Add scheduler state
+            if save_scheduler:
+                checkpoint["scheduler_state_dict"] = save_scheduler.state_dict()
+            
+            # Add additional items
+            checkpoint.update(kwargs)
+            
+            # Save checkpoint
+            torch.save(checkpoint, checkpoint_path)
+            
+            # Save metadata separately
+            metadata_path = checkpoint_path.parent / "checkpoint_metadata.json"
+            with open(metadata_path, "w") as f:
+                json.dump(
+                    {
+                        "checkpoint_path": str(checkpoint_path),
+                        "timestamp": checkpoint["timestamp"],
+                        "training_state": self.training_state,
+                        "metadata": self.metadata
+                    },
+                    f,
+                    indent=2
+                )
+            
+            logger.info(f"Saved checkpoint to {checkpoint_path}")
+            
+        except Exception as e:
+            raise ModelSaveError(f"Failed to save checkpoint: {e}")
     
     def load_checkpoint(
         self,
@@ -614,38 +677,47 @@ class ModelWrapper(nn.Module):
             load_optimizer: Optimizer to load state into
             load_scheduler: Scheduler to load state into
             strict: Strict state dict loading
+            
+        Raises:
+            ModelLoadError: If load fails
         """
-        checkpoint_path = Path(checkpoint_path)
-        
-        if not checkpoint_path.exists():
-            raise ModelLoadError(f"Checkpoint not found: {checkpoint_path}")
-        
-        # Load checkpoint
-        checkpoint = torch.load(checkpoint_path, map_location="cpu")
-        
-        # Load model state
-        self.wrapped_model.load_state_dict(
-            checkpoint["model_state_dict"],
-            strict=strict
-        )
-        
-        # Restore training state
-        if "training_state" in checkpoint:
-            self.training_state.update(checkpoint["training_state"])
-        
-        # Restore metadata
-        if "metadata" in checkpoint:
-            self.metadata.update(checkpoint["metadata"])
-        
-        # Load optimizer state
-        if load_optimizer and "optimizer_state_dict" in checkpoint:
-            load_optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-        
-        # Load scheduler state
-        if load_scheduler and "scheduler_state_dict" in checkpoint:
-            load_scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
-        
-        logger.info(f"Loaded checkpoint from {checkpoint_path}")
+        try:
+            checkpoint_path = Path(checkpoint_path)
+            
+            if not checkpoint_path.exists():
+                raise ModelLoadError(f"Checkpoint not found: {checkpoint_path}")
+            
+            # Load checkpoint
+            checkpoint = torch.load(checkpoint_path, map_location="cpu")
+            
+            # Load model state
+            self.wrapped_model.load_state_dict(
+                checkpoint["model_state_dict"],
+                strict=strict
+            )
+            
+            # Restore training state
+            if "training_state" in checkpoint:
+                self.training_state.update(checkpoint["training_state"])
+            
+            # Restore metadata
+            if "metadata" in checkpoint:
+                self.metadata.update(checkpoint["metadata"])
+            
+            # Load optimizer state
+            if load_optimizer and "optimizer_state_dict" in checkpoint:
+                load_optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+            
+            # Load scheduler state
+            if load_scheduler and "scheduler_state_dict" in checkpoint:
+                load_scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+            
+            logger.info(f"Loaded checkpoint from {checkpoint_path}")
+            
+        except ModelLoadError:
+            raise
+        except Exception as e:
+            raise ModelLoadError(f"Failed to load checkpoint: {e}")
     
     def _compute_model_hash(self) -> str:
         """Compute hash of model parameters for versioning."""
@@ -668,7 +740,44 @@ class ModelWrapper(nn.Module):
             "frozen": total - trainable
         }
     
-    def get_model_info(self) -> ModelInfo:
+    def freeze_layers(
+        self,
+        layers_to_freeze: Optional[List[str]] = None,
+        freeze_embeddings: bool = True,
+        freeze_encoder: bool = False,
+        num_layers_to_freeze: int = 0
+    ):
+        """
+        Freeze specific model layers.
+        
+        Args:
+            layers_to_freeze: List of layer names to freeze
+            freeze_embeddings: Freeze embedding layers
+            freeze_encoder: Freeze encoder layers
+            num_layers_to_freeze: Number of layers to freeze from bottom
+        """
+        frozen_params = 0
+        
+        # Freeze specific layers
+        if layers_to_freeze:
+            for name, param in self.wrapped_model.named_parameters():
+                if any(layer in name for layer in layers_to_freeze):
+                    param.requires_grad = False
+                    frozen_params += param.numel()
+        
+        # Freeze embeddings
+        if freeze_embeddings:
+            for name, param in self.wrapped_model.named_parameters():
+                if "embed" in name.lower():
+                    param.requires_grad = False
+                    frozen_params += param.numel()
+        
+        # Log results
+        total_params = sum(p.numel() for p in self.wrapped_model.parameters())
+        logger.info(f"Frozen {frozen_params:,} / {total_params:,} parameters "
+                   f"({frozen_params/total_params:.1%})")
+    
+    def get_model_info(self) -> Dict[str, Any]:
         """
         Get comprehensive model information.
         
@@ -786,6 +895,11 @@ class DistributedModelWrapper(ModelWrapper):
         if self.world_size > 1:
             for param in self.wrapped_model.parameters():
                 torch.distributed.broadcast(param.data, src=0)
+
+
+# Register wrapper with model registry
+MODELS.register("model_wrapper", ModelWrapper)
+MODELS.register("distributed_wrapper", DistributedModelWrapper)
 
 
 # Export public API
