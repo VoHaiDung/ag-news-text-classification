@@ -10,7 +10,7 @@ Implements prediction service following patterns from:
 This service handles all prediction-related operations including
 single and batch predictions, model loading, and result caching.
 
-Author: Team SOTA AGNews
+Author: Võ Hải Dũng
 License: MIT
 """
 
