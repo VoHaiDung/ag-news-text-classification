@@ -64,19 +64,50 @@ jobs:
             ${{ runner.os }}-pip-
           
       # Step 4: Install test dependencies
+      # Resolved dependency conflict issues with pytest-cov
       - name: Install dependencies
         run: |
-          # Update pip to latest version
+          # Update pip to latest version for better dependency resolution
           python -m pip install --upgrade pip setuptools wheel
           
-          # Install testing frameworks
-          pip install pytest==${{ env.PYTEST_VERSION }}
-          pip install pytest-cov pytest-timeout pytest-xdist
+          # Create temporary requirements file with compatible versions
+          # This approach ensures consistent and reproducible installations
+          cat > test-requirements.txt << 'EOF'
+          # Core testing dependencies with locked compatible versions
+          # Based on pytest ecosystem compatibility matrix
+          coverage==7.3.2
+          pytest==7.4.0
+          pytest-cov==4.1.0
+          pytest-timeout==2.2.0
+          pytest-xdist==3.5.0
           
-          # Install project dependencies
-          pip install pyyaml>=5.4 numpy>=1.21.0
+          # Project dependencies
+          pyyaml>=5.4
+          numpy>=1.21.0
+          EOF
+          
+          # Install with proper error handling and fallback mechanism
+          echo "Installing test dependencies..."
+          pip install -r test-requirements.txt || {
+            echo "Batch installation failed, trying alternative approach..."
+            
+            # Fallback: Install packages individually in dependency order
+            # Coverage must be installed first as it's a base dependency
+            pip install coverage==7.3.2
+            pip install pytest==7.4.0
+            pip install pytest-cov==4.1.0 --no-deps
+            pip install pytest-timeout==2.2.0
+            pip install pytest-xdist==3.5.0
+            pip install pyyaml>=5.4
+            pip install numpy>=1.21.0
+          }
+          
+          # Verify critical packages are installed correctly
+          python -c "import coverage; print(f'Coverage version: {coverage.__version__}')"
+          python -c "import pytest; print(f'Pytest version: {pytest.__version__}')"
           
           # Display installed packages for debugging
+          echo "Installed packages:"
           pip list
           
       # Step 5: Prepare test environment
@@ -130,10 +161,10 @@ jobs:
               return tmp_path
           EOF
           
-      # Step 6: Create comprehensive unit tests (FIXED STRING/FLOAT COMPARISON)
+      # Step 6: Create comprehensive unit tests with proper string/float comparison
       - name: Create unit test files
         run: |
-          # Create main unit test file with properly fixed YAML test
+          # Create main unit test file with properly handled YAML test
           cat > tests/unit/test_core.py << 'EOF'
           """
           Core unit tests for AG News Classification system.
@@ -224,7 +255,7 @@ jobs:
                   assert config['model']['parameters']['hidden_size'] == 768
                   assert config['training']['batch_size'] == 32
                   
-                  # Fixed: Handle both string and float representations of scientific notation
+                  # Handle both string and float representations of scientific notation
                   # YAML may parse scientific notation as string or float depending on version
                   learning_rate = config['training']['learning_rate']
                   
