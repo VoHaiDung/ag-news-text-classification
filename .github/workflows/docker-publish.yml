@@ -56,6 +56,7 @@ jobs:
           
           # Create a minimal working Dockerfile
           # This Dockerfile follows best practices from Docker documentation
+          # FIXED: Added retry mechanism and specific package versions for network issues
           cat > Dockerfile << 'DOCKERFILE'
           # Use official Python runtime as base image
           FROM python:3.10-slim
@@ -68,13 +69,56 @@ jobs:
           # Set working directory
           WORKDIR /app
           
-          # Create requirements.txt if not exists
-          RUN echo "pyyaml>=5.4" > requirements.txt && \
-              echo "numpy>=1.21.0" >> requirements.txt
+          # FIX: Install system dependencies first for better caching
+          # and to ensure network tools are available
+          RUN apt-get update && apt-get install -y --no-install-recommends \
+              build-essential \
+              curl \
+              ca-certificates \
+              && rm -rf /var/lib/apt/lists/*
           
-          # Install Python dependencies
-          RUN pip install --no-cache-dir --upgrade pip && \
-              pip install --no-cache-dir pyyaml numpy
+          # FIX: Create requirements with specific versions to avoid resolution issues
+          RUN echo "pyyaml==6.0.1" > requirements.txt && \
+              echo "numpy==1.24.3" >> requirements.txt && \
+              echo "setuptools>=65.0.0" >> requirements.txt && \
+              echo "wheel>=0.38.0" >> requirements.txt
+          
+          # FIX: Multi-step pip installation with retry mechanism
+          # Step 1: Upgrade pip, setuptools, and wheel first
+          RUN python -m pip install --no-cache-dir --upgrade pip==24.0 setuptools wheel
+          
+          # Step 2: Install packages with retries and trusted hosts
+          # Using multiple index URLs for redundancy
+          RUN python -m pip install --no-cache-dir \
+              --index-url https://pypi.org/simple \
+              --trusted-host pypi.org \
+              --trusted-host files.pythonhosted.org \
+              --retries 5 \
+              --timeout 60 \
+              pyyaml==6.0.1 || \
+              (echo "First attempt failed, retrying with alternative mirror..." && \
+              python -m pip install --no-cache-dir \
+              --index-url https://pypi.python.org/simple \
+              --extra-index-url https://pypi.org/simple \
+              pyyaml==6.0.1)
+          
+          # Step 3: Install numpy separately with specific configuration
+          RUN python -m pip install --no-cache-dir \
+              --index-url https://pypi.org/simple \
+              --trusted-host pypi.org \
+              --trusted-host files.pythonhosted.org \
+              --retries 5 \
+              --timeout 60 \
+              numpy==1.24.3 || \
+              (echo "NumPy installation failed, trying with no-binary option..." && \
+              python -m pip install --no-cache-dir \
+              --no-binary :all: \
+              --index-url https://pypi.org/simple \
+              numpy==1.24.3)
+          
+          # FIX: Verify installations
+          RUN python -c "import yaml; print('PyYAML imported successfully')" && \
+              python -c "import numpy; print(f'NumPy {numpy.__version__} imported successfully')"
           
           # Copy current directory contents
           # Using .dockerignore pattern to exclude unnecessary files
@@ -90,12 +134,14 @@ jobs:
           # Set Python environment variables
           ENV PYTHONUNBUFFERED=1
           ENV PYTHONDONTWRITEBYTECODE=1
+          ENV PIP_DEFAULT_TIMEOUT=100
+          ENV PIP_RETRIES=5
           
-          # Default command - display Python version
-          CMD ["python", "--version"]
+          # Default command - display Python version and installed packages
+          CMD ["python", "-c", "import sys, yaml, numpy; print(f'Python {sys.version}\\nPyYAML: {yaml.__version__}\\nNumPy: {numpy.__version__}')"]
           DOCKERFILE
           
-          echo "Dockerfile created successfully"
+          echo "Dockerfile created successfully with network fixes"
           
           # Create .dockerignore to optimize build context
           cat > .dockerignore << 'DOCKERIGNORE'
@@ -142,12 +188,18 @@ jobs:
           
           echo "Docker ignore file created"
           
-          # Create minimal requirements.txt if not exists
-          if [ ! -f requirements.txt ]; then
-            echo "pyyaml>=5.4" > requirements.txt
-            echo "numpy>=1.21.0" >> requirements.txt
-            echo "Requirements file created"
-          fi
+          # FIX: Create comprehensive requirements.txt with all necessary packages
+          cat > requirements.txt << 'REQUIREMENTS'
+          # Core dependencies with fixed versions
+          pyyaml==6.0.1
+          numpy==1.24.3
+          
+          # Additional packages for the project
+          setuptools>=65.0.0
+          wheel>=0.38.0
+          REQUIREMENTS
+          
+          echo "Requirements file created with specific versions"
         
       # Step 3: Set up Docker Buildx for advanced features
       - name: Set up Docker Buildx
@@ -189,7 +241,14 @@ jobs:
         run: |
           # Build image using docker command for better control
           echo "Building Docker image..."
-          docker build -t test-image:latest .
+          
+          # FIX: Add build arguments for network configuration
+          docker build \
+            --network=host \
+            --build-arg HTTP_PROXY=${HTTP_PROXY:-} \
+            --build-arg HTTPS_PROXY=${HTTPS_PROXY:-} \
+            --build-arg NO_PROXY=${NO_PROXY:-} \
+            -t test-image:latest .
           
           # Verify build success
           if [ $? -eq 0 ]; then
@@ -216,6 +275,9 @@ jobs:
           # Test 3: Check working directory
           docker run --rm test-image:latest pwd
           
+          # Test 4: Verify package versions
+          docker run --rm test-image:latest python -c "import yaml, numpy; print(f'PyYAML: {yaml.__version__}, NumPy: {numpy.__version__}')"
+          
           echo "All Docker tests passed"
           
       # Step 8: Build and push multi-platform image if not PR
@@ -234,6 +296,11 @@ jobs:
           # Use GitHub Actions cache
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          # FIX: Add network configuration
+          build-args: |
+            HTTP_PROXY=${{ env.HTTP_PROXY }}
+            HTTPS_PROXY=${{ env.HTTPS_PROXY }}
+            NO_PROXY=${{ env.NO_PROXY }}
           
       # Step 9: Output build status
       - name: Build status check
@@ -268,21 +335,35 @@ jobs:
       - name: Create GPU Dockerfile
         run: |
           # Create GPU-optimized Dockerfile
+          # FIX: Updated GPU Dockerfile with same fixes
           cat > Dockerfile.gpu << 'DOCKERFILE'
           # NVIDIA CUDA base image for GPU support
           FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04
           
           # Install Python and system dependencies
-          RUN apt-get update && apt-get install -y \
+          RUN apt-get update && apt-get install -y --no-install-recommends \
               python3.10 \
               python3-pip \
+              build-essential \
+              curl \
+              ca-certificates \
               && rm -rf /var/lib/apt/lists/*
           
           WORKDIR /app
           
-          # Install Python packages
-          RUN python3 -m pip install --upgrade pip && \
-              python3 -m pip install pyyaml numpy torch --index-url https://download.pytorch.org/whl/cu118
+          # Upgrade pip first
+          RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel
+          
+          # Install Python packages with retry mechanism
+          RUN python3 -m pip install --no-cache-dir \
+              --index-url https://pypi.org/simple \
+              --trusted-host pypi.org \
+              --retries 5 \
+              pyyaml==6.0.1 numpy==1.24.3
+          
+          # Install PyTorch for CUDA
+          RUN python3 -m pip install --no-cache-dir \
+              torch --index-url https://download.pytorch.org/whl/cu118
           
           # Copy application
           COPY . .
