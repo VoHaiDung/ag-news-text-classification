@@ -1,4 +1,4 @@
-""" 
+"""
 Template Manager for Prompt-Based Learning
 ===========================================
 
