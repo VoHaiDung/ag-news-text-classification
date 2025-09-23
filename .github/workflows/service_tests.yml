@@ -1,14 +1,15 @@
-# Service Testing Workflow
-# ================================================================================
-# Comprehensive testing pipeline for microservices architecture
-# Based on:
-# - Richardson, C. (2018). "Microservices Patterns: With examples in Java"
-# - Newman, S. (2015). "Building Microservices: Designing Fine-Grained Systems"
-# - Fowler, M. (2014). "Microservices: a definition of this new architectural term"
+# Service Testing Workflow for AG News Classification
+# ====================================================
+# Comprehensive testing pipeline for microservices architecture following:
+# - Microservices Testing Best Practices
+# - Service Architecture Testing Guidelines
+# - Integration Testing Standards
+# - Contract Testing Patterns
+# - Performance Testing Methodologies
+# - Academic Software Engineering Standards
 #
 # Author: Võ Hải Dũng
 # License: MIT
-# ================================================================================
 
 name: Service Tests
 
