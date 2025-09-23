@@ -1,14 +1,14 @@
-# API Testing Workflow
-# ================================================================================
-# Comprehensive API testing pipeline for REST, gRPC, and GraphQL endpoints
-# Based on:
-# - Martin Fowler's "Testing Strategies in a Microservice Architecture"
-# - Newman & Sam (2015). "Building Microservices: Testing"
-# - Academic research on API testing methodologies
+# API Testing Workflow for AG News Classification
+# ================================================
+# Comprehensive API testing pipeline for REST, gRPC, and GraphQL endpoints following:
+# - REST API Testing Best Practices
+# - gRPC Testing Guidelines  
+# - GraphQL Testing Standards
+# - OWASP API Security Guidelines
+# - Academic Research on API Testing Methodologies
 #
 # Author: Võ Hải Dũng
 # License: MIT
-# ================================================================================
 
 name: API Tests
 
