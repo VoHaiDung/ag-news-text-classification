@@ -1,0 +1,38 @@
+# API Requirements
+# ================
+# REST, gRPC, GraphQL dependencies
+# Author: Võ Hải Dũng
+
+# Include base
+-r base.txt
+
+# REST API
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+gunicorn>=21.2.0
+
+# gRPC
+grpcio>=1.60.0
+grpcio-tools>=1.60.0
+grpcio-reflection>=1.60.0
+
+# GraphQL
+strawberry-graphql[fastapi]>=0.215.0
+graphene>=3.3
+
+# API utilities
+pydantic>=2.5.0
+python-jose[cryptography]>=3.3.0
+python-multipart>=0.0.6
+passlib[bcrypt]>=1.7.4
+slowapi>=0.1.9
+
+# API documentation
+openapi-schema-validator>=0.6.0
+
+# API testing
+httpx>=0.25.0
+pytest-asyncio>=0.21.0
+
+# Monitoring
+prometheus-fastapi-instrumentator>=6.1.0
