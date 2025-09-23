@@ -12,7 +12,7 @@ References:
     - OWASP (2021). Cross-Origin Resource Sharing Security Cheat Sheet
     - MDN Web Docs. HTTP access control (CORS)
 
-Author: AG News Development Team
+Author: Võ Hải Dũng
 License: MIT
 """
 
