@@ -11,7 +11,7 @@ References:
     - OpenAPI Initiative (2021). OpenAPI Specification v3.1.0
     - FastAPI Documentation
 
-Author: AG News Development Team
+Author: Võ Hải Dũng
 License: MIT
 """
 
