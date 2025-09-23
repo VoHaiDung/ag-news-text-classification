@@ -14,7 +14,7 @@ References:
     - OWASP (2021). Authentication Cheat Sheet
     - Seemann, M. (2011). Dependency Injection in .NET
 
-Author: AG News Development Team
+Author: Võ Hải Dũng
 License: MIT
 """
 
