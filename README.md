@@ -180,15 +180,14 @@ ag-news-text-classification/
 ├── requirements/
 │   ├── base.txt
 │   ├── ml.txt
-│   ├── research.txt
 │   ├── prod.txt
 │   ├── dev.txt
 │   ├── data.txt
 │   ├── llm.txt
 │   ├── ui.txt
 │   ├── docs.txt
-│   ├── robustness.txt
-│   ├── minimal.txt
+│   ├── api.txt
+│   ├── services.txt
 │   └── all.txt
 │
 ├── .devcontainer/
@@ -200,12 +199,29 @@ ag-news-text-classification/
 │   └── commit-msg
 │
 ├── images/
-│   └── pipeline.png
+│   ├── pipeline.png
+│   ├── api_architecture.png
+│   └── service_flow.png
 │
 ├── configs/
 │   ├── __init__.py
 │   ├── config_loader.py
 │   ├── constants.py
+│   │
+│   ├── api/
+│   │   ├── rest_config.yaml
+│   │   ├── grpc_config.yaml
+│   │   ├── graphql_config.yaml
+│   │   ├── auth_config.yaml
+│   │   └── rate_limit_config.yaml
+│   │
+│   ├── services/
+│   │   ├── prediction_service.yaml
+│   │   ├── training_service.yaml
+│   │   ├── data_service.yaml
+│   │   ├── model_service.yaml
+│   │   ├── monitoring_service.yaml
+│   │   └── orchestration.yaml
 │   │
 │   ├── environments/
 │   │   ├── dev.yaml
@@ -216,7 +232,8 @@ ag-news-text-classification/
 │   │   └── feature_flags.yaml
 │   │
 │   ├── secrets/
-│   │   └── secrets.template.yaml
+│   │   ├── secrets.template.yaml
+│   │   └── api_keys.template.yaml
 │   │
 │   ├── models/
 │   │   ├── single/
@@ -326,37 +343,172 @@ ag-news-text-classification/
 │   │       └── teacher_predictions/
 │   ├── pseudo_labeled/
 │   ├── selected_subsets/
+│   ├── test_samples/
+│   │   ├── api_test_cases.json
+│   │   ├── service_test_data.json
+│   │   └── mock_responses.json
 │   └── cache/
+│       ├── api_cache/
+│       ├── service_cache/
+│       └── model_cache/
 │
 ├── src/
 │   ├── __init__.py
-|   ├── __version__.py
+│   ├── __version__.py
 │   ├── core/
 │   │   ├── __init__.py
 │   │   ├── registry.py
 │   │   ├── factory.py
 │   │   ├── types.py
-│   │   └── exceptions.py
+│   │   ├── exceptions.py
+│   │   └── interfaces.py
 │   │
 │   ├── api/
 │   │   ├── __init__.py
+│   │   ├── base/
+│   │   │   ├── __init__.py
+│   │   │   ├── base_handler.py
+│   │   │   ├── auth.py
+│   │   │   ├── rate_limiter.py
+│   │   │   ├── error_handler.py
+│   │   │   ├── cors_handler.py
+│   │   │   └── request_validator.py
+│   │   │
 │   │   ├── rest/
-│   │   │   ├── endpoints.py
-│   │   │   ├── middleware.py
-│   │   │   └── validators.py
+│   │   │   ├── __init__.py
+│   │   │   ├── app.py
+│   │   │   ├── routers/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── classification.py
+│   │   │   │   ├── training.py
+│   │   │   │   ├── models.py
+│   │   │   │   ├── data.py
+│   │   │   │   ├── health.py
+│   │   │   │   ├── metrics.py
+│   │   │   │   └── admin.py
+│   │   │   ├── schemas/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── request_schemas.py
+│   │   │   │   ├── response_schemas.py
+│   │   │   │   ├── error_schemas.py
+│   │   │   │   └── common_schemas.py
+│   │   │   ├── middleware/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── logging_middleware.py
+│   │   │   │   ├── metrics_middleware.py
+│   │   │   │   └── security_middleware.py
+│   │   │   ├── dependencies.py
+│   │   │   ├── validators.py
+│   │   │   └── websocket_handler.py
+│   │   │
 │   │   ├── grpc/
-│   │   │   ├── services.py
-│   │   │   └── protos/
+│   │   │   ├── __init__.py
+│   │   │   ├── server.py
+│   │   │   ├── services/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── classification_service.py
+│   │   │   │   ├── training_service.py
+│   │   │   │   ├── model_service.py
+│   │   │   │   └── data_service.py
+│   │   │   ├── interceptors/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── auth_interceptor.py
+│   │   │   │   ├── logging_interceptor.py
+│   │   │   │   ├── metrics_interceptor.py
+│   │   │   │   └── error_interceptor.py
+│   │   │   ├── protos/
+│   │   │   │   ├── classification.proto
+│   │   │   │   ├── model_management.proto
+│   │   │   │   ├── training.proto
+│   │   │   │   ├── data_service.proto
+│   │   │   │   ├── health.proto
+│   │   │   │   ├── monitoring.proto
+│   │   │   │   └── common/
+│   │   │   │       ├── types.proto
+│   │   │   │       └── status.proto
+│   │   │   └── compiled/
+│   │   │       ├── __init__.py
+│   │   │       ├── classification_pb2.py
+│   │   │       ├── classification_pb2_grpc.py
+│   │   │       ├── model_management_pb2.py
+│   │   │       ├── model_management_pb2_grpc.py
+│   │   │       ├── training_pb2.py
+│   │   │       ├── training_pb2_grpc.py
+│   │   │       ├── data_service_pb2.py
+│   │   │       ├── data_service_pb2_grpc.py
+│   │   │       ├── health_pb2.py
+│   │   │       ├── health_pb2_grpc.py
+│   │   │       ├── monitoring_pb2.py
+│   │   │       ├── monitoring_pb2_grpc.py
+│   │   │       └── common/
+│   │   │           ├── __init__.py
+│   │   │           ├── types_pb2.py
+│   │   │           └── status_pb2.py
+│   │   │
 │   │   └── graphql/
+│   │       ├── __init__.py
+│   │       ├── server.py
 │   │       ├── schema.py
-│   │       └── resolvers.py
+│   │       ├── resolvers.py
+│   │       ├── mutations.py
+│   │       ├── queries.py
+│   │       ├── subscriptions.py
+│   │       ├── types.py
+│   │       └── dataloaders.py
 │   │
 │   ├── services/
 │   │   ├── __init__.py
-│   │   ├── prediction_service.py
-│   │   ├── training_service.py
-│   │   ├── data_service.py
-│   │   └── model_management.py
+│   │   ├── base_service.py
+│   │   ├── service_registry.py
+│   │   │
+│   │   ├── core/
+│   │   │   ├── __init__.py
+│   │   │   ├── prediction_service.py
+│   │   │   ├── training_service.py
+│   │   │   ├── data_service.py
+│   │   │   └── model_management_service.py
+│   │   │
+│   │   ├── orchestration/
+│   │   │   ├── __init__.py
+│   │   │   ├── workflow_orchestrator.py
+│   │   │   ├── pipeline_manager.py
+│   │   │   ├── job_scheduler.py
+│   │   │   └── state_manager.py
+│   │   │
+│   │   ├── monitoring/
+│   │   │   ├── __init__.py
+│   │   │   ├── metrics_service.py
+│   │   │   ├── health_service.py
+│   │   │   ├── alerting_service.py
+│   │   │   └── logging_service.py
+│   │   │
+│   │   ├── caching/
+│   │   │   ├── __init__.py
+│   │   │   ├── cache_service.py
+│   │   │   ├── cache_strategies.py
+│   │   │   ├── redis_cache.py
+│   │   │   └── memory_cache.py
+│   │   │
+│   │   ├── queue/
+│   │   │   ├── __init__.py
+│   │   │   ├── task_queue.py
+│   │   │   ├── message_broker.py
+│   │   │   ├── celery_tasks.py
+│   │   │   └── job_processor.py
+│   │   │
+│   │   ├── notification/
+│   │   │   ├── __init__.py
+│   │   │   ├── notification_service.py
+│   │   │   ├── email_notifier.py
+│   │   │   ├── slack_notifier.py
+│   │   │   └── webhook_notifier.py
+│   │   │
+│   │   └── storage/
+│   │       ├── __init__.py
+│   │       ├── storage_service.py
+│   │       ├── s3_storage.py
+│   │       ├── gcs_storage.py
+│   │       └── local_storage.py
 │   │
 │   ├── data/
 │   │   ├── __init__.py
@@ -631,7 +783,9 @@ ag-news-text-classification/
 │       ├── memory_utils.py
 │       ├── profiling_utils.py
 │       ├── experiment_tracking.py
-│       └── prompt_utils.py
+│       ├── prompt_utils.py
+│       ├── api_utils.py
+│       └── service_utils.py
 │
 ├── experiments/
 │   ├── __init__.py
@@ -645,7 +799,8 @@ ag-news-text-classification/
 │   │   ├── speed_benchmark.py
 │   │   ├── memory_benchmark.py
 │   │   ├── accuracy_benchmark.py
-│   │   └── robustness_benchmark.py
+│   │   ├── robustness_benchmark.py
+│   │   └── sota_comparison.py
 │   ├── baselines/
 │   │   ├── classical/
 │   │   │   ├── naive_bayes.py
@@ -674,38 +829,31 @@ ag-news-text-classification/
 │       ├── result_aggregator.py
 │       └── leaderboard_generator.py
 │
-├── research/
-│   ├── papers/
-│   │   ├── references.bib
-│   │   └── related_work/
-│   ├── experiments_log/
-│   │   ├── daily_logs/
-│   │   └── experiment_notes.md
-│   ├── hypotheses/
-│   │   ├── current_hypotheses.md
-│   │   └── validation_results/
-│   └── findings/
-│       ├── key_insights.md
-│       └── failed_experiments/
-│
 ├── monitoring/
 │   ├── dashboards/
 │   │   ├── grafana/
-│   │   └── prometheus/
+│   │   ├── prometheus/
+│   │   └── kibana/
 │   ├── alerts/
 │   │   ├── alert_rules.yaml
-│   │   └── notification_config.yaml
+│   │   ├── notification_config.yaml
+│   │   └── escalation_policy.yaml
 │   ├── metrics/
 │   │   ├── custom_metrics.py
-│   │   └── metric_collectors.py
+│   │   ├── metric_collectors.py
+│   │   ├── api_metrics.py
+│   │   └── service_metrics.py
 │   └── logs_analysis/
 │       ├── log_parser.py
-│       └── anomaly_detector.py
+│       ├── anomaly_detector.py
+│       └── log_aggregator.py
 │
 ├── security/
 │   ├── api_auth/
 │   │   ├── jwt_handler.py
-│   │   └── api_keys.py
+│   │   ├── api_keys.py
+│   │   ├── oauth2_handler.py
+│   │   └── rbac.py
 │   ├── data_privacy/
 │   │   ├── pii_detector.py
 │   │   └── data_masking.py
@@ -737,8 +885,11 @@ ag-news-text-classification/
 │   ├── models/
 │   │   ├── version_converter.py
 │   │   └── compatibility_layer.py
-│   └── configs/
-│       └── config_migrator.py
+│   ├── configs/
+│   │   └── config_migrator.py
+│   └── api/
+│       ├── api_version_manager.py
+│       └── schema_migrations/
 │
 ├── cache/
 │   ├── redis/
@@ -751,10 +902,12 @@ ag-news-text-classification/
 ├── load_testing/
 │   ├── scenarios/
 │   │   ├── basic_load.yaml
-│   │   └── stress_test.yaml
+│   │   ├── stress_test.yaml
+│   │   └── api_load_test.yaml
 │   ├── scripts/
 │   │   ├── locust_test.py
-│   │   └── k6_test.js
+│   │   ├── k6_test.js
+│   │   └── jmeter_test.jmx
 │   └── reports/
 │       └── performance_report_template.md
 │
@@ -769,24 +922,13 @@ ag-news-text-classification/
 │       ├── disaster_recovery_plan.md
 │       └── recovery_procedures/
 │
-├── quality/
-│   ├── test_plans/
-│   │   ├── unit_test_plan.md
-│   │   └── integration_test_plan.md
-│   ├── test_cases/
-│   │   ├── manual_tests/
-│   │   └── automated_tests/
-│   ├── bug_reports/
-│   │   └── bug_template.md
-│   └── coverage/
-│       └── coverage_reports/
-│
 ├── quickstart/
 │   ├── README.md
 │   ├── minimal_example.py
 │   ├── train_simple.py
 │   ├── evaluate_simple.py
 │   ├── demo_app.py
+│   ├── api_quickstart.py
 │   ├── colab_notebook.ipynb
 │   └── docker_quickstart/
 │       ├── Dockerfile
@@ -801,8 +943,11 @@ ag-news-text-classification/
 │   │   └── README_template.md
 │   ├── dataset/
 │   │   └── dataset_template.py
-│   └── evaluation/
-│       └── metric_template.py
+│   ├── evaluation/
+│   │   └── metric_template.py
+│   └── api/
+│       ├── endpoint_template.py
+│       └── service_template.py
 │
 ├── notebooks/
 │   ├── tutorials/
@@ -812,7 +957,9 @@ ag-news-text-classification/
 │   │   ├── 03_model_training_basics.ipynb
 │   │   ├── 04_evaluation_tutorial.ipynb
 │   │   ├── 05_prompt_engineering.ipynb
-│   │   └── 06_instruction_tuning.ipynb
+│   │   ├── 06_instruction_tuning.ipynb
+│   │   ├── 07_api_usage.ipynb
+│   │   └── 08_service_integration.ipynb
 │   ├── exploratory/
 │   │   ├── 01_data_exploration.ipynb
 │   │   ├── 02_data_statistics.ipynb
@@ -837,7 +984,8 @@ ag-news-text-classification/
 │   ├── deployment/
 │   │   ├── 01_model_optimization.ipynb
 │   │   ├── 02_inference_pipeline.ipynb
-│   │   └── 03_api_testing.ipynb
+│   │   ├── 03_api_testing.ipynb
+│   │   └── 04_service_monitoring.ipynb
 │   └── platform_specific/
 │       ├── colab/
 │       │   ├── quick_start_colab.ipynb
@@ -861,7 +1009,9 @@ ag-news-text-classification/
 │   │   ├── 07_Real_Time_Demo.py
 │   │   ├── 08_Model_Selection.py
 │   │   ├── 09_Documentation.py
-│   │   └── 10_Prompt_Testing.py
+│   │   ├── 10_Prompt_Testing.py
+│   │   ├── 11_API_Explorer.py
+│   │   └── 12_Service_Status.py
 │   ├── components/
 │   │   ├── __init__.py
 │   │   ├── prediction_component.py
@@ -870,7 +1020,9 @@ ag-news-text-classification/
 │   │   ├── file_uploader.py
 │   │   ├── result_display.py
 │   │   ├── performance_monitor.py
-│   │   └── prompt_builder.py
+│   │   ├── prompt_builder.py
+│   │   ├── api_tester.py
+│   │   └── service_monitor.py
 │   ├── utils/
 │   │   ├── session_manager.py
 │   │   ├── caching.py
@@ -926,11 +1078,22 @@ ag-news-text-classification/
 │   │   ├── architecture_search.py
 │   │   ├── ensemble_optimization.py
 │   │   └── prompt_optimization.py
-│   └── deployment/
-│       ├── export_models.py
-│       ├── optimize_for_inference.py
-│       ├── create_docker_image.sh
-│       └── deploy_to_cloud.py
+│   ├── deployment/
+│   │   ├── export_models.py
+│   │   ├── optimize_for_inference.py
+│   │   ├── create_docker_image.sh
+│   │   └── deploy_to_cloud.py
+│   ├── api/
+│   │   ├── compile_protos.sh
+│   │   ├── start_all_services.py
+│   │   ├── test_api_endpoints.py
+│   │   ├── generate_api_docs.py
+│   │   └── update_api_schemas.py
+│   └── services/
+│       ├── service_health_check.py
+│       ├── restart_services.sh
+│       ├── service_diagnostics.py
+│       └── cleanup_services.sh
 │
 ├── prompts/
 │   ├── classification/
@@ -964,6 +1127,18 @@ ag-news-text-classification/
 │   │   │   ├── test_strategies.py
 │   │   │   ├── test_callbacks.py
 │   │   │   └── test_multi_stage.py
+│   │   ├── api/
+│   │   │   ├── test_rest_api.py
+│   │   │   ├── test_grpc_services.py
+│   │   │   ├── test_graphql_api.py
+│   │   │   ├── test_auth.py
+│   │   │   └── test_middleware.py
+│   │   ├── services/
+│   │   │   ├── test_prediction_service.py
+│   │   │   ├── test_training_service.py
+│   │   │   ├── test_data_service.py
+│   │   │   ├── test_orchestration.py
+│   │   │   └── test_cache_service.py
 │   │   └── utils/
 │   │       └── test_utilities.py
 │   ├── integration/
@@ -971,15 +1146,25 @@ ag-news-text-classification/
 │   │   ├── test_ensemble_pipeline.py
 │   │   ├── test_inference_pipeline.py
 │   │   ├── test_api_endpoints.py
+│   │   ├── test_service_integration.py
+│   │   ├── test_api_service_flow.py
 │   │   └── test_prompt_pipeline.py
 │   ├── performance/
 │   │   ├── test_model_speed.py
 │   │   ├── test_memory_usage.py
-│   │   └── test_accuracy_benchmarks.py
+│   │   ├── test_accuracy_benchmarks.py
+│   │   ├── test_api_performance.py
+│   │   └── test_service_scalability.py
+│   ├── e2e/
+│   │   ├── test_complete_workflow.py
+│   │   ├── test_user_scenarios.py
+│   │   └── test_production_flow.py
 │   └── fixtures/
 │       ├── sample_data.py
 │       ├── mock_models.py
-│       └── test_configs.py
+│       ├── test_configs.py
+│       ├── mock_services.py
+│       └── api_fixtures.py
 │
 ├── outputs/
 │   ├── models/
@@ -1004,7 +1189,9 @@ ag-news-text-classification/
 │   │   ├── training/
 │   │   ├── tensorboard/
 │   │   ├── wandb/
-│   │   └── mlflow/
+│   │   ├── mlflow/
+│   │   ├── api_logs/
+│   │   └── service_logs/
 │   └── artifacts/
 │       ├── figures/
 │       ├── tables/
@@ -1027,38 +1214,53 @@ ag-news-text-classification/
 │   │   ├── architecture.md
 │   │   ├── adding_models.md
 │   │   ├── custom_datasets.md
+│   │   ├── api_development.md
+│   │   ├── service_development.md
 │   │   └── contributing.md
 │   ├── api_reference/
+│   │   ├── rest_api.md
+│   │   ├── grpc_api.md
+│   │   ├── graphql_api.md
 │   │   ├── data_api.md
 │   │   ├── models_api.md
 │   │   ├── training_api.md
 │   │   └── evaluation_api.md
+│   ├── service_reference/
+│   │   ├── prediction_service.md
+│   │   ├── training_service.md
+│   │   ├── data_service.md
+│   │   └── orchestration.md
 │   ├── tutorials/
 │   │   ├── basic_usage.md
 │   │   ├── advanced_features.md
+│   │   ├── api_integration.md
 │   │   └── best_practices.md
 │   ├── architecture/
 │   │   ├── decisions/
 │   │   │   ├── 001-model-selection.md
-│   │   │   └── 002-ensemble-strategy.md
+│   │   │   ├── 002-ensemble-strategy.md
+│   │   │   ├── 003-api-design.md
+│   │   │   └── 004-service-architecture.md
 │   │   ├── diagrams/
 │   │   │   ├── system-overview.puml
-│   │   │   └── data-flow.puml
+│   │   │   ├── data-flow.puml
+│   │   │   ├── api-architecture.puml
+│   │   │   └── service-flow.puml
 │   │   └── patterns/
 │   │       ├── factory-pattern.md
-│   │       └── strategy-pattern.md
+│   │       ├── strategy-pattern.md
+│   │       └── service-pattern.md
 │   ├── operations/
 │   │   ├── runbooks/
 │   │   │   ├── deployment.md
-│   │   │   └── troubleshooting.md
+│   │   │   ├── troubleshooting.md
+│   │   │   └── api_operations.md
 │   │   ├── sops/
 │   │   │   ├── model-update.md
-│   │   │   └── data-refresh.md
+│   │   │   ├── data-refresh.md
+│   │   │   └── service-maintenance.md
 │   │   └── incidents/
 │   │       └── incident-response.md
-│   ├── case_studies/
-│   │   ├── production-deployment.md
-│   │   └── performance-optimization.md
 │   └── _static/
 │       └── custom.css
 │
@@ -1066,7 +1268,10 @@ ag-news-text-classification/
 │   ├── docker/
 │   │   ├── Dockerfile
 │   │   ├── Dockerfile.gpu
+│   │   ├── Dockerfile.api
+│   │   ├── Dockerfile.services
 │   │   ├── docker-compose.yml
+│   │   ├── docker-compose.prod.yml
 │   │   └── .dockerignore
 │   ├── kubernetes/
 │   │   ├── namespace.yaml
@@ -1074,7 +1279,9 @@ ag-news-text-classification/
 │   │   ├── service.yaml
 │   │   ├── ingress.yaml
 │   │   ├── configmap.yaml
-│   │   └── hpa.yaml
+│   │   ├── hpa.yaml
+│   │   ├── api-deployment.yaml
+│   │   └── services-deployment.yaml
 │   ├── cloud/
 │   │   ├── aws/
 │   │   │   ├── sagemaker/
@@ -1091,9 +1298,12 @@ ag-news-text-classification/
 │   │   │   └── coreml/
 │   │   └── iot/
 │   │       └── nvidia-jetson/
-│   └── serverless/
-│       ├── functions/
-│       └── api-gateway/
+│   ├── serverless/
+│   │   ├── functions/
+│   │   └── api-gateway/
+│   └── orchestration/
+│       ├── airflow/
+│       └── kubeflow/
 │
 ├── benchmarks/
 │   ├── accuracy/
@@ -1101,14 +1311,18 @@ ag-news-text-classification/
 │   │   └── ensemble_results.json
 │   ├── speed/
 │   │   ├── inference_benchmarks.json
-│   │   └── training_benchmarks.json
+│   │   ├── training_benchmarks.json
+│   │   └── api_benchmarks.json
 │   ├── efficiency/
 │   │   ├── memory_usage.json
 │   │   └── energy_consumption.json
-│   └── robustness/
-│       ├── adversarial_results.json
-│       ├── ood_detection.json
-│       └── contrast_set_results.json
+│   ├── robustness/
+│   │   ├── adversarial_results.json
+│   │   ├── ood_detection.json
+│   │   └── contrast_set_results.json
+│   └── scalability/
+│       ├── concurrent_users.json
+│       └── throughput_results.json
 │
 ├── .github/
 │   ├── workflows/
@@ -1117,7 +1331,9 @@ ag-news-text-classification/
 │   │   ├── tests.yml
 │   │   ├── docker-publish.yml
 │   │   ├── documentation.yml
-│   │   └── benchmarks.yml
+│   │   ├── benchmarks.yml
+│   │   ├── api_tests.yml
+│   │   └── service_tests.yml
 │   ├── ISSUE_TEMPLATE/
 │   │   ├── bug_report.md
 │   │   └── feature_request.md
@@ -1134,18 +1350,23 @@ ag-news-text-classification/
 │   ├── run_tests.sh
 │   ├── run_benchmarks.sh
 │   ├── build_docker.sh
-│   └── deploy.sh
+│   ├── deploy.sh
+│   ├── test_api.sh
+│   └── test_services.sh
 │
 └── tools/
     ├── profiling/
     │   ├── memory_profiler.py
-    │   └── speed_profiler.py
+    │   ├── speed_profiler.py
+    │   └── api_profiler.py
     ├── debugging/
     │   ├── model_debugger.py
-    │   └── data_validator.py
+    │   ├── data_validator.py
+    │   └── service_debugger.py
     └── visualization/
         ├── training_monitor.py
-        └── result_plotter.py
+        ├── result_plotter.py
+        └── api_dashboard.py
 ```
 
 ## Usage
