@@ -1,0 +1,205 @@
+syntax = "proto3";
+
+package ag_news;
+
+import "common/types.proto";
+import "common/status.proto";
+import "google/protobuf/timestamp.proto";
+
+// Monitoring service definition
+service MonitoringService {
+    // Get current metrics
+    rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse);
+    
+    // Stream real-time metrics
+    rpc StreamMetrics(StreamMetricsRequest) returns (stream MetricUpdate);
+    
+    // Get alerts
+    rpc GetAlerts(GetAlertsRequest) returns (GetAlertsResponse);
+    
+    // Acknowledge alert
+    rpc AcknowledgeAlert(AcknowledgeAlertRequest) returns (AcknowledgeAlertResponse);
+    
+    // Get performance report
+    rpc GetPerformanceReport(GetPerformanceReportRequest) returns (GetPerformanceReportResponse);
+    
+    // Export metrics
+    rpc ExportMetrics(ExportMetricsRequest) returns (ExportMetricsResponse);
+}
+
+// Metric type enumeration
+enum MetricType {
+    METRIC_UNKNOWN = 0;
+    COUNTER = 1;
+    GAUGE = 2;
+    HISTOGRAM = 3;
+    SUMMARY = 4;
+}
+
+// Alert severity
+enum AlertSeverity {
+    SEVERITY_UNKNOWN = 0;
+    INFO = 1;
+    WARNING = 2;
+    ERROR = 3;
+    CRITICAL = 4;
+}
+
+// Get metrics request
+message GetMetricsRequest {
+    repeated string metric_names = 1;
+    common.TimeRange time_range = 2;
+    string aggregation = 3;  // avg, sum, min, max, count
+}
+
+// Get metrics response
+message GetMetricsResponse {
+    repeated Metric metrics = 1;
+    common.Status status = 2;
+}
+
+// Metric information
+message Metric {
+    string name = 1;
+    MetricType type = 2;
+    double value = 3;
+    map<string, string> labels = 4;
+    google.protobuf.Timestamp timestamp = 5;
+    MetricStatistics statistics = 6;
+}
+
+// Metric statistics
+message MetricStatistics {
+    double min = 1;
+    double max = 2;
+    double avg = 3;
+    double sum = 4;
+    int64 count = 5;
+    double p50 = 6;
+    double p90 = 7;
+    double p95 = 8;
+    double p99 = 9;
+}
+
+// Stream metrics request
+message StreamMetricsRequest {
+    repeated string metric_names = 1;
+    int32 interval_seconds = 2;
+}
+
+// Metric update for streaming
+message MetricUpdate {
+    string name = 1;
+    double value = 2;
+    map<string, string> labels = 3;
+    google.protobuf.Timestamp timestamp = 4;
+}
+
+// Get alerts request
+message GetAlertsRequest {
+    AlertSeverity min_severity = 1;
+    bool active_only = 2;
+    int32 limit = 3;
+    int32 offset = 4;
+}
+
+// Get alerts response
+message GetAlertsResponse {
+    repeated Alert alerts = 1;
+    int32 total_count = 2;
+    common.Status status = 3;
+}
+
+// Alert information
+message Alert {
+    string alert_id = 1;
+    string name = 2;
+    AlertSeverity severity = 3;
+    string message = 4;
+    string source = 5;
+    google.protobuf.Timestamp triggered_at = 6;
+    google.protobuf.Timestamp acknowledged_at = 7;
+    google.protobuf.Timestamp resolved_at = 8;
+    bool is_active = 9;
+    map<string, string> labels = 10;
+}
+
+// Acknowledge alert request
+message AcknowledgeAlertRequest {
+    string alert_id = 1;
+    string acknowledged_by = 2;
+    string comment = 3;
+}
+
+// Acknowledge alert response
+message AcknowledgeAlertResponse {
+    bool success = 1;
+    common.Status status = 2;
+}
+
+// Get performance report request
+message GetPerformanceReportRequest {
+    common.TimeRange time_range = 1;
+    repeated string metrics = 2;
+    bool include_details = 3;
+}
+
+// Get performance report response
+message GetPerformanceReportResponse {
+    PerformanceReport report = 1;
+    common.Status status = 2;
+}
+
+// Performance report
+message PerformanceReport {
+    common.TimeRange period = 1;
+    PerformanceSummary summary = 2;
+    repeated PerformanceMetric metrics = 3;
+    repeated PerformanceTrend trends = 4;
+    google.protobuf.Timestamp generated_at = 5;
+}
+
+// Performance summary
+message PerformanceSummary {
+    float availability_percent = 1;
+    float avg_response_time_ms = 2;
+    float error_rate_percent = 3;
+    int64 total_requests = 4;
+    int64 successful_requests = 5;
+    int64 failed_requests = 6;
+}
+
+// Performance metric
+message PerformanceMetric {
+    string name = 1;
+    double value = 2;
+    double change_percent = 3;
+    string trend = 4;  // up, down, stable
+}
+
+// Performance trend
+message PerformanceTrend {
+    string metric_name = 1;
+    repeated DataPoint data_points = 2;
+}
+
+// Data point for trends
+message DataPoint {
+    google.protobuf.Timestamp timestamp = 1;
+    double value = 2;
+}
+
+// Export metrics request
+message ExportMetricsRequest {
+    common.TimeRange time_range = 1;
+    string format = 2;  // json, csv, prometheus
+    repeated string metrics = 3;
+}
+
+// Export metrics response
+message ExportMetricsResponse {
+    bytes data = 1;
+    string format = 2;
+    int32 record_count = 3;
+    common.Status status = 4;
+}
