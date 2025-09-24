@@ -1,0 +1,438 @@
+# Authentication Configuration
+# ================================================================================
+# Configuration for API authentication and authorization including JWT,
+# API keys, OAuth2, and role-based access control.
+#
+# References:
+#   - OWASP Authentication Cheat Sheet
+#   - JWT Best Practices (RFC 8725)
+#   - OAuth 2.0 Security Best Current Practice
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+# Authentication Providers
+providers:
+  # JWT Authentication
+  jwt:
+    enabled: true
+    
+    # JWT Configuration
+    secret_key: "${JWT_SECRET_KEY}"  # Must be set in environment
+    algorithm: "HS256"  # HS256, HS384, HS512, RS256, RS384, RS512
+    issuer: "ag-news-api"
+    audience: "ag-news-client"
+    
+    # Token expiration (in minutes/days)
+    access_token_expiry_minutes: 15
+    refresh_token_expiry_days: 7
+    
+    # Token settings
+    require_expiration: true
+    require_issued_at: true
+    verify_signature: true
+    verify_expiration: true
+    verify_issuer: true
+    verify_audience: true
+    
+    # Leeway for time-based claims (seconds)
+    leeway: 0
+    
+    # Token blacklist
+    blacklist_enabled: true
+    blacklist_storage: "memory"  # memory, redis
+    blacklist_check_revoked: true
+    
+    # Refresh token settings
+    refresh_token_enabled: true
+    refresh_token_reuse: false  # Allow refresh token reuse
+    refresh_token_rotation: true  # Rotate refresh tokens
+    
+  # API Key Authentication
+  api_key:
+    enabled: true
+    
+    # API Key settings
+    key_prefix: "ak_"
+    key_length: 32
+    
+    # Key generation
+    auto_generate: false
+    hash_keys: true  # Store hashed keys
+    hash_algorithm: "sha256"
+    
+    # Key expiration
+    default_expiry_days: 365
+    max_expiry_days: 730
+    
+    # Key validation
+    validate_format: true
+    validate_expiry: true
+    
+    # Rate limiting per key
+    rate_limit_enabled: true
+    default_rate_limit:
+      requests_per_minute: 100
+      requests_per_hour: 1000
+      
+  # OAuth2 Authentication
+  oauth2:
+    enabled: false
+    
+    # OAuth2 providers
+    providers:
+      google:
+        enabled: true
+        client_id: "${GOOGLE_CLIENT_ID}"
+        client_secret: "${GOOGLE_CLIENT_SECRET}"
+        authorize_url: "https://accounts.google.com/o/oauth2/v2/auth"
+        token_url: "https://oauth2.googleapis.com/token"
+        userinfo_url: "https://www.googleapis.com/oauth2/v2/userinfo"
+        redirect_uri: "https://api.agnews.ai/auth/callback/google"
+        scopes:
+          - "openid"
+          - "email"
+          - "profile"
+          
+      github:
+        enabled: false
+        client_id: "${GITHUB_CLIENT_ID}"
+        client_secret: "${GITHUB_CLIENT_SECRET}"
+        authorize_url: "https://github.com/login/oauth/authorize"
+        token_url: "https://github.com/login/oauth/access_token"
+        userinfo_url: "https://api.github.com/user"
+        redirect_uri: "https://api.agnews.ai/auth/callback/github"
+        scopes:
+          - "read:user"
+          - "user:email"
+          
+  # Basic Authentication (not recommended for production)
+  basic:
+    enabled: false
+    realm: "AG News API"
+
+# Role-Based Access Control (RBAC)
+rbac:
+  enabled: true
+  
+  # Role definitions
+  roles:
+    admin:
+      description: "Full system access"
+      permissions:
+        - "*"  # All permissions
+      inherits: []
+      
+    moderator:
+      description: "Content moderation capabilities"
+      permissions:
+        - "read"
+        - "write"
+        - "delete"
+        - "moderate"
+      inherits:
+        - "user"
+        
+    user:
+      description: "Standard user access"
+      permissions:
+        - "read"
+        - "write"
+        - "predict"
+      inherits:
+        - "guest"
+        
+    service:
+      description: "Service account for API access"
+      permissions:
+        - "read"
+        - "write"
+        - "predict"
+        - "train"
+        - "manage_models"
+      inherits: []
+      
+    readonly:
+      description: "Read-only access"
+      permissions:
+        - "read"
+      inherits:
+        - "guest"
+        
+    guest:
+      description: "Limited guest access"
+      permissions:
+        - "read:public"
+      inherits: []
+      
+  # Permission definitions
+  permissions:
+    # Prediction permissions
+    predict:
+      description: "Perform predictions"
+      resources:
+        - "/api/v1/classify"
+        - "/api/v1/classify/batch"
+        
+    # Training permissions
+    train:
+      description: "Train models"
+      resources:
+        - "/api/v1/training/*"
+        
+    # Model management permissions
+    manage_models:
+      description: "Manage models"
+      resources:
+        - "/api/v1/models/*"
+        
+    # Data permissions
+    manage_data:
+      description: "Manage datasets"
+      resources:
+        - "/api/v1/data/*"
+        
+    # Read permissions
+    read:
+      description: "Read resources"
+      resources:
+        - "GET /api/v1/*"
+        
+    # Write permissions
+    write:
+      description: "Write resources"
+      resources:
+        - "POST /api/v1/*"
+        - "PUT /api/v1/*"
+        
+    # Delete permissions
+    delete:
+      description: "Delete resources"
+      resources:
+        - "DELETE /api/v1/*"
+        
+    # Admin permissions
+    admin:
+      description: "Administrative access"
+      resources:
+        - "/api/v1/admin/*"
+        - "/api/v1/metrics"
+        
+  # Role hierarchy
+  hierarchy:
+    enabled: true
+    inherit_permissions: true
+    
+  # Default roles
+  default_role: "guest"
+  authenticated_role: "user"
+
+# Session Management
+session:
+  enabled: false  # Use stateless JWT instead
+  storage: "redis"  # memory, redis
+  
+  # Session settings
+  session_cookie_name: "session_id"
+  session_expiry_minutes: 60
+  session_refresh: true
+  session_secure: true  # HTTPS only
+  session_httponly: true
+  session_samesite: "lax"  # strict, lax, none
+
+# Password Policy
+password_policy:
+  # Hashing configuration (using bcrypt)
+  hash_scheme: "bcrypt"
+  bcrypt_rounds: 12  # Cost factor
+  
+  # Password requirements
+  min_length: 8
+  max_length: 128
+  require_uppercase: true
+  require_lowercase: true
+  require_digit: true
+  require_special: true
+  special_characters: "!@#$%^&*()_+-=[]{}|;:,.<>?"
+  
+  # Password history
+  history_count: 5  # Remember last N passwords
+  
+  # Password expiry
+  expiry_days: 90
+  expiry_warning_days: 14
+  
+  # Account lockout
+  max_failed_attempts: 5
+  lockout_duration_minutes: 30
+  
+  # Password reset
+  reset_token_expiry_minutes: 60
+  reset_token_length: 32
+
+# Multi-Factor Authentication (MFA)
+mfa:
+  enabled: false
+  
+  # TOTP (Time-based One-Time Password)
+  totp:
+    enabled: true
+    issuer: "AG News API"
+    algorithm: "SHA1"
+    digits: 6
+    period: 30
+    
+  # Backup codes
+  backup_codes:
+    enabled: true
+    count: 10
+    length: 8
+    
+  # SMS (not recommended)
+  sms:
+    enabled: false
+    provider: "twilio"
+    
+  # Email
+  email:
+    enabled: false
+    provider: "sendgrid"
+
+# Security Headers
+security_headers:
+  # Authorization header
+  authorization:
+    enabled: true
+    header_name: "Authorization"
+    scheme: "Bearer"  # Bearer, Basic
+    
+  # API Key header
+  api_key:
+    enabled: true
+    header_name: "X-API-Key"
+    query_param: "api_key"  # Alternative query parameter
+    
+  # CSRF token header
+  csrf:
+    enabled: false  # Not needed for API
+    header_name: "X-CSRF-Token"
+    
+  # Request signing
+  request_signing:
+    enabled: false
+    header_name: "X-Signature"
+    algorithm: "HMAC-SHA256"
+
+# Audit Logging
+audit:
+  enabled: true
+  
+  # Events to log
+  log_authentication: true
+  log_authorization: true
+  log_failed_attempts: true
+  log_token_generation: true
+  log_token_revocation: true
+  log_password_changes: true
+  log_permission_changes: true
+  
+  # Storage
+  storage: "file"  # file, database, elasticsearch
+  file_path: "logs/audit.log"
+  
+  # Retention
+  retention_days: 90
+  
+  # Sensitive data
+  mask_sensitive_data: true
+  sensitive_fields:
+    - "password"
+    - "token"
+    - "api_key"
+    - "secret"
+
+# IP Restrictions
+ip_restrictions:
+  enabled: false
+  
+  # Whitelist
+  whitelist:
+    enabled: false
+    ips:
+      - "127.0.0.1"
+      - "::1"
+    networks:
+      - "10.0.0.0/8"
+      - "192.168.0.0/16"
+      
+  # Blacklist
+  blacklist:
+    enabled: false
+    ips: []
+    networks: []
+    
+  # Geo-blocking
+  geo_blocking:
+    enabled: false
+    allowed_countries: []
+    blocked_countries: []
+
+# Token Management
+token_management:
+  # Token generation
+  token_bytes: 32  # Random bytes for token generation
+  
+  # Token validation
+  validate_issuer: true
+  validate_audience: true
+  validate_not_before: true
+  
+  # Token revocation
+  revocation_enabled: true
+  revocation_check_interval: 60  # seconds
+  
+  # Token refresh
+  refresh_enabled: true
+  refresh_reuse_window: 0  # seconds
+  
+  # Token cleanup
+  cleanup_enabled: true
+  cleanup_interval: 3600  # seconds
+  cleanup_expired_tokens: true
+  cleanup_revoked_tokens: true
+
+# CORS Authentication
+cors_auth:
+  allow_credentials: true
+  allowed_origins:
+    - "http://localhost:3000"
+    - "https://app.agnews.ai"
+
+# Development Settings
+development:
+  # Disable security features for development
+  disable_auth: false
+  disable_rate_limit: false
+  disable_https_redirect: true
+  
+  # Test credentials
+  test_users:
+    admin:
+      username: "admin"
+      password: "admin123"
+      roles:
+        - "admin"
+    user:
+      username: "user"
+      password: "user123"
+      roles:
+        - "user"
+        
+  # Test API keys
+  test_api_keys:
+    - key: "ak_test_key_admin"
+      roles:
+        - "admin"
+    - key: "ak_test_key_user"
+      roles:
+        - "user"
