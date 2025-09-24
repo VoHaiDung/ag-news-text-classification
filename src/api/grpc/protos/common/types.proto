@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package common;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/any.proto";
+
+// Common enumerations
+enum ModelType {
+    MODEL_TYPE_UNKNOWN = 0;
+    MODEL_TYPE_DEBERTA = 1;
+    MODEL_TYPE_ROBERTA = 2;
+    MODEL_TYPE_XLNET = 3;
+    MODEL_TYPE_ELECTRA = 4;
+    MODEL_TYPE_LONGFORMER = 5;
+    MODEL_TYPE_GPT2 = 6;
+    MODEL_TYPE_T5 = 7;
+    MODEL_TYPE_ENSEMBLE = 8;
+}
+
+enum DataFormat {
+    DATA_FORMAT_UNKNOWN = 0;
+    DATA_FORMAT_JSON = 1;
+    DATA_FORMAT_CSV = 2;
+    DATA_FORMAT_TEXT = 3;
+    DATA_FORMAT_JSONL = 4;
+    DATA_FORMAT_PARQUET = 5;
+}
+
+enum Split {
+    SPLIT_UNKNOWN = 0;
+    SPLIT_TRAIN = 1;
+    SPLIT_VALIDATION = 2;
+    SPLIT_TEST = 3;
+}
+
+// Common messages
+message Metadata {
+    map<string, string> labels = 1;
+    map<string, google.protobuf.Any> annotations = 2;
+    google.protobuf.Timestamp created_at = 3;
+    google.protobuf.Timestamp updated_at = 4;
+    string created_by = 5;
+    string updated_by = 6;
+}
+
+message Pagination {
+    int32 page = 1;
+    int32 per_page = 2;
+    int32 total = 3;
+    int32 total_pages = 4;
+}
+
+message Filter {
+    string field = 1;
+    string operator = 2;
+    google.protobuf.Any value = 3;
+}
+
+message Sort {
+    string field = 1;
+    bool descending = 2;
+}
+
+message TimeRange {
+    google.protobuf.Timestamp start = 1;
+    google.protobuf.Timestamp end = 2;
+}
+
+message ResourceIdentifier {
+    string id = 1;
+    string type = 2;
+    string namespace = 3;
+    string version = 4;
+}
