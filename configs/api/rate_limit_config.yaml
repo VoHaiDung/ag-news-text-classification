@@ -1,0 +1,447 @@
+# Rate Limiting Configuration
+# ================================================================================
+# Comprehensive rate limiting configuration for API endpoints with support
+# for multiple strategies, custom limits, and adaptive behavior.
+#
+# References:
+#   - Cloudflare: How We Built Rate Limiting Capable of Scaling to Millions
+#   - Redis Labs: Rate Limiting Patterns
+#   - Google Cloud: Rate Limiting Strategies
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+# Global Rate Limiting Settings
+global:
+  enabled: true
+  strategy: "token_bucket"  # Options: token_bucket, sliding_window, fixed_window, leaky_bucket, distributed, adaptive
+  
+  # Storage backend
+  storage: "memory"  # Options: memory, redis, memcached
+  redis_url: "${REDIS_URL:redis://localhost:6379/1}"
+  memcached_url: "${MEMCACHED_URL:localhost:11211}"
+  
+  # Default limits (can be overridden per endpoint/user)
+  default_limits:
+    requests_per_second: null  # No limit
+    requests_per_minute: 60
+    requests_per_hour: 1000
+    requests_per_day: 10000
+    burst_size: 10  # For token bucket
+    
+  # Response headers
+  include_headers: true
+  headers:
+    limit: "X-RateLimit-Limit"
+    remaining: "X-RateLimit-Remaining"
+    reset: "X-RateLimit-Reset"
+    retry_after: "Retry-After"
+    
+  # Error response
+  error_status_code: 429
+  error_message: "Rate limit exceeded. Please try again later."
+  include_retry_after: true
+
+# Strategy-Specific Configurations
+strategies:
+  # Token Bucket Algorithm
+  token_bucket:
+    refill_rate: 1.0  # Tokens per second
+    bucket_size: 10  # Maximum tokens
+    refill_period: 1.0  # Refill period in seconds
+    initial_tokens: 10  # Initial bucket fill
+    
+  # Sliding Window Algorithm
+  sliding_window:
+    window_size: 60  # Window size in seconds
+    precision: 1  # Precision in seconds
+    
+  # Fixed Window Algorithm
+  fixed_window:
+    window_size: 60  # Window size in seconds
+    
+  # Leaky Bucket Algorithm
+  leaky_bucket:
+    capacity: 10  # Bucket capacity
+    leak_rate: 1.0  # Requests leaked per second
+    
+  # Distributed Rate Limiting
+  distributed:
+    # Consensus algorithm
+    consensus: "redis_lua"  # Options: redis_lua, redis_transaction, zookeeper
+    
+    # Synchronization
+    sync_interval: 1  # seconds
+    sync_batch_size: 100
+    
+    # Partitioning
+    partition_key: "user_id"  # How to partition rate limits
+    partition_count: 16
+    
+    # Failover
+    failover_enabled: true
+    failover_threshold: 3  # Failed attempts before failover
+    
+  # Adaptive Rate Limiting
+  adaptive:
+    enabled: false
+    
+    # Adjustment factors
+    min_factor: 0.1  # Minimum multiplier (10% of normal)
+    max_factor: 2.0  # Maximum multiplier (200% of normal)
+    
+    # System metrics thresholds
+    cpu_threshold: 80  # CPU usage percentage
+    memory_threshold: 85  # Memory usage percentage
+    response_time_threshold: 1.0  # Response time in seconds
+    error_rate_threshold: 0.05  # 5% error rate
+    
+    # Adjustment parameters
+    adjustment_interval: 10  # seconds
+    smoothing_factor: 0.7  # Exponential smoothing
+    
+    # Machine learning based (experimental)
+    ml_enabled: false
+    ml_model: "gradient_boosting"
+    ml_features:
+      - "cpu_usage"
+      - "memory_usage"
+      - "request_rate"
+      - "error_rate"
+      - "response_time"
+
+# Endpoint-Specific Limits
+endpoints:
+  # Classification endpoints
+  "/api/v1/classify":
+    requests_per_minute: 100
+    requests_per_hour: 2000
+    burst_size: 20
+    strategy: "token_bucket"
+    
+  "/api/v1/classify/batch":
+    requests_per_minute: 30
+    requests_per_hour: 500
+    burst_size: 5
+    strategy: "sliding_window"
+    
+  "/api/v1/classify/stream":
+    requests_per_minute: 10
+    requests_per_hour: 100
+    burst_size: 2
+    
+  # Training endpoints
+  "/api/v1/training/start":
+    requests_per_minute: 5
+    requests_per_hour: 20
+    requests_per_day: 50
+    burst_size: 1
+    
+  "/api/v1/training/jobs":
+    requests_per_minute: 60
+    requests_per_hour: 1000
+    
+  # Model management endpoints
+  "/api/v1/models/load":
+    requests_per_minute: 10
+    requests_per_hour: 50
+    burst_size: 2
+    
+  "/api/v1/models/unload":
+    requests_per_minute: 10
+    requests_per_hour: 50
+    
+  # Data endpoints
+  "/api/v1/data/upload":
+    requests_per_minute: 5
+    requests_per_hour: 20
+    requests_per_day: 100
+    burst_size: 1
+    
+  "/api/v1/data/download":
+    requests_per_minute: 20
+    requests_per_hour: 200
+    
+  # Metrics endpoints
+  "/api/v1/metrics":
+    requests_per_minute: 60
+    requests_per_hour: 1000
+    
+  # Health check endpoints (usually exempt)
+  "/health":
+    bypass: true
+  "/health/ready":
+    bypass: true
+  "/health/live":
+    bypass: true
+
+# User/Role-Specific Limits
+user_limits:
+  # By role
+  roles:
+    admin:
+      requests_per_minute: 1000
+      requests_per_hour: 10000
+      requests_per_day: 100000
+      burst_size: 100
+      bypass_endpoints:  # Endpoints to bypass rate limiting
+        - "/api/v1/admin/*"
+        
+    moderator:
+      requests_per_minute: 500
+      requests_per_hour: 5000
+      requests_per_day: 50000
+      burst_size: 50
+      
+    service:
+      requests_per_minute: 500
+      requests_per_hour: 5000
+      requests_per_day: 50000
+      burst_size: 50
+      
+    user:
+      requests_per_minute: 60
+      requests_per_hour: 1000
+      requests_per_day: 10000
+      burst_size: 10
+      
+    guest:
+      requests_per_minute: 20
+      requests_per_hour: 100
+      requests_per_day: 500
+      burst_size: 5
+      
+  # By specific user ID (overrides role limits)
+  users:
+    "user_123":
+      requests_per_minute: 200
+      requests_per_hour: 3000
+      
+    "service_abc":
+      requests_per_minute: 1000
+      requests_per_hour: 10000
+      
+  # By API key
+  api_keys:
+    "ak_premium_key":
+      requests_per_minute: 500
+      requests_per_hour: 5000
+      
+    "ak_basic_key":
+      requests_per_minute: 100
+      requests_per_hour: 1000
+
+# IP-Based Rate Limiting
+ip_limits:
+  enabled: true
+  
+  # Default IP limits (stricter than user limits)
+  default:
+    requests_per_minute: 30
+    requests_per_hour: 500
+    requests_per_day: 5000
+    
+  # Whitelist (no rate limiting)
+  whitelist:
+    - "127.0.0.1"
+    - "::1"
+    - "10.0.0.0/8"
+    
+  # Blacklist (completely blocked)
+  blacklist: []
+  
+  # Custom IP limits
+  custom:
+    "192.168.1.100":
+      requests_per_minute: 100
+      requests_per_hour: 1000
+      
+  # Geographic limits
+  geo_limits:
+    enabled: false
+    countries:
+      "US":
+        requests_per_minute: 60
+      "CN":
+        requests_per_minute: 20
+      default:
+        requests_per_minute: 40
+
+# Cost-Based Rate Limiting
+cost_based:
+  enabled: false
+  
+  # Default cost per request
+  default_cost: 1
+  
+  # Endpoint costs
+  endpoint_costs:
+    "/api/v1/classify": 1
+    "/api/v1/classify/batch": 10
+    "/api/v1/training/start": 100
+    "/api/v1/models/load": 50
+    
+  # User budgets (points)
+  user_budgets:
+    default: 1000  # Points per hour
+    roles:
+      admin: 10000
+      user: 1000
+      guest: 100
+      
+  # Cost calculation factors
+  factors:
+    text_length: 0.001  # Cost per character
+    batch_size: 1  # Cost per item in batch
+    model_complexity:
+      "deberta-v3-large": 2.0
+      "roberta-large": 1.5
+      "ensemble": 3.0
+
+# Burst Handling
+burst_handling:
+  # Allow temporary bursts
+  allow_burst: true
+  burst_multiplier: 2.0  # Allow 2x normal rate for bursts
+  burst_duration: 10  # seconds
+  burst_cooldown: 60  # seconds between bursts
+  
+  # Queue overflow requests
+  queue_enabled: false
+  queue_size: 100
+  queue_timeout: 30  # seconds
+  
+  # Progressive delays
+  progressive_delay:
+    enabled: false
+    initial_delay: 1  # seconds
+    max_delay: 60  # seconds
+    multiplier: 2  # Exponential backoff
+
+# Monitoring and Alerting
+monitoring:
+  enabled: true
+  
+  # Metrics to track
+  metrics:
+    - "requests_total"
+    - "requests_limited"
+    - "limit_violations"
+    - "average_rate"
+    - "peak_rate"
+    - "unique_users"
+    - "unique_ips"
+    
+  # Alerting thresholds
+  alerts:
+    high_violation_rate:
+      threshold: 0.1  # 10% of requests limited
+      window: 300  # 5 minutes
+      
+    sustained_limit_hitting:
+      threshold: 0.5  # 50% of limit
+      duration: 600  # 10 minutes
+      
+    unusual_traffic_pattern:
+      enabled: true
+      sensitivity: "medium"  # low, medium, high
+      
+  # Logging
+  logging:
+    log_violations: true
+    log_level: "warning"  # debug, info, warning, error
+    include_user_info: true
+    include_request_details: false  # Privacy consideration
+
+# Dynamic Adjustment
+dynamic_adjustment:
+  enabled: false
+  
+  # Time-based adjustments
+  time_based:
+    enabled: true
+    rules:
+      # Peak hours (stricter limits)
+      - start_hour: 9
+        end_hour: 17
+        multiplier: 0.8
+        days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+        
+      # Off-peak (relaxed limits)
+      - start_hour: 0
+        end_hour: 6
+        multiplier: 1.5
+        days: ["saturday", "sunday"]
+        
+  # Event-based adjustments
+  event_based:
+    enabled: false
+    events:
+      "high_load":
+        trigger: "cpu > 80"
+        multiplier: 0.5
+      "low_load":
+        trigger: "cpu < 20"
+        multiplier: 2.0
+        
+  # Seasonal adjustments
+  seasonal:
+    enabled: false
+    seasons:
+      "black_friday":
+        start_date: "2024-11-29"
+        end_date: "2024-11-30"
+        multiplier: 0.5
+
+# Fallback Configuration
+fallback:
+  # When rate limiter fails
+  on_error: "allow"  # Options: allow, deny, default_limit
+  
+  # Default fallback limits
+  default_limit:
+    requests_per_minute: 30
+    burst_size: 5
+    
+  # Circuit breaker
+  circuit_breaker:
+    enabled: true
+    failure_threshold: 5
+    recovery_timeout: 60  # seconds
+    half_open_requests: 3
+
+# Testing Configuration
+testing:
+  # Bypass rate limiting in tests
+  bypass_in_tests: true
+  test_mode_header: "X-Test-Mode"
+  test_mode_secret: "${TEST_MODE_SECRET}"
+  
+  # Rate limit simulation
+  simulation:
+    enabled: false
+    multiplier: 0.1  # 10% of normal limits for testing
+
+# Environment Overrides
+environments:
+  development:
+    global:
+      enabled: false  # Disable rate limiting in development
+      
+  staging:
+    global:
+      default_limits:
+        requests_per_minute: 120
+        requests_per_hour: 2000
+        
+  production:
+    global:
+      strategy: "distributed"
+      storage: "redis"
+    adaptive:
+      enabled: true
+    monitoring:
+      enabled: true
+      alerts:
+        high_violation_rate:
+          threshold: 0.05  # Stricter in production
