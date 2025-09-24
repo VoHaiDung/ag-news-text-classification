@@ -1,0 +1,227 @@
+syntax = "proto3";
+
+package ag_news;
+
+import "common/types.proto";
+import "common/status.proto";
+import "google/protobuf/timestamp.proto";
+
+// Model management service definition
+service ModelManagementService {
+    // Register a new model
+    rpc RegisterModel(RegisterModelRequest) returns (RegisterModelResponse);
+    
+    // Deploy model for serving
+    rpc DeployModel(DeployModelRequest) returns (DeployModelResponse);
+    
+    // Undeploy model
+    rpc UndeployModel(UndeployModelRequest) returns (UndeployModelResponse);
+    
+    // Get model information
+    rpc GetModel(GetModelRequest) returns (GetModelResponse);
+    
+    // List models
+    rpc ListModels(ListModelsRequest) returns (ListModelsResponse);
+    
+    // Compare models
+    rpc CompareModels(CompareModelsRequest) returns (CompareModelsResponse);
+    
+    // Update model metadata
+    rpc UpdateModel(UpdateModelRequest) returns (UpdateModelResponse);
+    
+    // Delete model
+    rpc DeleteModel(DeleteModelRequest) returns (DeleteModelResponse);
+}
+
+// Model status enumeration
+enum ModelStatus {
+    UNKNOWN = 0;
+    REGISTERED = 1;
+    VALIDATED = 2;
+    DEPLOYED = 3;
+    DEPRECATED = 4;
+    ARCHIVED = 5;
+}
+
+// Deployment status enumeration
+enum DeploymentStatus {
+    DEPLOYMENT_UNKNOWN = 0;
+    DEPLOYING = 1;
+    DEPLOYED = 2;
+    UNDEPLOYING = 3;
+    FAILED = 4;
+}
+
+// Register model request
+message RegisterModelRequest {
+    string name = 1;
+    string type = 2;
+    string path = 3;
+    string version = 4;
+    string description = 5;
+    string framework = 6;
+    string framework_version = 7;
+    string training_job_id = 8;
+    repeated string tags = 9;
+    ModelMetrics metrics = 10;
+    map<string, string> metadata = 11;
+}
+
+// Model metrics
+message ModelMetrics {
+    float accuracy = 1;
+    float f1_score = 2;
+    float precision = 3;
+    float recall = 4;
+    float auc_roc = 5;
+    map<string, float> custom_metrics = 6;
+}
+
+// Register model response
+message RegisterModelResponse {
+    Model model = 1;
+    common.Status status = 2;
+}
+
+// Model information
+message Model {
+    string model_id = 1;
+    string name = 2;
+    string type = 3;
+    string version = 4;
+    ModelStatus status = 5;
+    int64 created_at = 6;
+    int64 updated_at = 7;
+    string path = 8;
+    string framework = 9;
+    string framework_version = 10;
+    ModelMetrics metrics = 11;
+    Deployment deployment = 12;
+    repeated string tags = 13;
+    map<string, string> metadata = 14;
+}
+
+// Deploy model request
+message DeployModelRequest {
+    string model_id = 1;
+    string deployment_name = 2;
+    int32 replicas = 3;
+    string cpu_limit = 4;
+    string memory_limit = 5;
+    bool gpu_required = 6;
+    bool autoscaling_enabled = 7;
+    int32 min_replicas = 8;
+    int32 max_replicas = 9;
+    int32 target_cpu_utilization = 10;
+    map<string, string> environment_variables = 11;
+}
+
+// Deploy model response
+message DeployModelResponse {
+    Deployment deployment = 1;
+    common.Status status = 2;
+}
+
+// Deployment information
+message Deployment {
+    string deployment_id = 1;
+    string model_id = 2;
+    string deployment_name = 3;
+    DeploymentStatus status = 4;
+    string endpoint = 5;
+    int32 replicas = 6;
+    int64 created_at = 7;
+    int64 updated_at = 8;
+    map<string, string> configuration = 9;
+}
+
+// Undeploy model request
+message UndeployModelRequest {
+    string deployment_id = 1;
+    bool force = 2;
+}
+
+// Undeploy model response
+message UndeployModelResponse {
+    bool success = 1;
+    string message = 2;
+    common.Status status = 3;
+}
+
+// Get model request
+message GetModelRequest {
+    string model_id = 1;
+    bool include_metrics = 2;
+    bool include_deployment = 3;
+}
+
+// Get model response
+message GetModelResponse {
+    Model model = 1;
+    common.Status status = 2;
+}
+
+// List models request
+message ListModelsRequest {
+    string type = 1;
+    ModelStatus status = 2;
+    bool deployed_only = 3;
+    int32 limit = 4;
+    int32 offset = 5;
+    repeated string tags = 6;
+}
+
+// List models response
+message ListModelsResponse {
+    repeated Model models = 1;
+    int32 total_count = 2;
+    common.Status status = 3;
+}
+
+// Compare models request
+message CompareModelsRequest {
+    repeated string model_ids = 1;
+    repeated string metrics = 2;
+}
+
+// Compare models response
+message CompareModelsResponse {
+    repeated ModelComparison comparisons = 1;
+    string best_model_id = 2;
+    common.Status status = 3;
+}
+
+// Model comparison result
+message ModelComparison {
+    string model_id = 1;
+    map<string, float> metrics = 2;
+    int32 rank = 3;
+}
+
+// Update model request
+message UpdateModelRequest {
+    string model_id = 1;
+    string description = 2;
+    repeated string tags = 3;
+    map<string, string> metadata = 4;
+    ModelStatus status = 5;
+}
+
+// Update model response
+message UpdateModelResponse {
+    Model model = 1;
+    common.Status status = 2;
+}
+
+// Delete model request
+message DeleteModelRequest {
+    string model_id = 1;
+    bool force = 2;
+}
+
+// Delete model response
+message DeleteModelResponse {
+    bool success = 1;
+    string message = 2;
+    common.Status status = 3;
+}
