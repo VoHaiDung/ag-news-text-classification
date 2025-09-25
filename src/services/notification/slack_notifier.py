@@ -13,9 +13,9 @@ The Slack notifier provides:
 - Error recovery mechanisms
 
 References:
-    - Slack API Documentation
-    - Slack Block Kit Builder
-    - Slack App Best Practices
+    - Slack API Documentation: https://api.slack.com/
+    - Slack Block Kit Builder: https://app.slack.com/block-kit-builder
+    - Slack App Best Practices: https://api.slack.com/best-practices
 
 Author: Võ Hải Dũng
 License: MIT
