@@ -12,9 +12,9 @@ The tasks include:
 - Notification tasks
 
 References:
-    - Celery Documentation: https://docs.celeryproject.org/
-    - Celery Best Practices: https://docs.celeryproject.org/en/stable/userguide/bestpractices.html
-    - Task Design Patterns: https://docs.celeryproject.org/en/stable/userguide/tasks.html
+    - Celery Documentation
+    - Celery Best Practices
+    - Task Design Patterns
 
 Author: Võ Hải Dũng
 License: MIT
