@@ -1,671 +1,532 @@
 """
-GraphQL Resolvers Implementation
+GraphQL Resolvers for AG News Text Classification API
 ================================================================================
-This module implements GraphQL resolvers for the AG News classification system,
-providing field resolution logic for queries, mutations, and subscriptions
-following GraphQL best practices and DataLoader patterns.
+This module implements GraphQL resolvers for queries, mutations, and subscriptions.
+Resolvers handle the business logic for GraphQL operations, interfacing with
+the service layer to perform actual operations.
 
-The implementation follows the GraphQL specification and implements efficient
-data fetching strategies to avoid N+1 query problems.
+The implementation follows GraphQL best practices for resolver design,
+error handling, and performance optimization through dataloaders.
 
 References:
-    - GraphQL Specification (2021). https://spec.graphql.org/
-    - Buna, S. (2018). Learning GraphQL: Declarative Data Fetching
-    - DataLoader Pattern: https://github.com/graphql/dataloader
+    - GraphQL Specification: https://spec.graphql.org/
+    - Principled GraphQL: https://principledgraphql.com/
+    - GraphQL Best Practices: https://graphql.org/learn/best-practices/
 
 Author: Võ Hải Dũng
 License: MIT
 """
 
-import asyncio
-from typing import Dict, Any, List, Optional, Callable, Union
+from typing import Dict, List, Any, Optional, Union
 from datetime import datetime
+import asyncio
 import logging
-from functools import wraps
+from dataclasses import dataclass
 
-from graphql import GraphQLResolveInfo
-from src.services.core.prediction_service import PredictionService
-from src.services.core.training_service import TrainingService
-from src.services.core.data_service import DataService
-from src.services.core.model_management_service import ModelManagementService
-from src.core.exceptions import (
-    ValidationError, NotFoundError, AuthenticationError,
-    AuthorizationError, ServiceError
-)
+from graphql import GraphQLError
+from graphene import ObjectType, String, Int, Float, List as GrapheneList, Field, Boolean
 
+from ...services.core.prediction_service import PredictionService
+from ...services.core.training_service import TrainingService
+from ...services.core.data_service import DataService
+from ...services.core.model_management_service import ModelManagementService
+from ...core.exceptions import ValidationError, ServiceError
+from .context import GraphQLContext
+
+# Configure logging
 logger = logging.getLogger(__name__)
 
 
-class BaseResolver:
+class QueryResolvers:
     """
-    Base class for GraphQL resolvers implementing common patterns.
+    Resolvers for GraphQL queries
     
-    This class provides shared functionality for all resolvers including
-    error handling, authentication checks, and logging.
-    """
-    
-    def __init__(self):
-        """Initialize base resolver with service instances."""
-        self.prediction_service = PredictionService()
-        self.training_service = TrainingService()
-        self.data_service = DataService()
-        self.model_service = ModelManagementService()
-        
-    def require_auth(self, func: Callable) -> Callable:
-        """
-        Decorator to require authentication for resolver.
-        
-        Args:
-            func: Resolver function to wrap
-            
-        Returns:
-            Wrapped function with authentication check
-        """
-        @wraps(func)
-        async def wrapper(parent, info: GraphQLResolveInfo, **kwargs):
-            context = info.context
-            if not context.get('user'):
-                raise AuthenticationError("Authentication required")
-            return await func(parent, info, **kwargs)
-        return wrapper
-        
-    def require_role(self, role: str) -> Callable:
-        """
-        Decorator to require specific role for resolver.
-        
-        Args:
-            role: Required role name
-            
-        Returns:
-            Decorator function
-        """
-        def decorator(func: Callable) -> Callable:
-            @wraps(func)
-            async def wrapper(parent, info: GraphQLResolveInfo, **kwargs):
-                context = info.context
-                user = context.get('user')
-                if not user:
-                    raise AuthenticationError("Authentication required")
-                if role not in user.get('roles', []):
-                    raise AuthorizationError(f"Role '{role}' required")
-                return await func(parent, info, **kwargs)
-            return wrapper
-        return decorator
-        
-    async def handle_error(self, error: Exception) -> Dict[str, Any]:
-        """
-        Handle and format errors for GraphQL response.
-        
-        Args:
-            error: Exception to handle
-            
-        Returns:
-            Formatted error response
-        """
-        logger.error(f"Resolver error: {str(error)}", exc_info=True)
-        
-        if isinstance(error, ValidationError):
-            return {
-                'success': False,
-                'error': {
-                    'code': 'VALIDATION_ERROR',
-                    'message': str(error),
-                    'details': error.details if hasattr(error, 'details') else None
-                }
-            }
-        elif isinstance(error, NotFoundError):
-            return {
-                'success': False,
-                'error': {
-                    'code': 'NOT_FOUND',
-                    'message': str(error)
-                }
-            }
-        elif isinstance(error, (AuthenticationError, AuthorizationError)):
-            return {
-                'success': False,
-                'error': {
-                    'code': 'AUTH_ERROR',
-                    'message': str(error)
-                }
-            }
-        else:
-            return {
-                'success': False,
-                'error': {
-                    'code': 'INTERNAL_ERROR',
-                    'message': 'An internal error occurred'
-                }
-            }
-
-
-class QueryResolvers(BaseResolver):
-    """
-    Implementation of GraphQL query resolvers.
-    
-    This class handles all read operations for the GraphQL API,
-    implementing efficient data fetching with DataLoader pattern.
+    Implements read operations for classification, models, and data.
+    Uses dataloaders for efficient batching and caching of database queries.
     """
     
-    async def resolve_classify_text(
-        self,
-        parent: Any,
-        info: GraphQLResolveInfo,
-        text: str,
-        model_id: Optional[str] = None,
-        options: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+    @staticmethod
+    async def resolve_classify(root, info: GraphQLContext, text: str, 
+                              model_id: Optional[str] = None) -> Dict[str, Any]:
         """
-        Resolve text classification query.
+        Resolve single text classification query
         
         Args:
-            parent: Parent resolver result
-            info: GraphQL resolve info
-            text: Text to classify
+            root: Parent resolver result
+            info: GraphQL execution context
+            text: Input text to classify
             model_id: Optional model identifier
-            options: Classification options
             
         Returns:
-            Classification result
+            Classification result dictionary
+            
+        Raises:
+            GraphQLError: If classification fails
         """
         try:
-            # Use DataLoader if available in context
-            dataloader = info.context.get('classification_loader')
-            if dataloader:
-                result = await dataloader.load((text, model_id, options))
-            else:
-                result = await self.prediction_service.predict(
-                    text=text,
-                    model_id=model_id,
-                    options=options or {}
-                )
-                
-            return {
-                'success': True,
-                'result': result
-            }
-        except Exception as e:
-            return await self.handle_error(e)
+            # Get prediction service from context
+            prediction_service = info.context.get_service('prediction')
             
-    async def resolve_batch_classify(
-        self,
-        parent: Any,
-        info: GraphQLResolveInfo,
-        texts: List[str],
-        model_id: Optional[str] = None,
-        options: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+            # Validate input
+            if not text or len(text.strip()) == 0:
+                raise GraphQLError("Text input cannot be empty")
+            
+            if len(text) > 10000:
+                raise GraphQLError("Text exceeds maximum length of 10000 characters")
+            
+            # Perform classification
+            result = await prediction_service.classify_async(
+                text=text,
+                model_id=model_id,
+                user_id=info.context.user_id
+            )
+            
+            # Log successful classification
+            logger.info(f"Classification completed for user {info.context.user_id}")
+            
+            return {
+                'predictions': result['predictions'],
+                'model_id': result['model_id'],
+                'processing_time': result['processing_time_ms'],
+                'timestamp': datetime.utcnow().isoformat()
+            }
+            
+        except ValidationError as e:
+            logger.warning(f"Validation error in classify: {e}")
+            raise GraphQLError(f"Validation error: {str(e)}")
+        except ServiceError as e:
+            logger.error(f"Service error in classify: {e}")
+            raise GraphQLError(f"Service error: {str(e)}")
+        except Exception as e:
+            logger.error(f"Unexpected error in classify: {e}")
+            raise GraphQLError("Internal server error during classification")
+    
+    @staticmethod
+    async def resolve_classify_batch(root, info: GraphQLContext, 
+                                    texts: List[str],
+                                    model_id: Optional[str] = None) -> Dict[str, Any]:
         """
-        Resolve batch text classification query.
+        Resolve batch text classification query
         
         Args:
-            parent: Parent resolver result
-            info: GraphQL resolve info
+            root: Parent resolver result
+            info: GraphQL execution context
             texts: List of texts to classify
             model_id: Optional model identifier
-            options: Classification options
             
         Returns:
             Batch classification results
         """
         try:
-            results = await self.prediction_service.predict_batch(
-                texts=texts,
-                model_id=model_id,
-                options=options or {}
-            )
+            # Validate batch size
+            if len(texts) > 100:
+                raise GraphQLError("Batch size exceeds maximum of 100 texts")
+            
+            # Get prediction service
+            prediction_service = info.context.get_service('prediction')
+            
+            # Use dataloader for efficient batch processing
+            dataloader = info.context.dataloaders.get('classification_batch')
+            if dataloader:
+                results = await dataloader.load_many(
+                    [(text, model_id) for text in texts]
+                )
+            else:
+                # Fallback to direct service call
+                results = await prediction_service.classify_batch_async(
+                    texts=texts,
+                    model_id=model_id,
+                    user_id=info.context.user_id
+                )
             
             return {
-                'success': True,
-                'results': results
+                'results': results,
+                'total': len(results),
+                'model_id': model_id,
+                'timestamp': datetime.utcnow().isoformat()
             }
-        except Exception as e:
-            return await self.handle_error(e)
             
-    @BaseResolver.require_auth
-    async def resolve_model(
-        self,
-        parent: Any,
-        info: GraphQLResolveInfo,
-        model_id: str
-    ) -> Dict[str, Any]:
+        except Exception as e:
+            logger.error(f"Error in batch classification: {e}")
+            raise GraphQLError(f"Batch classification failed: {str(e)}")
+    
+    @staticmethod
+    async def resolve_get_model(root, info: GraphQLContext, 
+                               model_id: str) -> Dict[str, Any]:
         """
-        Resolve model information query.
+        Resolve model information query
         
         Args:
-            parent: Parent resolver result
-            info: GraphQL resolve info
+            root: Parent resolver result
+            info: GraphQL execution context
             model_id: Model identifier
             
         Returns:
-            Model information
+            Model information dictionary
         """
         try:
-            model_info = await self.model_service.get_model_info(model_id)
-            return {
-                'success': True,
-                'model': model_info
-            }
-        except Exception as e:
-            return await self.handle_error(e)
+            # Get model management service
+            model_service = info.context.get_service('model_management')
             
-    @BaseResolver.require_auth
-    async def resolve_models(
-        self,
-        parent: Any,
-        info: GraphQLResolveInfo,
-        filter: Optional[Dict[str, Any]] = None,
-        pagination: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+            # Use dataloader for caching
+            dataloader = info.context.dataloaders.get('model')
+            if dataloader:
+                model_info = await dataloader.load(model_id)
+            else:
+                model_info = await model_service.get_model_info_async(model_id)
+            
+            if not model_info:
+                raise GraphQLError(f"Model {model_id} not found")
+            
+            return model_info
+            
+        except Exception as e:
+            logger.error(f"Error retrieving model {model_id}: {e}")
+            raise GraphQLError(f"Failed to retrieve model: {str(e)}")
+    
+    @staticmethod
+    async def resolve_list_models(root, info: GraphQLContext,
+                                 limit: int = 10,
+                                 offset: int = 0,
+                                 filter_active: Optional[bool] = None) -> Dict[str, Any]:
         """
-        Resolve models list query with filtering and pagination.
+        Resolve list of available models
         
         Args:
-            parent: Parent resolver result
-            info: GraphQL resolve info
-            filter: Filter criteria
-            pagination: Pagination parameters
+            root: Parent resolver result
+            info: GraphQL execution context
+            limit: Maximum number of models to return
+            offset: Pagination offset
+            filter_active: Optional filter for active models
             
         Returns:
-            List of models with pagination info
+            Dictionary with models list and metadata
         """
         try:
-            models = await self.model_service.list_models(
-                filter=filter or {},
-                pagination=pagination or {'limit': 10, 'offset': 0}
+            model_service = info.context.get_service('model_management')
+            
+            # Apply filters
+            filters = {}
+            if filter_active is not None:
+                filters['active'] = filter_active
+            
+            # Get models with pagination
+            models = await model_service.list_models_async(
+                limit=limit,
+                offset=offset,
+                filters=filters
             )
             
             return {
-                'success': True,
                 'models': models['items'],
-                'pagination': models['pagination']
+                'total': models['total'],
+                'limit': limit,
+                'offset': offset
             }
+            
         except Exception as e:
-            return await self.handle_error(e)
-            
-    @BaseResolver.require_auth
-    async def resolve_training_job(
-        self,
-        parent: Any,
-        info: GraphQLResolveInfo,
-        job_id: str
-    ) -> Dict[str, Any]:
-        """
-        Resolve training job information query.
-        
-        Args:
-            parent: Parent resolver result
-            info: GraphQL resolve info
-            job_id: Training job identifier
-            
-        Returns:
-            Training job information
-        """
-        try:
-            job_info = await self.training_service.get_job_status(job_id)
-            return {
-                'success': True,
-                'job': job_info
-            }
-        except Exception as e:
-            return await self.handle_error(e)
-            
-    @BaseResolver.require_auth
-    async def resolve_dataset(
-        self,
-        parent: Any,
-        info: GraphQLResolveInfo,
-        dataset_id: str
-    ) -> Dict[str, Any]:
-        """
-        Resolve dataset information query.
-        
-        Args:
-            parent: Parent resolver result
-            info: GraphQL resolve info
-            dataset_id: Dataset identifier
-            
-        Returns:
-            Dataset information
-        """
-        try:
-            dataset_info = await self.data_service.get_dataset_info(dataset_id)
-            return {
-                'success': True,
-                'dataset': dataset_info
-            }
-        except Exception as e:
-            return await self.handle_error(e)
+            logger.error(f"Error listing models: {e}")
+            raise GraphQLError(f"Failed to list models: {str(e)}")
 
 
-class MutationResolvers(BaseResolver):
+class MutationResolvers:
     """
-    Implementation of GraphQL mutation resolvers.
+    Resolvers for GraphQL mutations
     
-    This class handles all write operations for the GraphQL API,
-    implementing transactional patterns and optimistic updates.
+    Implements write operations for training, model management, and data updates.
+    Handles transactional operations and ensures data consistency.
     """
     
-    @BaseResolver.require_auth
-    async def resolve_start_training(
-        self,
-        parent: Any,
-        info: GraphQLResolveInfo,
-        config: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    @staticmethod
+    async def resolve_start_training(root, info: GraphQLContext,
+                                    config: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Resolve start training mutation.
+        Resolve training initiation mutation
         
         Args:
-            parent: Parent resolver result
-            info: GraphQL resolve info
+            root: Parent resolver result
+            info: GraphQL execution context
             config: Training configuration
             
         Returns:
             Training job information
         """
         try:
-            job_id = await self.training_service.start_training(
-                config=config,
-                user_id=info.context['user']['id']
+            # Check user permissions
+            if not info.context.has_permission('training:create'):
+                raise GraphQLError("Insufficient permissions to start training")
+            
+            # Get training service
+            training_service = info.context.get_service('training')
+            
+            # Validate configuration
+            validated_config = await training_service.validate_config_async(config)
+            
+            # Start training job
+            job_info = await training_service.start_training_async(
+                config=validated_config,
+                user_id=info.context.user_id
             )
             
-            return {
-                'success': True,
-                'job_id': job_id,
-                'message': 'Training job started successfully'
-            }
-        except Exception as e:
-            return await self.handle_error(e)
+            logger.info(f"Training job {job_info['job_id']} started by user {info.context.user_id}")
             
-    @BaseResolver.require_auth
-    async def resolve_stop_training(
-        self,
-        parent: Any,
-        info: GraphQLResolveInfo,
-        job_id: str
-    ) -> Dict[str, Any]:
+            return {
+                'job_id': job_info['job_id'],
+                'status': 'STARTED',
+                'config': validated_config,
+                'created_at': datetime.utcnow().isoformat()
+            }
+            
+        except ValidationError as e:
+            logger.warning(f"Invalid training config: {e}")
+            raise GraphQLError(f"Invalid configuration: {str(e)}")
+        except Exception as e:
+            logger.error(f"Error starting training: {e}")
+            raise GraphQLError(f"Failed to start training: {str(e)}")
+    
+    @staticmethod
+    async def resolve_stop_training(root, info: GraphQLContext,
+                                   job_id: str) -> Dict[str, Any]:
         """
-        Resolve stop training mutation.
+        Resolve training termination mutation
         
         Args:
-            parent: Parent resolver result
-            info: GraphQL resolve info
+            root: Parent resolver result
+            info: GraphQL execution context
             job_id: Training job identifier
             
         Returns:
-            Operation result
+            Updated job status
         """
         try:
-            await self.training_service.stop_training(job_id)
+            # Check permissions
+            if not info.context.has_permission('training:stop'):
+                raise GraphQLError("Insufficient permissions to stop training")
+            
+            training_service = info.context.get_service('training')
+            
+            # Stop training job
+            result = await training_service.stop_training_async(
+                job_id=job_id,
+                user_id=info.context.user_id
+            )
             
             return {
-                'success': True,
-                'message': 'Training job stopped successfully'
+                'job_id': job_id,
+                'status': 'STOPPED',
+                'stopped_at': datetime.utcnow().isoformat()
             }
-        except Exception as e:
-            return await self.handle_error(e)
             
-    @BaseResolver.require_role('admin')
-    async def resolve_deploy_model(
-        self,
-        parent: Any,
-        info: GraphQLResolveInfo,
-        model_id: str,
-        deployment_config: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        except Exception as e:
+            logger.error(f"Error stopping training job {job_id}: {e}")
+            raise GraphQLError(f"Failed to stop training: {str(e)}")
+    
+    @staticmethod
+    async def resolve_deploy_model(root, info: GraphQLContext,
+                                  model_id: str,
+                                  environment: str = 'staging') -> Dict[str, Any]:
         """
-        Resolve model deployment mutation.
+        Resolve model deployment mutation
         
         Args:
-            parent: Parent resolver result
-            info: GraphQL resolve info
+            root: Parent resolver result
+            info: GraphQL execution context
             model_id: Model identifier
-            deployment_config: Deployment configuration
+            environment: Deployment environment
             
         Returns:
             Deployment information
         """
         try:
-            deployment_id = await self.model_service.deploy_model(
+            # Check deployment permissions
+            if not info.context.has_permission(f'model:deploy:{environment}'):
+                raise GraphQLError(f"Insufficient permissions to deploy to {environment}")
+            
+            model_service = info.context.get_service('model_management')
+            
+            # Deploy model
+            deployment_info = await model_service.deploy_model_async(
                 model_id=model_id,
-                config=deployment_config
+                environment=environment,
+                user_id=info.context.user_id
+            )
+            
+            logger.info(f"Model {model_id} deployed to {environment} by user {info.context.user_id}")
+            
+            return {
+                'model_id': model_id,
+                'environment': environment,
+                'status': 'DEPLOYED',
+                'endpoint': deployment_info['endpoint'],
+                'deployed_at': datetime.utcnow().isoformat()
+            }
+            
+        except Exception as e:
+            logger.error(f"Error deploying model {model_id}: {e}")
+            raise GraphQLError(f"Failed to deploy model: {str(e)}")
+    
+    @staticmethod
+    async def resolve_upload_data(root, info: GraphQLContext,
+                                 dataset_name: str,
+                                 data: str,
+                                 format: str = 'json') -> Dict[str, Any]:
+        """
+        Resolve data upload mutation
+        
+        Args:
+            root: Parent resolver result
+            info: GraphQL execution context
+            dataset_name: Name for the dataset
+            data: Data content (base64 encoded for binary)
+            format: Data format (json, csv, etc.)
+            
+        Returns:
+            Upload status and dataset information
+        """
+        try:
+            # Check data upload permissions
+            if not info.context.has_permission('data:upload'):
+                raise GraphQLError("Insufficient permissions to upload data")
+            
+            data_service = info.context.get_service('data')
+            
+            # Process and store data
+            dataset_info = await data_service.upload_dataset_async(
+                name=dataset_name,
+                data=data,
+                format=format,
+                user_id=info.context.user_id
             )
             
             return {
-                'success': True,
-                'deployment_id': deployment_id,
-                'message': 'Model deployed successfully'
+                'dataset_id': dataset_info['id'],
+                'name': dataset_name,
+                'size': dataset_info['size'],
+                'format': format,
+                'status': 'UPLOADED',
+                'created_at': datetime.utcnow().isoformat()
             }
+            
         except Exception as e:
-            return await self.handle_error(e)
-            
-    @BaseResolver.require_role('admin')
-    async def resolve_delete_model(
-        self,
-        parent: Any,
-        info: GraphQLResolveInfo,
-        model_id: str
-    ) -> Dict[str, Any]:
-        """
-        Resolve model deletion mutation.
-        
-        Args:
-            parent: Parent resolver result
-            info: GraphQL resolve info
-            model_id: Model identifier
-            
-        Returns:
-            Operation result
-        """
-        try:
-            await self.model_service.delete_model(model_id)
-            
-            return {
-                'success': True,
-                'message': 'Model deleted successfully'
-            }
-        except Exception as e:
-            return await self.handle_error(e)
-            
-    @BaseResolver.require_auth
-    async def resolve_upload_dataset(
-        self,
-        parent: Any,
-        info: GraphQLResolveInfo,
-        dataset: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """
-        Resolve dataset upload mutation.
-        
-        Args:
-            parent: Parent resolver result
-            info: GraphQL resolve info
-            dataset: Dataset information and data
-            
-        Returns:
-            Upload result
-        """
-        try:
-            dataset_id = await self.data_service.upload_dataset(
-                dataset=dataset,
-                user_id=info.context['user']['id']
-            )
-            
-            return {
-                'success': True,
-                'dataset_id': dataset_id,
-                'message': 'Dataset uploaded successfully'
-            }
-        except Exception as e:
-            return await self.handle_error(e)
+            logger.error(f"Error uploading data: {e}")
+            raise GraphQLError(f"Failed to upload data: {str(e)}")
 
 
-class SubscriptionResolvers(BaseResolver):
+class SubscriptionResolvers:
     """
-    Implementation of GraphQL subscription resolvers.
+    Resolvers for GraphQL subscriptions
     
-    This class handles real-time updates for the GraphQL API,
-    implementing WebSocket-based subscriptions for live data.
+    Implements real-time updates for training progress, model updates,
+    and classification results using WebSocket connections.
     """
     
-    @BaseResolver.require_auth
-    async def resolve_training_progress(
-        self,
-        parent: Any,
-        info: GraphQLResolveInfo,
-        job_id: str
-    ):
+    @staticmethod
+    async def resolve_training_progress(root, info: GraphQLContext,
+                                       job_id: str):
         """
-        Resolve training progress subscription.
+        Resolve training progress subscription
         
         Args:
-            parent: Parent resolver result
-            info: GraphQL resolve info
+            root: Parent resolver result
+            info: GraphQL execution context
             job_id: Training job identifier
             
         Yields:
             Training progress updates
         """
         try:
-            async for update in self.training_service.stream_progress(job_id):
+            training_service = info.context.get_service('training')
+            
+            # Subscribe to training updates
+            async for update in training_service.subscribe_to_job_async(job_id):
                 yield {
                     'job_id': job_id,
-                    'progress': update['progress'],
-                    'metrics': update.get('metrics', {}),
-                    'status': update['status'],
+                    'epoch': update.get('epoch'),
+                    'batch': update.get('batch'),
+                    'loss': update.get('loss'),
+                    'metrics': update.get('metrics'),
+                    'status': update.get('status'),
                     'timestamp': datetime.utcnow().isoformat()
                 }
-        except Exception as e:
-            yield {
-                'error': str(e),
-                'timestamp': datetime.utcnow().isoformat()
-            }
-            
-    @BaseResolver.require_auth
-    async def resolve_model_metrics(
-        self,
-        parent: Any,
-        info: GraphQLResolveInfo,
-        model_id: str
-    ):
-        """
-        Resolve model metrics subscription.
-        
-        Args:
-            parent: Parent resolver result
-            info: GraphQL resolve info
-            model_id: Model identifier
-            
-        Yields:
-            Model metrics updates
-        """
-        try:
-            async for metrics in self.model_service.stream_metrics(model_id):
-                yield {
-                    'model_id': model_id,
-                    'metrics': metrics,
-                    'timestamp': datetime.utcnow().isoformat()
-                }
-        except Exception as e:
-            yield {
-                'error': str(e),
-                'timestamp': datetime.utcnow().isoformat()
-            }
-            
-    async def resolve_system_status(
-        self,
-        parent: Any,
-        info: GraphQLResolveInfo
-    ):
-        """
-        Resolve system status subscription.
-        
-        Args:
-            parent: Parent resolver result
-            info: GraphQL resolve info
-            
-        Yields:
-            System status updates
-        """
-        try:
-            while True:
-                status = await self._get_system_status()
-                yield {
-                    'status': status,
-                    'timestamp': datetime.utcnow().isoformat()
-                }
-                await asyncio.sleep(5)  # Update every 5 seconds
-        except Exception as e:
-            yield {
-                'error': str(e),
-                'timestamp': datetime.utcnow().isoformat()
-            }
-            
-    async def _get_system_status(self) -> Dict[str, Any]:
-        """
-        Get current system status.
-        
-        Returns:
-            System status information
-        """
-        return {
-            'api': 'healthy',
-            'services': await self._check_services_health(),
-            'models': await self.model_service.get_active_models_count(),
-            'jobs': await self.training_service.get_active_jobs_count()
-        }
-        
-    async def _check_services_health(self) -> Dict[str, str]:
-        """
-        Check health status of all services.
-        
-        Returns:
-            Services health status
-        """
-        services = {
-            'prediction': self.prediction_service,
-            'training': self.training_service,
-            'data': self.data_service,
-            'model': self.model_service
-        }
-        
-        health_status = {}
-        for name, service in services.items():
-            try:
-                await service.health_check()
-                health_status[name] = 'healthy'
-            except Exception:
-                health_status[name] = 'unhealthy'
                 
-        return health_status
+        except Exception as e:
+            logger.error(f"Error in training progress subscription: {e}")
+            yield {
+                'error': str(e),
+                'job_id': job_id,
+                'status': 'ERROR'
+            }
+    
+    @staticmethod
+    async def resolve_model_updates(root, info: GraphQLContext):
+        """
+        Resolve model updates subscription
+        
+        Args:
+            root: Parent resolver result
+            info: GraphQL execution context
+            
+        Yields:
+            Model update notifications
+        """
+        try:
+            model_service = info.context.get_service('model_management')
+            
+            # Subscribe to model updates
+            async for update in model_service.subscribe_to_updates_async():
+                yield {
+                    'model_id': update.get('model_id'),
+                    'event_type': update.get('event_type'),
+                    'details': update.get('details'),
+                    'timestamp': datetime.utcnow().isoformat()
+                }
+                
+        except Exception as e:
+            logger.error(f"Error in model updates subscription: {e}")
+            yield {
+                'error': str(e),
+                'event_type': 'ERROR'
+            }
+    
+    @staticmethod
+    async def resolve_classification_stream(root, info: GraphQLContext,
+                                           stream_id: str):
+        """
+        Resolve streaming classification subscription
+        
+        Args:
+            root: Parent resolver result
+            info: GraphQL execution context
+            stream_id: Stream identifier
+            
+        Yields:
+            Classification results stream
+        """
+        try:
+            prediction_service = info.context.get_service('prediction')
+            
+            # Subscribe to classification stream
+            async for result in prediction_service.subscribe_to_stream_async(stream_id):
+                yield {
+                    'stream_id': stream_id,
+                    'text': result.get('text'),
+                    'predictions': result.get('predictions'),
+                    'model_id': result.get('model_id'),
+                    'sequence_number': result.get('sequence_number'),
+                    'timestamp': datetime.utcnow().isoformat()
+                }
+                
+        except Exception as e:
+            logger.error(f"Error in classification stream subscription: {e}")
+            yield {
+                'error': str(e),
+                'stream_id': stream_id
+            }
 
 
-# Initialize resolver instances
-query_resolvers = QueryResolvers()
-mutation_resolvers = MutationResolvers()
-subscription_resolvers = SubscriptionResolvers()
-
-# Export resolver mappings
-resolvers = {
-    'Query': {
-        'classifyText': query_resolvers.resolve_classify_text,
-        'batchClassify': query_resolvers.resolve_batch_classify,
-        'model': query_resolvers.resolve_model,
-        'models': query_resolvers.resolve_models,
-        'trainingJob': query_resolvers.resolve_training_job,
-        'dataset': query_resolvers.resolve_dataset
-    },
-    'Mutation': {
-        'startTraining': mutation_resolvers.resolve_start_training,
-        'stopTraining': mutation_resolvers.resolve_stop_training,
-        'deployModel': mutation_resolvers.resolve_deploy_model,
-        'deleteModel': mutation_resolvers.resolve_delete_model,
-        'uploadDataset': mutation_resolvers.resolve_upload_dataset
-    },
-    'Subscription': {
-        'trainingProgress': subscription_resolvers.resolve_training_progress,
-        'modelMetrics': subscription_resolvers.resolve_model_metrics,
-        'systemStatus': subscription_resolvers.resolve_system_status
-    }
-}
+# Export resolver classes
+__all__ = [
+    'QueryResolvers',
+    'MutationResolvers',
+    'SubscriptionResolvers'
+]
