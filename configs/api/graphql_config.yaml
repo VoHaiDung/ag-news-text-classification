@@ -1,0 +1,251 @@
+# GraphQL API Configuration for AG News Text Classification
+# ================================================================================
+# This configuration file defines settings for the GraphQL API server including
+# schema options, execution settings, subscription configurations, and security.
+#
+# References:
+#   - GraphQL Specification: https://spec.graphql.org/
+#   - GraphQL Best Practices: https://graphql.org/learn/best-practices/
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+# Server Configuration
+server:
+  # Network settings
+  host: "0.0.0.0"
+  port: 4000
+  
+  # Server options
+  playground_enabled: true  # GraphQL Playground UI
+  introspection_enabled: true  # Schema introspection
+  
+  # CORS settings
+  cors:
+    enabled: true
+    allowed_origins:
+      - "http://localhost:3000"
+      - "http://localhost:8501"
+    allowed_methods:
+      - "GET"
+      - "POST"
+      - "OPTIONS"
+    allowed_headers:
+      - "Content-Type"
+      - "Authorization"
+    credentials: true
+    
+# Schema Configuration
+schema:
+  # Auto-reload schema in development
+  auto_reload: true
+  
+  # Schema validation
+  validation:
+    enabled: true
+    depth_limit: 10
+    complexity_limit: 1000
+    
+  # Federation settings (for distributed schemas)
+  federation:
+    enabled: false
+    service_name: "classification"
+    
+# Query Configuration
+query:
+  # Default query limits
+  default_limit: 100
+  max_limit: 1000
+  
+  # Timeout settings (in seconds)
+  timeout: 30
+  
+  # Query complexity settings
+  complexity:
+    enabled: true
+    max_complexity: 1000
+    scalar_cost: 1
+    object_cost: 2
+    list_factor: 10
+    introspection_cost: 1000
+    
+  # Query depth limiting
+  depth_limit:
+    enabled: true
+    max_depth: 10
+    
+# Mutation Configuration
+mutation:
+  # Transaction settings
+  transactional: true
+  isolation_level: "READ_COMMITTED"
+  
+  # Timeout for mutations (in seconds)
+  timeout: 60
+  
+  # Rate limiting for mutations
+  rate_limit:
+    enabled: true
+    max_mutations_per_minute: 30
+    
+# Subscription Configuration
+subscription:
+  # WebSocket settings
+  websocket:
+    enabled: true
+    path: "/graphql/ws"
+    keepalive_interval: 30
+    connection_timeout: 60
+    
+  # Subscription limits
+  max_subscriptions_per_connection: 10
+  max_subscription_lifetime_minutes: 60
+  
+  # PubSub backend
+  pubsub:
+    type: "redis"  # redis, memory, kafka
+    redis:
+      host: "localhost"
+      port: 6379
+      db: 0
+      
+# DataLoader Configuration
+dataloader:
+  # Batching settings
+  batch_enabled: true
+  max_batch_size: 100
+  batch_timeout_ms: 10
+  
+  # Caching settings
+  cache_enabled: true
+  cache_ttl_seconds: 300
+  
+  # Per-loader configurations
+  loaders:
+    classification:
+      max_batch_size: 100
+      cache_enabled: true
+    model:
+      max_batch_size: 50
+      cache_enabled: true
+    user:
+      max_batch_size: 50
+      cache_enabled: true
+    training_job:
+      max_batch_size: 50
+      cache_enabled: false
+      
+# Authentication Configuration
+authentication:
+  enabled: true
+  
+  # JWT settings
+  jwt:
+    secret_key: "${JWT_SECRET_KEY}"
+    algorithm: "HS256"
+    token_expiry_minutes: 60
+    
+  # API key authentication
+  api_key:
+    enabled: true
+    header_name: "X-API-Key"
+    
+  # OAuth2 settings
+  oauth2:
+    enabled: false
+    providers:
+      - name: "google"
+        client_id: "${GOOGLE_CLIENT_ID}"
+        client_secret: "${GOOGLE_CLIENT_SECRET}"
+        
+# Authorization Configuration
+authorization:
+  enabled: true
+  
+  # Role-based access control
+  rbac:
+    enabled: true
+    default_role: "viewer"
+    roles:
+      - name: "admin"
+        permissions: ["*"]
+      - name: "developer"
+        permissions: ["read:*", "write:*", "execute:*"]
+      - name: "user"
+        permissions: ["read:*", "execute:classify"]
+      - name: "viewer"
+        permissions: ["read:public"]
+        
+  # Field-level authorization
+  field_authorization:
+    enabled: true
+    sensitive_fields:
+      - "User.email"
+      - "User.password"
+      - "Model.internalConfig"
+      
+# Error Handling Configuration
+error_handling:
+  # Error formatting
+  include_extensions: true
+  include_stack_trace: false  # Only in development
+  
+  # Error masking in production
+  mask_errors: true
+  generic_error_message: "An error occurred processing your request"
+  
+# Performance Configuration
+performance:
+  # APQ (Automatic Persisted Queries)
+  apq:
+    enabled: true
+    cache_size: 1000
+    ttl_seconds: 3600
+    
+  # Response caching
+  response_cache:
+    enabled: true
+    ttl_seconds: 60
+    cache_introspection: false
+    
+  # Query batching
+  batching:
+    enabled: true
+    max_batch_size: 10
+    
+# Monitoring Configuration
+monitoring:
+  # Metrics
+  metrics:
+    enabled: true
+    include_field_metrics: true
+    include_resolver_metrics: true
+    
+  # Tracing
+  tracing:
+    enabled: true
+    sampling_rate: 0.1
+    
+  # Logging
+  logging:
+    enabled: true
+    log_queries: true
+    log_variables: false  # Security consideration
+    slow_query_threshold_ms: 1000
+    
+# Development Configuration
+development:
+  # GraphQL Playground settings
+  playground:
+    enabled: true
+    endpoint: "/graphql"
+    subscription_endpoint: "/graphql/ws"
+    settings:
+      editor.theme: "dark"
+      request.credentials: "include"
+      
+  # Debug mode
+  debug:
+    enabled: false
+    include_debug_info: true
+    print_schema: false
