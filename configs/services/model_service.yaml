@@ -1,0 +1,299 @@
+# Model Management Service Configuration for AG News Text Classification
+# ================================================================================
+# This configuration file defines settings for the model management service
+# including model registry, versioning, deployment, and lifecycle management.
+#
+# References:
+#   - Sculley, D., et al. (2015). Hidden Technical Debt in Machine Learning Systems
+#   - Paleyes, A., et al. (2020). Challenges in Deploying Machine Learning: A Survey
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+# Service Metadata
+service:
+  name: "model-service"
+  version: "1.0.0"
+  description: "Model management and deployment service"
+  namespace: "agnews"
+  
+# Model Registry Configuration
+model_registry:
+  # Registry backend
+  backend: "mlflow"  # mlflow, bentoml, custom
+  
+  # MLflow configuration
+  mlflow:
+    tracking_uri: "${MLFLOW_TRACKING_URI}"
+    registry_uri: "${MLFLOW_REGISTRY_URI}"
+    default_artifact_root: "s3://agnews-models"
+    
+  # Model metadata
+  metadata:
+    auto_log: true
+    required_fields:
+      - "model_type"
+      - "framework"
+      - "metrics"
+      - "dataset_version"
+      - "training_config"
+      
+  # Model stages
+  stages:
+    - "development"
+    - "staging"
+    - "production"
+    - "archived"
+    
+# Model Versioning
+versioning:
+  # Versioning strategy
+  strategy: "semantic"  # semantic, incremental, timestamp
+  
+  # Version control
+  version_control:
+    auto_increment: true
+    tag_format: "v{major}.{minor}.{patch}"
+    
+  # Model comparison
+  comparison:
+    enabled: true
+    metrics_threshold: 0.01
+    auto_promote: false
+    
+# Model Deployment
+deployment:
+  # Deployment strategies
+  strategies:
+    blue_green:
+      enabled: true
+      switch_threshold: 0.95
+      
+    canary:
+      enabled: true
+      initial_traffic_percent: 10
+      increment_percent: 10
+      increment_interval_minutes: 30
+      
+    rolling:
+      enabled: false
+      batch_size: 1
+      pause_between_batches_seconds: 60
+      
+  # Deployment targets
+  targets:
+    - name: "development"
+      type: "local"
+      auto_deploy: true
+      
+    - name: "staging"
+      type: "kubernetes"
+      namespace: "agnews-staging"
+      auto_deploy: false
+      
+    - name: "production"
+      type: "kubernetes"
+      namespace: "agnews-prod"
+      auto_deploy: false
+      approval_required: true
+      
+  # Rollback configuration
+  rollback:
+    enabled: true
+    auto_rollback_on_failure: true
+    keep_previous_versions: 3
+    
+# Model Serving
+serving:
+  # Serving frameworks
+  frameworks:
+    - name: "torchserve"
+      enabled: true
+      config:
+        batch_size: 32
+        max_batch_delay: 100
+        
+    - name: "tensorflow_serving"
+      enabled: false
+      
+    - name: "triton"
+      enabled: false
+      
+  # Model optimization
+  optimization:
+    quantization:
+      enabled: false
+      method: "dynamic"
+      
+    onnx_conversion:
+      enabled: true
+      opset_version: 14
+      
+    tensorrt:
+      enabled: false
+      precision: "fp16"
+      
+  # Serving configuration
+  config:
+    max_models_in_memory: 5
+    model_load_timeout_seconds: 60
+    request_timeout_seconds: 30
+    
+# Model Monitoring
+monitoring:
+  # Performance monitoring
+  performance:
+    enabled: true
+    metrics:
+      - "latency"
+      - "throughput"
+      - "error_rate"
+      - "resource_usage"
+      
+  # Model drift detection
+  drift_detection:
+    enabled: true
+    methods:
+      - "psi"  # Population Stability Index
+      - "kl_divergence"
+      - "wasserstein_distance"
+    check_interval_hours: 24
+    alert_threshold: 0.1
+    
+  # Data quality monitoring
+  data_quality:
+    enabled: true
+    check_schema: true
+    check_distribution: true
+    
+  # A/B testing
+  ab_testing:
+    enabled: true
+    metrics_tracking: true
+    statistical_significance: 0.05
+    
+# Model Lifecycle
+lifecycle:
+  # Training triggers
+  training_triggers:
+    - type: "scheduled"
+      cron: "0 0 * * 0"  # Weekly
+    - type: "drift_detected"
+      threshold: 0.15
+    - type: "manual"
+      
+  # Model retirement
+  retirement:
+    auto_retire: true
+    inactive_days: 90
+    performance_threshold: 0.7
+    
+  # Model promotion
+  promotion:
+    auto_promote: false
+    criteria:
+      - metric: "accuracy"
+        threshold: 0.95
+      - metric: "f1_score"
+        threshold: 0.93
+        
+# Model Validation
+validation:
+  # Pre-deployment validation
+  pre_deployment:
+    enabled: true
+    checks:
+      - "model_signature"
+      - "input_schema"
+      - "performance_benchmarks"
+      - "security_scan"
+      
+  # Post-deployment validation
+  post_deployment:
+    enabled: true
+    smoke_tests: true
+    integration_tests: true
+    
+  # Validation datasets
+  datasets:
+    - name: "golden_dataset"
+      path: "s3://agnews-validation/golden"
+    - name: "edge_cases"
+      path: "s3://agnews-validation/edge_cases"
+      
+# Model Documentation
+documentation:
+  # Auto-documentation
+  auto_generate: true
+  
+  # Documentation requirements
+  required_sections:
+    - "model_description"
+    - "training_data"
+    - "performance_metrics"
+    - "limitations"
+    - "ethical_considerations"
+    
+  # Model cards
+  model_cards:
+    enabled: true
+    template: "model_card_template.md"
+    
+# Security Configuration
+security:
+  # Model security
+  model_security:
+    scan_for_vulnerabilities: true
+    adversarial_testing: true
+    
+  # Access control
+  access_control:
+    enabled: true
+    model_permissions:
+      - role: "admin"
+        actions: ["*"]
+      - role: "developer"
+        actions: ["read", "deploy_staging"]
+      - role: "viewer"
+        actions: ["read"]
+        
+  # Audit logging
+  audit:
+    enabled: true
+    log_all_actions: true
+    retention_days: 365
+    
+# Performance Configuration
+performance:
+  # Caching
+  caching:
+    model_cache:
+      enabled: true
+      ttl_seconds: 3600
+      
+    prediction_cache:
+      enabled: true
+      ttl_seconds: 300
+      
+  # Resource limits
+  resources:
+    max_memory_per_model_gb: 4
+    max_models_loaded: 10
+    
+# Integration Configuration
+integration:
+  # CI/CD integration
+  cicd:
+    enabled: true
+    platform: "github_actions"
+    auto_test: true
+    auto_validate: true
+    
+  # Notification services
+  notifications:
+    enabled: true
+    channels:
+      - type: "email"
+        events: ["deployment", "failure", "drift_detected"]
+      - type: "slack"
+        events: ["deployment", "failure"]
