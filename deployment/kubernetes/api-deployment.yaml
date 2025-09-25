@@ -1,0 +1,644 @@
+# Kubernetes Deployment Configuration for AG News API Services
+# ================================================================================
+# This configuration defines Kubernetes deployments, services, and ingress rules
+# for the AG News Text Classification API services. It follows Kubernetes best
+# practices for high availability, scalability, and security.
+#
+# References:
+#   - Kubernetes Best Practices: https://kubernetes.io/docs/concepts/configuration/overview/
+#   - Cloud Native Computing Foundation Guidelines
+#   - Production-Grade Kubernetes (O'Reilly, 2021)
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: agnews-api
+  labels:
+    app: agnews
+    environment: production
+
+---
+# REST API Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rest-api
+  namespace: agnews-api
+  labels:
+    app: agnews
+    component: rest-api
+    version: v1
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: agnews
+      component: rest-api
+  template:
+    metadata:
+      labels:
+        app: agnews
+        component: rest-api
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: agnews-api
+      
+      # Security context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        
+      # Init container for database migration
+      initContainers:
+      - name: db-migrate
+        image: agnews/api:latest
+        command: ["python", "scripts/migrate_database.py"]
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: agnews-secrets
+              key: database-url
+              
+      containers:
+      - name: rest-api
+        image: agnews/rest-api:latest
+        imagePullPolicy: Always
+        
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        - containerPort: 9090
+          name: metrics
+          protocol: TCP
+          
+        env:
+        - name: API_VERSION
+          value: "v1"
+        - name: ENVIRONMENT
+          value: "production"
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: WORKERS
+          value: "4"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: agnews-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: agnews-secrets
+              key: redis-url
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: agnews-secrets
+              key: jwt-secret
+              
+        # Resource limits and requests
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+            
+        # Liveness probe
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+          
+        # Readiness probe
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+          
+        # Volume mounts
+        volumeMounts:
+        - name: config
+          mountPath: /app/configs
+        - name: cache
+          mountPath: /app/cache
+          
+      volumes:
+      - name: config
+        configMap:
+          name: api-config
+      - name: cache
+        emptyDir:
+          sizeLimit: 1Gi
+          
+      # Node affinity for better performance
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: component
+                  operator: In
+                  values:
+                  - rest-api
+              topologyKey: kubernetes.io/hostname
+
+---
+# REST API Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: rest-api-service
+  namespace: agnews-api
+  labels:
+    app: agnews
+    component: rest-api
+spec:
+  type: ClusterIP
+  selector:
+    app: agnews
+    component: rest-api
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8000
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+
+---
+# gRPC API Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grpc-api
+  namespace: agnews-api
+  labels:
+    app: agnews
+    component: grpc-api
+    version: v1
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: agnews
+      component: grpc-api
+  template:
+    metadata:
+      labels:
+        app: agnews
+        component: grpc-api
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+    spec:
+      serviceAccountName: agnews-api
+      
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        
+      containers:
+      - name: grpc-api
+        image: agnews/grpc-api:latest
+        imagePullPolicy: Always
+        
+        ports:
+        - containerPort: 50051
+          name: grpc
+          protocol: TCP
+        - containerPort: 9090
+          name: metrics
+          protocol: TCP
+          
+        env:
+        - name: GRPC_PORT
+          value: "50051"
+        - name: ENVIRONMENT
+          value: "production"
+        - name: MAX_WORKERS
+          value: "10"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: agnews-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: agnews-secrets
+              key: redis-url
+              
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+            
+        livenessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:50051
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          
+        readinessProbe:
+          exec:
+            command:
+            - /bin/grpc_health_probe
+            - -addr=:50051
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          
+        volumeMounts:
+        - name: config
+          mountPath: /app/configs
+        - name: tls-certs
+          mountPath: /app/certs
+          readOnly: true
+          
+      volumes:
+      - name: config
+        configMap:
+          name: api-config
+      - name: tls-certs
+        secret:
+          secretName: grpc-tls-secret
+          optional: true
+
+---
+# gRPC API Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: grpc-api-service
+  namespace: agnews-api
+  labels:
+    app: agnews
+    component: grpc-api
+  annotations:
+    service.alpha.kubernetes.io/app-protocols: '{"grpc":"HTTP2"}'
+spec:
+  type: ClusterIP
+  selector:
+    app: agnews
+    component: grpc-api
+  ports:
+  - name: grpc
+    port: 50051
+    targetPort: 50051
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+
+---
+# GraphQL API Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: graphql-api
+  namespace: agnews-api
+  labels:
+    app: agnews
+    component: graphql-api
+    version: v1
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: agnews
+      component: graphql-api
+  template:
+    metadata:
+      labels:
+        app: agnews
+        component: graphql-api
+        version: v1
+    spec:
+      serviceAccountName: agnews-api
+      
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        
+      containers:
+      - name: graphql-api
+        image: agnews/graphql-api:latest
+        imagePullPolicy: Always
+        
+        ports:
+        - containerPort: 4000
+          name: http
+          protocol: TCP
+        - containerPort: 9090
+          name: metrics
+          protocol: TCP
+          
+        env:
+        - name: GRAPHQL_PORT
+          value: "4000"
+        - name: ENVIRONMENT
+          value: "production"
+        - name: PLAYGROUND_ENABLED
+          value: "false"  # Disable in production
+        - name: INTROSPECTION_ENABLED
+          value: "false"  # Disable in production
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: agnews-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: agnews-secrets
+              key: redis-url
+              
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+            
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          
+        volumeMounts:
+        - name: config
+          mountPath: /app/configs
+          
+      volumes:
+      - name: config
+        configMap:
+          name: api-config
+
+---
+# GraphQL API Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: graphql-api-service
+  namespace: agnews-api
+  labels:
+    app: agnews
+    component: graphql-api
+spec:
+  type: ClusterIP
+  selector:
+    app: agnews
+    component: graphql-api
+  ports:
+  - name: http
+    port: 80
+    targetPort: 4000
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+
+---
+# Horizontal Pod Autoscaler for REST API
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: rest-api-hpa
+  namespace: agnews-api
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: rest-api
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Pods
+    pods:
+      metric:
+        name: http_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "1000"
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+
+---
+# Ingress Configuration
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-ingress
+  namespace: agnews-api
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+    nginx.ingress.kubernetes.io/grpc-backend: "true"
+spec:
+  tls:
+  - hosts:
+    - api.agnews.ai
+    secretName: api-tls-secret
+  rules:
+  - host: api.agnews.ai
+    http:
+      paths:
+      - path: /api/v1
+        pathType: Prefix
+        backend:
+          service:
+            name: rest-api-service
+            port:
+              number: 80
+      - path: /graphql
+        pathType: Prefix
+        backend:
+          service:
+            name: graphql-api-service
+            port:
+              number: 80
+      - path: /grpc
+        pathType: Prefix
+        backend:
+          service:
+            name: grpc-api-service
+            port:
+              number: 50051
+
+---
+# Service Account
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: agnews-api
+  namespace: agnews-api
+
+---
+# ConfigMap for API configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  namespace: agnews-api
+data:
+  rest_config.yaml: |
+    server:
+      host: 0.0.0.0
+      port: 8000
+      workers: 4
+    cors:
+      enabled: true
+      allow_origins: ["*"]
+    rate_limit:
+      enabled: true
+      requests_per_minute: 1000
+      
+  grpc_config.yaml: |
+    server:
+      host: 0.0.0.0
+      port: 50051
+      max_workers: 10
+    interceptors:
+      auth:
+        enabled: true
+      logging:
+        enabled: true
+      metrics:
+        enabled: true
+        
+  graphql_config.yaml: |
+    server:
+      host: 0.0.0.0
+      port: 4000
+    schema:
+      auto_reload: false
+    query:
+      timeout: 30
+      complexity:
+        enabled: true
+        max_complexity: 1000
+
+---
+# Network Policy
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-network-policy
+  namespace: agnews-api
+spec:
+  podSelector:
+    matchLabels:
+      app: agnews
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - podSelector:
+        matchLabels:
+          app: agnews
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: agnews
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 5432  # PostgreSQL
+    - protocol: TCP
+      port: 6379  # Redis
+    - protocol: TCP
+      port: 53    # DNS
+    - protocol: UDP
+      port: 53    # DNS
