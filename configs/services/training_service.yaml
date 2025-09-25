@@ -1,0 +1,278 @@
+# Training Service Configuration for AG News Text Classification
+# ================================================================================
+# This configuration file defines settings for the training service including
+# job management, resource allocation, experiment tracking, and distributed training.
+#
+# References:
+#   - Large-Scale Distributed Deep Networks (Dean et al., 2012)
+#   - Horovod: Fast and Easy Distributed Deep Learning in TensorFlow (Sergeev & Del Balso, 2018)
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+# Service Metadata
+service:
+  name: "training-service"
+  version: "1.0.0"
+  description: "Model training service for AG News classification"
+  namespace: "agnews"
+  
+# Job Management Configuration
+job_management:
+  # Job scheduling
+  scheduling:
+    scheduler_type: "fifo"  # fifo, priority, fair
+    max_concurrent_jobs: 5
+    max_queued_jobs: 100
+    
+  # Job persistence
+  persistence:
+    backend: "postgresql"  # postgresql, mongodb, redis
+    connection_string: "${DATABASE_URL}"
+    
+  # Job lifecycle
+  lifecycle:
+    default_timeout_hours: 24
+    allow_cancellation: true
+    auto_cleanup_days: 30
+    checkpoint_interval_minutes: 30
+    
+  # Job priorities
+  priorities:
+    levels: ["low", "normal", "high", "critical"]
+    default_priority: "normal"
+    preemption_enabled: false
+    
+# Resource Management
+resources:
+  # Compute resources
+  compute:
+    # CPU allocation
+    cpu:
+      default_cores: 4
+      max_cores: 16
+      cpu_limit_policy: "throttle"  # throttle, terminate
+      
+    # Memory allocation
+    memory:
+      default_gb: 16
+      max_gb: 64
+      oom_policy: "restart"  # restart, terminate, checkpoint
+      
+    # GPU allocation
+    gpu:
+      enabled: true
+      default_gpus: 1
+      max_gpus: 4
+      gpu_types: ["V100", "A100", "T4"]
+      allocation_strategy: "best_fit"  # best_fit, first_fit, spread
+      
+  # Storage
+  storage:
+    # Working directory
+    working_dir: "${TRAINING_WORKSPACE:/workspace}"
+    
+    # Model storage
+    model_storage:
+      backend: "s3"  # s3, gcs, local, nfs
+      bucket: "${MODEL_BUCKET:agnews-models}"
+      
+    # Dataset cache
+    dataset_cache:
+      enabled: true
+      cache_dir: "${DATASET_CACHE:/data/cache}"
+      max_size_gb: 100
+      
+    # Checkpoint storage
+    checkpoint_storage:
+      backend: "s3"
+      bucket: "${CHECKPOINT_BUCKET:agnews-checkpoints}"
+      retention_policy:
+        keep_best_n: 3
+        keep_last_n: 1
+        
+# Training Configuration
+training:
+  # Framework settings
+  frameworks:
+    default: "pytorch"
+    supported: ["pytorch", "tensorflow", "jax"]
+    
+  # Distributed training
+  distributed:
+    enabled: true
+    backend: "nccl"  # nccl, gloo, mpi
+    strategy: "ddp"  # ddp, horovod, deepspeed
+    
+    # DeepSpeed configuration
+    deepspeed:
+      enabled: false
+      config_file: "configs/training/deepspeed_config.json"
+      
+    # Horovod configuration
+    horovod:
+      enabled: false
+      fusion_threshold_mb: 64
+      
+  # Mixed precision training
+  mixed_precision:
+    enabled: true
+    backend: "apex"  # apex, native
+    opt_level: "O1"  # O0, O1, O2, O3
+    
+  # Gradient accumulation
+  gradient_accumulation:
+    enabled: true
+    default_steps: 1
+    max_steps: 16
+    
+  # Early stopping
+  early_stopping:
+    enabled: true
+    patience: 3
+    min_delta: 0.001
+    monitor: "validation_loss"
+    mode: "min"  # min, max
+    
+# Hyperparameter Configuration
+hyperparameters:
+  # Search configuration
+  search:
+    enabled: false
+    backend: "optuna"  # optuna, ray_tune, hyperopt
+    
+    # Optuna settings
+    optuna:
+      study_name: "agnews_hpo"
+      storage: "postgresql:///${DATABASE_URL}"
+      n_trials: 100
+      pruner: "median"  # median, hyperband, successive_halving
+      
+  # Parameter ranges
+  ranges:
+    learning_rate:
+      type: "loguniform"
+      low: 1e-5
+      high: 1e-2
+    batch_size:
+      type: "categorical"
+      choices: [16, 32, 64, 128]
+    warmup_ratio:
+      type: "uniform"
+      low: 0.0
+      high: 0.1
+      
+# Experiment Tracking
+experiment_tracking:
+  # MLflow configuration
+  mlflow:
+    enabled: true
+    tracking_uri: "${MLFLOW_TRACKING_URI:http://localhost:5000}"
+    experiment_name: "agnews-classification"
+    
+  # Weights & Biases
+  wandb:
+    enabled: false
+    api_key: "${WANDB_API_KEY}"
+    project: "agnews"
+    entity: "${WANDB_ENTITY}"
+    
+  # TensorBoard
+  tensorboard:
+    enabled: true
+    log_dir: "${TENSORBOARD_LOGDIR:/logs/tensorboard}"
+    
+  # Metrics to track
+  metrics:
+    training: ["loss", "accuracy", "learning_rate"]
+    validation: ["loss", "accuracy", "f1_score", "precision", "recall"]
+    system: ["gpu_utilization", "memory_usage", "batch_time"]
+    
+# Data Pipeline Configuration
+data_pipeline:
+  # Data loading
+  loading:
+    num_workers: 4
+    prefetch_factor: 2
+    persistent_workers: true
+    pin_memory: true
+    
+  # Data augmentation
+  augmentation:
+    enabled: true
+    techniques: ["back_translation", "paraphrase", "token_replacement"]
+    augmentation_probability: 0.3
+    
+  # Sampling strategy
+  sampling:
+    strategy: "balanced"  # balanced, weighted, stratified
+    oversample_minority: true
+    undersample_majority: false
+    
+# Monitoring Configuration
+monitoring:
+  # Progress tracking
+  progress:
+    update_frequency_seconds: 10
+    include_eta: true
+    include_speed: true
+    
+  # Alerting
+  alerting:
+    enabled: true
+    channels: ["email", "slack"]
+    
+    # Alert conditions
+    conditions:
+      - name: "training_failed"
+        severity: "critical"
+      - name: "gpu_oom"
+        severity: "high"
+      - name: "slow_convergence"
+        severity: "medium"
+        
+  # Resource monitoring
+  resource_monitoring:
+    enabled: true
+    interval_seconds: 30
+    metrics: ["cpu", "memory", "gpu", "disk_io", "network_io"]
+    
+# Recovery Configuration
+recovery:
+  # Fault tolerance
+  fault_tolerance:
+    enabled: true
+    max_retries: 3
+    retry_delay_seconds: 60
+    
+  # Checkpointing
+  checkpointing:
+    enabled: true
+    interval_epochs: 1
+    keep_best_only: false
+    save_weights_only: false
+    
+  # Resume training
+  resume:
+    enabled: true
+    auto_resume: true
+    resume_from_checkpoint: "latest"  # latest, best
+    
+# Security Configuration
+security:
+  # Access control
+  access_control:
+    enabled: true
+    require_authentication: true
+    
+  # Data privacy
+  data_privacy:
+    differential_privacy:
+      enabled: false
+      epsilon: 1.0
+      delta: 1e-5
+      
+  # Model security
+  model_security:
+    encryption_at_rest: false
+    secure_aggregation: false
