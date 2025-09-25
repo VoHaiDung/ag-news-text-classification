@@ -1,0 +1,237 @@
+# Multi-stage Dockerfile for AG News Text Classification API Services
+# ================================================================================
+# This Dockerfile implements a multi-stage build process for creating optimized
+# container images for API services. It follows Docker best practices for
+# security, caching efficiency, and minimal image size.
+#
+# References:
+#   - Docker Best Practices: https://docs.docker.com/develop/dev-best-practices/
+#   - Dockerfile Best Practices: https://docs.docker.com/develop/develop-images/dockerfile_best-practices/
+#   - Container Security Best Practices (NIST SP 800-190)
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+# Stage 1: Python base with system dependencies
+FROM python:3.9-slim AS python-base
+
+# Set environment variables for Python optimization
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_DEFAULT_TIMEOUT=100 \
+    POETRY_VERSION=1.3.0 \
+    POETRY_HOME="/opt/poetry" \
+    POETRY_VIRTUALENVS_IN_PROJECT=true \
+    POETRY_NO_INTERACTION=1 \
+    PYSETUP_PATH="/opt/pysetup" \
+    VENV_PATH="/opt/pysetup/.venv"
+
+# Add poetry and venv to PATH
+ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    git \
+    libpq-dev \
+    libssl-dev \
+    libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Stage 2: Poetry installation
+FROM python-base AS poetry-base
+
+# Install Poetry using the official installer
+RUN curl -sSL https://install.python-poetry.org | python3 -
+
+# Copy poetry files
+WORKDIR $PYSETUP_PATH
+COPY pyproject.toml poetry.lock* ./
+
+# Install runtime dependencies only
+RUN poetry install --no-dev --no-root
+
+# Stage 3: Development environment
+FROM python-base AS development
+
+# Copy poetry and dependencies from poetry-base
+COPY --from=poetry-base $POETRY_HOME $POETRY_HOME
+COPY --from=poetry-base $PYSETUP_PATH $PYSETUP_PATH
+
+# Set working directory
+WORKDIR /app
+
+# Copy application code
+COPY . .
+
+# Install all dependencies including dev
+WORKDIR $PYSETUP_PATH
+RUN poetry install --with dev
+
+# Set working directory back to app
+WORKDIR /app
+
+# Install pre-commit hooks
+RUN pre-commit install || true
+
+# Expose ports for different services
+EXPOSE 8000 8001 8002 8003 4000 50051 9090
+
+# Default command for development
+CMD ["python", "-m", "uvicorn", "src.api.rest.app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+# Stage 4: Production build for REST API
+FROM python-base AS production-rest
+
+# Copy virtual environment from poetry-base
+COPY --from=poetry-base $PYSETUP_PATH $PYSETUP_PATH
+
+# Create non-root user for security
+RUN groupadd -r apiuser && useradd -r -g apiuser apiuser
+
+# Set working directory
+WORKDIR /app
+
+# Copy only necessary application files
+COPY --chown=apiuser:apiuser src/ ./src/
+COPY --chown=apiuser:apiuser configs/ ./configs/
+COPY --chown=apiuser:apiuser scripts/ ./scripts/
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/cache /app/tmp && \
+    chown -R apiuser:apiuser /app
+
+# Switch to non-root user
+USER apiuser
+
+# Health check for REST API
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:8000/health').raise_for_status()"
+
+# Expose REST API port
+EXPOSE 8000
+
+# Production command with Gunicorn
+CMD ["gunicorn", "src.api.rest.app:app", \
+     "--workers", "4", \
+     "--worker-class", "uvicorn.workers.UvicornWorker", \
+     "--bind", "0.0.0.0:8000", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-", \
+     "--log-level", "info", \
+     "--timeout", "120", \
+     "--keep-alive", "5", \
+     "--max-requests", "1000", \
+     "--max-requests-jitter", "50"]
+
+# Stage 5: Production build for gRPC server
+FROM python-base AS production-grpc
+
+# Copy virtual environment from poetry-base
+COPY --from=poetry-base $PYSETUP_PATH $PYSETUP_PATH
+
+# Create non-root user
+RUN groupadd -r apiuser && useradd -r -g apiuser apiuser
+
+# Set working directory
+WORKDIR /app
+
+# Copy application files
+COPY --chown=apiuser:apiuser src/ ./src/
+COPY --chown=apiuser:apiuser configs/ ./configs/
+
+# Compile proto files
+RUN python -m grpc_tools.protoc \
+    -I./src/api/grpc/protos \
+    --python_out=./src/api/grpc/compiled \
+    --grpc_python_out=./src/api/grpc/compiled \
+    ./src/api/grpc/protos/*.proto
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/cache && \
+    chown -R apiuser:apiuser /app
+
+# Switch to non-root user
+USER apiuser
+
+# Health check for gRPC
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import grpc; channel = grpc.insecure_channel('localhost:50051'); grpc.channel_ready_future(channel).result(timeout=5)"
+
+# Expose gRPC port
+EXPOSE 50051
+
+# gRPC server command
+CMD ["python", "src/api/grpc/server.py"]
+
+# Stage 6: Production build for GraphQL server
+FROM python-base AS production-graphql
+
+# Copy virtual environment from poetry-base
+COPY --from=poetry-base $PYSETUP_PATH $PYSETUP_PATH
+
+# Create non-root user
+RUN groupadd -r apiuser && useradd -r -g apiuser apiuser
+
+# Set working directory
+WORKDIR /app
+
+# Copy application files
+COPY --chown=apiuser:apiuser src/ ./src/
+COPY --chown=apiuser:apiuser configs/ ./configs/
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/cache && \
+    chown -R apiuser:apiuser /app
+
+# Switch to non-root user
+USER apiuser
+
+# Health check for GraphQL
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:4000/health').raise_for_status()"
+
+# Expose GraphQL port
+EXPOSE 4000
+
+# GraphQL server command
+CMD ["python", "src/api/graphql/server.py"]
+
+# Stage 7: Nginx reverse proxy
+FROM nginx:alpine AS nginx-proxy
+
+# Remove default nginx config
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copy custom nginx configuration
+COPY deployment/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY deployment/nginx/api.conf /etc/nginx/conf.d/
+
+# Health check for nginx
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost/health || exit 1
+
+# Expose HTTP and HTTPS ports
+EXPOSE 80 443
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
+
+# Stage 8: All-in-one development image
+FROM development AS all-in-one
+
+# Install supervisord for running multiple services
+RUN apt-get update && apt-get install -y supervisor && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy supervisor configuration
+COPY deployment/supervisor/supervisord.conf /etc/supervisor/conf.d/
+
+# Expose all service ports
+EXPOSE 8000 8001 8002 8003 4000 50051 9090
+
+# Start supervisor
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
