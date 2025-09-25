@@ -1,0 +1,299 @@
+# Data Service Configuration for AG News Text Classification
+# ================================================================================
+# This configuration file defines settings for the data service including
+# data management, preprocessing, augmentation, and quality control.
+#
+# References:
+#   - Data Management Body of Knowledge (DAMA-DMBOK2) (2017)
+#   - Polyzotis, N., et al. (2017). Data Management Challenges in Production Machine Learning
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+# Service Metadata
+service:
+  name: "data-service"
+  version: "1.0.0"
+  description: "Data management and processing service for AG News"
+  namespace: "agnews"
+  
+# Data Sources Configuration
+data_sources:
+  # Primary data source
+  primary:
+    type: "filesystem"  # filesystem, s3, gcs, database
+    path: "${DATA_PATH:/data}"
+    format: "json"  # json, csv, parquet, tfrecord
+    
+  # External data sources
+  external:
+    - name: "news_corpus"
+      type: "s3"
+      bucket: "${NEWS_CORPUS_BUCKET}"
+      prefix: "news/"
+    - name: "wikipedia"
+      type: "api"
+      endpoint: "https://api.wikipedia.org"
+      
+  # Cache configuration
+  cache:
+    enabled: true
+    type: "redis"  # redis, memcached, disk
+    ttl_seconds: 3600
+    max_size_gb: 10
+    
+# Data Management
+data_management:
+  # Dataset versioning
+  versioning:
+    enabled: true
+    strategy: "git-lfs"  # git-lfs, dvc, custom
+    auto_commit: true
+    
+  # Data validation
+  validation:
+    enabled: true
+    schema_validation: true
+    quality_checks:
+      - check_duplicates: true
+      - check_missing: true
+      - check_outliers: true
+      - check_consistency: true
+      
+  # Data lineage tracking
+  lineage:
+    enabled: true
+    backend: "mlflow"  # mlflow, atlas, custom
+    track_transformations: true
+    
+  # Data catalog
+  catalog:
+    enabled: true
+    backend: "hive"  # hive, glue, custom
+    auto_discovery: true
+    
+# Preprocessing Configuration
+preprocessing:
+  # Text cleaning
+  text_cleaning:
+    lowercase: true
+    remove_punctuation: false
+    remove_numbers: false
+    remove_urls: true
+    remove_emails: true
+    remove_special_chars: true
+    normalize_whitespace: true
+    
+  # Tokenization
+  tokenization:
+    tokenizer: "bert"  # bert, spacy, nltk, custom
+    max_length: 512
+    truncation: "longest_first"
+    padding: "max_length"
+    
+  # Feature extraction
+  feature_extraction:
+    methods:
+      - name: "tfidf"
+        max_features: 10000
+      - name: "word2vec"
+        vector_size: 300
+      - name: "bert_embeddings"
+        model: "bert-base-uncased"
+        
+  # Pipeline configuration
+  pipeline:
+    steps:
+      - "text_cleaning"
+      - "tokenization"
+      - "feature_extraction"
+    parallel_processing: true
+    num_workers: 4
+    
+# Augmentation Configuration
+augmentation:
+  # Augmentation strategies
+  strategies:
+    back_translation:
+      enabled: true
+      languages: ["es", "fr", "de"]
+      translation_model: "opus-mt"
+      
+    paraphrase:
+      enabled: true
+      model: "paraphrase-distilroberta-base-v1"
+      num_paraphrases: 3
+      
+    token_replacement:
+      enabled: true
+      methods: ["synonym", "mask", "random"]
+      replacement_prob: 0.1
+      
+    mixup:
+      enabled: true
+      alpha: 0.2
+      
+    adversarial:
+      enabled: false
+      epsilon: 0.1
+      method: "fgsm"
+      
+  # Augmentation control
+  control:
+    augmentation_ratio: 1.0
+    preserve_original: true
+    quality_threshold: 0.8
+    max_augmentations_per_sample: 5
+    
+# Data Quality
+data_quality:
+  # Quality metrics
+  metrics:
+    - completeness: 0.95
+    - accuracy: 0.98
+    - consistency: 0.99
+    - timeliness: 0.90
+    
+  # Quality monitoring
+  monitoring:
+    enabled: true
+    check_interval_minutes: 60
+    alert_on_degradation: true
+    
+  # Data profiling
+  profiling:
+    enabled: true
+    compute_statistics: true
+    detect_anomalies: true
+    generate_report: true
+    
+# Sampling Configuration
+sampling:
+  # Sampling strategies
+  strategies:
+    balanced:
+      enabled: true
+      method: "stratified"
+      
+    active_learning:
+      enabled: false
+      uncertainty_method: "entropy"
+      query_batch_size: 100
+      
+    coreset:
+      enabled: false
+      selection_ratio: 0.1
+      method: "gradient_matching"
+      
+  # Class balancing
+  class_balancing:
+    enabled: true
+    method: "smote"  # smote, adasyn, random_oversample
+    sampling_strategy: "auto"
+    
+# Batch Processing
+batch_processing:
+  # Batch configuration
+  batch_size: 1000
+  max_batch_size: 10000
+  
+  # Processing options
+  parallel_batches: 4
+  prefetch_batches: 2
+  
+  # Memory management
+  max_memory_usage_gb: 8
+  spill_to_disk: true
+  
+# Storage Configuration
+storage:
+  # Primary storage
+  primary:
+    type: "s3"  # s3, gcs, azure, local
+    bucket: "${DATA_BUCKET}"
+    region: "${AWS_REGION:us-east-1}"
+    
+  # Backup storage
+  backup:
+    enabled: true
+    type: "s3"
+    bucket: "${BACKUP_BUCKET}"
+    retention_days: 90
+    
+  # Compression
+  compression:
+    enabled: true
+    algorithm: "gzip"  # gzip, snappy, lz4
+    level: 6
+    
+# API Configuration
+api:
+  # Rate limiting
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 1000
+    burst_size: 2000
+    
+  # Pagination
+  pagination:
+    default_page_size: 100
+    max_page_size: 1000
+    
+  # Response caching
+  response_cache:
+    enabled: true
+    ttl_seconds: 300
+    
+# Monitoring Configuration
+monitoring:
+  # Metrics collection
+  metrics:
+    enabled: true
+    collect:
+      - "data_processing_time"
+      - "augmentation_quality"
+      - "cache_hit_rate"
+      - "storage_usage"
+      
+  # Logging
+  logging:
+    level: "INFO"
+    include_data_samples: false
+    
+  # Alerting
+  alerting:
+    enabled: true
+    channels: ["email", "slack"]
+    
+# Security Configuration
+security:
+  # Data privacy
+  privacy:
+    pii_detection: true
+    pii_masking: true
+    encryption_at_rest: true
+    encryption_in_transit: true
+    
+  # Access control
+  access_control:
+    enabled: true
+    rbac_enabled: true
+    audit_logging: true
+    
+# Performance Optimization
+performance:
+  # Caching strategies
+  caching:
+    preprocessed_data: true
+    augmented_data: false
+    embeddings: true
+    
+  # Indexing
+  indexing:
+    enabled: true
+    index_fields: ["id", "label", "timestamp"]
+    
+  # Query optimization
+  query_optimization:
+    enabled: true
+    use_materialized_views: true
