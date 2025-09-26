@@ -1,0 +1,450 @@
+# Meta-Learning Configuration
+# ============================
+# Configuration for meta-learning (learning to learn) following methodologies from:
+# - Finn et al. (2017): "Model-Agnostic Meta-Learning for Fast Adaptation"
+# - Nichol et al. (2018): "Reptile: A Scalable Metalearning Algorithm"
+# - Ravi & Larochelle (2017): "Optimization as a Model for Few-Shot Learning"
+# - Hospedales et al. (2021): "Meta-Learning in Neural Networks: A Survey"
+#
+# Mathematical Foundation:
+# MAML objective: min_θ Σ_τ L_τ(θ - α∇L_τ(θ))
+# where τ are tasks, α is inner loop learning rate, θ are meta-parameters
+#
+# Reptile update: θ = θ + ε(θ' - θ)
+# where θ' are parameters after k steps of SGD on task
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: meta_learning
+type: advanced_meta
+description: "Meta-learning for rapid adaptation to new tasks with few examples"
+
+# Base configuration inheritance
+extends: ../standard/base_training.yaml
+
+# Meta-Learning Configuration
+meta_learning:
+  enabled: true
+  
+  # Meta-learning algorithm
+  algorithm: maml  # Options: maml, reptile, fomaml, proto_net, matching_net, relation_net
+  
+  # Task configuration
+  tasks:
+    # Number of ways (classes per task)
+    n_way: 4  # 4-way classification for AG News
+    
+    # Number of shots (examples per class)
+    k_shot: 5  # 5-shot learning
+    
+    # Query set size per class
+    q_query: 15
+    
+    # Task sampling
+    num_tasks_per_epoch: 100
+    task_batch_size: 4  # Number of tasks per meta-batch
+    
+    # Task distribution
+    task_distribution: uniform  # Options: uniform, weighted, curriculum
+    
+    # Task augmentation
+    task_augmentation:
+      enabled: true
+      permute_labels: true
+      subset_classes: true
+      vary_shots: false  # Variable k-shot
+      shot_range: [1, 10]
+
+# MAML (Model-Agnostic Meta-Learning)
+maml:
+  enabled: true
+  
+  # Inner loop (task-specific adaptation)
+  inner_loop:
+    learning_rate: 0.01  # α in MAML
+    num_steps: 5  # Gradient steps for adaptation
+    
+    # First-order approximation
+    first_order: false  # True for FOMAML
+    
+    # Learning rate scheduling
+    lr_scheduler: none  # Options: none, linear, cosine
+    lr_decay: 0.9
+    
+    # Gradient clipping
+    clip_grad: 1.0
+    
+  # Outer loop (meta-optimization)
+  outer_loop:
+    learning_rate: 0.001  # Meta learning rate
+    optimizer: adam  # Options: adam, sgd, adamw
+    
+    # Meta gradient accumulation
+    accumulation_steps: 1
+    
+    # Second-order gradients
+    second_order: true  # False for first-order MAML
+    
+    # Hessian-vector products
+    use_hvp: false  # Efficient second-order computation
+    
+  # Multi-step loss
+  multi_step_loss:
+    enabled: false
+    weights: [0.1, 0.2, 0.3, 0.4]  # Weights for each adaptation step
+    
+  # Task-specific parameters
+  task_specific_params:
+    enabled: false
+    num_context_params: 100
+    param_generator: mlp  # Options: mlp, lstm, transformer
+
+# Reptile
+reptile:
+  enabled: false
+  
+  # Training iterations
+  inner_iterations: 5  # k in Reptile
+  
+  # Meta step size
+  meta_step_size: 1.0  # ε in Reptile
+  meta_step_decay: 0.999
+  
+  # Optimization
+  inner_optimizer: sgd
+  inner_learning_rate: 0.01
+  
+  # Outer loop batching
+  meta_batch_size: 5
+  
+  # Interpolation
+  interpolation_factor: null  # Manual override for ε
+
+# Prototypical Networks
+proto_net:
+  enabled: false
+  
+  # Prototype computation
+  prototype_method: mean  # Options: mean, median, attention
+  
+  # Distance metric
+  distance_metric: euclidean  # Options: euclidean, cosine, mahalanobis
+  
+  # Temperature scaling
+  temperature: 1.0
+  learnable_temperature: false
+  
+  # Prototype refinement
+  refinement:
+    enabled: false
+    num_iterations: 3
+    refinement_method: gradient  # Options: gradient, attention
+    
+  # Class prototype regularization
+  prototype_regularization:
+    enabled: false
+    regularization_weight: 0.01
+    regularization_type: l2  # Options: l1, l2
+
+# Matching Networks
+matching_net:
+  enabled: false
+  
+  # Full context embeddings
+  fce: true  # Full Context Embeddings
+  fce_lstm_layers: 1
+  fce_lstm_hidden: 64
+  
+  # Attention mechanism
+  attention_type: cosine  # Options: cosine, dot, scaled_dot
+  
+  # Support set augmentation
+  augment_support: false
+  augmentation_factor: 2
+
+# Relation Networks
+relation_net:
+  enabled: false
+  
+  # Relation module
+  relation_module:
+    architecture: mlp  # Options: mlp, cnn, transformer
+    hidden_dims: [64, 64]
+    activation: relu
+    
+  # Combination method
+  combination: concatenation  # Options: concatenation, subtraction, multiplication
+  
+  # Output activation
+  output_activation: sigmoid
+
+# Memory-Augmented Neural Networks (MANN)
+mann:
+  enabled: false
+  
+  # Memory configuration
+  memory_size: 128
+  memory_dim: 64
+  
+  # Controller
+  controller_type: lstm  # Options: lstm, gru, transformer
+  controller_hidden: 256
+  
+  # Read/write heads
+  num_read_heads: 1
+  num_write_heads: 1
+  
+  # Addressing
+  addressing_mode: content  # Options: content, location, hybrid
+
+# Optimization-based Meta-Learning
+optimization_based:
+  # LEO (Latent Embedding Optimization)
+  leo:
+    enabled: false
+    latent_dim: 64
+    encoder_hidden: [128, 64]
+    decoder_hidden: [64, 128]
+    
+  # Meta-SGD
+  meta_sgd:
+    enabled: false
+    learn_inner_lr: true  # Learn per-parameter learning rates
+    inner_lr_init: 0.01
+    
+  # iMAML (Implicit MAML)
+  imaml:
+    enabled: false
+    cg_steps: 5  # Conjugate gradient steps
+    cg_damping: 1.0
+    
+  # ANIL (Almost No Inner Loop)
+  anil:
+    enabled: false
+    freeze_backbone: true
+    adapt_head_only: true
+
+# Task Generation and Sampling
+task_generation:
+  # Synthetic task generation
+  synthetic_tasks:
+    enabled: false
+    generation_method: permutation  # Options: permutation, subset, mixup
+    
+  # Task curriculum
+  curriculum:
+    enabled: false
+    difficulty_metric: accuracy  # Options: accuracy, loss, uncertainty
+    start_difficulty: easy
+    progression_rate: 0.1
+    
+  # Hard task mining
+  hard_task_mining:
+    enabled: false
+    mining_frequency: 10  # Every N episodes
+    hard_task_ratio: 0.2
+    
+  # Task augmentation
+  augmentation:
+    label_smoothing: 0.1
+    mixup_tasks: false
+    mixup_alpha: 0.2
+
+# Few-shot Learning Specifics
+few_shot:
+  # Support/Query split
+  support_query_split: random  # Options: random, stratified, temporal
+  
+  # Data augmentation for few-shot
+  augmentation:
+    support_set: true
+    query_set: false
+    techniques:
+      - rotation
+      - crop
+      - color_jitter
+      
+  # Transductive learning
+  transductive:
+    enabled: false
+    use_query_for_prototypes: false
+    
+  # Semi-supervised few-shot
+  semi_supervised:
+    enabled: false
+    unlabeled_ratio: 0.5
+    ssl_method: pseudo_labeling  # Options: pseudo_labeling, consistency
+
+# Continual Meta-Learning
+continual:
+  enabled: false
+  
+  # Continual learning strategy
+  strategy: ewc  # Options: ewc, mas, gem, a-gem
+  
+  # Elastic Weight Consolidation
+  ewc:
+    lambda: 1000
+    fisher_estimation_samples: 200
+    
+  # Gradient Episodic Memory
+  gem:
+    memory_size: 256
+    margin: 0.5
+
+# Model Architecture for Meta-Learning
+architecture:
+  # Backbone
+  backbone: resnet18  # Smaller model for faster adaptation
+  pretrained: false  # Usually start from scratch for meta-learning
+  
+  # Feature extractor
+  feature_dim: 512
+  
+  # Adaptation modules
+  film:  # Feature-wise Linear Modulation
+    enabled: false
+    num_layers: 4
+    
+  # Task conditioning
+  task_conditioning:
+    enabled: false
+    conditioning_method: concat  # Options: concat, film, attention
+    task_embedding_dim: 64
+
+# Training Configuration
+training:
+  # Meta-training
+  meta_epochs: 100
+  meta_batch_size: 4  # Tasks per batch
+  
+  # Validation
+  val_tasks: 100
+  val_frequency: 5  # Validate every N epochs
+  
+  # Meta-testing
+  test_tasks: 500
+  test_adaptation_steps: 10
+  
+  # Learning rate schedules
+  meta_lr_scheduler: cosine
+  inner_lr_scheduler: none
+  
+  # Early stopping
+  early_stopping_patience: 10
+  early_stopping_metric: val_accuracy
+  
+  # Checkpointing
+  save_best_only: true
+  save_frequency: 10
+
+# Evaluation
+evaluation:
+  # Evaluation protocol
+  num_test_tasks: 1000
+  adaptation_steps: [1, 5, 10]  # Evaluate at different adaptation steps
+  
+  # Metrics
+  metrics:
+    - accuracy
+    - f1_score
+    - confusion_matrix
+    
+  # Confidence intervals
+  compute_confidence: true
+  confidence_level: 0.95
+  bootstrap_samples: 1000
+  
+  # Cross-domain evaluation
+  cross_domain:
+    enabled: false
+    domains: []
+
+# Debugging and Analysis
+debugging:
+  # Gradient analysis
+  log_inner_gradients: false
+  log_outer_gradients: false
+  check_gradient_flow: true
+  
+  # Task analysis
+  log_task_performance: true
+  analyze_task_similarity: false
+  
+  # Visualization
+  visualize_adaptation: false
+  plot_learning_curves: true
+  
+  # Sanity checks
+  overfit_single_task: false
+  memorization_check: false
+
+# Experimental Features
+experimental:
+  # Meta-learning with transformers
+  transformer_maml:
+    enabled: false
+    adapt_attention: true
+    adapt_ffn: true
+    
+  # Neural Architecture Search
+  meta_nas:
+    enabled: false
+    search_space: darts
+    
+  # Bayesian meta-learning
+  bayesian:
+    enabled: false
+    uncertainty_method: dropout
+    num_samples: 10
+    
+  # Meta-learning with RL
+  meta_rl:
+    enabled: false
+    policy_network: lstm
+    reward_shaping: true
+
+# Hardware Optimization
+optimization:
+  # Memory optimization
+  gradient_checkpointing: false
+  accumulate_meta_gradients: false
+  
+  # Computation optimization
+  parallel_inner_loops: false
+  num_workers: 4
+  
+  # Mixed precision
+  fp16: false  # Often problematic for meta-learning
+  
+  # Distributed training
+  distributed:
+    enabled: false
+    tasks_per_gpu: 1
+
+# Notes
+notes: |
+  Meta-Learning Configuration for AG News:
+  
+  Algorithm selection:
+  - MAML: Best for gradient-based adaptation
+  - Reptile: Simpler, more scalable alternative
+  - ProtoNet: Good for metric learning
+  
+  Key hyperparameters:
+  - Inner learning rate: 0.01 (task adaptation)
+  - Outer learning rate: 0.001 (meta-optimization)
+  - Inner steps: 5 (usually 1-10)
+  - N-way K-shot: 4-way 5-shot for AG News
+  
+  Expected performance:
+  - Rapid adaptation (5-10 gradient steps)
+  - Good few-shot performance (70-80% with 5 shots)
+  - Better generalization to new categories
+  
+  Common issues:
+  - Instability: Reduce inner/outer learning rates
+  - Overfitting: Increase task diversity
+  - Slow convergence: Increase meta-batch size
+  - Memory issues: Use first-order approximation
