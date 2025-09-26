@@ -1,0 +1,387 @@
+# Contrastive Learning Configuration
+# ===================================
+# Configuration for contrastive learning following methodologies from:
+# - Chen et al. (2020): "A Simple Framework for Contrastive Learning of Visual Representations"
+# - Gao et al. (2021): "SimCSE: Simple Contrastive Learning of Sentence Embeddings"
+# - Khosla et al. (2020): "Supervised Contrastive Learning"
+# - Robinson et al. (2021): "Contrastive Learning with Hard Negative Samples"
+#
+# Mathematical Foundation:
+# Contrastive loss: L = -log(exp(sim(z_i, z_j)/τ) / Σ_k exp(sim(z_i, z_k)/τ))
+# where z_i, z_j are positive pairs, z_k includes negatives, τ is temperature
+#
+# InfoNCE objective: maximizes mutual information I(z_i; z_j)
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: contrastive_learning
+type: advanced_contrastive
+description: "Contrastive learning for robust representation learning"
+
+# Base configuration inheritance
+extends: ../standard/base_training.yaml
+
+# Contrastive Learning Configuration
+contrastive:
+  enabled: true
+  
+  # Contrastive framework
+  framework: simcse  # Options: simcse, simclr, moco, supervised_contrastive
+  
+  # Loss configuration
+  loss:
+    # Loss type
+    type: infonce  # Options: infonce, triplet, nt_xent, supervised_contrastive
+    
+    # Temperature parameter (τ)
+    temperature: 0.05  # Lower values make model more selective
+    temperature_learnable: false
+    
+    # Loss weights
+    contrastive_weight: 0.5  # Weight vs classification loss
+    classification_weight: 0.5
+    
+    # Margin for triplet loss
+    margin: 1.0
+    
+    # Label smoothing
+    label_smoothing: 0.1
+    
+    # Hard negative mining
+    hard_negative_mining:
+      enabled: true
+      num_hard_negatives: 5
+      mining_strategy: semi_hard  # Options: hard, semi_hard, all
+      margin_multiplier: 1.2
+  
+  # Positive pair generation
+  positive_pairs:
+    # Strategy for creating positive pairs
+    strategy: dropout  # Options: dropout, augmentation, paraphrase, token_cutoff
+    
+    # Dropout-based (SimCSE)
+    dropout:
+      enabled: true
+      dropout_rate: 0.1
+      apply_twice: true  # Apply dropout twice for positive pairs
+      
+    # Data augmentation
+    augmentation:
+      enabled: true
+      techniques:
+        - token_replacement
+        - synonym_substitution
+        - random_deletion
+        - random_swap
+      augmentation_probability: 0.3
+      max_augmentations: 2
+      
+    # Paraphrase generation
+    paraphrase:
+      enabled: false
+      model: pegasus  # Paraphrase generation model
+      num_paraphrases: 2
+      quality_threshold: 0.8
+      
+    # Token cutoff
+    token_cutoff:
+      enabled: false
+      cutoff_rate: 0.2
+      random_cutoff: true
+  
+  # Negative pair sampling
+  negative_pairs:
+    # Sampling strategy
+    strategy: in_batch  # Options: in_batch, memory_bank, hard_negative
+    
+    # In-batch negatives
+    in_batch:
+      enabled: true
+      batch_size_multiplier: 1  # Effective negative samples
+      exclude_same_class: false  # For supervised contrastive
+      
+    # Memory bank (MoCo-style)
+    memory_bank:
+      enabled: false
+      bank_size: 65536
+      momentum: 0.999
+      update_frequency: 1
+      
+    # Hard negative sampling
+    hard_negatives:
+      enabled: true
+      num_candidates: 100
+      selection_method: top_k  # Options: top_k, threshold, probabilistic
+      k: 10
+      threshold: 0.8
+      
+    # Cross-batch negatives
+    cross_batch:
+      enabled: false
+      num_previous_batches: 3
+      storage_size: 1024
+
+# Projection head configuration
+projection_head:
+  enabled: true
+  
+  # Architecture
+  architecture: mlp  # Options: mlp, linear, transformer
+  
+  # MLP projection head
+  mlp:
+    hidden_dims: [768, 768]
+    activation: relu
+    dropout: 0.1
+    batch_norm: true
+    
+  # Output dimension
+  output_dim: 128  # Dimension of contrastive space
+  
+  # Normalization
+  normalize_embeddings: true
+  normalization_type: l2  # Options: l2, batch_norm, layer_norm
+  
+  # Training behavior
+  train_only: true  # Remove projection head after training
+  detach_gradients: false
+
+# Encoder configuration
+encoder:
+  # Shared encoder for all views
+  shared: true
+  
+  # Momentum encoder (MoCo)
+  momentum_encoder:
+    enabled: false
+    momentum: 0.999
+    update_frequency: 1
+    
+  # Stop gradient
+  stop_gradient: false
+  
+  # Encoder architecture modifications
+  modifications:
+    add_pooler: true
+    pooling_strategy: mean  # Options: mean, max, cls, attention
+    
+  # Fine-tuning strategy
+  fine_tuning:
+    freeze_layers: []
+    unfreeze_after_epochs: 0
+    layer_wise_lr_decay: 0.95
+
+# Data loading for contrastive learning
+data:
+  # Batch composition
+  batch_composition:
+    samples_per_class: 2  # For supervised contrastive
+    classes_per_batch: 16
+    
+  # Data sampling
+  sampling:
+    strategy: balanced  # Options: balanced, random, hard
+    use_triplet_sampling: false
+    
+  # Multiple views
+  num_views: 2  # Number of augmented views per sample
+  
+  # Caching
+  cache_embeddings: false
+  cache_size: 10000
+
+# SimCLR-specific configuration
+simclr:
+  enabled: false
+  
+  # NT-Xent loss
+  normalized_temperature: true
+  
+  # Large batch training
+  use_large_batch: true
+  accumulated_batch_size: 4096
+  
+  # LARS optimizer
+  use_lars: true
+  lars_momentum: 0.9
+  lars_weight_decay: 1e-6
+
+# SimCSE-specific configuration
+simcse:
+  enabled: true
+  
+  # Unsupervised SimCSE
+  unsupervised:
+    pooler_type: cls  # Options: cls, mean, max
+    hard_negative_weight: 0.0
+    
+  # Supervised SimCSE
+  supervised:
+    use_labels: false
+    entailment_data: null  # Path to NLI data
+
+# MoCo-specific configuration
+moco:
+  enabled: false
+  
+  # Queue settings
+  queue_size: 65536
+  momentum: 0.999
+  
+  # MoCo v2 improvements
+  use_mlp_head: true
+  use_augmentation_blur: false
+  
+  # MoCo v3 improvements
+  use_prediction_head: false
+  prediction_hidden_dim: 4096
+
+# Supervised Contrastive configuration
+supervised_contrastive:
+  enabled: false
+  
+  # Label usage
+  use_labels: true
+  label_smoothing: 0.1
+  
+  # Class-aware sampling
+  class_aware_temperature: false
+  per_class_temperature: null
+  
+  # Prototype learning
+  use_prototypes: false
+  num_prototypes_per_class: 1
+  prototype_momentum: 0.9
+
+# Multi-task learning with contrastive
+multi_task:
+  enabled: true
+  
+  # Task weights
+  task_weights:
+    classification: 0.5
+    contrastive: 0.5
+    
+  # Task scheduling
+  task_scheduling: simultaneous  # Options: simultaneous, alternating, curriculum
+  
+  # Gradient balancing
+  gradient_balancing: true
+  balancing_method: uncertainty  # Options: uncertainty, gradnorm, static
+
+# Training dynamics
+training:
+  # Warmup for contrastive learning
+  contrastive_warmup_epochs: 2
+  contrastive_only_epochs: 0  # Train contrastive only first
+  
+  # Learning rate schedules
+  encoder_lr: 1e-5
+  projection_head_lr: 1e-4
+  
+  # Optimizer
+  optimizer: adamw
+  weight_decay: 0.05
+  
+  # Batch size (important for contrastive)
+  per_device_train_batch_size: 64  # Larger is better
+  gradient_accumulation_steps: 4  # Effective batch = 256
+
+# Evaluation metrics
+evaluation:
+  # Representation quality metrics
+  compute_alignment: true  # Alignment of positive pairs
+  compute_uniformity: true  # Uniformity of representations
+  
+  # Similarity metrics
+  compute_similarity_matrix: true
+  similarity_metric: cosine  # Options: cosine, euclidean, dot
+  
+  # Downstream evaluation
+  linear_eval: true  # Linear evaluation protocol
+  freeze_encoder: true
+  
+  # Retrieval metrics
+  compute_retrieval_metrics: true
+  retrieval_k: [1, 5, 10, 20]
+
+# Augmentation strategies
+augmentation:
+  # Text augmentation
+  text:
+    enabled: true
+    
+    # EDA (Easy Data Augmentation)
+    eda:
+      synonym_replacement: 0.1
+      random_insertion: 0.1
+      random_swap: 0.1
+      random_deletion: 0.1
+      
+    # Back-translation
+    back_translation:
+      enabled: false
+      languages: [fr, de, es]
+      
+    # Contextual augmentation
+    contextual:
+      enabled: false
+      model: bert-base-uncased
+      mask_probability: 0.15
+      
+  # Embedding augmentation
+  embedding:
+    enabled: false
+    noise_std: 0.1
+    dropout: 0.1
+
+# Memory and efficiency
+efficiency:
+  # Gradient checkpointing
+  gradient_checkpointing: true
+  
+  # Mixed precision
+  fp16: true
+  
+  # Efficient attention
+  use_flash_attention: false
+  
+  # Cache management
+  clear_cache_steps: 100
+
+# Ablation studies
+ablation:
+  # Disable components
+  disable_projection_head: false
+  disable_augmentation: false
+  disable_hard_negatives: false
+  
+  # Vary hyperparameters
+  temperature_ablation: [0.01, 0.05, 0.1, 0.5]
+  batch_size_ablation: [32, 64, 128, 256]
+
+# Notes
+notes: |
+  Contrastive Learning Configuration for AG News:
+  
+  Key insights:
+  1. Contrastive learning improves representation quality
+  2. Larger batch sizes generally improve performance
+  3. Temperature is a critical hyperparameter (0.05-0.1 works well)
+  4. Hard negative mining significantly improves results
+  
+  Recommended settings:
+  - For small datasets: Use supervised contrastive
+  - For large datasets: Use SimCSE or SimCLR
+  - For limited compute: Use in-batch negatives only
+  
+  Performance expectations:
+  - 2-5% improvement in downstream tasks
+  - Better generalization to unseen classes
+  - More robust to adversarial examples
+  
+  Common issues:
+  - Mode collapse: Increase temperature or add regularization
+  - Poor convergence: Reduce learning rate or increase warmup
+  - Memory issues: Reduce batch size or use gradient accumulation
