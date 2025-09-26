@@ -1,0 +1,398 @@
+# Prompt Tuning Configuration
+# ============================
+# Configuration for Prompt Tuning following methodologies from:
+# - Lester et al. (2021): "The Power of Scale for Parameter-Efficient Prompt Tuning"
+# - Liu et al. (2021): "GPT Understands, Too"
+# - Gu et al. (2022): "PPT: Pre-trained Prompt Tuning for Few-shot Learning"
+# - Vu et al. (2022): "SPoT: Better Frozen Model Adaptation through Soft Prompt Transfer"
+#
+# Mathematical Foundation:
+# Prompt tuning learns continuous embeddings P ∈ R^{k×d}
+# Input: [P; x] where P are soft prompts, x is input
+# Objective: min_P L(f([P; x]), y) with frozen f
+#
+# Parameters: O(k * d) where k=prompt length, d=embedding dimension
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: prompt_tuning
+type: efficient_prompt
+description: "Soft prompt tuning with continuous embeddings for parameter-efficient learning"
+
+# Base configuration inheritance
+extends: ../standard/base_training.yaml
+
+# Prompt Tuning Configuration
+prompt_tuning:
+  enabled: true
+  
+  # Prompt dimensions
+  dimensions:
+    # Number of soft prompt tokens
+    num_tokens: 20  # Typically 10-100
+    
+    # Embedding dimension (must match model)
+    embedding_dim: 768  # For BERT-base
+    
+    # Hidden dimension for reparameterization
+    hidden_dim: 512
+  
+  # Prompt initialization
+  initialization:
+    # Initialization strategy
+    strategy: vocab  # Options: random, vocab, class_label, task_desc, pretrained
+    
+    # Random initialization
+    random:
+      distribution: uniform  # Options: uniform, normal
+      range: [-0.5, 0.5]  # For uniform
+      mean: 0.0  # For normal
+      std: 0.02  # For normal
+      
+    # Vocabulary initialization
+    vocab:
+      # Initialize from vocabulary embeddings
+      sample_method: random  # Options: random, frequent, task_related
+      vocab_size: 30522  # BERT vocab size
+      
+      # Specific tokens (optional)
+      token_ids: null
+      tokens: ["[MASK]", "classify", "news", "category"]
+      
+    # Class label initialization
+    class_label:
+      enabled: false
+      labels: ["World", "Sports", "Business", "Tech"]
+      expand_method: repeat  # Options: repeat, interpolate
+      
+    # Task description initialization
+    task_desc:
+      enabled: false
+      description: "Classify the following news article:"
+      encode_method: average  # Options: average, first, last
+      
+    # Pretrained initialization
+    pretrained:
+      enabled: false
+      checkpoint_path: null
+      source_task: null
+  
+  # Prompt configuration
+  configuration:
+    # Prompt position
+    position: prefix  # Options: prefix, suffix, infix, mixed
+    
+    # Infix configuration (if position=infix)
+    infix:
+      insert_after_token: 5
+      num_segments: 1
+      
+    # Mixed configuration (if position=mixed)
+    mixed:
+      prefix_length: 10
+      suffix_length: 10
+      
+    # Prompt reparameterization
+    reparameterization:
+      enabled: false  # Use MLP to generate prompts
+      mlp_layers: 1
+      activation: relu
+      dropout: 0.1
+      
+    # Virtual token type
+    virtual_token_type: soft  # Options: soft, discrete, hybrid
+
+# Deep Prompt Tuning
+deep_prompt:
+  enabled: false
+  
+  # Layer-wise prompts
+  layer_prompts:
+    enabled: true
+    shared: false  # Share prompts across layers
+    layers: all  # Options: all, [0,1,2,...], alternate
+    
+  # Progressive prompt insertion
+  progressive:
+    enabled: false
+    schedule: linear  # Options: linear, exponential
+    initial_layers: 1
+    final_layers: 12
+
+# Instance-aware Prompt Tuning
+instance_aware:
+  enabled: false
+  
+  # Instance encoder
+  encoder:
+    type: mlp  # Options: mlp, lstm, transformer
+    input_features: 768
+    hidden_dim: 256
+    output_dim: 20  # Prompt length
+    
+  # Prompt generation
+  generation:
+    method: additive  # Options: additive, multiplicative, gating
+    base_prompt: true  # Use base prompt + instance-specific
+
+# SPoT (Soft Prompt Transfer)
+spot:
+  enabled: false
+  
+  # Source task prompts
+  source_prompts:
+    tasks: []  # List of source tasks
+    prompt_paths: []  # Paths to source prompts
+    
+  # Transfer strategy
+  transfer:
+    method: average  # Options: average, attention, learned
+    fine_tune: true
+    
+  # Multi-source transfer
+  multi_source:
+    enabled: false
+    aggregation: weighted  # Options: weighted, selective
+
+# Training Configuration
+training:
+  # Model freezing
+  freeze_model: true  # Critical: only train prompts
+  freeze_embeddings: false  # May train embeddings
+  
+  # Learning rate
+  prompt_lr: 3e-2  # Much higher than model LR
+  embedding_lr: 1e-4  # If training embeddings
+  
+  # Optimizer
+  optimizer: adafactor  # Good for prompt tuning
+  weight_decay: 1e-5
+  
+  # Scheduler
+  scheduler: constant_with_warmup
+  warmup_steps: 500
+  
+  # Batch configuration
+  per_device_train_batch_size: 32
+  gradient_accumulation_steps: 1
+  
+  # Training duration
+  num_train_epochs: 30  # More epochs for prompt tuning
+  max_steps: -1
+  
+  # Gradient clipping
+  max_grad_norm: 1.0
+  
+  # Mixed precision
+  fp16: true
+
+# Regularization
+regularization:
+  # Prompt dropout
+  prompt_dropout: 0.1
+  
+  # L2 regularization
+  l2_reg: 1e-5
+  
+  # Prompt norm constraint
+  max_prompt_norm: null  # Constrain prompt norm
+  
+  # Entropy regularization
+  entropy_reg:
+    enabled: false
+    weight: 0.01
+    
+  # Similarity regularization
+  similarity_reg:
+    enabled: false
+    target: orthogonal  # Options: orthogonal, diverse
+    weight: 0.01
+
+# Few-shot Configuration
+few_shot:
+  enabled: false
+  
+  # Number of examples
+  num_shots: 16  # 16-shot learning
+  
+  # Sampling strategy
+  sampling: balanced  # Options: balanced, random
+  
+  # Prompt scaling with examples
+  scale_with_examples: true
+  scaling_factor: 0.1
+
+# Multi-task Prompt Tuning
+multi_task:
+  enabled: false
+  
+  # Shared prompts
+  shared:
+    enabled: true
+    length: 5
+    
+  # Task-specific prompts
+  task_specific:
+    enabled: true
+    length: 15
+    
+  # Task embeddings
+  task_embeddings:
+    enabled: false
+    dim: 64
+    
+  # Prompt selection
+  selection:
+    method: learned  # Options: learned, fixed, attention
+
+# Prompt Ensemble
+ensemble:
+  enabled: false
+  
+  # Number of prompts
+  num_prompts: 5
+  
+  # Combination method
+  combination: voting  # Options: voting, average, attention
+  
+  # Diversity encouragement
+  diversity_loss: 0.01
+
+# Memory Efficiency
+memory:
+  # Gradient checkpointing
+  gradient_checkpointing: true
+  
+  # Prompt caching
+  cache_prompts: true
+  
+  # Batch processing
+  dynamic_batching: true
+  
+  # CPU offloading
+  offload_to_cpu: false
+
+# Inference Optimization
+inference:
+  # Prompt compilation
+  compile_prompts: false
+  
+  # Caching
+  cache_size: 1000
+  
+  # Quantization
+  quantize_prompts: false
+  bits: 8
+  
+  # Pruning
+  prune_prompts: false
+  pruning_threshold: 0.01
+
+# Analysis and Debugging
+analysis:
+  # Prompt analysis
+  analyze_prompts: true
+  log_prompt_stats: true
+  
+  # Gradient analysis
+  log_prompt_gradients: true
+  gradient_histogram: false
+  
+  # Similarity analysis
+  compute_token_similarity: true
+  nearest_vocab_tokens: 5
+  
+  # Attention analysis
+  analyze_prompt_attention: true
+  
+  # Evolution tracking
+  track_prompt_evolution: true
+  save_prompt_checkpoints: true
+
+# Evaluation
+evaluation:
+  # Prompt-specific metrics
+  compute_prompt_perplexity: true
+  
+  # Robustness testing
+  robustness:
+    prompt_perturbation: true
+    perturbation_scale: 0.1
+    
+  # Transferability
+  test_transfer: false
+  transfer_tasks: []
+  
+  # Ablation
+  ablation:
+    prompt_lengths: [5, 10, 20, 50]
+    positions: [prefix, suffix, infix]
+    init_methods: [random, vocab, class_label]
+
+# Experimental Features
+experimental:
+  # Discrete prompt search
+  discrete_search:
+    enabled: false
+    search_method: gradient  # Options: gradient, reinforcement, evolutionary
+    vocab_size: 30522
+    
+  # Prompt compression
+  compression:
+    enabled: false
+    method: svd  # Options: svd, pca, autoencoder
+    compressed_dim: 10
+    
+  # Adversarial prompts
+  adversarial:
+    enabled: false
+    attack_method: pgd
+    epsilon: 0.1
+    
+  # Meta prompt tuning
+  meta_prompt:
+    enabled: false
+    meta_learning_rate: 1e-4
+    inner_steps: 5
+
+# Notes
+notes: |
+  Prompt Tuning Configuration for AG News:
+  
+  Key settings:
+  - 20 soft prompt tokens (good for classification)
+  - Vocab initialization for better start
+  - Prefix position (most effective)
+  - High learning rate (3e-2)
+  - Frozen model (only train prompts)
+  
+  Parameter count:
+  - Prompt parameters: 20 * 768 = 15,360
+  - Model parameters: 110M (frozen)
+  - Efficiency: 0.014% of full model
+  
+  Performance expectations:
+  - Full data: 85-90% of fine-tuning
+  - Few-shot (16): 70-75% accuracy
+  - Training time: 10x faster
+  - Memory: 100x less per task
+  
+  Advantages:
+  - Extreme parameter efficiency
+  - No model modification
+  - Easy task switching
+  - Composable prompts
+  
+  Best practices:
+  - Start with vocab initialization
+  - Use 10-100 prompt tokens
+  - High learning rate (0.01-0.1)
+  - More training epochs (20-50)
+  - Monitor prompt norm
+  
+  Common issues:
+  - Poor initialization: Try vocab or class labels
+  - Optimization difficulty: Reduce learning rate
+  - Underfitting: Increase prompt length
+  - Instability: Add prompt dropout
