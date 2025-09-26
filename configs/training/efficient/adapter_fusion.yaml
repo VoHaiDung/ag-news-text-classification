@@ -1,0 +1,363 @@
+# Adapter Fusion Configuration
+# =============================
+# Configuration for Adapter Fusion following methodologies from:
+# - Pfeiffer et al. (2021): "AdapterFusion: Non-Destructive Task Composition"
+# - Houlsby et al. (2019): "Parameter-Efficient Transfer Learning for NLP"
+# - Rücklé et al. (2021): "AdapterDrop: On the Efficiency of Adapters"
+# - He et al. (2022): "Towards a Unified View of Parameter-Efficient Transfer Learning"
+#
+# Mathematical Foundation:
+# Adapter: h = h + f(hW_down)W_up where W_down ∈ R^{d×r}, W_up ∈ R^{r×d}
+# Fusion: h_fused = Σ_i α_i * h_i where α_i are learned fusion weights
+# Parameters: O(L * K * 2rd) where L=layers, K=tasks, r=bottleneck, d=hidden
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: adapter_fusion
+type: efficient_adapter
+description: "Adapter-based parameter-efficient learning with task composition capabilities"
+
+# Base configuration inheritance
+extends: ../standard/base_training.yaml
+
+# Adapter Configuration
+adapters:
+  enabled: true
+  
+  # Adapter architecture
+  architecture:
+    # Adapter type
+    type: pfeiffer  # Options: pfeiffer, houlsby, parallel, mix
+    
+    # Bottleneck dimension
+    bottleneck_dim: 64  # Reduction factor r
+    
+    # Scaling factor
+    scaling: 1.0  # Output scaling
+    
+    # Non-linearity
+    activation: relu  # Options: relu, gelu, swish, tanh
+    
+    # Residual connection
+    residual: true
+    
+    # Layer normalization
+    layer_norm: true
+    layer_norm_before: false  # LN position
+    
+    # Initialization
+    init_method: bert  # Options: bert, xavier, normal, zeros
+    init_scale: 0.01
+  
+  # Adapter placement
+  placement:
+    # Where to insert adapters
+    locations:
+      - after_attention  # After self-attention
+      - after_ffn  # After feed-forward
+      
+    # Layer selection
+    target_layers: all  # Options: all, [0,1,2,...], alternate, top_half
+    
+    # Shared vs. layer-specific
+    shared_across_layers: false
+    
+    # Task-specific adapters
+    task_specific: true
+    num_tasks: 1  # For AG News (can be extended)
+
+# Adapter Fusion Configuration
+adapter_fusion:
+  enabled: false  # Enable for multi-task scenarios
+  
+  # Fusion architecture
+  architecture:
+    # Fusion method
+    method: dynamic  # Options: static, dynamic, attention
+    
+    # Fusion layers
+    fusion_layers: all  # Which layers to fuse
+    
+    # Key-value dimensions for attention
+    key_dim: 64
+    value_dim: 64
+    
+    # Number of attention heads
+    num_heads: 8
+    
+    # Temperature for fusion weights
+    temperature: 1.0
+    
+    # Regularization
+    regularization: 0.01
+  
+  # Adapter selection
+  selection:
+    # Pre-trained adapters to fuse
+    adapter_names: []  # List of adapter names
+    
+    # Adapter weights initialization
+    init_weights: uniform  # Options: uniform, learned, importance
+    
+    # Dropout
+    fusion_dropout: 0.1
+    
+  # Training strategy
+  training:
+    # Freeze adapters during fusion
+    freeze_adapters: true
+    
+    # Only train fusion layers
+    train_fusion_only: true
+    
+    # Fusion learning rate
+    fusion_learning_rate: 1e-4
+
+# AdapterDrop (Efficiency optimization)
+adapter_drop:
+  enabled: false
+  
+  # Dropping strategy
+  strategy: random  # Options: random, structured, learned
+  
+  # Drop probability
+  drop_prob: 0.1
+  
+  # Layer-wise dropping
+  layer_drop_probs: null  # Different drop prob per layer
+  
+  # Structured dropping
+  structured:
+    drop_every_n: 2  # Drop every 2nd adapter
+    keep_first_last: true  # Always keep first and last
+
+# Parallel Adapters
+parallel_adapters:
+  enabled: false
+  
+  # Parallel configuration
+  num_parallel: 2
+  
+  # Combination method
+  combination: sum  # Options: sum, concatenate, attention
+  
+  # Independent training
+  independent: false
+
+# Mix Adapter (Mixture of Adapters)
+mix_adapter:
+  enabled: false
+  
+  # Number of experts
+  num_experts: 4
+  
+  # Gating mechanism
+  gating: top_k  # Options: top_k, soft, sparse
+  top_k: 2
+  
+  # Load balancing
+  load_balance_loss: 0.01
+  
+  # Expert capacity
+  capacity_factor: 1.25
+
+# Compacter (Compact Adapters)
+compacter:
+  enabled: false
+  
+  # Hypercomplex layers
+  hypercomplex: true
+  hypercomplex_dim: 4
+  
+  # Low-rank factorization
+  factorized: true
+  rank: 16
+  
+  # Shared parameters
+  shared_phm: true  # Shared Parameterized Hypercomplex Multiplication
+
+# Training Configuration
+training:
+  # Learning rates
+  base_model_lr: 0  # Freeze base model
+  adapter_lr: 1e-3  # Higher LR for adapters
+  
+  # Optimizer
+  optimizer: adamw
+  weight_decay: 0.01
+  
+  # Scheduler
+  scheduler: linear
+  warmup_steps: 500
+  
+  # Batch size
+  per_device_train_batch_size: 32
+  gradient_accumulation_steps: 1
+  
+  # Epochs
+  num_train_epochs: 10
+  
+  # Mixed precision
+  fp16: true
+  
+  # Gradient clipping
+  max_grad_norm: 1.0
+
+# Multi-Task Training
+multi_task:
+  enabled: false
+  
+  # Task configuration
+  tasks:
+    - name: classification
+      adapter_name: cls_adapter
+      weight: 1.0
+      
+    - name: ner
+      adapter_name: ner_adapter
+      weight: 0.5
+      
+  # Task sampling
+  sampling: proportional  # Options: proportional, uniform, annealing
+  
+  # Gradient accumulation per task
+  per_task_accumulation: false
+
+# Adapter Composition
+composition:
+  enabled: false
+  
+  # Composition operations
+  operations:
+    - type: stack  # Stack adapters
+      adapters: [adapter1, adapter2]
+      
+    - type: fuse  # Fuse adapters
+      adapters: [adapter1, adapter2, adapter3]
+      fusion_method: attention
+      
+    - type: split  # Split adapter into sub-adapters
+      adapter: adapter1
+      num_splits: 2
+
+# Memory Efficiency
+memory:
+  # Gradient checkpointing
+  gradient_checkpointing: false
+  
+  # Adapter checkpointing only
+  checkpoint_adapters_only: true
+  
+  # Cache management
+  clear_cache_steps: 100
+  
+  # CPU offloading
+  offload_adapters: false
+
+# Inference Optimization
+inference:
+  # Adapter caching
+  cache_adapters: true
+  
+  # Dynamic adapter loading
+  dynamic_loading: false
+  
+  # Adapter merging into base model
+  merge_adapters: false
+  
+  # Pruning inactive adapters
+  prune_adapters: false
+  prune_threshold: 0.01
+
+# Evaluation
+evaluation:
+  # Per-adapter evaluation
+  eval_per_adapter: true
+  
+  # Fusion evaluation
+  eval_fusion: true
+  
+  # Ablation studies
+  ablation:
+    without_adapters: true
+    single_adapters: true
+    random_fusion_weights: true
+
+# Analysis and Debugging
+analysis:
+  # Adapter importance
+  compute_importance: true
+  importance_method: gradient  # Options: gradient, taylor, attention
+  
+  # Activation analysis
+  analyze_activations: true
+  
+  # Parameter efficiency
+  compute_parameter_ratio: true
+  
+  # Fusion weight analysis
+  analyze_fusion_weights: true
+  plot_fusion_heatmap: true
+
+# Experimental Features
+experimental:
+  # LoRA + Adapters
+  lora_adapters:
+    enabled: false
+    use_lora_in_adapters: true
+    lora_rank: 8
+    
+  # Conditional adapters
+  conditional_adapters:
+    enabled: false
+    condition_on: task_embedding
+    condition_dim: 64
+    
+  # Sparse adapters
+  sparse_adapters:
+    enabled: false
+    sparsity: 0.9
+    structured: true
+    
+  # Quantized adapters
+  quantized_adapters:
+    enabled: false
+    bits: 8
+    quantization_method: dynamic
+
+# Notes
+notes: |
+  Adapter Fusion Configuration for AG News:
+  
+  Architecture choices:
+  - Pfeiffer adapters: Simple and effective
+  - Bottleneck dimension 64: Good balance
+  - After attention and FFN: Maximum expressivity
+  
+  Parameter efficiency:
+  - Base model: 110M params (BERT-base)
+  - Adapters: 0.9M params (0.8% of base)
+  - Training only adapters: 100x fewer gradients
+  
+  Performance expectations:
+  - 95-98% of full fine-tuning performance
+  - 50x faster training
+  - 100x less storage per task
+  
+  Multi-task benefits (with fusion):
+  - Share knowledge across tasks
+  - Non-destructive task composition
+  - Dynamic task weighting
+  
+  Best practices:
+  - Use bottleneck_dim = hidden_dim/16
+  - Higher LR for adapters (1e-3)
+  - Freeze base model for stability
+  - Use adapter dropout for regularization
+  
+  Common issues:
+  - Underfitting: Increase bottleneck dimension
+  - Overfitting: Add dropout or reduce adapter size
+  - Slow convergence: Increase adapter learning rate
+  - Memory issues: Enable gradient checkpointing
