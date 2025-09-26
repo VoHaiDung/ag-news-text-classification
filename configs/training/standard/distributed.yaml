@@ -1,0 +1,441 @@
+# Distributed Training Configuration
+# ===================================
+# Configuration for distributed training across multiple GPUs/nodes following:
+# - Li et al. (2020): "PyTorch Distributed: Experiences on Accelerating Data Parallel Training"
+# - Goyal et al. (2017): "Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour"
+# - Sergeev & Del Balso (2018): "Horovod: Fast and Easy Distributed Deep Learning"
+#
+# Mathematical Foundation:
+# Effective batch size = batch_size_per_gpu * num_gpus * gradient_accumulation_steps
+# Learning rate scaling: lr_effective = lr_base * sqrt(batch_size_effective / batch_size_base)
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: distributed_training
+type: standard_distributed
+description: "Multi-GPU/Multi-node distributed training configuration"
+
+# Inheritance from base config
+extends: base_training.yaml
+
+# Distributed Training Configuration
+distributed:
+  # Backend selection
+  backend: nccl  # Options: nccl, gloo, mpi
+  enabled: true
+  
+  # Process configuration
+  world_size: -1  # -1 for auto-detection
+  rank: -1  # Process rank (-1 for auto)
+  local_rank: -1  # Local GPU rank (-1 for auto)
+  
+  # Initialization
+  init_method: env://  # Options: env://, tcp://, file://
+  dist_url: tcp://localhost:23456
+  
+  # NCCL specific settings
+  nccl:
+    enabled: true
+    debug: false
+    
+    # NCCL environment variables
+    nccl_blocking_wait: 1
+    nccl_debug_subsys: null
+    nccl_ib_disable: 0
+    nccl_p2p_disable: 0
+    nccl_tree_threshold: 0
+    
+    # Performance tuning
+    nccl_socket_ifname: null  # Network interface
+    nccl_ib_cuda_support: 1
+    
+  # Gloo specific settings (CPU training)
+  gloo:
+    enabled: false
+    timeout_seconds: 1800
+    
+  # MPI settings (if using MPI backend)
+  mpi:
+    enabled: false
+    mpi_cuda_aware: false
+
+# Data Parallel Configuration
+data_parallel:
+  # PyTorch DDP settings
+  ddp:
+    enabled: true
+    
+    # DDP parameters
+    find_unused_parameters: false
+    broadcast_buffers: true
+    bucket_cap_mb: 25
+    gradient_as_bucket_view: false
+    static_graph: false
+    
+    # Communication
+    ddp_comm_hook: null  # Options: null, powerSGD, fp16_compress
+    
+    # Gradient synchronization
+    gradient_predivide_factor: 1.0
+    
+    # DDP logging
+    ddp_logging_level: WARNING
+    
+  # DataParallel (legacy, single-node)
+  dp:
+    enabled: false
+    device_ids: null
+    output_device: null
+    
+  # Fully Sharded Data Parallel (FSDP)
+  fsdp:
+    enabled: false
+    
+    # FSDP configuration
+    sharding_strategy: full_shard  # Options: full_shard, shard_grad_op, no_shard
+    cpu_offload: false
+    auto_wrap_policy: transformer_based_wrap
+    transformer_layer_cls_to_wrap: null
+    min_num_params: 1e8
+    
+    # Mixed precision
+    mixed_precision: true
+    
+    # Checkpointing
+    activation_checkpointing: false
+    
+    # State dict type
+    state_dict_type: full  # Options: full, local, sharded
+
+# DeepSpeed Configuration
+deepspeed:
+  enabled: false
+  
+  # DeepSpeed config file (overrides inline settings)
+  config_file: null
+  
+  # Inline configuration
+  config:
+    # Optimizer
+    optimizer:
+      type: AdamW
+      params:
+        lr: 3e-5
+        betas: [0.9, 0.999]
+        eps: 1e-8
+        weight_decay: 0.01
+    
+    # Scheduler
+    scheduler:
+      type: WarmupDecayLR
+      params:
+        warmup_min_lr: 0
+        warmup_max_lr: 3e-5
+        warmup_num_steps: 500
+        total_num_steps: 10000
+    
+    # ZeRO optimization
+    zero_optimization:
+      stage: 2  # Options: 0, 1, 2, 3
+      
+      # Stage 2 settings
+      allgather_partitions: true
+      allgather_bucket_size: 2e8
+      overlap_comm: true
+      reduce_scatter: true
+      reduce_bucket_size: 2e8
+      contiguous_gradients: true
+      
+      # Stage 3 settings (for very large models)
+      stage3_max_live_parameters: 1e9
+      stage3_max_reuse_distance: 1e9
+      stage3_prefetch_bucket_size: 5e8
+      stage3_param_persistence_threshold: 1e6
+      
+      # CPU offloading
+      offload_optimizer:
+        device: cpu
+        pin_memory: true
+      offload_param:
+        device: cpu
+        pin_memory: true
+    
+    # Gradient clipping
+    gradient_clipping: 1.0
+    
+    # FP16 training
+    fp16:
+      enabled: true
+      loss_scale: 0
+      initial_scale_power: 16
+      loss_scale_window: 1000
+      hysteresis: 2
+      min_loss_scale: 1
+    
+    # Activation checkpointing
+    activation_checkpointing:
+      partition_activations: false
+      contiguous_memory_optimization: false
+      number_checkpoints: null
+    
+    # Training batch size
+    train_batch_size: auto
+    train_micro_batch_size_per_gpu: auto
+    gradient_accumulation_steps: auto
+    
+    # Logging
+    steps_per_print: 100
+    wall_clock_breakdown: false
+
+# Horovod Configuration (Alternative to DDP)
+horovod:
+  enabled: false
+  
+  # Horovod settings
+  fp16_allreduce: false
+  gradient_predivide_factor: 1.0
+  
+  # Compression
+  compression: none  # Options: none, fp16, bit
+  
+  # Horovod timeline
+  timeline_filename: null
+  
+  # Elastic training
+  elastic: false
+
+# Fairscale Configuration
+fairscale:
+  enabled: false
+  
+  # Optimizer state sharding (OSS)
+  oss:
+    enabled: false
+    broadcast_fp16: false
+    
+  # Sharded DDP
+  sharded_ddp:
+    enabled: false
+    reduce_fp16: false
+    
+  # Pipeline parallelism
+  pipe:
+    enabled: false
+    balance: null
+    devices: null
+
+# Learning Rate Scaling for Distributed Training
+lr_scaling:
+  enabled: true
+  
+  # Scaling strategy
+  strategy: linear  # Options: linear, sqrt, none
+  base_batch_size: 32
+  base_learning_rate: 2e-5
+  
+  # Warmup scaling
+  warmup_scaling: true
+  warmup_epochs: 2
+  
+  # Per-GPU limits
+  max_lr_per_gpu: 5e-5
+  min_lr_per_gpu: 1e-6
+
+# Batch Size Configuration
+batch_size:
+  # Per-GPU batch sizes
+  per_device_train_batch_size: 16  # Per GPU
+  per_device_eval_batch_size: 32
+  
+  # Global batch size (overrides per-device if set)
+  global_train_batch_size: null  # Total across all GPUs
+  global_eval_batch_size: null
+  
+  # Gradient accumulation for effective batch size
+  gradient_accumulation_steps: 2
+  
+  # Dynamic batching
+  auto_find_batch_size: false
+  
+  # Memory optimization
+  gradient_checkpointing: false
+
+# Communication Optimization
+communication:
+  # All-reduce algorithm
+  allreduce_algorithm: nccl  # Options: nccl, ring, tree
+  
+  # Gradient compression
+  gradient_compression:
+    enabled: false
+    algorithm: powerSGD  # Options: powerSGD, signSGD, topk
+    compression_ratio: 0.01
+    
+  # Gradient bucketing
+  bucket_mode: size  # Options: size, type
+  bucket_cap_mb: 25
+  
+  # Async communication
+  async_comm: false
+  
+  # Network optimization
+  tcp_no_delay: true
+  num_nccl_streams: 1
+
+# Fault Tolerance
+fault_tolerance:
+  # Checkpoint saving
+  save_on_each_node: false
+  checkpoint_interval: 1000
+  
+  # Recovery
+  resume_from_checkpoint: null
+  ignore_data_skip: false
+  
+  # Elastic training (dynamic workers)
+  elastic_training:
+    enabled: false
+    min_workers: 1
+    max_workers: 8
+    
+  # Health checks
+  heartbeat_interval: 30
+  heartbeat_timeout: 60
+  
+  # Error handling
+  continue_on_error: false
+  max_failures: 3
+
+# Performance Optimization
+performance:
+  # CUDA settings
+  cudnn_benchmark: true
+  cudnn_deterministic: false
+  
+  # Memory optimization
+  empty_cache_steps: 100
+  memory_efficient_attention: true
+  
+  # I/O optimization
+  dataloader_num_workers: 4
+  dataloader_prefetch_factor: 2
+  dataloader_persistent_workers: true
+  
+  # Computation optimization
+  tf32: true  # For Ampere GPUs
+  matmul_precision: high
+  
+  # Profiling
+  profile: false
+  profile_steps: [10, 20]
+
+# Multi-node Configuration
+multi_node:
+  enabled: false
+  
+  # Node configuration
+  nnodes: 1
+  node_rank: 0
+  master_addr: localhost
+  master_port: 29500
+  
+  # SLURM integration
+  slurm:
+    enabled: false
+    partition: null
+    nodes: 1
+    ntasks_per_node: 8
+    cpus_per_task: 10
+    mem: 32G
+    time: 24:00:00
+    
+  # SSH configuration
+  ssh:
+    enabled: false
+    hostfile: null
+    ssh_port: 22
+
+# Monitoring and Logging
+monitoring:
+  # Rank-specific logging
+  log_on_each_node: false
+  log_rank_0_only: true
+  
+  # Metrics aggregation
+  aggregate_metrics: true
+  aggregation_method: mean  # Options: mean, sum, max, min
+  
+  # Performance tracking
+  track_total_throughput: true
+  track_per_gpu_throughput: true
+  track_communication_time: true
+  
+  # Synchronization points
+  barrier_timeout: 1800
+  log_barrier_time: true
+
+# Environment Variables
+env_vars:
+  # PyTorch distributed
+  MASTER_ADDR: localhost
+  MASTER_PORT: 29500
+  WORLD_SIZE: 1
+  RANK: 0
+  LOCAL_RANK: 0
+  
+  # NCCL
+  NCCL_DEBUG: INFO
+  NCCL_IB_DISABLE: 0
+  NCCL_SOCKET_IFNAME: eth0
+  
+  # CUDA
+  CUDA_VISIBLE_DEVICES: 0,1,2,3,4,5,6,7
+  CUDA_LAUNCH_BLOCKING: 0
+  
+  # OMP (CPU parallelism)
+  OMP_NUM_THREADS: 1
+  
+  # Debugging
+  TORCH_DISTRIBUTED_DEBUG: OFF
+
+# Testing Configuration
+testing:
+  # Synthetic data testing
+  use_synthetic_data: false
+  synthetic_data_size: 1000
+  
+  # Gradient checking
+  check_gradients: false
+  gradient_check_freq: 100
+  
+  # Communication testing
+  test_communication: false
+  communication_test_size: 1e6
+
+# Notes
+notes: |
+  Distributed Training Configuration optimized for:
+  - Multi-GPU training on single node (DDP)
+  - Multi-node training across clusters
+  - Large model training with model/optimizer sharding
+  - Fault-tolerant training with checkpointing
+  
+  Recommended setups:
+  1. Single-node multi-GPU: Use PyTorch DDP with NCCL
+  2. Multi-node: Use DDP with appropriate network configuration
+  3. Very large models: Use FSDP or DeepSpeed ZeRO
+  4. TPU training: Use XLA with appropriate backend
+  
+  Performance tips:
+  - Use NCCL for GPU communication
+  - Enable mixed precision training
+  - Tune bucket_cap_mb for your model size
+  - Use gradient accumulation for larger effective batch sizes
+  - Profile to identify communication bottlenecks
+  
+  Debugging:
+  - Set NCCL_DEBUG=INFO for communication issues
+  - Use TORCH_DISTRIBUTED_DEBUG=DETAIL for detailed logs
+  - Monitor GPU utilization and network bandwidth
+  - Check for stragglers in multi-node setup
