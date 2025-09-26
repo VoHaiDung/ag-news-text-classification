@@ -1,0 +1,375 @@
+# Prefix Tuning Configuration
+# ============================
+# Configuration for Prefix Tuning following methodologies from:
+# - Li & Liang (2021): "Prefix-Tuning: Optimizing Continuous Prompts for Generation"
+# - Liu et al. (2022): "P-Tuning v2: Prompt Tuning Can Be Comparable to Fine-tuning"
+# - Qin & Eisner (2021): "Learning How to Ask: Querying LMs with Mixtures of Soft Prompts"
+#
+# Mathematical Foundation:
+# Prefix tuning prepends learnable vectors to keys and values:
+# K' = [P_K; K], V' = [P_V; V]
+# where P_K, P_V ∈ R^{l×d} are prefix parameters
+# Attention: Attn(Q, K', V') = softmax(QK'^T/√d)V'
+#
+# Parameters: O(2 * l * L * d) where l=prefix length, L=layers, d=hidden dim
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: prefix_tuning
+type: efficient_prefix
+description: "Prefix-based parameter-efficient tuning with continuous prompts in attention"
+
+# Base configuration inheritance
+extends: ../standard/base_training.yaml
+
+# Prefix Tuning Configuration
+prefix_tuning:
+  enabled: true
+  
+  # Prefix dimensions
+  dimensions:
+    # Prefix length (number of virtual tokens)
+    prefix_length: 20  # Typically 10-50
+    
+    # Hidden dimension (model's hidden size)
+    hidden_dim: 768  # For BERT-base
+    
+    # Number of layers
+    num_layers: 12
+    
+    # Number of attention heads
+    num_attention_heads: 12
+    
+  # Prefix initialization
+  initialization:
+    # Initialization method
+    method: random  # Options: random, embedding, task_specific, pretrained
+    
+    # Random initialization
+    random:
+      distribution: normal  # Options: normal, uniform
+      mean: 0.0
+      std: 0.02
+      
+    # Embedding initialization (from vocab)
+    embedding:
+      use_embeddings: false
+      token_ids: null  # Specific token IDs to use
+      
+    # Task-specific initialization
+    task_specific:
+      use_task_words: false
+      task_description: "Classify news articles"
+      
+    # Pretrained initialization
+    pretrained:
+      checkpoint: null  # Path to pretrained prefix
+  
+  # Reparameterization
+  reparameterization:
+    enabled: true  # Reparameterize for stability
+    
+    # MLP reparameterization
+    mlp:
+      input_dim: 512  # Bottleneck dimension
+      hidden_dim: 512
+      output_dim: null  # Auto-computed: 2 * layers * hidden_dim
+      activation: tanh
+      num_layers: 2
+      dropout: 0.1
+      
+    # LSTM reparameterization (alternative)
+    lstm:
+      enabled: false
+      hidden_dim: 512
+      num_layers: 2
+      bidirectional: false
+  
+  # Prefix placement
+  placement:
+    # Apply to encoder, decoder, or both
+    encoder_prefix: true
+    decoder_prefix: false  # For encoder-only models
+    cross_attention_prefix: false
+    
+    # Layer-specific prefixes
+    layer_specific: true  # Different prefix per layer
+    shared_across_layers: false
+    
+    # Attention-specific
+    prefix_projection: true  # Project prefix for K and V
+
+# Deep Prompt Tuning (Prefix at multiple layers)
+deep_prompt:
+  enabled: false
+  
+  # Insertion points
+  insertion_layers: [0, 4, 8]  # Insert at specific layers
+  
+  # Shared vs. independent
+  shared_prompts: false
+  
+  # Progressive insertion
+  progressive:
+    enabled: false
+    schedule: [0, 3, 6, 9]  # Add layers progressively
+
+# P-Tuning v2 Configuration
+p_tuning_v2:
+  enabled: false
+  
+  # Continuous prompts at every layer
+  all_layers: true
+  
+  # Prompt encoder
+  encoder:
+    type: mlp  # Options: mlp, lstm, none
+    hidden_dims: [512, 512]
+    activation: relu
+    dropout: 0.1
+    
+  # Multi-task prompts
+  multi_task:
+    enabled: false
+    shared_prompt_length: 10
+    task_specific_length: 10
+
+# Training Configuration
+training:
+  # Model freezing
+  freeze_model: true  # Only train prefix
+  trainable_params: prefix_only
+  
+  # Learning rate (higher for prefix)
+  learning_rate: 1e-2  # 10-100x model LR
+  
+  # Optimizer
+  optimizer: adamw
+  weight_decay: 1e-4
+  
+  # Scheduler
+  scheduler: linear
+  warmup_ratio: 0.1
+  
+  # Batch configuration
+  per_device_train_batch_size: 32
+  gradient_accumulation_steps: 1
+  
+  # Training epochs
+  num_train_epochs: 20  # More epochs needed
+  
+  # Gradient clipping
+  max_grad_norm: 1.0
+  
+  # Mixed precision
+  fp16: true
+  
+  # Early stopping
+  early_stopping_patience: 5
+  early_stopping_threshold: 0.001
+
+# Optimization Strategies
+optimization:
+  # Prefix dropout
+  prefix_dropout: 0.1
+  
+  # Layer-wise prefix learning rate
+  layer_wise_lr:
+    enabled: false
+    decay_factor: 0.9
+    
+  # Prefix pruning
+  pruning:
+    enabled: false
+    method: magnitude  # Options: magnitude, gradient, lottery
+    sparsity: 0.5
+    
+  # Prefix distillation
+  distillation:
+    enabled: false
+    teacher_prefix_length: 50
+    student_prefix_length: 20
+    temperature: 3.0
+
+# Multi-task Prefix
+multi_task:
+  enabled: false
+  
+  # Task-specific prefixes
+  task_prefixes:
+    classification:
+      length: 10
+      shared: false
+      
+    generation:
+      length: 20
+      shared: false
+      
+  # Shared prefix
+  shared_prefix:
+    enabled: true
+    length: 10
+    
+  # Task routing
+  routing:
+    method: learned  # Options: learned, fixed, attention
+    router_hidden_dim: 256
+
+# Memory Efficiency
+memory:
+  # Gradient checkpointing for base model
+  gradient_checkpointing: true
+  
+  # Cache prefix computations
+  cache_prefix: true
+  cache_size: 1000
+  
+  # CPU offloading
+  offload_prefix: false
+  
+  # Quantization
+  quantize_prefix: false
+  quantization_bits: 8
+
+# Inference Optimization
+inference:
+  # Prefix caching
+  cache_prefix_states: true
+  
+  # Batch prefix computation
+  batch_prefix_computation: true
+  
+  # Compile prefix
+  compile_prefix: false
+  
+  # Export format
+  export_format: onnx  # Options: onnx, torchscript, tflite
+
+# Analysis and Visualization
+analysis:
+  # Prefix attention patterns
+  analyze_attention: true
+  save_attention_maps: false
+  
+  # Prefix evolution
+  track_prefix_changes: true
+  log_prefix_norms: true
+  
+  # Gradient flow
+  analyze_gradient_flow: true
+  
+  # Similarity analysis
+  compute_prefix_similarity: true
+  similarity_metric: cosine
+
+# Ablation Studies
+ablation:
+  # Prefix length ablation
+  length_ablation: [5, 10, 20, 50, 100]
+  
+  # Position ablation
+  position_ablation:
+    - encoder_only
+    - decoder_only
+    - both
+    
+  # Initialization ablation
+  init_ablation:
+    - random
+    - embedding
+    - zeros
+    
+  # Reparameterization ablation
+  reparam_ablation:
+    - none
+    - linear
+    - mlp
+    - lstm
+
+# Experimental Features
+experimental:
+  # Adaptive prefix length
+  adaptive_length:
+    enabled: false
+    min_length: 5
+    max_length: 50
+    length_predictor: learned
+    
+  # Hierarchical prefix
+  hierarchical:
+    enabled: false
+    levels: 3
+    aggregation: attention
+    
+  # Mixture of Prefixes
+  mixture:
+    enabled: false
+    num_prefixes: 4
+    gating: soft
+    
+  # Cross-lingual prefix
+  cross_lingual:
+    enabled: false
+    languages: [en, es, fr, de]
+    shared_prefix_ratio: 0.5
+
+# Comparison with Other Methods
+comparison:
+  # Baseline (full fine-tuning)
+  baseline:
+    enabled: false
+    checkpoint: null
+    
+  # LoRA comparison
+  lora:
+    enabled: false
+    rank: 8
+    
+  # Adapter comparison
+  adapter:
+    enabled: false
+    bottleneck: 64
+    
+  # Prompt tuning comparison
+  prompt:
+    enabled: false
+    num_tokens: 20
+
+# Notes
+notes: |
+  Prefix Tuning Configuration for AG News:
+  
+  Key design choices:
+  - Prefix length 20: Good balance between performance and efficiency
+  - MLP reparameterization: Improves optimization stability
+  - Layer-specific prefixes: Better expressivity
+  - High learning rate (1e-2): Faster convergence for prefix
+  
+  Parameter efficiency:
+  - Trainable params: 20 * 2 * 12 * 768 = 368K
+  - Base model params: 110M (frozen)
+  - Efficiency: 0.33% of full model
+  
+  Performance expectations:
+  - 90-95% of full fine-tuning performance
+  - 10-20x faster training
+  - 100x less storage per task
+  - No catastrophic forgetting
+  
+  Advantages over other methods:
+  - vs Adapters: No additional inference latency
+  - vs LoRA: Better for generation tasks
+  - vs Prompt Tuning: Works in all layers
+  
+  Best practices:
+  - Use prefix_length = 10-50 (task-dependent)
+  - Enable reparameterization for stability
+  - Use higher learning rate than base model
+  - Monitor prefix norm during training
+  
+  Common issues:
+  - Optimization instability: Enable reparameterization
+  - Underfitting: Increase prefix length
+  - Overfitting: Add prefix dropout
+  - Memory issues: Reduce batch size or prefix length
