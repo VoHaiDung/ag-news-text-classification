@@ -1,0 +1,397 @@
+# Curriculum Learning Configuration
+# ==================================
+# Configuration for curriculum learning following methodologies from:
+# - Bengio et al. (2009): "Curriculum Learning"
+# - Hacohen & Weinshall (2019): "On The Power of Curriculum Learning in Training Deep Networks"
+# - Platanios et al. (2019): "Competence-based Curriculum Learning"
+# - Soviany et al. (2021): "Curriculum Learning: A Survey"
+#
+# Mathematical Foundation:
+# Curriculum learning optimizes: L_t = Σ_i∈D_t w_i ℓ(f_θ(x_i), y_i)
+# where D_t ⊆ D is the subset of training data at time t, ordered by difficulty.
+#
+# Difficulty scoring: d(x) = E[ℓ(f_θ(x), y)] estimated via various metrics
+# Pacing function: λ(t) determines the fraction of data used at time t
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: curriculum_learning
+type: advanced_curriculum
+description: "Progressive training from easy to hard samples for improved convergence"
+
+# Base configuration inheritance
+extends: ../standard/base_training.yaml
+
+# Curriculum Learning Configuration
+curriculum:
+  enabled: true
+  
+  # Curriculum strategy
+  strategy: competence_based  # Options: fixed, self_paced, competence_based, adaptive
+  
+  # Difficulty estimation
+  difficulty:
+    # Metric for difficulty scoring
+    metric: loss_based  # Options: loss_based, length_based, confidence_based, gradient_based, hybrid
+    
+    # Loss-based difficulty
+    loss_based:
+      enabled: true
+      warmup_epochs: 1  # Epochs to collect loss statistics
+      update_frequency: 5  # Update difficulty every N epochs
+      percentile_normalization: true
+      smoothing_factor: 0.1  # EMA smoothing for loss tracking
+      
+    # Length-based difficulty (for text)
+    length_based:
+      enabled: false
+      max_length_percentile: 95
+      min_length_percentile: 5
+      normalize: true
+      
+    # Confidence-based difficulty
+    confidence_based:
+      enabled: false
+      entropy_threshold: 0.5
+      use_monte_carlo: false
+      mc_samples: 5
+      
+    # Gradient-based difficulty
+    gradient_based:
+      enabled: false
+      norm_type: 2  # L2 norm
+      per_sample_gradients: true
+      gradient_accumulation: 1
+      
+    # Hybrid difficulty (combination)
+    hybrid:
+      enabled: false
+      weights:
+        loss: 0.4
+        length: 0.2
+        confidence: 0.2
+        gradient: 0.2
+      normalization: softmax
+  
+  # Pacing function (how fast to increase difficulty)
+  pacing:
+    # Pacing function type
+    function: linear  # Options: linear, exponential, logarithmic, step, root, sigmoid, adaptive
+    
+    # Common parameters
+    initial_competence: 0.2  # Start with 20% easiest samples
+    final_competence: 1.0  # End with all samples
+    
+    # Linear pacing: c(t) = c_0 + (c_1 - c_0) * t/T
+    linear:
+      enabled: true
+      slope: 1.0
+      
+    # Exponential pacing: c(t) = c_0 * (c_1/c_0)^(t/T)
+    exponential:
+      enabled: false
+      base: 2.0
+      
+    # Logarithmic pacing: c(t) = c_0 + (c_1 - c_0) * log(1 + t)/log(1 + T)
+    logarithmic:
+      enabled: false
+      base: 10
+      
+    # Step pacing: discrete difficulty levels
+    step:
+      enabled: false
+      num_steps: 5
+      step_size: 0.2
+      
+    # Root pacing: c(t) = c_0 + (c_1 - c_0) * (t/T)^(1/p)
+    root:
+      enabled: false
+      power: 2.0  # Square root by default
+      
+    # Sigmoid pacing: S-shaped curve
+    sigmoid:
+      enabled: false
+      steepness: 5.0
+      midpoint: 0.5
+      
+    # Adaptive pacing based on performance
+    adaptive:
+      enabled: false
+      performance_threshold: 0.85  # Advance when accuracy > threshold
+      patience: 3  # Epochs to wait before advancing
+      min_competence_increase: 0.05
+      max_competence_increase: 0.2
+  
+  # Curriculum scheduling
+  scheduling:
+    # Duration of curriculum
+    curriculum_epochs: 5  # Epochs with curriculum before full training
+    warmup_epochs: 1  # Initial warmup with easiest samples
+    
+    # Transition to full dataset
+    transition_type: smooth  # Options: smooth, abrupt
+    transition_epochs: 2  # Epochs for smooth transition
+    
+    # Curriculum phases
+    phases:
+      - name: warmup
+        epochs: 1
+        competence: 0.1
+        learning_rate_multiplier: 0.5
+        
+      - name: easy
+        epochs: 2
+        competence: 0.3
+        learning_rate_multiplier: 0.8
+        
+      - name: medium
+        epochs: 2
+        competence: 0.6
+        learning_rate_multiplier: 1.0
+        
+      - name: hard
+        epochs: 2
+        competence: 0.9
+        learning_rate_multiplier: 1.0
+        
+      - name: full
+        epochs: 3
+        competence: 1.0
+        learning_rate_multiplier: 0.8
+  
+  # Sample selection
+  selection:
+    # Selection method
+    method: threshold  # Options: threshold, probabilistic, top_k, stratified
+    
+    # Threshold-based selection
+    threshold:
+      enabled: true
+      difficulty_threshold: dynamic  # Options: dynamic, fixed value
+      include_margin: 0.05  # Include samples within margin of threshold
+      
+    # Probabilistic selection
+    probabilistic:
+      enabled: false
+      temperature: 1.0  # Softmax temperature for sampling
+      sampling_method: multinomial  # Options: multinomial, systematic
+      
+    # Top-k selection
+    top_k:
+      enabled: false
+      k_fraction: 0.5  # Select top 50% easiest
+      stratified: true  # Maintain class balance
+      
+    # Stratified selection (maintain class distribution)
+    stratified:
+      enabled: true
+      maintain_class_ratio: true
+      min_samples_per_class: 10
+  
+  # Anti-curriculum (start with hard samples)
+  anti_curriculum:
+    enabled: false
+    # Same parameters as curriculum but reversed
+
+# Self-Paced Learning Configuration
+self_paced:
+  enabled: false
+  
+  # Self-paced parameters
+  initial_lambda: 0.1  # Initial threshold
+  lambda_growth_rate: 1.5  # Growth rate per epoch
+  max_lambda: 10.0
+  
+  # Sample weighting
+  weight_type: binary  # Options: binary, continuous
+  min_weight: 0.0
+  max_weight: 1.0
+  
+  # Regularization
+  regularization_weight: 1.0
+  regularization_type: l2  # Options: l1, l2
+  
+  # Diversity
+  diversity_weight: 0.1
+  diversity_metric: cosine  # Options: cosine, euclidean
+
+# Competence-Based Curriculum
+competence_based:
+  enabled: true
+  
+  # Competence function
+  competence_type: linear  # Options: linear, root, geometric, adaptive
+  
+  # Competence progression
+  progression_type: performance  # Options: fixed, performance, uncertainty
+  competence_increment: 0.05
+  competence_patience: 3
+  performance_threshold: 0.85
+  
+  # Difficulty estimation
+  difficulty_features:
+    - length
+    - vocabulary
+    - syntax
+    - semantics
+  
+  # Sampling strategy
+  sampling_type: probabilistic  # Options: threshold, probabilistic, ranked
+  sampling_temperature: 1.0
+  min_batch_competence: 0.5
+
+# Data Augmentation with Curriculum
+augmentation_curriculum:
+  enabled: false
+  
+  # Progressive augmentation
+  progressive_augmentation: true
+  
+  # Augmentation schedule
+  schedule:
+    - epoch: [0, 2]
+      augmentation_strength: 0.1
+      augmentation_types: [token_replacement]
+      
+    - epoch: [2, 5]
+      augmentation_strength: 0.3
+      augmentation_types: [token_replacement, paraphrase]
+      
+    - epoch: [5, 10]
+      augmentation_strength: 0.5
+      augmentation_types: [token_replacement, paraphrase, back_translation]
+
+# Training dynamics with curriculum
+training:
+  # Batch size scheduling
+  batch_size_schedule:
+    enabled: false
+    initial_batch_size: 16
+    final_batch_size: 64
+    scaling: linear
+    
+  # Learning rate scheduling
+  lr_curriculum:
+    enabled: true
+    adjust_lr_with_difficulty: true
+    lr_scaling_factor: 0.8  # Scale LR for hard samples
+    
+  # Optimizer adjustments
+  optimizer_curriculum:
+    enabled: false
+    easy_phase_optimizer: sgd
+    hard_phase_optimizer: adamw
+    transition_epoch: 5
+    
+  # Loss function curriculum
+  loss_curriculum:
+    enabled: false
+    easy_loss: mse
+    hard_loss: cross_entropy
+    transition: smooth
+
+# Monitoring and evaluation
+monitoring:
+  # Track curriculum metrics
+  track_competence: true
+  track_difficulty_distribution: true
+  track_sample_usage: true
+  
+  # Logging frequency
+  log_curriculum_stats: true
+  log_frequency: 100  # Steps
+  
+  # Visualization
+  plot_difficulty_histogram: true
+  plot_competence_curve: true
+  plot_sample_selection: true
+  
+  # Save curriculum data
+  save_difficulty_scores: true
+  save_selection_history: true
+
+# Performance optimization
+performance:
+  # Caching
+  cache_difficulty_scores: true
+  cache_size: 10000
+  
+  # Parallel difficulty computation
+  parallel_difficulty_computation: true
+  num_workers: 4
+  
+  # Efficient sampling
+  use_indexed_sampling: true
+  rebuild_index_frequency: 5  # Epochs
+
+# Experimental features
+experimental:
+  # Multi-task curriculum
+  multi_task_curriculum:
+    enabled: false
+    task_ordering: easiest_first
+    task_interleaving: sequential
+    
+  # Transfer curriculum
+  transfer_curriculum:
+    enabled: false
+    source_task: null
+    transfer_difficulty_scores: false
+    
+  # Meta-curriculum learning
+  meta_curriculum:
+    enabled: false
+    learn_pacing_function: false
+    learn_difficulty_metric: false
+    
+  # Reinforcement learning for curriculum
+  rl_curriculum:
+    enabled: false
+    reward_metric: validation_accuracy
+    exploration_rate: 0.1
+
+# Ablation study settings
+ablation:
+  # Disable components for ablation
+  disable_curriculum: false
+  disable_pacing: false
+  disable_difficulty_scoring: false
+  
+  # Random baselines
+  random_ordering: false
+  reverse_curriculum: false
+  
+  # Oracle settings
+  use_oracle_difficulty: false
+  oracle_difficulty_file: null
+
+# Notes and best practices
+notes: |
+  Curriculum Learning Configuration for AG News Classification:
+  
+  Key principles:
+  1. Start with easy samples (short, clear texts)
+  2. Gradually introduce harder samples (longer, ambiguous)
+  3. Adjust pacing based on model performance
+  4. Maintain class balance throughout curriculum
+  
+  Recommended settings by dataset size:
+  - Small (<10K): Use aggressive curriculum (initial_competence=0.1)
+  - Medium (10K-100K): Moderate curriculum (initial_competence=0.2)
+  - Large (>100K): Gentle curriculum (initial_competence=0.3)
+  
+  Performance expectations:
+  - Faster convergence (20-30% fewer epochs)
+  - Better generalization (2-5% accuracy improvement)
+  - More stable training (reduced variance)
+  
+  Troubleshooting:
+  - If model plateaus early: Increase pacing speed
+  - If training unstable: Decrease initial_competence
+  - If no improvement: Check difficulty scoring quality
+  
+  Advanced techniques:
+  - Combine with self-paced learning for adaptive curriculum
+  - Use competence-based progression for automatic pacing
+  - Apply anti-curriculum for robust feature learning
