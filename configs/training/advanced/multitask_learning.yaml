@@ -1,0 +1,455 @@
+# Multi-Task Learning Configuration
+# ==================================
+# Configuration for multi-task learning following methodologies from:
+# - Caruana (1997): "Multitask Learning"
+# - Ruder (2017): "An Overview of Multi-Task Learning in Deep Neural Networks"
+# - Liu et al. (2019): "Multi-Task Deep Neural Networks for Natural Language Understanding"
+# - Vandenhende et al. (2021): "Multi-Task Learning for Dense Prediction Tasks: A Survey"
+#
+# Mathematical Foundation:
+# Multi-task objective: L_total = Σ_i λ_i * L_i(θ_shared, θ_i)
+# where λ_i are task weights, θ_shared are shared parameters, θ_i are task-specific
+#
+# Gradient balancing: ∇L_total = Σ_i α_i * ∇L_i where α_i balances gradient magnitudes
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: multitask_learning
+type: advanced_multitask
+description: "Multi-task learning for improved generalization through auxiliary tasks"
+
+# Base configuration inheritance
+extends: ../standard/base_training.yaml
+
+# Multi-Task Learning Configuration
+multitask:
+  enabled: true
+  
+  # Architecture type
+  architecture: shared_bottom  # Options: shared_bottom, cross_stitch, moe, mmoe, ple
+  
+  # Task definitions
+  tasks:
+    # Primary task: AG News classification
+    primary_classification:
+      name: ag_news_classification
+      type: classification
+      num_classes: 4
+      weight: 1.0
+      loss: cross_entropy
+      metrics: [accuracy, f1_macro]
+      is_primary: true
+      
+    # Auxiliary task 1: Domain classification
+    domain_classification:
+      name: domain_classification
+      type: classification
+      num_classes: 10  # Fine-grained domains
+      weight: 0.3
+      loss: cross_entropy
+      metrics: [accuracy]
+      is_auxiliary: true
+      
+    # Auxiliary task 2: Sentiment analysis
+    sentiment_analysis:
+      name: sentiment
+      type: classification
+      num_classes: 3  # Positive, Negative, Neutral
+      weight: 0.2
+      loss: cross_entropy
+      metrics: [accuracy, f1_macro]
+      is_auxiliary: true
+      
+    # Auxiliary task 3: Named entity recognition
+    ner:
+      name: ner
+      type: sequence_labeling
+      num_classes: 9  # B-PER, I-PER, B-LOC, etc.
+      weight: 0.2
+      loss: crf  # Conditional Random Field
+      metrics: [f1_micro]
+      is_auxiliary: true
+      
+    # Auxiliary task 4: Language modeling
+    mlm:
+      name: masked_language_modeling
+      type: mlm
+      vocab_size: 30522
+      weight: 0.3
+      loss: cross_entropy
+      mask_probability: 0.15
+      metrics: [perplexity]
+      is_auxiliary: true
+
+# Shared encoder configuration
+shared_encoder:
+  # Base model
+  model_name: bert-base-uncased
+  
+  # Sharing strategy
+  sharing_strategy: full  # Options: full, partial, layer_wise
+  
+  # Partial sharing (if enabled)
+  partial_sharing:
+    shared_layers: [0, 1, 2, 3, 4, 5]  # First 6 layers shared
+    task_specific_layers: [6, 7, 8, 9, 10, 11]  # Last 6 layers task-specific
+    
+  # Layer-wise sharing
+  layer_wise_sharing:
+    enabled: false
+    sharing_pattern: [1, 1, 1, 1, 0.5, 0.5, 0.5, 0.5, 0, 0, 0, 0]  # Gradual unsharing
+    
+  # Freeze settings
+  freeze_shared: false
+  freeze_schedule:
+    - epoch: 0
+      freeze_layers: []
+    - epoch: 5
+      freeze_layers: [0, 1, 2]
+    - epoch: 10
+      freeze_layers: [0, 1, 2, 3, 4, 5]
+
+# Task-specific heads
+task_heads:
+  # Head architecture
+  architecture: mlp  # Options: linear, mlp, transformer
+  
+  # MLP configuration
+  mlp:
+    hidden_dims: [768, 384]
+    activation: gelu
+    dropout: 0.1
+    batch_norm: false
+    
+  # Transformer head (if used)
+  transformer:
+    num_layers: 2
+    num_heads: 8
+    hidden_dim: 768
+    dropout: 0.1
+    
+  # Parameter sharing between heads
+  share_head_parameters: false
+  shared_components: []  # e.g., ["layer_norm", "dropout"]
+
+# Cross-stitch networks
+cross_stitch:
+  enabled: false
+  
+  # Cross-stitch units at each layer
+  num_units: 12  # One per transformer layer
+  
+  # Initialization
+  init_value: 0.9  # Diagonal initialization
+  off_diagonal_init: 0.1
+  
+  # Learning
+  learnable: true
+  learning_rate: 1e-3
+
+# Mixture of Experts (MoE)
+moe:
+  enabled: false
+  
+  # Expert configuration
+  num_experts: 4
+  expert_capacity: 1.25  # Capacity factor
+  
+  # Gating network
+  gating_type: top_k  # Options: top_k, soft, noisy_top_k
+  top_k: 2  # Select top-2 experts
+  
+  # Load balancing
+  load_balancing_loss_weight: 0.01
+  
+  # Expert specialization
+  encourage_specialization: true
+  specialization_loss_weight: 0.01
+
+# Multi-gate Mixture of Experts (MMoE)
+mmoe:
+  enabled: false
+  
+  # Expert configuration
+  num_experts: 3
+  expert_hidden_dim: 768
+  
+  # Task-specific gating
+  num_tasks: 4
+  gate_hidden_dim: 256
+  
+  # Gating activation
+  gate_activation: softmax
+  temperature: 1.0
+
+# Progressive Layered Extraction (PLE)
+ple:
+  enabled: false
+  
+  # CGC blocks (Customized Gate Control)
+  num_cgc_blocks: 3
+  
+  # Experts per block
+  shared_experts: 2
+  task_specific_experts: 1
+  
+  # Progressive extraction
+  extraction_levels: 3
+
+# Task weighting strategies
+task_weighting:
+  # Weighting strategy
+  strategy: uncertainty  # Options: static, uncertainty, gradnorm, dynamic, learned
+  
+  # Static weights
+  static_weights:
+    primary_classification: 1.0
+    domain_classification: 0.3
+    sentiment_analysis: 0.2
+    ner: 0.2
+    mlm: 0.3
+    
+  # Uncertainty weighting (Kendall et al., 2018)
+  uncertainty:
+    enabled: true
+    init_variance: 1.0
+    learnable: true
+    
+  # GradNorm (Chen et al., 2018)
+  gradnorm:
+    enabled: false
+    alpha: 1.5  # Asymmetry parameter
+    update_frequency: 25  # Update weights every N steps
+    
+  # Dynamic weight averaging (Liu et al., 2019)
+  dwa:
+    enabled: false
+    temperature: 2.0
+    window_size: 2  # Consider last 2 epochs
+    
+  # Learned weights
+  learned:
+    enabled: false
+    meta_learning_rate: 1e-4
+
+# Gradient manipulation
+gradient_surgery:
+  enabled: true
+  
+  # PCGrad (Yu et al., 2020)
+  pcgrad:
+    enabled: true
+    reduction: mean  # Options: mean, sum
+    
+  # GradDrop (Chen et al., 2020)
+  graddrop:
+    enabled: false
+    leak_ratio: 0.0  # Probability of not dropping
+    
+  # CAGrad (Liu et al., 2021)
+  cagrad:
+    enabled: false
+    c: 0.4  # Trade-off parameter
+    
+  # Gradient clipping per task
+  per_task_clipping: true
+  clip_value: 1.0
+
+# Task sampling strategies
+task_sampling:
+  # Sampling strategy
+  strategy: round_robin  # Options: round_robin, proportional, annealing, curriculum
+  
+  # Round-robin sampling
+  round_robin:
+    enabled: true
+    
+  # Proportional sampling
+  proportional:
+    enabled: false
+    proportions:
+      primary_classification: 0.4
+      domain_classification: 0.2
+      sentiment_analysis: 0.15
+      ner: 0.15
+      mlm: 0.1
+      
+  # Annealing (reduce auxiliary tasks over time)
+  annealing:
+    enabled: false
+    initial_auxiliary_weight: 0.6
+    final_auxiliary_weight: 0.1
+    annealing_epochs: 10
+    
+  # Task curriculum
+  curriculum:
+    enabled: false
+    schedule:
+      - epochs: [0, 3]
+        tasks: [mlm]  # Start with MLM
+      - epochs: [3, 6]
+        tasks: [mlm, domain_classification]
+      - epochs: [6, 10]
+        tasks: all  # All tasks
+
+# Training dynamics
+training:
+  # Batch composition
+  batch_composition:
+    homogeneous: false  # Same task in batch
+    task_batch_size:
+      primary_classification: 16
+      domain_classification: 8
+      sentiment_analysis: 8
+      ner: 8
+      mlm: 16
+      
+  # Learning rates per task
+  task_learning_rates:
+    shared_encoder: 2e-5
+    primary_classification: 3e-5
+    domain_classification: 3e-5
+    sentiment_analysis: 3e-5
+    ner: 5e-5
+    mlm: 1e-5
+    
+  # Task-specific optimizers
+  task_optimizers:
+    use_different_optimizers: false
+    optimizers:
+      shared: adamw
+      classification: adamw
+      sequence_labeling: adamw
+      
+  # Scheduling
+  task_scheduling:
+    alternate_tasks: false
+    steps_per_task: 100
+    
+  # Early stopping per task
+  early_stopping:
+    monitor_all_tasks: false
+    primary_task_patience: 5
+    auxiliary_task_patience: 10
+
+# Evaluation
+evaluation:
+  # Evaluate all tasks
+  evaluate_all_tasks: true
+  
+  # Task-specific evaluation
+  task_eval_frequency:
+    primary_classification: 1  # Every epoch
+    domain_classification: 2
+    sentiment_analysis: 2
+    ner: 2
+    mlm: 5
+    
+  # Metric aggregation
+  aggregate_metrics: true
+  aggregation_method: weighted_average
+  
+  # Best model selection
+  selection_criterion: primary_task  # Options: primary_task, average, weighted
+  
+  # Task transfer analysis
+  analyze_task_transfer: true
+  compute_task_similarity: true
+
+# Auxiliary task generation
+auxiliary_generation:
+  # Auto-generate auxiliary tasks
+  auto_generate: false
+  
+  # Self-supervised tasks
+  self_supervised:
+    - next_sentence_prediction
+    - sentence_order_prediction
+    - token_detection
+    
+  # Data augmentation as tasks
+  augmentation_tasks:
+    - paraphrase_detection
+    - synonym_replacement_detection
+
+# Regularization
+regularization:
+  # Task-specific dropout
+  task_dropout:
+    primary_classification: 0.1
+    domain_classification: 0.2
+    sentiment_analysis: 0.15
+    ner: 0.1
+    mlm: 0.1
+    
+  # L2 regularization per task
+  task_weight_decay:
+    shared: 0.01
+    task_specific: 0.001
+    
+  # Knowledge distillation between tasks
+  inter_task_distillation:
+    enabled: false
+    temperature: 3.0
+    distillation_weight: 0.1
+
+# Memory optimization
+memory:
+  # Gradient accumulation per task
+  task_gradient_accumulation:
+    primary_classification: 1
+    domain_classification: 2
+    sentiment_analysis: 2
+    ner: 2
+    mlm: 1
+    
+  # Task-specific gradient checkpointing
+  task_checkpointing:
+    enabled: false
+    checkpoint_tasks: [ner, mlm]
+
+# Monitoring
+monitoring:
+  # Task-specific tensorboard
+  separate_task_logs: true
+  
+  # Gradient flow analysis
+  monitor_gradient_flow: true
+  log_gradient_conflict: true
+  
+  # Task correlation tracking
+  track_task_correlation: true
+  correlation_window: 100
+  
+  # Performance tracking
+  track_task_improvement: true
+  track_negative_transfer: true
+
+# Notes
+notes: |
+  Multi-Task Learning Configuration for AG News:
+  
+  Architecture choices:
+  - Shared bottom: Simple, effective for related tasks
+  - Cross-stitch: Learns task relationships
+  - MMoE: Handles task conflicts well
+  - PLE: Best for complex task relationships
+  
+  Task selection:
+  - Domain classification: Natural auxiliary task
+  - Sentiment: Helps understand text semantics
+  - NER: Improves entity understanding
+  - MLM: Provides language understanding
+  
+  Expected benefits:
+  - 3-7% improvement on primary task
+  - Better generalization
+  - Faster convergence
+  - Improved robustness
+  
+  Common issues:
+  - Negative transfer: Use gradient surgery
+  - Task imbalance: Adjust task weights
+  - Memory issues: Use gradient accumulation
+  - Convergence issues: Try different architectures
