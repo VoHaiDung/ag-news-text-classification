@@ -1,0 +1,337 @@
+# Mixed Precision Training Configuration
+# ========================================
+# Configuration for mixed precision training following:
+# - Micikevicius et al. (2018): "Mixed Precision Training"
+# - NVIDIA Apex Documentation
+# - PyTorch Automatic Mixed Precision (AMP)
+#
+# Mathematical Foundation:
+# Mixed precision uses FP16 for forward/backward passes while maintaining
+# FP32 master weights for numerical stability.
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: mixed_precision_training
+type: standard_mixed_precision
+description: "Optimized mixed precision training for faster computation and reduced memory usage"
+
+# Inheritance from base config
+extends: base_training.yaml
+
+# Mixed Precision Settings
+mixed_precision:
+  # Precision backend
+  backend: amp  # Options: amp, apex, deepspeed
+  enabled: true
+  
+  # PyTorch Native AMP Settings
+  amp:
+    enabled: true
+    autocast_dtype: float16  # Options: float16, bfloat16
+    
+    # GradScaler configuration
+    grad_scaler:
+      enabled: true
+      init_scale: 2048.0  # 2^11
+      growth_factor: 2.0
+      backoff_factor: 0.5
+      growth_interval: 2000
+      
+    # Autocast settings
+    autocast_cpu: false
+    autocast_cuda: true
+    cache_enabled: true
+    
+  # NVIDIA Apex Settings (if using apex)
+  apex:
+    enabled: false
+    opt_level: O1  # O0=FP32, O1=Mixed, O2=Almost FP16, O3=FP16
+    
+    # Apex-specific settings
+    keep_batchnorm_fp32: true
+    loss_scale: dynamic  # Options: dynamic, 128, 256, 512, 1024
+    
+    # Loss scaling for O1/O2
+    loss_scale_window: 1000
+    min_loss_scale: 1.0
+    max_loss_scale: 2^24
+    
+    # Cast model weights
+    cast_model_type: null  # Options: float16, float32, null
+    patch_torch_functions: true
+    
+  # BFloat16 Settings (for A100/TPU)
+  bfloat16:
+    enabled: false  # Enable for Ampere GPUs (A100)
+    
+    # BF16 specific settings
+    use_cpu: false
+    compute_dtype: bfloat16
+    
+  # FP16 Settings
+  fp16:
+    enabled: true
+    
+    # Loss scaling
+    loss_scale: 0  # 0 means dynamic loss scaling
+    initial_scale_power: 16  # 2^16 = 65536
+    loss_scale_window: 1000
+    hysteresis: 2
+    min_loss_scale: 1
+    
+    # FP16 optimizations
+    fp16_opt_level: O1
+    fp16_master_weights: true
+    fp16_resume_from_checkpoint: false
+
+# Optimizer adjustments for mixed precision
+optimizer:
+  name: adamw
+  learning_rate: 3e-5  # Slightly higher LR often works better with FP16
+  weight_decay: 0.01
+  adam_beta1: 0.9
+  adam_beta2: 0.999
+  adam_epsilon: 1e-8  # Important for FP16 stability
+  
+  # Gradient clipping (crucial for FP16)
+  max_grad_norm: 1.0
+  
+  # FP16-specific optimizer settings
+  use_apex_optimizer: false
+  fused_adam: true  # Faster CUDA kernel
+  adam_w_mode: true
+  
+  # Stability settings
+  eps_inside_sqrt: false
+  use_mt: true  # Momentum tracking
+  
+# Gradient handling for mixed precision
+gradients:
+  # Gradient accumulation
+  gradient_accumulation_steps: 2  # Increase for stability
+  
+  # Gradient clipping (important for FP16)
+  gradient_clipping: 1.0
+  gradient_clipping_norm_type: 2.0
+  
+  # Gradient scaling
+  scale_gradients: true
+  unscale_gradients: true
+  
+  # Overflow handling
+  skip_on_overflow: true
+  log_overflow: true
+  
+  # Gradient checkpointing (memory optimization)
+  gradient_checkpointing: false
+  gradient_checkpointing_kwargs:
+    use_reentrant: false
+
+# Model-specific mixed precision settings
+model:
+  # Layer-specific precision
+  cast_inputs: true
+  cast_model_outputs: false
+  
+  # BatchNorm handling
+  keep_batchnorm_fp32: true
+  keep_layernorm_fp32: false
+  
+  # Attention computation
+  attention_probs_dtype: float32  # Keep attention in FP32 for stability
+  
+  # Embedding precision
+  embedding_dtype: float16
+  
+  # Output layer
+  output_dtype: float32
+
+# Loss computation settings
+loss:
+  # Loss scaling
+  scale_loss: true
+  loss_scale_value: dynamic
+  
+  # Loss computation precision
+  compute_loss_dtype: float32
+  
+  # Numerical stability
+  label_smoothing_factor: 0.1
+  use_log_softmax: true  # More stable than softmax + log
+
+# Training dynamics
+training:
+  # Batch size (can often be increased with FP16)
+  per_device_train_batch_size: 48  # 1.5x of FP32 batch size
+  per_device_eval_batch_size: 96
+  
+  # Learning rate schedule
+  warmup_ratio: 0.1  # Important for FP16 stability
+  warmup_steps: 500
+  
+  # Training epochs
+  num_train_epochs: 10
+  max_steps: -1
+  
+  # Evaluation
+  evaluation_strategy: steps
+  eval_steps: 250
+  
+  # Early stopping
+  early_stopping: true
+  early_stopping_patience: 5
+  early_stopping_threshold: 0.0001
+
+# Memory optimization
+memory:
+  # Memory-efficient attention
+  use_memory_efficient_attention: true
+  attention_implementation: flash_attention_2  # Options: eager, flash_attention_2, sdpa
+  
+  # Activation checkpointing
+  use_activation_checkpointing: false
+  checkpointing_segments: 2
+  
+  # Memory pooling
+  empty_cache_steps: 100
+  
+  # OOM prevention
+  oom_prevention: true
+  reduce_batch_on_oom: true
+
+# Hardware optimization
+hardware:
+  # CUDA settings
+  cuda:
+    enabled: true
+    allow_tf32: true  # Allow TensorFloat-32 on Ampere
+    matmul_precision: high  # Options: highest, high, medium
+    cudnn_benchmark: true
+    cudnn_deterministic: false
+    
+  # Multi-GPU settings
+  multi_gpu:
+    enabled: false
+    backend: nccl
+    find_unused_parameters: false
+    
+  # CPU offloading (for large models)
+  cpu_offload:
+    enabled: false
+    offload_optimizer: false
+    offload_param: false
+
+# Validation and stability checks
+validation:
+  # NaN/Inf detection
+  detect_anomaly: true
+  check_finite: true
+  skip_nan_batches: true
+  
+  # Gradient monitoring
+  log_gradient_norm: true
+  log_gradient_histogram: false
+  
+  # Loss monitoring
+  log_loss_scale: true
+  abort_on_nan: true
+  
+  # Validation frequency
+  validate_every_n_steps: 250
+
+# Logging specific to mixed precision
+logging:
+  # Loss scale logging
+  log_loss_scale_window: 100
+  log_overflow_occurrences: true
+  
+  # Precision metrics
+  log_dtype_usage: true
+  log_memory_usage: true
+  
+  # Performance metrics
+  log_throughput: true
+  log_flops: false
+  
+  # Detailed logging
+  log_grad_norm: true
+  log_parameter_norm: false
+
+# Performance benchmarking
+benchmarking:
+  enabled: false
+  
+  # Benchmark settings
+  benchmark_steps: 100
+  benchmark_warmup_steps: 10
+  
+  # Metrics to track
+  track_memory: true
+  track_time: true
+  track_throughput: true
+  
+  # Comparison with FP32
+  compare_with_fp32: false
+
+# Troubleshooting settings
+troubleshooting:
+  # Debug mode
+  debug_mode: false
+  
+  # Verbose logging
+  verbose_overflow: true
+  verbose_scaler: false
+  
+  # Gradient analysis
+  analyze_gradients: false
+  gradient_histogram_freq: 100
+  
+  # Loss analysis
+  analyze_loss_landscape: false
+  
+  # Checkpoint on issues
+  checkpoint_on_nan: true
+  checkpoint_on_overflow: false
+
+# Notes and recommendations
+notes: |
+  Mixed Precision Training Configuration optimized for:
+  - Faster training (1.5-3x speedup on modern GPUs)
+  - Reduced memory usage (allows larger batch sizes)
+  - Maintained model accuracy through careful loss scaling
+  
+  Hardware requirements:
+  - NVIDIA GPU with Tensor Cores (V100, T4, A100, etc.)
+  - CUDA 11.0+ for best performance
+  - PyTorch 1.6+ for native AMP support
+  
+  Best practices:
+  1. Start with O1 optimization level
+  2. Use dynamic loss scaling
+  3. Keep BatchNorm in FP32
+  4. Monitor for overflow/underflow
+  5. Increase batch size to utilize memory savings
+  
+  Troubleshooting:
+  - If loss becomes NaN, reduce learning rate or increase loss scale
+  - If gradients overflow frequently, reduce loss scale growth factor
+  - For convergence issues, try keeping more layers in FP32
+
+# Experimental features
+experimental:
+  # Quantization-aware training
+  quantization:
+    enabled: false
+    qat_mode: false
+    bits: 8
+    
+  # Gradient compression
+  gradient_compression:
+    enabled: false
+    compression_ratio: 0.1
+    
+  # Tensor parallelism
+  tensor_parallel:
+    enabled: false
+    world_size: 1
