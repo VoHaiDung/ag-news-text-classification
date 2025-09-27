@@ -1,0 +1,208 @@
+{
+    "python.defaultInterpreterPath": "${workspaceFolder}/venv/bin/python",
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Path": "${workspaceFolder}/venv/bin/flake8",
+    "python.linting.flake8Args": [
+        "--config=${workspaceFolder}/.flake8",
+        "--max-line-length=120",
+        "--ignore=E203,W503,E501"
+    ],
+    "python.formatting.provider": "black",
+    "python.formatting.blackPath": "${workspaceFolder}/venv/bin/black",
+    "python.formatting.blackArgs": [
+        "--line-length=120"
+    ],
+    "python.sortImports.path": "${workspaceFolder}/venv/bin/isort",
+    "python.sortImports.args": [
+        "--profile=black",
+        "--line-length=120"
+    ],
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestPath": "${workspaceFolder}/venv/bin/pytest",
+    "python.testing.pytestArgs": [
+        "tests",
+        "-v",
+        "--cov=src",
+        "--cov-report=term-missing",
+        "--cov-report=html",
+        "--tb=short",
+        "--color=yes"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+    "python.autoComplete.extraPaths": [
+        "${workspaceFolder}/src",
+        "${workspaceFolder}"
+    ],
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/src",
+        "${workspaceFolder}"
+    ],
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.autoSearchPaths": true,
+    "python.analysis.diagnosticMode": "workspace",
+    "python.analysis.completeFunctionParens": true,
+    "python.languageServer": "Pylance",
+    "python.terminal.activateEnvironment": true,
+    "python.terminal.activateEnvInCurrentTerminal": true,
+    "python.envFile": "${workspaceFolder}/.env",
+    
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true,
+        "source.fixAll": true
+    },
+    "editor.rulers": [80, 120],
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.trimAutoWhitespace": true,
+    "editor.renderWhitespace": "trailing",
+    "editor.suggestSelection": "first",
+    "editor.wordWrap": "on",
+    "editor.minimap.enabled": true,
+    "editor.bracketPairColorization.enabled": true,
+    
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/.pytest_cache": true,
+        "**/.mypy_cache": true,
+        "**/.coverage": true,
+        "**/.hypothesis": true,
+        "**/htmlcov": true,
+        "**/.ipynb_checkpoints": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/*.egg-info": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/.tox": true
+    },
+    
+    "files.watcherExclude": {
+        "**/__pycache__/**": true,
+        "**/venv/**": true,
+        "**/env/**": true,
+        "**/data/raw/**": true,
+        "**/data/processed/**": true,
+        "**/outputs/**": true,
+        "**/logs/**": true,
+        "**/mlruns/**": true,
+        "**/wandb/**": true
+    },
+    
+    "files.associations": {
+        "*.yaml": "yaml",
+        "*.yml": "yaml",
+        "*.proto": "proto3",
+        "*.ipynb": "jupyter",
+        "requirements*.txt": "pip-requirements",
+        "Dockerfile*": "dockerfile",
+        "*.sh": "shellscript",
+        "*.env*": "dotenv"
+    },
+    
+    "yaml.schemas": {
+        "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.yml",
+        "https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json": "docker-compose*.yml"
+    },
+    
+    "jupyter.jupyterServerType": "local",
+    "jupyter.notebookFileRoot": "${workspaceFolder}",
+    "jupyter.askForKernelRestart": false,
+    
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "terminal.integrated.defaultProfile.osx": "zsh",
+    "terminal.integrated.defaultProfile.windows": "powershell",
+    "terminal.integrated.env.linux": {
+        "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src"
+    },
+    "terminal.integrated.env.osx": {
+        "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src"
+    },
+    "terminal.integrated.env.windows": {
+        "PYTHONPATH": "${workspaceFolder};${workspaceFolder}\\src"
+    },
+    
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    "git.enableSmartCommit": true,
+    
+    "docker.dockerPath": "docker",
+    "docker.dockerComposePath": "docker-compose",
+    
+    "protoc": {
+        "options": [
+            "--proto_path=${workspaceFolder}/src/api/grpc/protos",
+            "--python_out=${workspaceFolder}/src/api/grpc/compiled",
+            "--grpc_python_out=${workspaceFolder}/src/api/grpc/compiled"
+        ]
+    },
+    
+    "cSpell.words": [
+        "adamw",
+        "agnews",
+        "arxiv",
+        "augmenter",
+        "backprop",
+        "batchnorm",
+        "bayesian",
+        "bert",
+        "catboost",
+        "celery",
+        "contrastive",
+        "coreset",
+        "cuda",
+        "dataloader",
+        "deberta",
+        "distillation",
+        "dropout",
+        "electra",
+        "embeddings",
+        "fastapi",
+        "fgm",
+        "grafana",
+        "grpc",
+        "hyperparameter",
+        "interpretability",
+        "kubernetes",
+        "lora",
+        "lstm",
+        "mixup",
+        "mlflow",
+        "multiprocessing",
+        "onnx",
+        "optuna",
+        "peft",
+        "pgd",
+        "pooler",
+        "pretrained",
+        "protobuf",
+        "pytorch",
+        "qlora",
+        "quantization",
+        "redis",
+        "roberta",
+        "sklearn",
+        "softmax",
+        "streamlit",
+        "tensorboard",
+        "tokenizer",
+        "transformers",
+        "wandb",
+        "xlnet",
+        "xgboost"
+    ],
+    
+    "workbench.colorTheme": "Default Dark+",
+    "workbench.iconTheme": "vscode-icons",
+    "workbench.editor.enablePreview": false,
+    "workbench.editor.showTabs": true,
+    "workbench.startupEditor": "none",
+    
+    "debug.console.fontSize": 14,
+    "debug.console.fontFamily": "Consolas, 'Courier New', monospace"
+}
