@@ -32,7 +32,8 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_DEFAULT_TIMEOUT=100 \
-    DEBIAN_FRONTEND=noninteractive
+    DEBIAN_FRONTEND=noninteractive \
+    PYTHONPATH="/app:\${PYTHONPATH}"
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -44,6 +45,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     vim \
     libgomp1 \
+    libhdf5-dev \
+    libssl-dev \
+    libffi-dev \
+    libxml2-dev \
+    libxslt1-dev \
+    libprotobuf-dev \
+    protobuf-compiler \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -63,14 +71,13 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Upgrade pip and install build tools
-RUN pip install --upgrade pip setuptools wheel
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
-# Install base requirements with CPU PyTorch for broad compatibility
-RUN pip install torch==2.0.1+cpu torchvision==0.15.2+cpu \
-    -f https://download.pytorch.org/whl/torch_stable.html
-
-# Install ML requirements
-RUN pip install transformers==4.35.0 \
+# Install base requirements
+RUN pip install --no-cache-dir \
+    torch==2.0.1 --index-url https://download.pytorch.org/whl/cpu && \
+    pip install --no-cache-dir \
+    transformers==4.35.0 \
     datasets==2.14.0 \
     tokenizers==0.15.0 \
     numpy==1.24.0 \
@@ -81,7 +88,8 @@ RUN pip install transformers==4.35.0 \
     python-dotenv==1.0.0 \
     tqdm==4.66.0 \
     requests==2.31.0 \
-    typing-extensions==4.8.0
+    typing-extensions==4.8.0 && \
+    rm -rf /root/.cache/pip/*
 
 # Stage 3: Training environment
 FROM python-base AS training
@@ -90,6 +98,10 @@ FROM python-base AS training
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
+# Install additional training dependencies
+COPY requirements/ /tmp/requirements/
+RUN pip install --no-cache-dir accelerate==0.24.0 peft==0.6.0 || true
+
 # Copy application code
 COPY src/ /app/src/
 COPY configs/ /app/configs/
@@ -97,10 +109,10 @@ COPY scripts/ /app/scripts/
 COPY setup.py pyproject.toml README.md /app/
 
 # Install application in development mode
-RUN pip install -e .
+RUN pip install --no-cache-dir -e . || true
 
 # Set Python path
-ENV PYTHONPATH=/app:${PYTHONPATH:-}
+ENV PYTHONPATH="/app:\${PYTHONPATH}"
 
 # Create volume mount points
 VOLUME ["/app/data", "/app/models", "/app/outputs", "/app/logs"]
@@ -109,11 +121,31 @@ VOLUME ["/app/data", "/app/models", "/app/outputs", "/app/logs"]
 CMD ["python", "scripts/training/train_single_model.py"]
 
 # Stage 4: Inference environment
-FROM python-base AS inference
+FROM python:${PYTHON_VERSION}-slim AS inference
 
-# Copy virtual environment from builder
-COPY --from=builder /opt/venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONPATH="/app:\${PYTHONPATH}"
+
+# Install only runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgomp1 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install minimal Python dependencies for inference
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir \
+    torch==2.0.1 --index-url https://download.pytorch.org/whl/cpu && \
+    pip install --no-cache-dir \
+    transformers==4.35.0 \
+    tokenizers==0.15.0 \
+    numpy==1.24.0 \
+    pyyaml==6.0.1 \
+    tqdm==4.66.0 && \
+    rm -rf /root/.cache/pip/*
 
 # Copy only necessary code for inference
 COPY src/ /app/src/
@@ -121,10 +153,9 @@ COPY configs/ /app/configs/
 COPY setup.py pyproject.toml /app/
 
 # Install application
-RUN pip install .
+RUN pip install --no-cache-dir . || true
 
-# Set Python path
-ENV PYTHONPATH=/app:${PYTHONPATH:-}
+WORKDIR /app
 
 # Create non-root user for security
 RUN groupadd -r mluser && useradd -r -g mluser mluser && \
@@ -142,15 +173,28 @@ CMD ["python", "src/inference/predictors/single_predictor.py"]
 # Stage 5: Production environment
 FROM python:${PYTHON_VERSION}-slim AS production
 
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONPATH="/app:\${PYTHONPATH}"
+
 # Install only runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy virtual environment from builder
-COPY --from=builder /opt/venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+# Install minimal dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir \
+    torch==2.0.1 --index-url https://download.pytorch.org/whl/cpu && \
+    pip install --no-cache-dir \
+    transformers==4.35.0 \
+    tokenizers==0.15.0 \
+    numpy==1.24.0 \
+    pyyaml==6.0.1 && \
+    rm -rf /root/.cache/pip/*
 
 # Copy application code
 COPY --from=inference /app /app
@@ -162,9 +206,6 @@ RUN groupadd -r mluser && useradd -r -g mluser mluser && \
 WORKDIR /app
 
 USER mluser
-
-# Set Python path
-ENV PYTHONPATH=/app:${PYTHONPATH:-}
 
 # Expose port for serving
 EXPOSE 8080
