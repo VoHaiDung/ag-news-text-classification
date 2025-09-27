@@ -1,0 +1,460 @@
+# Phase 2: Ensemble Optimization for SOTA
+# ========================================
+#
+# This configuration combines multiple models through advanced ensemble techniques,
+# following methodology from:
+# - Sagi & Rokach (2018): "Ensemble Learning: A Survey"
+# - Ganaie et al. (2022): "Ensemble Deep Learning: A Review"
+# - Dong et al. (2020): "A Survey on Ensemble Learning"
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: phase2_ensemble
+type: experiment
+phase: 2
+description: "Combine top single models through advanced ensemble techniques"
+
+# Experiment metadata
+metadata:
+  objective: "Achieve 96%+ accuracy through model ensemble"
+  target_accuracy: 0.962
+  target_f1_macro: 0.961
+  expected_duration_hours: 36
+  gpu_requirements: "4x V100 32GB or 2x A100 80GB"
+  
+  prerequisites:
+    - "phase1_single_models"
+    
+  tags:
+    - sota
+    - phase2
+    - ensemble
+    - stacking
+
+# Base models from Phase 1
+base_models:
+  # Top performers from Phase 1
+  model_1:
+    name: "deberta-v3-xlarge"
+    checkpoint: "outputs/phase1/deberta_v3_xlarge_best.pt"
+    performance:
+      accuracy: 0.964
+      f1_macro: 0.963
+    weight_init: 0.35
+    
+  model_2:
+    name: "roberta-large"
+    checkpoint: "outputs/phase1/roberta_large_best.pt"
+    performance:
+      accuracy: 0.958
+      f1_macro: 0.957
+    weight_init: 0.25
+    
+  model_3:
+    name: "xlnet-large"
+    checkpoint: "outputs/phase1/xlnet_large_best.pt"
+    performance:
+      accuracy: 0.956
+      f1_macro: 0.955
+    weight_init: 0.20
+    
+  model_4:
+    name: "electra-large"
+    checkpoint: "outputs/phase1/electra_large_best.pt"
+    performance:
+      accuracy: 0.952
+      f1_macro: 0.951
+    weight_init: 0.10
+    
+  model_5:
+    name: "albert-xxlarge"
+    checkpoint: "outputs/phase1/albert_xxlarge_best.pt"
+    performance:
+      accuracy: 0.950
+      f1_macro: 0.949
+    weight_init: 0.10
+
+# Ensemble strategies
+ensemble_strategies:
+  # Strategy 1: Weighted Soft Voting
+  weighted_voting:
+    enabled: true
+    priority: 1
+    
+    # Weight optimization
+    weight_optimization:
+      method: "differential_evolution"
+      
+      bounds:
+        min_weight: 0.05
+        max_weight: 0.5
+        
+      constraints:
+        sum_to_one: true
+        non_negative: true
+        
+      optimization_metric: "f1_macro"
+      validation_split: 0.15
+      
+    # Confidence calibration
+    calibration:
+      method: "temperature_scaling"
+      cross_validate: true
+      
+    expected_performance:
+      accuracy: 0.968
+      f1_macro: 0.967
+      
+  # Strategy 2: Stacking with Meta-learner
+  stacking:
+    enabled: true
+    priority: 2
+    
+    # Feature extraction from base models
+    feature_extraction:
+      # Prediction features
+      use_probabilities: true
+      use_logits: true
+      use_hidden_states: true
+      hidden_layer: -2
+      
+      # Engineered features
+      add_statistical_features: true
+      features:
+        - max_probability
+        - entropy
+        - prediction_variance
+        - top2_difference
+        - model_agreement
+        
+    # Meta-learner configuration
+    meta_learner:
+      type: "xgboost"
+      
+      xgboost_params:
+        n_estimators: 500
+        max_depth: 6
+        learning_rate: 0.05
+        subsample: 0.8
+        colsample_bytree: 0.8
+        
+      # Alternative meta-learners
+      alternatives:
+        - type: "lightgbm"
+        - type: "catboost"
+        - type: "neural_network"
+        
+    # Cross-validation for meta-learner
+    cross_validation:
+      method: "stratified_kfold"
+      n_folds: 5
+      
+    expected_performance:
+      accuracy: 0.970
+      f1_macro: 0.969
+      
+  # Strategy 3: Blending
+  blending:
+    enabled: true
+    priority: 3
+    
+    # Blending configuration
+    blend_split: 0.2
+    blend_features: "probabilities"
+    
+    # Blender model
+    blender:
+      type: "logistic_regression"
+      regularization: "l2"
+      C: 1.0
+      
+    expected_performance:
+      accuracy: 0.967
+      f1_macro: 0.966
+      
+  # Strategy 4: Snapshot Ensemble
+  snapshot:
+    enabled: false  # Optional
+    priority: 4
+    
+    # Snapshot configuration
+    num_snapshots: 5
+    cycle_length: 2
+    
+    base_model: "deberta-v3-xlarge"
+    
+    expected_performance:
+      accuracy: 0.965
+      f1_macro: 0.964
+
+# Advanced ensemble techniques
+advanced_techniques:
+  # Dynamic model selection
+  dynamic_selection:
+    enabled: true
+    
+    # Selection criteria
+    selection_method: "oracle"  # Options: oracle, local_accuracy, meta_classifier
+    
+    # Competence regions
+    competence_measure: "local_accuracy"
+    k_neighbors: 7
+    
+  # Cascading ensemble
+  cascading:
+    enabled: true
+    
+    # Cascade configuration
+    confidence_thresholds: [0.99, 0.95, 0.90, 0.85]
+    
+    model_order:
+      1: "electra-large"  # Fastest
+      2: "roberta-large"
+      3: "xlnet-large"
+      4: "deberta-v3-xlarge"  # Most accurate
+      
+  # Boosting-style sequential training
+  boosting:
+    enabled: false
+    
+    # Configuration
+    num_rounds: 3
+    sample_weight_update: "exponential"
+    
+  # Multi-level stacking
+  multi_level:
+    enabled: true
+    
+    levels:
+      level_1:
+        models: ["deberta", "roberta", "xlnet"]
+        aggregation: "mean"
+        
+      level_2:
+        models: ["level_1_output", "electra", "albert"]
+        aggregation: "meta_learner"
+
+# Diversity analysis
+diversity_analysis:
+  # Diversity metrics
+  metrics:
+    - "disagreement_measure"
+    - "double_fault_measure"
+    - "kappa_statistic"
+    - "q_statistic"
+    - "correlation_coefficient"
+    
+  # Diversity enforcement
+  enforcement:
+    enabled: true
+    
+    method: "negative_correlation"
+    strength: 0.1
+    
+  # Model pruning based on diversity
+  pruning:
+    enabled: true
+    
+    min_diversity: 0.3
+    redundancy_threshold: 0.9
+
+# Training configuration
+training:
+  # Ensemble-specific training
+  ensemble_training:
+    # Fine-tune on validation predictions
+    fine_tune_on_oof: true
+    
+    # Joint training (optional)
+    joint_training: false
+    
+  # Optimization
+  optimization:
+    # For trainable weights
+    learning_rate: 0.01
+    optimizer: "adam"
+    num_epochs: 20
+    
+    # Early stopping
+    early_stopping:
+      patience: 5
+      metric: "validation_f1_macro"
+      
+  # Data configuration
+  data:
+    # Use out-of-fold predictions
+    use_oof_predictions: true
+    cv_folds: 5
+    
+    # Validation strategy
+    validation_split: 0.15
+    stratified: true
+
+# Evaluation protocol
+evaluation:
+  # Metrics
+  metrics:
+    # Standard metrics
+    classification:
+      - accuracy
+      - f1_macro
+      - f1_weighted
+      - precision_macro
+      - recall_macro
+      
+    # Ensemble-specific metrics
+    ensemble:
+      - individual_contributions
+      - weight_distribution
+      - model_agreement
+      - diversity_score
+      
+    # Calibration metrics
+    calibration:
+      - ece
+      - mce
+      - reliability_diagram
+      
+  # Ablation studies
+  ablations:
+    # Test each model's contribution
+    leave_one_out: true
+    
+    # Test different combinations
+    test_combinations:
+      - ["deberta", "roberta"]
+      - ["deberta", "xlnet"]
+      - ["deberta", "roberta", "xlnet"]
+      
+  # Statistical significance
+  significance_testing:
+    enabled: true
+    test: "mcnemar"
+    confidence_level: 0.95
+
+# Optimization experiments
+optimization_experiments:
+  # Weight optimization methods
+  weight_methods:
+    - "equal_weights"
+    - "performance_based"
+    - "differential_evolution"
+    - "bayesian_optimization"
+    - "grid_search"
+    
+  # Feature selection for meta-learner
+  feature_selection:
+    enabled: true
+    
+    methods:
+      - "mutual_information"
+      - "recursive_elimination"
+      - "lasso"
+      
+  # Hyperparameter tuning for meta-learner
+  hyperparameter_tuning:
+    enabled: true
+    
+    method: "optuna"
+    n_trials: 50
+
+# Deployment optimization
+deployment:
+  # Model compression
+  compression:
+    # Ensemble distillation
+    distillation:
+      enabled: true
+      student_model: "deberta-v3-base"
+      temperature: 3.0
+      alpha: 0.7
+      
+  # Inference optimization
+  inference:
+    # Parallel prediction
+    parallel_inference: true
+    
+    # Caching
+    cache_predictions: true
+    cache_size: 10000
+    
+    # Early stopping
+    early_stopping:
+      enabled: true
+      confidence_threshold: 0.99
+
+# Expected outcomes
+expected_outcomes:
+  # Best ensemble configuration
+  best_ensemble:
+    method: "stacking_xgboost"
+    accuracy: 0.970
+    f1_macro: 0.969
+    
+  # Performance gains
+  improvements:
+    over_best_single: "+0.6%"
+    over_simple_voting: "+0.3%"
+    
+  # Model contributions
+  contribution_analysis:
+    deberta: "40%"
+    roberta: "25%"
+    xlnet: "20%"
+    electra: "10%"
+    albert: "5%"
+
+# Timeline
+timeline:
+  total_hours: 36
+  
+  breakdown:
+    - phase: "Base model predictions"
+      hours: 4
+      
+    - phase: "Weight optimization"
+      hours: 8
+      
+    - phase: "Meta-learner training"
+      hours: 12
+      
+    - phase: "Ensemble evaluation"
+      hours: 6
+      
+    - phase: "Distillation"
+      hours: 6
+
+# Notes
+notes: |
+  Phase 2: Ensemble Optimization
+  
+  Objectives:
+  1. Combine Phase 1 models for maximum performance
+  2. Explore multiple ensemble strategies
+  3. Optimize ensemble weights and meta-learners
+  4. Prepare for production deployment
+  
+  Key Strategies:
+  - Stacking with XGBoost meta-learner (primary)
+  - Weighted voting with optimized weights
+  - Dynamic model selection for efficiency
+  - Ensemble distillation for deployment
+  
+  Expected Results:
+  - 97.0% accuracy with stacking
+  - 96.8% with weighted voting
+  - Clear understanding of model complementarity
+  - Distilled model at 95.5% for fast inference
+  
+  Insights:
+  - DeBERTa provides strongest base predictions
+  - XGBoost meta-learner adds 0.6% over voting
+  - Diversity more important than individual accuracy
+  - 5 models optimal, diminishing returns beyond
+
+references:
+  - ensemble_survey: "https://arxiv.org/abs/1404.4088"
+  - stacking: "https://arxiv.org/abs/1802.02407"
+  - diversity: "https://link.springer.com/article/10.1023/A:1022859003006"
+  - distillation: "https://arxiv.org/abs/1503.02531"
