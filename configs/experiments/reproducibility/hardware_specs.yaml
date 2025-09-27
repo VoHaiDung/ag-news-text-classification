@@ -1,0 +1,364 @@
+# Hardware Specifications and Performance Study Configuration
+# ============================================================
+#
+# This configuration documents hardware requirements and studies performance
+# across different hardware configurations, following methodology from:
+# - Strubell et al. (2019): "Energy and Policy Considerations for Deep Learning in NLP"
+# - Patterson et al. (2021): "Carbon Emissions and Large Neural Network Training"
+# - You et al. (2020): "Large Batch Optimization for Deep Learning"
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: hardware_specs
+type: experiment
+subtype: reproducibility
+description: "Document hardware requirements and study performance across configurations"
+
+# Hardware configurations tested
+hardware_configurations:
+  # Development configurations
+  development:
+    cpu_only:
+      cpu: "Intel Core i7-9750H"
+      cores: 6
+      ram: 16
+      gpu: null
+      expected_performance:
+        training_time_hours: 48
+        inference_ms: 500
+        
+    single_gpu_consumer:
+      cpu: "AMD Ryzen 7 5800X"
+      cores: 8
+      ram: 32
+      gpu: "NVIDIA RTX 3090"
+      gpu_memory: 24
+      expected_performance:
+        training_time_hours: 4
+        inference_ms: 30
+        
+  # Research configurations
+  research:
+    single_gpu_datacenter:
+      cpu: "Intel Xeon Gold 6226R"
+      cores: 16
+      ram: 64
+      gpu: "NVIDIA V100"
+      gpu_memory: 32
+      expected_performance:
+        training_time_hours: 3
+        inference_ms: 25
+        
+    multi_gpu_node:
+      cpu: "AMD EPYC 7763"
+      cores: 64
+      ram: 256
+      gpu: "4x NVIDIA A100"
+      gpu_memory: "4x 40GB"
+      expected_performance:
+        training_time_hours: 1
+        inference_ms: 15
+        
+  # Production configurations
+  production:
+    inference_optimized:
+      cpu: "Intel Xeon Platinum 8375C"
+      cores: 32
+      ram: 128
+      gpu: "NVIDIA T4"
+      gpu_memory: 16
+      expected_performance:
+        training_time_hours: 6
+        inference_ms: 20
+        throughput_qps: 100
+        
+    high_throughput:
+      cpu: "AMD EPYC 7R32"
+      cores: 48
+      ram: 192
+      gpu: "8x NVIDIA A100"
+      gpu_memory: "8x 80GB"
+      expected_performance:
+        training_time_hours: 0.5
+        inference_ms: 10
+        throughput_qps: 1000
+
+# Model requirements
+model_requirements:
+  # Small models
+  distilbert:
+    min_gpu_memory: 4
+    recommended_gpu_memory: 8
+    min_ram: 8
+    batch_size_per_gb: 8
+    
+  # Base models
+  bert_base:
+    min_gpu_memory: 8
+    recommended_gpu_memory: 16
+    min_ram: 16
+    batch_size_per_gb: 4
+    
+  roberta_base:
+    min_gpu_memory: 8
+    recommended_gpu_memory: 16
+    min_ram: 16
+    batch_size_per_gb: 4
+    
+  # Large models
+  roberta_large:
+    min_gpu_memory: 16
+    recommended_gpu_memory: 24
+    min_ram: 32
+    batch_size_per_gb: 2
+    
+  deberta_v3_large:
+    min_gpu_memory: 24
+    recommended_gpu_memory: 32
+    min_ram: 48
+    batch_size_per_gb: 1.5
+    
+  # XLarge models
+  deberta_v3_xlarge:
+    min_gpu_memory: 40
+    recommended_gpu_memory: 80
+    min_ram: 64
+    batch_size_per_gb: 0.5
+
+# Performance benchmarks
+benchmarks:
+  # Training benchmarks
+  training:
+    metrics:
+      - samples_per_second
+      - time_per_epoch
+      - total_training_time
+      - gpu_utilization
+      - memory_usage
+      
+    configurations:
+      - batch_size: 8
+      - batch_size: 16
+      - batch_size: 32
+      - batch_size: 64
+      
+  # Inference benchmarks
+  inference:
+    metrics:
+      - latency_p50
+      - latency_p95
+      - latency_p99
+      - throughput_qps
+      - gpu_memory_usage
+      
+    batch_sizes: [1, 8, 32, 128]
+    
+  # Optimization benchmarks
+  optimization:
+    techniques:
+      - name: "fp16"
+        speedup: 1.5
+        memory_reduction: 0.5
+        
+      - name: "int8"
+        speedup: 2.0
+        memory_reduction: 0.25
+        
+      - name: "onnx"
+        speedup: 1.3
+        memory_reduction: 0.8
+        
+      - name: "tensorrt"
+        speedup: 2.5
+        memory_reduction: 0.6
+
+# Scaling experiments
+scaling:
+  # Multi-GPU scaling
+  multi_gpu:
+    num_gpus: [1, 2, 4, 8]
+    
+    expected_speedup:
+      data_parallel:
+        2_gpus: 1.8
+        4_gpus: 3.2
+        8_gpus: 5.6
+        
+      model_parallel:
+        2_gpus: 1.6
+        4_gpus: 2.8
+        8_gpus: 4.5
+        
+  # Batch size scaling
+  batch_size:
+    sizes: [1, 2, 4, 8, 16, 32, 64, 128, 256]
+    
+    memory_usage: "linear"
+    compute_time: "sub_linear"
+    
+  # Mixed precision scaling
+  mixed_precision:
+    fp32_baseline: 1.0
+    fp16_speedup: 1.5
+    bf16_speedup: 1.4
+    int8_speedup: 2.0
+
+# Resource optimization
+optimization:
+  # Memory optimization
+  memory:
+    gradient_checkpointing:
+      memory_reduction: 0.3
+      time_overhead: 1.2
+      
+    gradient_accumulation:
+      effective_batch_size: 256
+      actual_batch_size: 16
+      
+    cpu_offloading:
+      memory_reduction: 0.5
+      time_overhead: 1.5
+      
+  # Compute optimization
+  compute:
+    torch_compile:
+      speedup: 1.2
+      
+    flash_attention:
+      speedup: 1.5
+      memory_reduction: 0.2
+      
+    kernel_fusion:
+      speedup: 1.1
+
+# Cost analysis
+cost_analysis:
+  # Cloud provider costs (USD per hour)
+  cloud_costs:
+    aws:
+      p3_2xlarge: 3.06  # V100 16GB
+      p3_8xlarge: 12.24  # 4x V100
+      p4d_24xlarge: 32.77  # 8x A100
+      
+    gcp:
+      n1_standard_8_v100: 2.48
+      a2_highgpu_1g: 3.67  # A100 40GB
+      a2_highgpu_8g: 29.36  # 8x A100
+      
+    azure:
+      nc6s_v3: 3.06  # V100
+      nc24ads_a100_v4: 3.92  # A100
+      nd96asr_v4: 27.20  # 8x A100
+      
+  # Training cost estimates
+  training_costs:
+    distilbert:
+      hours: 2
+      cost: 6.12
+      
+    roberta_base:
+      hours: 4
+      cost: 12.24
+      
+    deberta_large:
+      hours: 8
+      cost: 31.36
+      
+    full_ensemble:
+      hours: 24
+      cost: 94.08
+
+# Environmental impact
+environmental_impact:
+  # Carbon footprint
+  carbon_footprint:
+    # kgCO2eq per experiment
+    single_model_training: 0.5
+    ensemble_training: 2.5
+    hyperparameter_search: 10.0
+    
+  # Energy consumption (kWh)
+  energy_consumption:
+    gpu_power:
+      rtx_3090: 350
+      v100: 300
+      a100: 400
+      
+    training_energy:
+      small_model: 2.0
+      base_model: 8.0
+      large_model: 20.0
+
+# Recommendations
+recommendations:
+  # Development
+  development:
+    minimum: "GTX 1660 Ti (6GB)"
+    recommended: "RTX 3090 (24GB)"
+    
+  # Research
+  research:
+    minimum: "V100 (16GB)"
+    recommended: "A100 (40GB)"
+    
+  # Production
+  production:
+    inference: "T4 or A10"
+    training: "A100 multi-GPU"
+    
+  # Cost-effective options
+  budget:
+    cloud: "Spot instances"
+    on_premise: "RTX 4090"
+    colab: "Colab Pro+"
+
+# Timeline
+timeline:
+  total_hours: 48
+  
+  phases:
+    - name: "CPU benchmarks"
+      hours: 8
+      
+    - name: "Single GPU benchmarks"
+      hours: 16
+      
+    - name: "Multi-GPU scaling"
+      hours: 16
+      
+    - name: "Optimization techniques"
+      hours: 8
+
+# Notes
+notes: |
+  Hardware Specifications and Performance Study
+  
+  Objectives:
+  1. Document hardware requirements for all models
+  2. Benchmark performance across configurations
+  3. Provide cost-benefit analysis
+  4. Environmental impact assessment
+  
+  Key Findings:
+  - Minimum: 8GB GPU for base models
+  - Recommended: 24GB GPU for experimentation
+  - Multi-GPU scaling: 70-80% efficiency
+  - FP16 provides 1.5x speedup with minimal accuracy loss
+  
+  Recommendations by Use Case:
+  - Development: RTX 3090 (best value)
+  - Research: A100 40GB (best performance)
+  - Production: T4 for inference, A100 for training
+  - Budget: Colab Pro+ or used V100
+  
+  Cost Optimization:
+  - Use spot instances (70% savings)
+  - Gradient accumulation for large batches
+  - Mixed precision training
+  - Model quantization for inference
+
+references:
+  - energy_nlp: "https://arxiv.org/abs/1906.02243"
+  - carbon_emissions: "https://arxiv.org/abs/2104.10350"
+  - large_batch: "https://arxiv.org/abs/1904.00962"
