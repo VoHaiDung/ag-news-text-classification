@@ -675,12 +675,18 @@ class TestInstructionTuning(PromptModelTestBase):
             
             def parse_cot_response(self, response: str) -> Tuple[str, str]:
                 """Parse CoT response into reasoning and answer."""
-                # Mock parsing - Fixed to handle comma properly
+                # Fixed parsing logic to handle comma properly
                 if "Therefore" in response:
                     parts = response.split("Therefore")
                     reasoning = parts[0].strip()
-                    # Fix: Remove leading comma and spaces from answer
-                    answer = parts[1].strip().lstrip(',').strip() if len(parts) > 1 else ""
+                    # Remove any leading punctuation and whitespace from answer
+                    if len(parts) > 1:
+                        answer = parts[1].strip()
+                        # Remove leading comma, colon, or other punctuation
+                        while answer and answer[0] in [',', ':', ';', '.']:
+                            answer = answer[1:].strip()
+                    else:
+                        answer = ""
                 else:
                     reasoning = ""
                     answer = response.strip()
@@ -702,7 +708,13 @@ class TestInstructionTuning(PromptModelTestBase):
         cot_prompt = prompter.add_cot_trigger(prompt)
         self.assertIn("Let's think step by step", cot_prompt)
         
-        # Test parsing CoT response
+        # Test parsing CoT response - case 1: without comma
+        response = "The article discusses stocks and trading. Therefore, Business"
+        reasoning, answer = prompter.parse_cot_response(response)
+        self.assertIn("stocks and trading", reasoning)
+        self.assertEqual(answer, "Business")
+        
+        # Test parsing CoT response - case 2: with comma (the failing case)
         response = "The article discusses stocks and trading. Therefore, Business"
         reasoning, answer = prompter.parse_cot_response(response)
         self.assertIn("stocks and trading", reasoning)
