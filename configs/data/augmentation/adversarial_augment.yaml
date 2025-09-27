@@ -7,6 +7,7 @@
 # - Morris et al. (2020): "TextAttack: A Framework for Adversarial Attacks"
 #
 # Author: Võ Hải Dũng
+# License: MIT
 
 name: adversarial_augmentation
 type: augmentation
