@@ -1,0 +1,292 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src",
+                "CUDA_VISIBLE_DEVICES": "0"
+            },
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Python: Train Single Model",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/training/train_single_model.py",
+            "args": [
+                "--config", "configs/models/single/deberta_v3_xlarge.yaml",
+                "--data-dir", "data/processed",
+                "--output-dir", "outputs/models",
+                "--batch-size", "16",
+                "--epochs", "10"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src",
+                "CUDA_VISIBLE_DEVICES": "0"
+            },
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Python: Evaluate Model",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/evaluation/evaluate_all_models.py",
+            "args": [
+                "--model-dir", "outputs/models",
+                "--data-dir", "data/processed/test",
+                "--output-dir", "outputs/results"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src"
+            },
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Python: Data Preparation",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/data_preparation/prepare_ag_news.py",
+            "args": [
+                "--input-dir", "data/raw",
+                "--output-dir", "data/processed",
+                "--config", "configs/data/preprocessing/standard.yaml"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src"
+            },
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "FastAPI: REST API Server",
+            "type": "python",
+            "request": "launch",
+            "module": "uvicorn",
+            "args": [
+                "src.api.rest.app:app",
+                "--reload",
+                "--host", "0.0.0.0",
+                "--port", "8000",
+                "--log-level", "debug"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src",
+                "API_ENV": "development"
+            },
+            "envFile": "${workspaceFolder}/.env",
+            "jinja": true
+        },
+        {
+            "name": "gRPC: Server",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/api/grpc/server.py",
+            "args": [
+                "--port", "50051",
+                "--workers", "4"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src",
+                "GRPC_ENV": "development"
+            },
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "GraphQL: Server",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/api/graphql/server.py",
+            "args": [
+                "--port", "8080",
+                "--debug"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src",
+                "GRAPHQL_ENV": "development"
+            },
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Streamlit: Demo App",
+            "type": "python",
+            "request": "launch",
+            "module": "streamlit",
+            "args": [
+                "run",
+                "${workspaceFolder}/app/streamlit_app.py",
+                "--server.port", "8501",
+                "--server.address", "localhost",
+                "--server.runOnSave", "true"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src"
+            },
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Python: Pytest",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "tests",
+                "-v",
+                "--tb=short",
+                "--color=yes",
+                "-s"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src",
+                "PYTEST_ENV": "test"
+            },
+            "envFile": "${workspaceFolder}/.env.test"
+        },
+        {
+            "name": "Python: Pytest (Current File)",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "${file}",
+                "-v",
+                "--tb=short",
+                "--color=yes",
+                "-s"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src",
+                "PYTEST_ENV": "test"
+            },
+            "envFile": "${workspaceFolder}/.env.test"
+        },
+        {
+            "name": "Python: Hyperparameter Search",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/scripts/optimization/hyperparameter_search.py",
+            "args": [
+                "--config", "configs/experiments/sota_attempts/phase4_final_sota.yaml",
+                "--trials", "100",
+                "--study-name", "ag_news_optimization"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src",
+                "CUDA_VISIBLE_DEVICES": "0,1"
+            },
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Python: Distributed Training",
+            "type": "python",
+            "request": "launch",
+            "module": "torch.distributed.launch",
+            "args": [
+                "--nproc_per_node", "2",
+                "--master_port", "29500",
+                "${workspaceFolder}/scripts/training/distributed_training.py",
+                "--config", "configs/training/standard/distributed.yaml"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src",
+                "CUDA_VISIBLE_DEVICES": "0,1"
+            },
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Celery: Worker",
+            "type": "python",
+            "request": "launch",
+            "module": "celery",
+            "args": [
+                "-A", "src.services.queue.celery_tasks",
+                "worker",
+                "--loglevel=info",
+                "--concurrency=4"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src",
+                "CELERY_ENV": "development"
+            },
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Python: Jupyter Notebook",
+            "type": "python",
+            "request": "launch",
+            "module": "jupyter",
+            "args": [
+                "notebook",
+                "--notebook-dir=${workspaceFolder}/notebooks",
+                "--no-browser"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}:${workspaceFolder}/src"
+            },
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Docker: Attach to Container",
+            "type": "python",
+            "request": "attach",
+            "port": 5678,
+            "host": "localhost",
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "/app"
+                }
+            ]
+        }
+    ],
+    "compounds": [
+        {
+            "name": "All API Servers",
+            "configurations": [
+                "FastAPI: REST API Server",
+                "gRPC: Server",
+                "GraphQL: Server"
+            ],
+            "stopAll": true
+        },
+        {
+            "name": "Full Stack",
+            "configurations": [
+                "FastAPI: REST API Server",
+                "Streamlit: Demo App",
+                "Celery: Worker"
+            ],
+            "stopAll": true
+        }
+    ]
+}
