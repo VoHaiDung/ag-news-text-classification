@@ -1,0 +1,325 @@
+# Kubernetes ConfigMap Configuration for AG News Text Classification
+# ================================================================================
+# This configuration defines ConfigMaps for storing non-sensitive configuration
+# data that can be consumed by pods as environment variables or mounted files.
+#
+# ConfigMap usage:
+#   - Application configuration
+#   - Model hyperparameters
+#   - Service endpoints
+#   - Feature flags
+#
+# References:
+#   - ConfigMaps: https://kubernetes.io/docs/concepts/configuration/configmap/
+#   - Configuration Best Practices: https://kubernetes.io/docs/concepts/configuration/overview/
+#   - Twelve-Factor App: https://12factor.net/config
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+---
+# Model Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: model-config
+  namespace: agnews-production
+  labels:
+    app: agnews
+    component: model
+    version: v1
+data:
+  # Model registry configuration
+  registry_url: "https://model-registry.agnews.ai"
+  model_version: "v2.1.0"
+  model_name: "deberta-v3-xlarge-agnews"
+  
+  # Model hyperparameters
+  model_config.yaml: |
+    model:
+      architecture: "deberta-v3-xlarge"
+      num_labels: 4
+      max_sequence_length: 512
+      hidden_size: 1024
+      num_attention_heads: 16
+      num_hidden_layers: 24
+      dropout_rate: 0.1
+      attention_dropout: 0.1
+      
+    inference:
+      batch_size: 32
+      max_batch_size: 64
+      timeout_seconds: 30
+      use_fp16: true
+      use_onnx: false
+      optimization_level: 2
+      
+    preprocessing:
+      tokenizer: "microsoft/deberta-v3-xlarge"
+      do_lower_case: false
+      remove_special_tokens: false
+      padding: "max_length"
+      truncation: true
+
+---
+# Inference Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: inference-config
+  namespace: agnews-production
+  labels:
+    app: agnews
+    component: inference
+data:
+  # Server configuration
+  server_config.yaml: |
+    server:
+      host: "0.0.0.0"
+      port: 8080
+      workers: 4
+      worker_class: "uvicorn.workers.UvicornWorker"
+      keepalive: 5
+      timeout: 60
+      
+    cache:
+      enabled: true
+      ttl: 3600
+      max_size: 1000
+      eviction_policy: "lru"
+      
+    monitoring:
+      metrics_port: 9090
+      enable_prometheus: true
+      enable_tracing: true
+      sampling_rate: 0.1
+      
+    rate_limiting:
+      enabled: true
+      requests_per_minute: 1000
+      burst_size: 100
+      
+  # Feature flags
+  feature_flags.json: |
+    {
+      "enable_batch_inference": true,
+      "enable_model_versioning": true,
+      "enable_request_logging": true,
+      "enable_auto_scaling": true,
+      "enable_circuit_breaker": true,
+      "enable_cache_warming": false,
+      "enable_a_b_testing": false,
+      "enable_gradual_rollout": true
+    }
+
+---
+# Training Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: training-config
+  namespace: agnews-production
+  labels:
+    app: agnews
+    component: training
+data:
+  # MLflow configuration
+  mlflow_uri: "http://mlflow-service.agnews-production.svc.cluster.local:5000"
+  mlflow_experiment: "agnews-classification"
+  
+  # Training configuration
+  training_config.yaml: |
+    training:
+      epochs: 10
+      batch_size: 16
+      gradient_accumulation_steps: 2
+      learning_rate: 2e-5
+      warmup_ratio: 0.1
+      weight_decay: 0.01
+      adam_epsilon: 1e-8
+      max_grad_norm: 1.0
+      
+    optimization:
+      fp16: true
+      fp16_opt_level: "O1"
+      gradient_checkpointing: true
+      deepspeed: false
+      
+    evaluation:
+      eval_batch_size: 32
+      eval_steps: 500
+      save_steps: 1000
+      logging_steps: 100
+      save_total_limit: 3
+      load_best_model_at_end: true
+      metric_for_best_model: "f1_macro"
+      
+    data:
+      train_file: "data/train.csv"
+      validation_file: "data/validation.csv"
+      test_file: "data/test.csv"
+      max_train_samples: null
+      max_eval_samples: null
+      
+    callbacks:
+      early_stopping:
+        enabled: true
+        patience: 3
+        threshold: 0.001
+      model_checkpoint:
+        enabled: true
+        save_best_only: true
+      tensorboard:
+        enabled: true
+        log_dir: "/logs/tensorboard"
+
+---
+# Data Processing Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: data-config
+  namespace: agnews-data
+  labels:
+    app: agnews
+    component: data
+data:
+  # Storage configuration
+  s3_bucket: "agnews-data-bucket"
+  s3_region: "us-west-2"
+  gcs_bucket: "agnews-data-gcs"
+  azure_container: "agnews-data"
+  
+  # Kafka configuration (optional)
+  kafka_brokers: "kafka-1:9092,kafka-2:9092,kafka-3:9092"
+  kafka_topic: "agnews-events"
+  kafka_consumer_group: "agnews-processors"
+  
+  # Data pipeline configuration
+  pipeline_config.yaml: |
+    pipeline:
+      name: "agnews-data-pipeline"
+      version: "1.0.0"
+      
+    ingestion:
+      source_type: "streaming"
+      batch_size: 1000
+      buffer_size: 10000
+      compression: "gzip"
+      
+    preprocessing:
+      steps:
+        - name: "text_cleaning"
+          enabled: true
+          params:
+            remove_html: true
+            remove_urls: true
+            remove_emails: true
+        - name: "tokenization"
+          enabled: true
+          params:
+            tokenizer: "deberta"
+            max_length: 512
+        - name: "augmentation"
+          enabled: false
+          params:
+            techniques: ["synonym_replacement", "back_translation"]
+            augmentation_factor: 2
+            
+    validation:
+      min_text_length: 10
+      max_text_length: 5000
+      required_fields: ["text", "label"]
+      label_values: ["World", "Sports", "Business", "Sci/Tech"]
+      
+    output:
+      format: "parquet"
+      partitioning: "daily"
+      compression: "snappy"
+
+---
+# Celery Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: celery-config
+  namespace: agnews-production
+  labels:
+    app: agnews
+    component: celery
+data:
+  # Celery configuration
+  celery_config.py: |
+    from celery import Celery
+    from kombu import Exchange, Queue
+    
+    # Broker settings
+    broker_url = 'redis://redis-service:6379/0'
+    result_backend = 'redis://redis-service:6379/1'
+    
+    # Task settings
+    task_serializer = 'json'
+    accept_content = ['json']
+    result_serializer = 'json'
+    timezone = 'UTC'
+    enable_utc = True
+    
+    # Worker settings
+    worker_prefetch_multiplier = 4
+    worker_max_tasks_per_child = 100
+    worker_disable_rate_limits = False
+    
+    # Task routing
+    task_routes = {
+        'tasks.training.*': {'queue': 'training'},
+        'tasks.inference.*': {'queue': 'inference'},
+        'tasks.data.*': {'queue': 'data_processing'},
+    }
+    
+    # Queue configuration
+    task_queues = (
+        Queue('training', Exchange('training'), routing_key='training'),
+        Queue('inference', Exchange('inference'), routing_key='inference'),
+        Queue('data_processing', Exchange('data'), routing_key='data'),
+    )
+    
+    # Beat schedule
+    beat_schedule = {
+        'cleanup-old-models': {
+            'task': 'tasks.maintenance.cleanup_old_models',
+            'schedule': 86400.0,  # Daily
+        },
+        'update-metrics': {
+            'task': 'tasks.monitoring.update_metrics',
+            'schedule': 300.0,  # Every 5 minutes
+        },
+    }
+
+---
+# Environment Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: environment-config
+  namespace: agnews-production
+  labels:
+    app: agnews
+    component: environment
+data:
+  # Environment variables
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  DEBUG: "false"
+  PYTHONUNBUFFERED: "1"
+  TZ: "UTC"
+  
+  # Service endpoints
+  API_BASE_URL: "https://api.agnews.ai"
+  FRONTEND_URL: "https://app.agnews.ai"
+  DOCS_URL: "https://docs.agnews.ai"
+  
+  # Feature configuration
+  ENABLE_METRICS: "true"
+  ENABLE_TRACING: "true"
+  ENABLE_PROFILING: "false"
+  ENABLE_DEBUG_ENDPOINTS: "false"
