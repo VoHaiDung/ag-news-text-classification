@@ -1,0 +1,430 @@
+# Data Augmentation Impact Ablation Study Configuration
+# ======================================================
+#
+# This configuration evaluates the effectiveness of different data augmentation techniques
+# on AG News classification performance, following methodologies from:
+# - Wei & Zou (2019): "EDA: Easy Data Augmentation Techniques for Boosting Performance"
+# - Feng et al. (2021): "A Survey of Data Augmentation Approaches for NLP"
+# - Chen et al. (2023): "An Empirical Survey of Data Augmentation for Limited Data Learning"
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: augmentation_impact_ablation
+type: experiment
+subtype: ablation
+description: "Comprehensive study of data augmentation impact on classification performance"
+
+# Experimental methodology
+methodology:
+  # Ablation design principles
+  ablation_design:
+    variable: "augmentation_technique"
+    control_group: "no_augmentation"
+    isolation_strategy: "single_technique"
+    combination_strategy: "additive"
+    
+  # Statistical rigor
+  statistical_analysis:
+    num_seeds: 5
+    cross_validation_folds: 5
+    significance_level: 0.05
+    multiple_comparison_correction: "bonferroni"
+    
+  # Evaluation protocol
+  evaluation:
+    primary_metric: "accuracy"
+    secondary_metrics: ["f1_macro", "robustness_score"]
+    compute_confidence_intervals: true
+
+# Augmentation techniques to evaluate
+augmentation_techniques:
+  # Baseline (no augmentation)
+  baseline:
+    name: "no_augmentation"
+    type: "control"
+    augmentation_ratio: 0.0
+    description: "Original data without augmentation"
+    
+  # Token-level augmentations
+  synonym_replacement:
+    name: "synonym_replacement"
+    type: "token_level"
+    augmentation_ratio: 0.5
+    
+    parameters:
+      num_replacements: 3
+      use_wordnet: true
+      preserve_entities: true
+      
+  random_insertion:
+    name: "random_insertion"
+    type: "token_level"
+    augmentation_ratio: 0.5
+    
+    parameters:
+      num_insertions: 2
+      vocabulary_source: "training_data"
+      
+  random_deletion:
+    name: "random_deletion"
+    type: "token_level"
+    augmentation_ratio: 0.5
+    
+    parameters:
+      deletion_probability: 0.1
+      min_sentence_length: 3
+      
+  random_swap:
+    name: "random_swap"
+    type: "token_level"
+    augmentation_ratio: 0.5
+    
+    parameters:
+      num_swaps: 2
+      swap_distance: 3
+      
+  # Sentence-level augmentations
+  back_translation:
+    name: "back_translation"
+    type: "sentence_level"
+    augmentation_ratio: 1.0
+    
+    parameters:
+      intermediate_languages: ["fr", "de", "es", "zh"]
+      translation_model: "mbart-large-50"
+      temperature: 0.8
+      
+  paraphrase_generation:
+    name: "paraphrase_generation"
+    type: "sentence_level"
+    augmentation_ratio: 1.0
+    
+    parameters:
+      model: "t5-large-paraphrase"
+      num_paraphrases: 2
+      diversity_penalty: 1.2
+      
+  # Advanced augmentations
+  mixup:
+    name: "mixup"
+    type: "embedding_level"
+    augmentation_ratio: 0.5
+    
+    parameters:
+      alpha: 0.2
+      layer: "embedding"
+      interpolation: "linear"
+      
+  cutmix:
+    name: "cutmix"
+    type: "embedding_level"
+    augmentation_ratio: 0.5
+    
+    parameters:
+      beta: 1.0
+      cut_ratio: 0.3
+      
+  adversarial:
+    name: "adversarial"
+    type: "gradient_based"
+    augmentation_ratio: 0.3
+    
+    parameters:
+      epsilon: 0.01
+      method: "pgd"
+      steps: 3
+      
+  # Context-aware augmentations
+  contextual_replacement:
+    name: "contextual_replacement"
+    type: "contextual"
+    augmentation_ratio: 0.5
+    
+    parameters:
+      model: "roberta-base"
+      mask_probability: 0.15
+      top_k: 10
+      
+  # Synthetic generation
+  gpt_generation:
+    name: "gpt_generation"
+    type: "generative"
+    augmentation_ratio: 1.0
+    
+    parameters:
+      model: "gpt-3.5-turbo"
+      prompt_template: "instruction_based"
+      temperature: 0.7
+      
+  # Combination strategies
+  eda_combined:
+    name: "eda_combined"
+    type: "combination"
+    augmentation_ratio: 1.0
+    
+    components:
+      - synonym_replacement: 0.25
+      - random_insertion: 0.25
+      - random_deletion: 0.25
+      - random_swap: 0.25
+      
+  advanced_combined:
+    name: "advanced_combined"
+    type: "combination"
+    augmentation_ratio: 2.0
+    
+    components:
+      - back_translation: 0.3
+      - paraphrase_generation: 0.3
+      - contextual_replacement: 0.2
+      - mixup: 0.2
+
+# Data configurations
+data_configurations:
+  # Different data sizes to test
+  data_sizes:
+    - size: 100
+      name: "few_shot"
+      description: "Limited data scenario"
+      
+    - size: 1000
+      name: "low_resource"
+      description: "Low resource scenario"
+      
+    - size: 10000
+      name: "medium_resource"
+      description: "Medium resource scenario"
+      
+    - size: 96000
+      name: "full_data"
+      description: "Full training data"
+      
+  # Class imbalance scenarios
+  imbalance_scenarios:
+    - name: "balanced"
+      ratio: [1, 1, 1, 1]
+      
+    - name: "imbalanced"
+      ratio: [4, 2, 1, 1]
+
+# Models to evaluate
+models:
+  # Fast baseline
+  distilbert:
+    name: "distilbert-base-uncased"
+    type: "transformer"
+    max_length: 256
+    batch_size: 32
+    
+  # Standard model
+  roberta_base:
+    name: "roberta-base"
+    type: "transformer"
+    max_length: 256
+    batch_size: 16
+    
+  # Large model
+  deberta_large:
+    name: "microsoft/deberta-v3-large"
+    type: "transformer"
+    max_length: 256
+    batch_size: 8
+
+# Training configuration
+training:
+  # Standard training
+  standard:
+    num_epochs: 10
+    learning_rate: 2e-5
+    warmup_ratio: 0.1
+    weight_decay: 0.01
+    early_stopping_patience: 3
+    
+  # Augmentation-specific
+  augmentation_specific:
+    # Online vs offline augmentation
+    augmentation_mode: "offline"
+    
+    # Augmentation scheduling
+    augmentation_schedule:
+      constant: 1.0
+      linear_decay: [1.0, 0.0]
+      cosine_decay: [1.0, 0.1]
+      
+    # Augmentation probability
+    augmentation_probability:
+      100: 1.0
+      1000: 0.8
+      10000: 0.5
+      96000: 0.3
+
+# Experiments
+experiments:
+  # Experiment 1: Individual technique effectiveness
+  individual_effectiveness:
+    description: "Evaluate each augmentation technique in isolation"
+    
+    expected_improvements:
+      synonym_replacement: "+2-3%"
+      back_translation: "+3-5%"
+      paraphrase_generation: "+4-6%"
+      mixup: "+2-4%"
+      adversarial: "+1-3%"
+      gpt_generation: "+5-8%"
+      
+  # Experiment 2: Data size sensitivity
+  data_size_sensitivity:
+    description: "How augmentation impact varies with data size"
+    
+    expected_patterns:
+      few_shot: "High impact (>10% improvement)"
+      low_resource: "Medium impact (5-10% improvement)"
+      medium_resource: "Low impact (2-5% improvement)"
+      full_data: "Minimal impact (<2% improvement)"
+      
+  # Experiment 3: Combination effectiveness
+  combination_effectiveness:
+    description: "Evaluate augmentation combinations"
+    
+    combinations_to_test:
+      - [synonym_replacement, random_insertion]
+      - [back_translation, paraphrase_generation]
+      - [mixup, adversarial]
+      - [eda_combined]
+      - [advanced_combined]
+      
+  # Experiment 4: Model-specific impact
+  model_specific_impact:
+    description: "How different models benefit from augmentation"
+    
+    expected_results:
+      distilbert: "High benefit from augmentation"
+      roberta_base: "Medium benefit from augmentation"
+      deberta_large: "Low benefit from augmentation"
+      
+  # Experiment 5: Robustness analysis
+  robustness_analysis:
+    description: "Impact on model robustness"
+    
+    robustness_tests:
+      - adversarial_examples
+      - out_of_distribution
+      - noisy_inputs
+      - contrast_sets
+
+# Analysis metrics
+analysis:
+  # Performance metrics
+  performance_metrics:
+    - accuracy_improvement
+    - f1_improvement
+    - consistency_across_folds
+    
+  # Efficiency metrics
+  efficiency_metrics:
+    - augmentation_time
+    - storage_overhead
+    - training_time_increase
+    
+  # Quality metrics
+  quality_metrics:
+    - augmentation_diversity
+    - semantic_preservation
+    - label_consistency
+    
+  # Statistical analysis
+  statistical_analysis:
+    - paired_t_test
+    - wilcoxon_signed_rank
+    - effect_size_cohens_d
+    
+  # Visualizations
+  visualizations:
+    - improvement_heatmap
+    - data_size_vs_improvement
+    - model_vs_technique_matrix
+    - augmentation_examples
+
+# Expected insights
+insights:
+  # Effectiveness insights
+  effectiveness:
+    - "Paraphrase generation most effective overall"
+    - "Token-level augmentations best for few-shot"
+    - "Sentence-level augmentations best for medium data"
+    
+  # Efficiency insights
+  efficiency:
+    - "EDA techniques fastest to apply"
+    - "Back-translation computationally expensive"
+    - "GPT generation highest quality but costly"
+    
+  # Practical recommendations
+  recommendations:
+    few_shot:
+      primary: "eda_combined"
+      secondary: "paraphrase_generation"
+      
+    low_resource:
+      primary: "back_translation"
+      secondary: "contextual_replacement"
+      
+    production:
+      primary: "synonym_replacement"
+      secondary: "mixup"
+
+# Resource requirements
+resources:
+  compute:
+    gpu_hours: 48
+    gpu_type: "V100"
+    
+  storage:
+    augmented_data: "50GB"
+    model_checkpoints: "20GB"
+    
+  api_usage:
+    gpt_tokens: 1000000
+    translation_api_calls: 50000
+
+# Timeline
+timeline:
+  total_days: 5
+  
+  phases:
+    - name: "Data preparation and augmentation"
+      days: 2
+      
+    - name: "Training experiments"
+      days: 2
+      
+    - name: "Analysis and reporting"
+      days: 1
+
+# Notes
+notes: |
+  Data Augmentation Impact Study
+  
+  Key Questions:
+  1. Which augmentation techniques provide most value?
+  2. How does effectiveness vary with data size?
+  3. What combinations work best?
+  4. How do augmentations affect robustness?
+  
+  Expected Findings:
+  - Augmentation most valuable with <1000 examples
+  - Paraphrase generation provides best quality
+  - Combinations outperform individual techniques
+  - Augmentation improves robustness significantly
+  
+  Practical Guidelines:
+  - Always use augmentation with <1000 samples
+  - Consider cost-benefit for production systems
+  - Combine multiple techniques for best results
+  - Monitor semantic drift in augmented data
+
+references:
+  - eda_paper: "https://arxiv.org/abs/1901.11196"
+  - augmentation_survey: "https://arxiv.org/abs/2105.03075"
+  - mixup_nlp: "https://arxiv.org/abs/2008.09106"
