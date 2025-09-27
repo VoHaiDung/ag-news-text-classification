@@ -32,8 +32,7 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_DEFAULT_TIMEOUT=100 \
-    DEBIAN_FRONTEND=noninteractive \
-    PYTHONPATH="/app:\${PYTHONPATH}"
+    DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -71,15 +70,17 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Upgrade pip and install build tools
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+RUN pip install --upgrade pip setuptools wheel
 
-# Install base requirements
-RUN pip install --no-cache-dir \
-    torch==2.0.1 --index-url https://download.pytorch.org/whl/cpu && \
-    pip install --no-cache-dir \
+# Install base requirements with compatible versions
+RUN pip install torch==2.0.1+cpu torchvision==0.15.2+cpu \
+    -f https://download.pytorch.org/whl/torch_stable.html
+
+# Install ML requirements with compatible versions
+RUN pip install \
     transformers==4.35.0 \
+    tokenizers==0.14.1 \
     datasets==2.14.0 \
-    tokenizers==0.15.0 \
     numpy==1.24.0 \
     pandas==2.0.0 \
     scikit-learn==1.3.0 \
@@ -88,8 +89,7 @@ RUN pip install --no-cache-dir \
     python-dotenv==1.0.0 \
     tqdm==4.66.0 \
     requests==2.31.0 \
-    typing-extensions==4.8.0 && \
-    rm -rf /root/.cache/pip/*
+    typing-extensions==4.8.0
 
 # Stage 3: Training environment
 FROM python-base AS training
@@ -98,9 +98,8 @@ FROM python-base AS training
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Install additional training dependencies
-COPY requirements/ /tmp/requirements/
-RUN pip install --no-cache-dir accelerate==0.24.0 peft==0.6.0 || true
+# Install additional training dependencies if needed
+RUN pip install accelerate==0.24.0 peft==0.6.0 || true
 
 # Copy application code
 COPY src/ /app/src/
@@ -109,10 +108,10 @@ COPY scripts/ /app/scripts/
 COPY setup.py pyproject.toml README.md /app/
 
 # Install application in development mode
-RUN pip install --no-cache-dir -e . || true
+RUN pip install -e . || true
 
 # Set Python path
-ENV PYTHONPATH="/app:\${PYTHONPATH}"
+ENV PYTHONPATH=/app:${PYTHONPATH:-}
 
 # Create volume mount points
 VOLUME ["/app/data", "/app/models", "/app/outputs", "/app/logs"]
@@ -127,7 +126,7 @@ FROM python:${PYTHON_VERSION}-slim AS inference
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
-    PYTHONPATH="/app:\${PYTHONPATH}"
+    PYTHONPATH=/app:${PYTHONPATH:-}
 
 # Install only runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -135,17 +134,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install minimal Python dependencies for inference
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir \
-    torch==2.0.1 --index-url https://download.pytorch.org/whl/cpu && \
-    pip install --no-cache-dir \
+# Install minimal Python dependencies for inference with compatible versions
+RUN pip install --upgrade pip && \
+    pip install \
+    torch==2.0.1+cpu \
+    -f https://download.pytorch.org/whl/torch_stable.html && \
+    pip install \
     transformers==4.35.0 \
-    tokenizers==0.15.0 \
+    tokenizers==0.14.1 \
     numpy==1.24.0 \
     pyyaml==6.0.1 \
-    tqdm==4.66.0 && \
-    rm -rf /root/.cache/pip/*
+    tqdm==4.66.0
 
 # Copy only necessary code for inference
 COPY src/ /app/src/
@@ -153,7 +152,7 @@ COPY configs/ /app/configs/
 COPY setup.py pyproject.toml /app/
 
 # Install application
-RUN pip install --no-cache-dir . || true
+RUN pip install . || true
 
 WORKDIR /app
 
@@ -177,7 +176,7 @@ FROM python:${PYTHON_VERSION}-slim AS production
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
-    PYTHONPATH="/app:\${PYTHONPATH}"
+    PYTHONPATH=/app:${PYTHONPATH:-}
 
 # Install only runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -185,16 +184,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install minimal dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir \
-    torch==2.0.1 --index-url https://download.pytorch.org/whl/cpu && \
-    pip install --no-cache-dir \
+# Install minimal dependencies with compatible versions
+RUN pip install --upgrade pip && \
+    pip install \
+    torch==2.0.1+cpu \
+    -f https://download.pytorch.org/whl/torch_stable.html && \
+    pip install \
     transformers==4.35.0 \
-    tokenizers==0.15.0 \
+    tokenizers==0.14.1 \
     numpy==1.24.0 \
-    pyyaml==6.0.1 && \
-    rm -rf /root/.cache/pip/*
+    pyyaml==6.0.1
 
 # Copy application code
 COPY --from=inference /app /app
