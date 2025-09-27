@@ -7,6 +7,7 @@
 # - Chen et al. (2020): "MixText: Linguistically-Informed Interpolation of Hidden States"
 #
 # Author: Võ Hải Dũng
+# License: MIT
 
 name: mixup_strategies
 type: augmentation
