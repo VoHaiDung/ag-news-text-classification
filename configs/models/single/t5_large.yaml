@@ -1,0 +1,308 @@
+# T5-Large Model Configuration
+# Text-to-Text Transfer Transformer for AG News Classification
+
+name: t5_large
+type: transformer
+architecture: t5
+
+# Model identifiers
+model:
+  pretrained_model_name: t5-large
+  model_revision: main
+  cache_dir: ./.cache/models
+  use_auth_token: false
+
+# Architecture parameters
+architecture_params:
+  d_model: 1024
+  d_kv: 64
+  d_ff: 4096
+  num_layers: 24
+  num_decoder_layers: 24
+  num_heads: 16
+  relative_attention_num_buckets: 32
+  relative_attention_max_distance: 128
+  dropout_rate: 0.1
+  layer_norm_epsilon: 1e-6
+  initializer_factor: 1.0
+  feed_forward_proj: gated-gelu
+  is_encoder_decoder: true
+  use_cache: true
+  
+# Task-specific configuration
+task:
+  num_labels: 4
+  problem_type: single_label_classification
+  # T5 uses text-to-text format
+  label_map:
+    0: "world"
+    1: "sports"
+    2: "business"
+    3: "technology"
+  reverse_label_map:
+    "world": 0
+    "sports": 1
+    "business": 2
+    "technology": 3
+  
+  # T5 task prefix
+  task_prefix: "classify: "
+  
+  # Text-to-text format
+  text2text_format: true
+
+# Classification configuration (T5 specific)
+classifier:
+  type: t5_classification
+  use_decoder: true
+  max_decode_length: 20
+  
+  # Generation parameters for classification
+  num_beams: 1  # Greedy decoding for classification
+  early_stopping: true
+  
+  # Label tokens
+  label_tokens:
+    - "world"
+    - "sports"
+    - "business"
+    - "technology"
+
+# Fine-tuning configuration
+fine_tuning:
+  # Layer freezing
+  freeze_embeddings: false
+  freeze_encoder: false
+  freeze_decoder: false
+  freeze_encoder_layers: 0
+  freeze_decoder_layers: 0
+  
+  # Differential learning rates
+  use_differential_lr: true
+  encoder_lr: 3e-5
+  decoder_lr: 3e-5
+  
+  # T5 specific
+  tie_word_embeddings: true
+  tie_encoder_decoder: false
+
+# Training hyperparameters
+training:
+  learning_rate: 3e-5
+  weight_decay: 0.01
+  adam_beta1: 0.9
+  adam_beta2: 0.999
+  adam_epsilon: 1e-8
+  max_grad_norm: 1.0
+  
+  # Batch settings
+  train_batch_size: 8
+  eval_batch_size: 16
+  gradient_accumulation_steps: 8
+  
+  # Schedule
+  num_train_epochs: 6
+  warmup_ratio: 0.1
+  warmup_steps: 500
+  
+  # Learning rate schedule
+  lr_scheduler_type: constant_with_warmup
+  lr_scheduler_kwargs:
+    last_epoch: -1
+  
+  # Optimization
+  fp16: true
+  fp16_opt_level: O1
+  gradient_checkpointing: true
+  
+  # Regularization
+  label_smoothing_factor: 0.1
+  dropout_rate: 0.1
+
+# Data processing
+data_processing:
+  max_length: 512
+  max_target_length: 20  # For classification labels
+  truncation: true
+  padding: max_length
+  pad_to_multiple_of: 8
+  return_attention_mask: true
+  return_token_type_ids: false
+  
+  # Special tokens (T5 specific)
+  add_special_tokens: false  # T5 doesn't use special tokens
+  pad_token: "<pad>"
+  eos_token: "</s>"
+  unk_token: "<unk>"
+  
+  # Task formatting
+  input_template: "classify: {text}"
+  target_template: "{label}"
+
+# Advanced techniques
+advanced:
+  # Prompt tuning
+  prompt_tuning:
+    enabled: true
+    num_virtual_tokens: 20
+    prompt_tuning_init: TEXT
+    prompt_tuning_init_text: "Classify the news article into categories"
+  
+  # Prefix tuning
+  prefix_tuning:
+    enabled: false
+    num_prefix_tokens: 10
+    prefix_projection: true
+  
+  # Multi-task learning
+  multi_task:
+    enabled: false
+    auxiliary_tasks:
+      - summarization
+      - sentiment
+  
+  # Adversarial training
+  adversarial_training:
+    enabled: false
+    method: fgm
+    epsilon: 0.3
+  
+  # Ensemble distillation readiness
+  distillation_ready: true
+  temperature: 2.0
+
+# Optimization techniques
+optimization:
+  # Quantization
+  quantization:
+    enabled: false
+    method: int8
+    bits: 8
+  
+  # Model sharding
+  model_sharding:
+    enabled: false
+    strategy: fully_sharded
+  
+  # Compilation
+  compile_model: false  # Encoder-decoder not fully supported
+
+# Model outputs
+outputs:
+  output_hidden_states: true
+  output_attentions: false
+  use_cache: true
+  
+  # Save settings
+  save_safetensors: true
+  save_torch: true
+  save_onnx: false
+
+# Evaluation metrics
+evaluation:
+  metrics:
+    - accuracy
+    - precision
+    - recall
+    - f1
+    - f1_macro
+    - f1_micro
+    - f1_weighted
+    - matthews_corrcoef
+    - exact_match  # T5 specific
+  
+  primary_metric: f1_macro
+  greater_is_better: true
+  
+  # Evaluation settings
+  eval_accumulation_steps: 5
+  eval_delay: 0
+  per_device_eval_batch_size: 16
+  
+  # Generation evaluation
+  predict_with_generate: true
+
+# Inference configuration
+inference:
+  # Optimization
+  use_fast_tokenizer: true
+  use_cache: true
+  torch_compile: false
+  
+  # Batching
+  max_batch_size: 32
+  dynamic_batching: true
+  
+  # Generation settings
+  generation_config:
+    max_new_tokens: 20
+    min_length: 1
+    do_sample: false
+    num_beams: 1
+    temperature: 1.0
+    top_p: 1.0
+    repetition_penalty: 1.0
+  
+  # Post-processing
+  decode_labels: true
+  normalize_outputs: true
+
+# Hardware requirements
+hardware_requirements:
+  min_gpu_memory_gb: 24
+  recommended_gpu_memory_gb: 32
+  min_ram_gb: 32
+  recommended_ram_gb: 48
+  
+  # Supported GPUs
+  supported_gpus:
+    - A100
+    - A6000
+    - V100-32GB
+    - RTX-4090
+
+# Experiment tracking
+tracking:
+  track_gradients: false
+  track_weights: false
+  log_frequency: 25
+  
+  # Tags for tracking
+  tags:
+    - t5
+    - large
+    - text2text
+    - encoder-decoder
+
+# Model card information
+model_card:
+  description: "T5-Large fine-tuned for AG News classification in text-to-text format"
+  intended_use: "News classification using unified text-to-text framework"
+  training_data: "AG News dataset formatted for T5"
+  eval_results:
+    accuracy: 0.959
+    f1_macro: 0.958
+    exact_match: 0.959
+    inference_time_ms: 30
+  limitations: "Requires text-to-text formatting, higher memory usage due to encoder-decoder"
+  ethical_considerations: "Pre-trained on C4 dataset, may reflect web text biases"
+
+# Notes and references
+notes: |
+  T5-Large uses text-to-text format for all tasks including classification.
+  Key features:
+  - Unified framework for all NLP tasks
+  - Encoder-decoder architecture
+  - Relative position embeddings
+  - Can leverage prompt tuning and prefix tuning
+  
+  Expected performance:
+  - Accuracy: ~95.9%
+  - F1-macro: ~95.8%
+  - Exact Match: ~95.9%
+  - Inference: ~30ms per sample on A100
+
+references:
+  - paper: "https://arxiv.org/abs/1910.10683"
+  - github: "https://github.com/google-research/text-to-text-transfer-transformer"
+  - huggingface: "https://huggingface.co/t5-large"
