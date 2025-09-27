@@ -7,6 +7,7 @@
 # - Kazemnejad et al. (2020): "Paraphrase Generation by Learning How to Edit from Samples"
 #
 # Author: Võ Hải Dũng
+# License: MIT
 
 name: paraphrase_generation
 type: augmentation
