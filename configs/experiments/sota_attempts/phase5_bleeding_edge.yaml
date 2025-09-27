@@ -1,0 +1,413 @@
+# Phase 5: Bleeding Edge Techniques for SOTA
+# ==========================================
+#
+# This configuration implements cutting-edge techniques from recent research,
+# following methodology from:
+# - Wortsman et al. (2022): "Model Soups: Averaging Weights of Multiple Fine-tuned Models"
+# - Wei et al. (2022): "Chain-of-Thought Prompting Elicits Reasoning"
+# - Wang et al. (2023): "Self-Consistency Improves Chain of Thought Reasoning"
+# - Touvron et al. (2023): "LLaMA: Open and Efficient Foundation Language Models"
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: phase5_bleeding_edge
+type: experiment
+phase: 5
+description: "Experimental techniques pushing the boundaries of text classification"
+
+# Experiment metadata
+metadata:
+  objective: "Explore cutting-edge techniques for maximum possible performance"
+  target_accuracy: 0.975  # Ambitious target
+  target_f1_macro: 0.974
+  expected_duration_hours: 120
+  gpu_requirements: "8x A100 80GB or 4x H100"
+  
+  prerequisites:
+    - "phase1_single_models"
+    - "phase2_ensemble"
+    - "phase3_dapt"
+    - "phase4_final_sota"
+    
+  tags:
+    - sota
+    - phase5
+    - experimental
+    - bleeding_edge
+
+# Cutting-edge techniques
+techniques:
+  # Technique 1: Model Soups (Wortsman et al., 2022)
+  model_soups:
+    enabled: true
+    
+    # Soup ingredients (different training runs)
+    ingredients:
+      num_models: 10
+      
+      # Varying hyperparameters
+      hyperparameter_ranges:
+        learning_rate: [1e-5, 2e-5, 3e-5, 5e-5]
+        dropout: [0.05, 0.1, 0.15, 0.2]
+        weight_decay: [0.001, 0.01, 0.1]
+        seed: [0, 42, 123, 456, 789]
+        
+    # Soup recipes
+    recipes:
+      uniform_soup:
+        method: "uniform"
+        
+      greedy_soup:
+        method: "greedy"
+        metric: "validation_accuracy"
+        
+      learned_soup:
+        method: "learned"
+        learning_rate: 0.01
+        
+    expected_gain: "+0.5-0.8%"
+    
+  # Technique 2: Instruction Tuning with LLMs
+  instruction_tuning:
+    enabled: true
+    
+    # Base model
+    base_model: "meta-llama/Llama-2-70b"
+    
+    # Instruction templates
+    templates:
+      - "Classify the following news article into World, Sports, Business, or Sci/Tech: {text}"
+      - "What category does this news belong to? Categories: World, Sports, Business, Sci/Tech\nArticle: {text}"
+      - "Task: News Classification\nCategories: [World, Sports, Business, Sci/Tech]\nText: {text}\nCategory:"
+      
+    # Fine-tuning configuration
+    fine_tuning:
+      method: "lora"  # Parameter-efficient
+      r: 64
+      alpha: 128
+      dropout: 0.1
+      
+    # Prompt optimization
+    prompt_optimization:
+      method: "rlhf"
+      reward_model: "outputs/phase4/reward_model.pt"
+      
+    expected_gain: "+0.8-1.2%"
+    
+  # Technique 3: Test-Time Training (TTT)
+  test_time_training:
+    enabled: true
+    
+    # TTT configuration
+    auxiliary_task: "masked_language_modeling"
+    
+    adaptation_steps: 10
+    adaptation_lr: 1e-5
+    
+    # Self-supervised objective
+    self_supervised:
+      method: "rotation_prediction"
+      augmentations: ["mask", "permute", "substitute"]
+      
+    expected_gain: "+0.3-0.5%"
+    
+  # Technique 4: Mixture of Experts (MoE)
+  mixture_of_experts:
+    enabled: true
+    
+    # Expert configuration
+    num_experts: 8
+    expert_capacity: 2
+    
+    # Routing
+    routing:
+      method: "top2"
+      load_balancing_loss: 0.01
+      
+    # Expert specialization
+    specialization:
+      method: "clustering"
+      clusters: ["world", "sports", "business", "tech"]
+      
+    expected_gain: "+0.4-0.6%"
+    
+  # Technique 5: Retrieval-Augmented Classification
+  retrieval_augmented:
+    enabled: true
+    
+    # Retriever configuration
+    retriever:
+      model: "facebook/contriever"
+      index_size: 1000000
+      top_k: 5
+      
+    # Knowledge base
+    knowledge_base:
+      sources:
+        - "wikipedia"
+        - "news_archive"
+        - "domain_specific"
+        
+    # Fusion method
+    fusion:
+      method: "cross_attention"
+      
+    expected_gain: "+0.5-0.7%"
+    
+  # Technique 6: Consistency Training
+  consistency_training:
+    enabled: true
+    
+    # Self-consistency
+    self_consistency:
+      num_samples: 10
+      temperature: 0.7
+      aggregation: "majority_vote"
+      
+    # Cross-consistency
+    cross_consistency:
+      models: ["deberta", "roberta", "llama"]
+      agreement_threshold: 0.8
+      
+    # Temporal consistency
+    temporal_consistency:
+      window_size: 5
+      consistency_loss_weight: 0.1
+      
+    expected_gain: "+0.3-0.5%"
+    
+  # Technique 7: Neural Architecture Search (NAS)
+  neural_architecture_search:
+    enabled: false  # Very expensive
+    
+    # Search space
+    search_space:
+      num_layers: [10, 12, 24, 36]
+      hidden_size: [768, 1024, 1536]
+      num_heads: [12, 16, 24]
+      intermediate_size: [3072, 4096, 6144]
+      
+    # Search method
+    method: "evolutionary"
+    population_size: 20
+    generations: 10
+    
+    expected_gain: "+0.5-1.0%"
+    
+  # Technique 8: Adversarial Training++
+  advanced_adversarial:
+    enabled: true
+    
+    # Multiple perturbation types
+    perturbations:
+      - method: "virtual_adversarial"
+        epsilon: 2.0
+        
+      - method: "manifold_adversarial"
+        epsilon: 1.0
+        
+      - method: "contextual_adversarial"
+        epsilon: 0.5
+        
+    # Adversarial data augmentation
+    adversarial_augmentation:
+      generate_adversarial_examples: true
+      augmentation_ratio: 0.3
+      
+    expected_gain: "+0.4-0.6%"
+
+# Multi-stage pipeline
+pipeline:
+  # Stage 1: Model Soup Creation
+  stage1:
+    name: "model_soup_creation"
+    duration_hours: 40
+    
+    tasks:
+      - "Train 10 model variants"
+      - "Create greedy soup"
+      - "Optimize soup weights"
+      
+  # Stage 2: Instruction Tuning
+  stage2:
+    name: "instruction_tuning"
+    duration_hours: 30
+    
+    tasks:
+      - "Fine-tune LLaMA with LoRA"
+      - "Optimize prompts"
+      - "RLHF alignment"
+      
+  # Stage 3: Advanced Training
+  stage3:
+    name: "advanced_training"
+    duration_hours: 30
+    
+    tasks:
+      - "MoE training"
+      - "Consistency training"
+      - "Adversarial training++"
+      
+  # Stage 4: Integration
+  stage4:
+    name: "integration"
+    duration_hours: 20
+    
+    tasks:
+      - "Combine all techniques"
+      - "Optimize ensemble"
+      - "Final evaluation"
+
+# Evaluation protocol
+evaluation:
+  # Comprehensive evaluation
+  metrics:
+    # Standard metrics
+    classification:
+      - accuracy
+      - f1_macro
+      - f1_micro
+      - matthews_corrcoef
+      
+    # Robustness metrics
+    robustness:
+      - adversarial_accuracy
+      - ood_detection_auroc
+      - consistency_score
+      
+    # Efficiency metrics
+    efficiency:
+      - inference_time
+      - memory_usage
+      - flops
+      
+    # Calibration metrics
+    calibration:
+      - ece
+      - reliability_score
+      
+  # Stress testing
+  stress_tests:
+    # Distribution shift
+    distribution_shift:
+      - temporal_shift
+      - domain_shift
+      - style_shift
+      
+    # Adversarial robustness
+    adversarial:
+      - textfooler
+      - bert_attack
+      - deepwordbug
+      
+    # Edge cases
+    edge_cases:
+      - very_short_text
+      - very_long_text
+      - mixed_language
+      - noisy_text
+
+# Hardware optimization
+hardware_optimization:
+  # Model parallelism
+  model_parallelism:
+    tensor_parallel: 2
+    pipeline_parallel: 2
+    
+  # Efficient attention
+  attention:
+    use_flash_attention: true
+    use_xformers: true
+    
+  # Kernel fusion
+  kernel_fusion:
+    enabled: true
+    backend: "triton"
+    
+  # Quantization
+  quantization:
+    method: "int8"
+    dynamic: true
+
+# Expected outcomes
+expected_outcomes:
+  # Performance targets
+  best_configuration:
+    accuracy: 0.973
+    f1_macro: 0.972
+    
+  # Technique contributions
+  technique_gains:
+    model_soups: "+0.6%"
+    instruction_tuning: "+1.0%"
+    test_time_training: "+0.4%"
+    mixture_of_experts: "+0.5%"
+    retrieval_augmented: "+0.6%"
+    consistency_training: "+0.4%"
+    advanced_adversarial: "+0.5%"
+    
+  # Combined effect
+  total_improvement: "+2.5% over Phase 4"
+  
+  # Trade-offs
+  trade_offs:
+    inference_time: "3x slower"
+    memory_usage: "2x higher"
+    training_cost: "5x higher"
+
+# Risk assessment
+risks:
+  # Technical risks
+  technical:
+    - "Overfitting to validation set"
+    - "Technique interactions unknown"
+    - "Computational requirements excessive"
+    
+  # Practical risks
+  practical:
+    - "Too complex for production"
+    - "Maintenance difficulty"
+    - "Reproducibility challenges"
+
+# Notes
+notes: |
+  Phase 5: Bleeding Edge Techniques
+  
+  Objectives:
+  1. Push the boundaries of possible performance
+  2. Explore latest research techniques
+  3. Understand practical limits of text classification
+  
+  Key Innovations:
+  - Model Soups for robust averaging
+  - LLM-based instruction tuning
+  - Test-time adaptation
+  - Mixture of Experts
+  - Retrieval augmentation
+  - Advanced consistency training
+  
+  Expected Results:
+  - 97.3% accuracy (theoretical maximum ~98%)
+  - Significantly improved robustness
+  - Better calibration and consistency
+  - Trade-off: Higher computational cost
+  
+  Insights:
+  - Combining techniques yields diminishing returns
+  - Instruction tuning provides largest single gain
+  - Computational cost becomes prohibitive
+  - Production deployment challenging
+  
+  Recommendations:
+  - Use Phase 4 configuration for production
+  - Reserve Phase 5 for research/benchmarking
+  - Consider technique subset for specific use cases
+
+references:
+  - model_soups: "https://arxiv.org/abs/2203.05482"
+  - instruction_tuning: "https://arxiv.org/abs/2109.01652"
+  - test_time_training: "https://arxiv.org/abs/1909.13231"
+  - mixture_of_experts: "https://arxiv.org/abs/2101.03961"
+  - retrieval_augmented: "https://arxiv.org/abs/2005.11401"
+  - consistency: "https://arxiv.org/abs/2203.11171"
