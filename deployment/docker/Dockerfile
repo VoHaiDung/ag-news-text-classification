@@ -1,10 +1,11 @@
 # Multi-stage Dockerfile for AG News Text Classification
 # ================================================================================
-# Optimized for GitHub Actions CI/CD with reduced image size
-# Uses slim Python base and installs only necessary dependencies
+# Main Dockerfile for building training and inference containers
+# Supports both CPU and GPU environments with optimized layer caching
 #
 # Build stages:
 #   - python-base: Base Python environment with system dependencies
+#   - builder: Dependency installation stage
 #   - training: Training environment with full ML stack
 #   - inference: Lightweight inference environment
 #   - production: Production-ready minimal image
@@ -13,7 +14,7 @@
 #   - Docker Multi-stage Builds: https://docs.docker.com/develop/develop-images/multistage-build/
 #   - Python Docker Best Practices: https://pythonspeed.com/docker/
 #
-# Author: Võ Hải Dũng
+# Author: AG News Classification Team
 # License: MIT
 
 ARG PYTHON_VERSION=3.9
@@ -31,15 +32,17 @@ ENV PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_DEFAULT_TIMEOUT=100 \
-    DEBIAN_FRONTEND=noninteractive \
-    PYTHONPATH="/app:\${PYTHONPATH}"
+    DEBIAN_FRONTEND=noninteractive
 
-# Install only essential system dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    cmake \
     curl \
     ca-certificates \
     git \
+    wget \
+    vim \
     libgomp1 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -49,18 +52,25 @@ RUN mkdir -p /app /app/data /app/models /app/outputs /app/logs /app/cache
 
 WORKDIR /app
 
-# Stage 2: Training environment (CPU-only for CI/CD)
-FROM python-base AS training
+# Stage 2: Builder stage for dependencies
+FROM python-base AS builder
 
 # Copy requirements files
 COPY requirements/ /tmp/requirements/
 
-# Install Python dependencies directly without venv to save space
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir \
-    torch==2.0.1 --index-url https://download.pytorch.org/whl/cpu && \
-    pip install --no-cache-dir \
-    transformers==4.35.0 \
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Upgrade pip and install build tools
+RUN pip install --upgrade pip setuptools wheel
+
+# Install base requirements with CPU PyTorch for broad compatibility
+RUN pip install torch==2.0.1+cpu torchvision==0.15.2+cpu \
+    -f https://download.pytorch.org/whl/torch_stable.html
+
+# Install ML requirements
+RUN pip install transformers==4.35.0 \
     datasets==2.14.0 \
     tokenizers==0.15.0 \
     numpy==1.24.0 \
@@ -71,8 +81,14 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     python-dotenv==1.0.0 \
     tqdm==4.66.0 \
     requests==2.31.0 \
-    typing-extensions==4.8.0 && \
-    rm -rf /root/.cache/pip/*
+    typing-extensions==4.8.0
+
+# Stage 3: Training environment
+FROM python-base AS training
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy application code
 COPY src/ /app/src/
@@ -81,7 +97,10 @@ COPY scripts/ /app/scripts/
 COPY setup.py pyproject.toml README.md /app/
 
 # Install application in development mode
-RUN pip install --no-cache-dir -e . || true
+RUN pip install -e .
+
+# Set Python path
+ENV PYTHONPATH=/app:${PYTHONPATH:-}
 
 # Create volume mount points
 VOLUME ["/app/data", "/app/models", "/app/outputs", "/app/logs"]
@@ -89,32 +108,12 @@ VOLUME ["/app/data", "/app/models", "/app/outputs", "/app/logs"]
 # Default command for training
 CMD ["python", "scripts/training/train_single_model.py"]
 
-# Stage 3: Inference environment (minimal)
-FROM python:${PYTHON_VERSION}-slim AS inference
+# Stage 4: Inference environment
+FROM python-base AS inference
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PYTHONPATH="/app:\${PYTHONPATH}"
-
-# Install only runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgomp1 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install minimal Python dependencies for inference
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir \
-    torch==2.0.1 --index-url https://download.pytorch.org/whl/cpu && \
-    pip install --no-cache-dir \
-    transformers==4.35.0 \
-    tokenizers==0.15.0 \
-    numpy==1.24.0 \
-    pyyaml==6.0.1 \
-    tqdm==4.66.0 && \
-    rm -rf /root/.cache/pip/*
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy only necessary code for inference
 COPY src/ /app/src/
@@ -122,9 +121,10 @@ COPY configs/ /app/configs/
 COPY setup.py pyproject.toml /app/
 
 # Install application
-RUN pip install --no-cache-dir . || true
+RUN pip install .
 
-WORKDIR /app
+# Set Python path
+ENV PYTHONPATH=/app:${PYTHONPATH:-}
 
 # Create non-root user for security
 RUN groupadd -r mluser && useradd -r -g mluser mluser && \
@@ -139,31 +139,18 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 # Default command for inference
 CMD ["python", "src/inference/predictors/single_predictor.py"]
 
-# Stage 4: Production environment (ultra-minimal)
+# Stage 5: Production environment
 FROM python:${PYTHON_VERSION}-slim AS production
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PYTHONPATH="/app:\${PYTHONPATH}"
-
-# Install only essential runtime dependencies
+# Install only runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install minimal dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir \
-    torch==2.0.1 --index-url https://download.pytorch.org/whl/cpu && \
-    pip install --no-cache-dir \
-    transformers==4.35.0 \
-    tokenizers==0.15.0 \
-    numpy==1.24.0 \
-    pyyaml==6.0.1 && \
-    rm -rf /root/.cache/pip/*
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy application code
 COPY --from=inference /app /app
@@ -176,6 +163,9 @@ WORKDIR /app
 
 USER mluser
 
+# Set Python path
+ENV PYTHONPATH=/app:${PYTHONPATH:-}
+
 # Expose port for serving
 EXPOSE 8080
 
@@ -184,42 +174,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import sys; sys.exit(0)"
 
 # Production inference command
-CMD ["python", "-m", "src.inference.predictors.single_predictor", "--host", "0.0.0.0", "--port", "8080"]
-
-# Stage 5: CI/CD Test environment (for GitHub Actions)
-FROM python:${PYTHON_VERSION}-slim AS ci-test
-
-# Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PYTHONPATH="/app:\${PYTHONPATH}"
-
-# Install test dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    curl \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install minimal Python dependencies for testing
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir \
-    pytest==7.4.0 \
-    pytest-cov==4.1.0 \
-    pytest-mock==3.11.1 \
-    black==23.7.0 \
-    flake8==6.1.0 \
-    mypy==1.5.1 && \
-    rm -rf /root/.cache/pip/*
-
-# Copy application code
-COPY src/ /app/src/
-COPY tests/ /app/tests/
-COPY configs/ /app/configs/
-COPY setup.py pyproject.toml /app/
-
-WORKDIR /app
-
-# Run tests by default
-CMD ["pytest", "tests/", "-v", "--cov=src"]
+CMD ["python", "-m", "src.inference.serving.model_server", "--host", "0.0.0.0", "--port", "8080"]
