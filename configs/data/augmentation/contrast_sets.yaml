@@ -6,6 +6,7 @@
 # - Kaushik et al. (2020): "Learning The Difference That Makes A Difference"
 #
 # Author: Võ Hải Dũng
+# License: MIT
 
 name: contrast_sets
 type: augmentation
