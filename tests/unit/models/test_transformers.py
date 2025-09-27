@@ -15,7 +15,7 @@ This module tests:
 - Longformer with global attention
 - Generative models (GPT-2, T5) for classification
 
-Author: AG News Classification Team
+Author: Võ Hải Dũng
 License: MIT
 """
 
