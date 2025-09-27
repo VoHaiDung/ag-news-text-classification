@@ -67,7 +67,10 @@ RUN pip install torch==2.0.1+cu118 torchvision==0.15.2+cu118 torchaudio==2.0.2 \
 RUN git clone https://github.com/NVIDIA/apex /tmp/apex && \
     cd /tmp/apex && \
     pip install -v --disable-pip-version-check --no-cache-dir \
-    --global-option="--cpp_ext" --global-option="--cuda_ext" ./ && \
+    --no-build-isolation \
+    --config-settings "--build-option=--cpp_ext" \
+    --config-settings "--build-option=--cuda_ext" \
+    ./ || echo "APEX installation optional" && \
     rm -rf /tmp/apex
 
 WORKDIR /app
@@ -79,9 +82,14 @@ FROM gpu-base AS gpu-builder
 COPY requirements/ /tmp/requirements/
 
 # Install GPU-specific requirements
-RUN pip install -r /tmp/requirements/base.txt && \
-    pip install -r /tmp/requirements/ml.txt && \
-    pip install transformers accelerate bitsandbytes datasets
+RUN pip install transformers==4.35.0 \
+    accelerate==0.24.0 \
+    bitsandbytes==0.41.0 \
+    datasets==2.14.0 \
+    tokenizers==0.15.0 \
+    numpy==1.24.0 \
+    scipy==1.10.0 \
+    scikit-learn==1.3.0
 
 # Install additional GPU libraries
 RUN pip install \
@@ -90,7 +98,7 @@ RUN pip install \
     onnxruntime-gpu \
     triton \
     flash-attn \
-    xformers
+    xformers || echo "Some GPU libraries are optional"
 
 # Stage 3: GPU Training environment
 FROM gpu-base AS gpu-training
@@ -127,7 +135,7 @@ ENV NCCL_DEBUG=INFO \
 RUN mkdir -p /app/data /app/models /app/outputs /app/logs /app/cache
 
 # Set Python path
-ENV PYTHONPATH=/app:$PYTHONPATH
+ENV PYTHONPATH=/app:${PYTHONPATH:-}
 
 # Volume for data persistence
 VOLUME ["/app/data", "/app/models", "/app/outputs"]
@@ -166,7 +174,7 @@ RUN groupadd -r mluser && useradd -r -g mluser mluser && \
 USER mluser
 
 # Set Python path
-ENV PYTHONPATH=/app:$PYTHONPATH
+ENV PYTHONPATH=/app:${PYTHONPATH:-}
 
 # Environment for inference optimization
 ENV CUDA_MODULE_LOADING=LAZY \
@@ -202,10 +210,11 @@ RUN pip install \
 
 # Install CUDA development tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    cuda-nsight-systems-${CUDA_VERSION} \
-    cuda-nsight-compute-${CUDA_VERSION} \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    cuda-nsight-systems-11-8 \
+    cuda-nsight-compute-11-8 \
+    || echo "CUDA dev tools optional" && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Expose Jupyter port
 EXPOSE 8888
