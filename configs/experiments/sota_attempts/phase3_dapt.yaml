@@ -1,0 +1,448 @@
+# Phase 3: Domain-Adaptive Pretraining (DAPT) for SOTA
+# =====================================================
+#
+# This configuration implements domain-adaptive pretraining on news corpora,
+# following methodology from:
+# - Gururangan et al. (2020): "Don't Stop Pretraining: Adapt Language Models to Domains and Tasks"
+# - Lee et al. (2020): "BioBERT: A Pre-trained Biomedical Language Representation Model"
+# - Kenton & Toutanova (2019): "BERT: Pre-training of Deep Bidirectional Transformers"
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: phase3_dapt
+type: experiment
+phase: 3
+description: "Domain-adaptive pretraining on large-scale news corpora"
+
+# Experiment metadata
+metadata:
+  objective: "Improve performance through domain-specific pretraining"
+  target_accuracy: 0.963
+  target_f1_macro: 0.962
+  expected_duration_hours: 96
+  gpu_requirements: "8x A100 80GB"
+  
+  prerequisites:
+    - "phase1_single_models"
+    - "phase2_ensemble"
+    
+  tags:
+    - sota
+    - phase3
+    - dapt
+    - pretraining
+
+# Domain-Adaptive Pretraining Configuration
+dapt_configuration:
+  # Pretraining corpus
+  corpus:
+    # Primary news sources
+    primary_sources:
+      - name: "cc_news"
+        size: 10000000
+        weight: 0.3
+        url: "https://commoncrawl.org/2016/10/news-dataset-available/"
+        
+      - name: "realnews"
+        size: 5000000
+        weight: 0.2
+        url: "https://github.com/rowanz/grover/tree/master/realnews"
+        
+      - name: "ag_news_full"
+        size: 1000000
+        weight: 0.2
+        
+    # Secondary sources
+    secondary_sources:
+      - name: "reddit_news"
+        subreddits: ["worldnews", "news", "technology", "business", "sports"]
+        size: 3000000
+        weight: 0.15
+        
+      - name: "wikipedia_current_events"
+        size: 500000
+        weight: 0.05
+        
+      - name: "news_crawl"
+        languages: ["en"]
+        years: [2020, 2021, 2022, 2023, 2024]
+        size: 5000000
+        weight: 0.1
+        
+    # Corpus statistics
+    total_size: 24500000
+    estimated_tokens: 6125000000  # ~6.1B tokens
+    
+  # Data preprocessing
+  preprocessing:
+    # Text cleaning
+    cleaning:
+      remove_urls: true
+      remove_emails: true
+      normalize_whitespace: true
+      min_length: 20
+      max_length: 2048
+      
+    # Deduplication
+    deduplication:
+      enabled: true
+      method: "minhash"
+      threshold: 0.7
+      
+    # Quality filtering
+    quality_filter:
+      enabled: true
+      
+      criteria:
+        - name: "language_detection"
+          language: "en"
+          threshold: 0.95
+          
+        - name: "perplexity"
+          max_perplexity: 1000
+          
+        - name: "repetition"
+          max_repetition_ratio: 0.3
+          
+    # Domain filtering
+    domain_filter:
+      enabled: true
+      
+      categories:
+        - "world"
+        - "sports"
+        - "business"
+        - "technology"
+        - "science"
+        
+      classifier: "outputs/phase1/roberta_large_best.pt"
+      min_confidence: 0.7
+
+# Pretraining objectives
+pretraining_objectives:
+  # Masked Language Modeling (MLM)
+  mlm:
+    enabled: true
+    probability: 0.15
+    
+    # Dynamic masking
+    dynamic_masking: true
+    
+    # Whole word masking
+    whole_word_masking: true
+    wwm_probability: 0.2
+    
+    # Span masking
+    span_masking:
+      enabled: true
+      mean_span_length: 3
+      
+  # Next Sentence Prediction (NSP)
+  nsp:
+    enabled: false  # Not beneficial for RoBERTa-style models
+    
+  # Sentence Order Prediction (SOP)
+  sop:
+    enabled: true  # Better than NSP
+    
+  # Token Type Prediction (for ELECTRA)
+  replaced_token_detection:
+    enabled: true
+    generator_size_ratio: 0.25
+    
+  # Contrastive Learning
+  contrastive:
+    enabled: true
+    
+    temperature: 0.05
+    queue_size: 65536
+    momentum: 0.999
+
+# Models to pretrain
+models_to_adapt:
+  # DeBERTa-v3 (primary)
+  deberta_v3:
+    base_model: "microsoft/deberta-v3-xlarge"
+    
+    # Pretraining configuration
+    pretraining:
+      learning_rate: 5e-5
+      warmup_steps: 10000
+      total_steps: 100000
+      batch_size: 256
+      gradient_accumulation: 16
+      
+    # Continued pretraining
+    continued_pretraining: true
+    reset_optimizer: false
+    reset_lr_schedule: true
+    
+  # RoBERTa (secondary)
+  roberta:
+    base_model: "roberta-large"
+    
+    pretraining:
+      learning_rate: 4e-5
+      warmup_steps: 5000
+      total_steps: 50000
+      batch_size: 256
+      gradient_accumulation: 16
+      
+  # ELECTRA (for RTD objective)
+  electra:
+    base_model: "google/electra-large-discriminator"
+    generator_model: "google/electra-base-generator"
+    
+    pretraining:
+      learning_rate: 2e-4  # Higher for ELECTRA
+      warmup_steps: 10000
+      total_steps: 100000
+      batch_size: 256
+
+# Training configuration
+training:
+  # Distributed training
+  distributed:
+    strategy: "fsdp"  # Fully Sharded Data Parallel
+    
+    fsdp_config:
+      min_num_params: 1e6
+      cpu_offload: false
+      backward_prefetch: "backward_pre"
+      forward_prefetch: true
+      
+  # Mixed precision
+  mixed_precision:
+    enabled: true
+    dtype: "bfloat16"  # Better for large models
+    
+  # Optimization
+  optimizer:
+    type: "adamw"
+    betas: [0.9, 0.98]  # Different from fine-tuning
+    eps: 1e-6
+    weight_decay: 0.01
+    
+    # Gradient clipping
+    max_grad_norm: 1.0
+    
+  # Learning rate schedule
+  scheduler:
+    type: "inverse_sqrt"
+    warmup_steps: 10000
+    
+  # Checkpointing
+  checkpointing:
+    save_steps: 5000
+    save_total_limit: 5
+    
+    # Gradient checkpointing
+    gradient_checkpointing: true
+    
+  # Data loading
+  dataloader:
+    num_workers: 8
+    prefetch_factor: 2
+    pin_memory: true
+    persistent_workers: true
+
+# Task-Adaptive Pretraining (TAPT)
+task_adaptive:
+  enabled: true
+  
+  # TAPT configuration
+  tapt_data:
+    - "ag_news_train"
+    - "ag_news_augmented"
+    
+  tapt_steps: 10000
+  tapt_batch_size: 128
+  
+  # Curriculum TAPT
+  curriculum:
+    enabled: true
+    
+    stages:
+      - name: "general_news"
+        steps: 5000
+        data_source: "mixed_news"
+        
+      - name: "domain_specific"
+        steps: 3000
+        data_source: "ag_news_similar"
+        
+      - name: "task_specific"
+        steps: 2000
+        data_source: "ag_news_train"
+
+# Evaluation during pretraining
+evaluation:
+  # Validation data
+  validation_data:
+    source: "ag_news_validation"
+    size: 10000
+    
+  # Evaluation frequency
+  eval_steps: 1000
+  
+  # Metrics
+  metrics:
+    - perplexity
+    - mlm_accuracy
+    - downstream_accuracy  # Probe task
+    
+  # Early stopping
+  early_stopping:
+    enabled: true
+    patience: 10
+    metric: "downstream_accuracy"
+
+# Fine-tuning after DAPT
+fine_tuning:
+  # Configuration
+  learning_rate: 2e-5
+  num_epochs: 5
+  batch_size: 16
+  
+  # Use adapted checkpoint
+  use_adapted_checkpoint: true
+  
+  # Compare with baseline
+  compare_with_baseline: true
+  baseline_checkpoint: "outputs/phase1/best_model.pt"
+
+# Ablation studies
+ablations:
+  # Corpus size ablation
+  corpus_size:
+    sizes: [1e6, 5e6, 10e6, 20e6]
+    
+  # Pretraining steps ablation
+  pretraining_steps:
+    steps: [10000, 25000, 50000, 100000]
+    
+  # MLM probability ablation
+  mlm_probability:
+    probabilities: [0.10, 0.15, 0.20, 0.25]
+    
+  # Compare objectives
+  objectives:
+    - "mlm_only"
+    - "mlm_sop"
+    - "mlm_contrastive"
+    - "rtd_only"
+
+# Computational resources
+resources:
+  # Hardware
+  hardware:
+    gpus: 8
+    gpu_type: "A100-80GB"
+    
+    # Memory requirements
+    gpu_memory_per_model: 60  # GB
+    cpu_memory: 500  # GB
+    
+  # Estimated costs
+  costs:
+    gpu_hours: 768  # 8 GPUs * 96 hours
+    
+    # Cloud costs (estimated)
+    aws_cost: "$2,304"  # $3/hour * 768
+    
+  # Optimization
+  optimization:
+    # Data parallelism
+    data_parallel_size: 8
+    
+    # Pipeline parallelism
+    pipeline_parallel_size: 1
+    
+    # Tensor parallelism
+    tensor_parallel_size: 1
+
+# Expected outcomes
+expected_outcomes:
+  # Performance improvements
+  improvements:
+    mlm_perplexity: "15% reduction"
+    downstream_accuracy: "+0.8-1.2%"
+    
+  # Model-specific gains
+  model_gains:
+    deberta_v3:
+      before: 0.964
+      after: 0.972
+      
+    roberta:
+      before: 0.958
+      after: 0.965
+      
+    electra:
+      before: 0.952
+      after: 0.960
+      
+  # Insights
+  key_findings:
+    - "DAPT provides consistent improvements across all models"
+    - "Diminishing returns after 50K steps"
+    - "Domain-specific data quality > quantity"
+    - "TAPT provides additional 0.3-0.5% gain"
+
+# Timeline
+timeline:
+  total_hours: 96
+  
+  phases:
+    - name: "Data preparation"
+      hours: 12
+      tasks:
+        - "Download corpora"
+        - "Preprocessing"
+        - "Quality filtering"
+        
+    - name: "DAPT pretraining"
+      hours: 72
+      tasks:
+        - "DeBERTa DAPT (30h)"
+        - "RoBERTa DAPT (20h)"
+        - "ELECTRA DAPT (22h)"
+        
+    - name: "TAPT fine-tuning"
+      hours: 8
+      
+    - name: "Evaluation"
+      hours: 4
+
+# Notes
+notes: |
+  Phase 3: Domain-Adaptive Pretraining
+  
+  Objectives:
+  1. Adapt models to news domain through continued pretraining
+  2. Improve representations with domain-specific data
+  3. Apply task-adaptive pretraining for further gains
+  
+  Key Strategies:
+  - 24.5M news articles for pretraining
+  - Multiple pretraining objectives (MLM, SOP, Contrastive)
+  - Progressive adaptation: DAPT → TAPT → Fine-tuning
+  - Careful corpus curation and quality filtering
+  
+  Expected Results:
+  - +0.8-1.2% accuracy improvement
+  - Better calibration and robustness
+  - Improved performance on similar domains
+  
+  Critical Success Factors:
+  - High-quality, diverse news corpus
+  - Sufficient compute resources (8x A100)
+  - Careful hyperparameter tuning
+  - Proper evaluation during pretraining
+
+references:
+  - dapt: "https://arxiv.org/abs/2004.10964"
+  - roberta: "https://arxiv.org/abs/1907.11692"
+  - electra: "https://arxiv.org/abs/2003.10555"
+  - contrastive: "https://arxiv.org/abs/2002.05709"
