@@ -1,30 +1,49 @@
 # Phase 4: Final SOTA Configuration
-# Combining all techniques for maximum performance
+# ==================================
+#
+# This configuration combines all optimized techniques from previous phases
+# to achieve state-of-the-art performance on AG News classification,
+# following methodology from:
+# - Gururangan et al. (2020): "Don't Stop Pretraining: Adapt Language Models to Domains and Tasks"
+# - Liu et al. (2020): "Self-training with Noisy Student Improves ImageNet Classification"
+# - Miyato et al. (2018): "Virtual Adversarial Training: A Regularization Method"
+# - Loshchilov & Hutter (2019): "Decoupled Weight Decay Regularization"
+# - Foret et al. (2021): "Sharpness-Aware Minimization for Efficiently Improving Generalization"
+#
+# Author: Võ Hải Dũng
+# License: MIT
 
 name: phase4_final_sota
 type: experiment
-description: "Final push for 96%+ accuracy with all optimizations"
+phase: 4
+description: "Final push for 96%+ accuracy combining all optimization techniques"
+
+# Experiment metadata
+metadata:
+  objective: "Achieve SOTA performance by integrating all successful techniques"
+  target_accuracy: 0.965
+  target_f1_macro: 0.964
+  expected_duration_hours: 72
+  gpu_requirements: "8x A100 80GB"
+  
+  prerequisites:
+    - "phase1_single_models"
+    - "phase2_ensemble"
+    - "phase3_dapt"
+  
+  tags:
+    - sota
+    - phase4
+    - final
+    - production
+    - ensemble
+    - multi-stage
 
 # Inheritance chain
 inherit:
   - experiments/sota_attempts/phase3_dapt.yaml
   - training/advanced/adversarial_training.yaml
   - training/advanced/knowledge_distillation.yaml
-
-# Experiment metadata
-metadata:
-  phase: 4
-  target_accuracy: 0.965
-  target_f1_macro: 0.964
-  expected_duration_hours: 72
-  gpu_requirements: "8x A100 80GB"
-  
-  tags:
-    - sota
-    - final
-    - production
-    - ensemble
-    - multi-stage
 
 # Multi-stage training pipeline
 training_pipeline:
