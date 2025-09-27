@@ -1,0 +1,588 @@
+# Production Docker Compose configuration for AG News Text Classification
+# ================================================================================
+# Production-optimized orchestration with security, scaling, and monitoring
+# Uses production images, resource limits, and health checks
+#
+# Production features:
+#   - Resource constraints and limits
+#   - Security hardening
+#   - Production logging
+#   - Auto-scaling configuration
+#   - Backup strategies
+#
+# References:
+#   - Docker Production Best Practices: https://docs.docker.com/compose/production/
+#   - Container Security: https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+version: '3.9'
+
+x-production-variables: &production-variables
+  PYTHONUNBUFFERED: 1
+  PYTHONDONTWRITEBYTECODE: 1
+  LOG_LEVEL: INFO
+  ENVIRONMENT: production
+  REDIS_URL: redis://redis:6379/0
+  DATABASE_URL: postgresql://agnews_user:${DB_PASSWORD}@postgres:5432/agnews_prod
+  ELASTICSEARCH_URL: http://elasticsearch:9200
+  MLFLOW_TRACKING_URI: http://mlflow:5000
+  SENTRY_DSN: ${SENTRY_DSN}
+  DD_AGENT_HOST: datadog-agent
+  DD_TRACE_ENABLED: true
+
+x-resource-limits: &resource-limits
+  limits:
+    cpus: '2.0'
+    memory: 4G
+  reservations:
+    cpus: '1.0'
+    memory: 2G
+
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s
+
+services:
+  # Load Balancer / API Gateway
+  nginx:
+    image: nginx:stable-alpine
+    container_name: agnews-nginx-prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deployment/nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./deployment/nginx/api.prod.conf:/etc/nginx/conf.d/api.conf:ro
+      - ./deployment/ssl:/etc/nginx/ssl:ro
+      - nginx-cache:/var/cache/nginx
+    depends_on:
+      rest-api:
+        condition: service_healthy
+      grpc-server:
+        condition: service_healthy
+      graphql-server:
+        condition: service_healthy
+    networks:
+      - agnews-prod-network
+    deploy:
+      resources: *resource-limits
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      <<: *healthcheck-config
+      test: ["CMD", "nginx", "-t"]
+
+  # REST API Service (Multiple Instances)
+  rest-api:
+    image: agnews/rest-api:${VERSION:-latest}
+    environment:
+      <<: *production-variables
+      SERVICE_NAME: rest-api
+      API_PORT: 8000
+      WORKERS: 4
+    expose:
+      - "8000"
+    volumes:
+      - models-cache:/app/models:ro
+      - api-logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - agnews-prod-network
+    deploy:
+      replicas: 3
+      resources: *resource-limits
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    healthcheck:
+      <<: *healthcheck-config
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+
+  # gRPC Server (Multiple Instances)
+  grpc-server:
+    image: agnews/grpc-server:${VERSION:-latest}
+    environment:
+      <<: *production-variables
+      SERVICE_NAME: grpc-server
+      GRPC_PORT: 50051
+    expose:
+      - "50051"
+    volumes:
+      - models-cache:/app/models:ro
+      - grpc-logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - agnews-prod-network
+    deploy:
+      replicas: 2
+      resources: *resource-limits
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    healthcheck:
+      <<: *healthcheck-config
+      test: ["CMD", "grpc_health_probe", "-addr=:50051"]
+
+  # GraphQL Server
+  graphql-server:
+    image: agnews/graphql-server:${VERSION:-latest}
+    environment:
+      <<: *production-variables
+      SERVICE_NAME: graphql-server
+      GRAPHQL_PORT: 4000
+    expose:
+      - "4000"
+    volumes:
+      - models-cache:/app/models:ro
+      - graphql-logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - agnews-prod-network
+    deploy:
+      replicas: 2
+      resources: *resource-limits
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    healthcheck:
+      <<: *healthcheck-config
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+
+  # Prediction Service (Auto-scaling)
+  prediction-service:
+    image: agnews/prediction-service:${VERSION:-latest}
+    environment:
+      <<: *production-variables
+      SERVICE_NAME: prediction-service
+      SERVICE_PORT: 8002
+      MODEL_CACHE_SIZE: 1000
+      BATCH_SIZE: 32
+    expose:
+      - "8002"
+    volumes:
+      - models-cache:/app/models:ro
+      - prediction-logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+      model-service:
+        condition: service_healthy
+    networks:
+      - agnews-prod-network
+    deploy:
+      replicas: 4
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+        reservations:
+          cpus: '2.0'
+          memory: 4G
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    healthcheck:
+      <<: *healthcheck-config
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+
+  # Model Management Service
+  model-service:
+    image: agnews/model-service:${VERSION:-latest}
+    environment:
+      <<: *production-variables
+      SERVICE_NAME: model-service
+      SERVICE_PORT: 8004
+      MODEL_REGISTRY: s3://agnews-models-prod
+    expose:
+      - "8004"
+    volumes:
+      - models-cache:/app/models
+      - model-logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mlflow:
+        condition: service_healthy
+    networks:
+      - agnews-prod-network
+    deploy:
+      resources: *resource-limits
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    healthcheck:
+      <<: *healthcheck-config
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+
+  # Celery Workers (Auto-scaling)
+  celery-worker:
+    image: agnews/celery-worker:${VERSION:-latest}
+    environment:
+      <<: *production-variables
+      SERVICE_NAME: celery-worker
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      CELERY_CONCURRENCY: 4
+    volumes:
+      - models-cache:/app/models:ro
+      - celery-logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - agnews-prod-network
+    deploy:
+      replicas: 4
+      resources: *resource-limits
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  # Redis Cluster
+  redis:
+    image: redis:7-alpine
+    container_name: agnews-redis-prod
+    expose:
+      - "6379"
+    volumes:
+      - redis-data-prod:/data
+      - ./deployment/redis/redis.prod.conf:/usr/local/etc/redis/redis.conf:ro
+    networks:
+      - agnews-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+    command: redis-server /usr/local/etc/redis/redis.conf || redis-server --appendonly yes
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      <<: *healthcheck-config
+      test: ["CMD", "redis-cli", "ping"]
+
+  # PostgreSQL Primary
+  postgres:
+    image: postgres:15-alpine
+    container_name: agnews-postgres-prod
+    environment:
+      POSTGRES_DB: agnews_prod
+      POSTGRES_USER: agnews_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --data-checksums"
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+    expose:
+      - "5432"
+    volumes:
+      - postgres-data-prod:/var/lib/postgresql/data
+      - ./deployment/sql/init.prod.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - postgres-backup:/backup
+    networks:
+      - agnews-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    healthcheck:
+      <<: *healthcheck-config
+      test: ["CMD-SHELL", "pg_isready -U agnews_user -d agnews_prod"]
+
+  # Elasticsearch Cluster
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+    container_name: agnews-elasticsearch-prod
+    environment:
+      - cluster.name=agnews-prod
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - xpack.security.authc.api_key.enabled=true
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    expose:
+      - "9200"
+    volumes:
+      - elasticsearch-data-prod:/usr/share/elasticsearch/data
+    networks:
+      - agnews-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+    healthcheck:
+      <<: *healthcheck-config
+      test: ["CMD-SHELL", "curl -s -u elastic:${ELASTIC_PASSWORD} http://localhost:9200/_cluster/health || exit 1"]
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: agnews-rabbitmq-prod
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_VM_MEMORY_HIGH_WATERMARK: 0.4
+    expose:
+      - "5672"
+      - "15672"
+    volumes:
+      - rabbitmq-data-prod:/var/lib/rabbitmq
+    networks:
+      - agnews-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      <<: *healthcheck-config
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: agnews-prometheus-prod
+    expose:
+      - "9090"
+    volumes:
+      - ./deployment/prometheus/prometheus.prod.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data-prod:/prometheus
+    networks:
+      - agnews-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: agnews-grafana-prod
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+      GF_INSTALL_PLUGINS: redis-datasource,cloudwatch
+      GF_SERVER_ROOT_URL: https://grafana.agnews.prod
+    expose:
+      - "3000"
+    volumes:
+      - grafana-data-prod:/var/lib/grafana
+      - ./deployment/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./deployment/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    networks:
+      - agnews-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Datadog Agent
+  datadog-agent:
+    image: datadog/agent:latest
+    container_name: agnews-datadog-agent
+    environment:
+      DD_API_KEY: ${DD_API_KEY}
+      DD_SITE: datadoghq.com
+      DD_LOGS_ENABLED: true
+      DD_PROCESS_AGENT_ENABLED: true
+      DD_DOCKER_LABELS_AS_TAGS: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+    networks:
+      - agnews-prod-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+
+networks:
+  agnews-prod-network:
+    driver: overlay
+    attachable: true
+    driver_opts:
+      encrypted: "true"
+
+volumes:
+  redis-data-prod:
+    driver: local
+  postgres-data-prod:
+    driver: local
+  postgres-backup:
+    driver: local
+  elasticsearch-data-prod:
+    driver: local
+  rabbitmq-data-prod:
+    driver: local
+  prometheus-data-prod:
+    driver: local
+  grafana-data-prod:
+    driver: local
+  models-cache:
+    driver: local
+  nginx-cache:
+    driver: local
+  api-logs:
+    driver: local
+  grpc-logs:
+    driver: local
+  graphql-logs:
+    driver: local
+  prediction-logs:
+    driver: local
+  model-logs:
+    driver: local
+  celery-logs:
+    driver: local
