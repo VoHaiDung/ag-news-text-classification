@@ -1,0 +1,272 @@
+# Seed Reproducibility Study Configuration
+# =========================================
+#
+# This configuration ensures reproducibility and studies variance across random seeds,
+# following methodology from:
+# - Crane (2018): "Questionable Answers in Question Answering Research: Reproducibility and Variability"
+# - Dodge et al. (2020): "Fine-Tuning Pretrained Language Models: Weight Initializations, Data Orders, and Early Stopping"
+# - Picard (2021): "Torch.manual_seed(3407) is all you need"
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: seed_reproducibility
+type: experiment
+subtype: reproducibility
+description: "Study variance and ensure reproducibility across different random seeds"
+
+# Reproducibility configuration
+reproducibility:
+  # Seeds to test
+  seeds:
+    primary: [42, 123, 456, 789, 2024]
+    extended: [0, 1, 7, 13, 31, 73, 127, 337, 3407, 65537]
+    
+  # Random state control
+  random_state_control:
+    python_random: true
+    numpy_random: true
+    torch_random: true
+    cuda_deterministic: true
+    cuda_benchmark: false
+    
+  # Environment logging
+  environment:
+    log_versions: true
+    log_hardware: true
+    log_git_hash: true
+    save_pip_freeze: true
+
+# Models to test
+models:
+  # Small model (high variance expected)
+  distilbert:
+    name: "distilbert-base-uncased"
+    expected_mean: 0.935
+    expected_std: 0.003
+    
+  # Medium model
+  roberta_base:
+    name: "roberta-base"
+    expected_mean: 0.945
+    expected_std: 0.002
+    
+  # Large model (low variance expected)
+  deberta_large:
+    name: "microsoft/deberta-v3-large"
+    expected_mean: 0.958
+    expected_std: 0.001
+
+# Training configuration
+training:
+  # Fixed hyperparameters
+  hyperparameters:
+    num_epochs: 10
+    batch_size: 32
+    learning_rate: 2e-5
+    warmup_ratio: 0.1
+    weight_decay: 0.01
+    max_length: 256
+    
+  # Data configuration
+  data:
+    shuffle: true
+    stratified_split: true
+    train_size: 0.8
+    val_size: 0.1
+    test_size: 0.1
+
+# Experiments
+experiments:
+  # Experiment 1: Seed variance analysis
+  seed_variance:
+    num_runs: 20
+    
+    metrics_to_track:
+      - accuracy
+      - f1_macro
+      - loss
+      - training_time
+      
+    analysis:
+      - mean
+      - std
+      - min
+      - max
+      - coefficient_of_variation
+      - confidence_interval_95
+      
+  # Experiment 2: Initialization impact
+  initialization_impact:
+    components:
+      - classifier_head
+      - embeddings
+      - attention_weights
+      
+    freeze_base_model: [true, false]
+    
+  # Experiment 3: Data order impact
+  data_order:
+    shuffle_modes:
+      - no_shuffle
+      - epoch_shuffle
+      - batch_shuffle
+      - full_shuffle
+      
+  # Experiment 4: Convergence stability
+  convergence_stability:
+    track_metrics_every: 100
+    
+    convergence_criteria:
+      - loss_plateau
+      - accuracy_plateau
+      - gradient_norm
+      
+  # Experiment 5: Best practices validation
+  best_practices:
+    test_configurations:
+      - name: "pytorch_3407"
+        seed: 3407
+        
+      - name: "standard_42"
+        seed: 42
+        
+      - name: "prime_seeds"
+        seeds: [2, 3, 5, 7, 11]
+
+# Variance analysis
+variance_analysis:
+  # Statistical tests
+  statistical_tests:
+    # Normality test
+    shapiro_wilk: true
+    
+    # Variance tests
+    levene_test: true
+    bartlett_test: true
+    
+    # ANOVA
+    one_way_anova: true
+    
+  # Visualization
+  plots:
+    - seed_distribution_boxplot
+    - convergence_curves_all_seeds
+    - metric_variance_heatmap
+    - confidence_intervals
+    
+  # Outlier detection
+  outlier_detection:
+    method: "iqr"
+    threshold: 1.5
+
+# Reproducibility verification
+verification:
+  # Exact reproduction test
+  exact_reproduction:
+    tolerance: 1e-6
+    
+    test_scenarios:
+      - single_gpu
+      - multi_gpu
+      - cpu_only
+      
+  # Cross-platform test
+  cross_platform:
+    platforms:
+      - linux_cuda11
+      - linux_cuda12
+      - windows
+      - macos
+      
+  # Package version sensitivity
+  version_sensitivity:
+    test_versions:
+      pytorch: ["1.13", "2.0", "2.1"]
+      transformers: ["4.30", "4.35", "4.40"]
+
+# Best practices recommendations
+recommendations:
+  # Seed selection
+  seed_selection:
+    num_seeds: 5
+    seed_list: [42, 123, 456, 789, 2024]
+    
+  # Reporting guidelines
+  reporting:
+    report_mean: true
+    report_std: true
+    report_confidence_interval: true
+    report_individual_runs: true
+    
+  # Environment control
+  environment_control:
+    - "Set all random seeds"
+    - "Use deterministic algorithms"
+    - "Log all package versions"
+    - "Save model checkpoints"
+    - "Version control configs"
+
+# Expected outcomes
+expected_outcomes:
+  # Variance ranges
+  variance:
+    small_models: "0.3-0.5%"
+    base_models: "0.1-0.3%"
+    large_models: "0.05-0.15%"
+    
+  # Reproducibility
+  reproducibility:
+    exact_match_rate: 0.95
+    within_tolerance_rate: 0.99
+    
+  # Insights
+  insights:
+    - "Larger models show less variance"
+    - "First epoch has highest variance"
+    - "Seed 3407 slightly better than average"
+    - "5 seeds sufficient for reliable estimates"
+
+# Timeline
+timeline:
+  total_hours: 24
+  
+  phases:
+    - name: "Primary seed experiments"
+      hours: 10
+      
+    - name: "Extended seed testing"
+      hours: 8
+      
+    - name: "Cross-platform validation"
+      hours: 4
+      
+    - name: "Analysis and reporting"
+      hours: 2
+
+# Notes
+notes: |
+  Seed Reproducibility Study
+  
+  Objectives:
+  1. Quantify variance across random seeds
+  2. Ensure reproducibility across environments
+  3. Establish best practices for reporting
+  
+  Key Findings Expected:
+  - Standard deviation: 0.1-0.3% for base models
+  - 5 seeds sufficient for reliable mean
+  - Deterministic mode adds 10% training time
+  - Platform differences < 0.01%
+  
+  Best Practices:
+  - Always report mean ± std over 5 seeds
+  - Use seeds: [42, 123, 456, 789, 2024]
+  - Set all random generators
+  - Use deterministic algorithms
+  - Log complete environment
+
+references:
+  - reproducibility_crisis: "https://arxiv.org/abs/1807.03341"
+  - seed_variance: "https://arxiv.org/abs/2002.06305"
+  - torch_3407: "https://arxiv.org/abs/2109.08203"
