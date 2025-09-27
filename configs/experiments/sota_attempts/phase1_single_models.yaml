@@ -1,0 +1,498 @@
+# Phase 1: Single Model Optimization for SOTA
+# ============================================
+#
+# This configuration establishes optimal single model performance
+# through systematic hyperparameter optimization and training techniques,
+# following methodology from:
+# - Liu et al. (2019): "RoBERTa: A Robustly Optimized BERT Pretraining Approach"
+# - He et al. (2021): "DeBERTa: Decoding-enhanced BERT with Disentangled Attention"
+# - Goyal et al. (2017): "Accurate, Large Minibatch SGD: Training ImageNet in 1 Hour"
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: phase1_single_models
+type: experiment
+phase: 1
+description: "Optimize individual transformer models for maximum single-model performance"
+
+# Experiment metadata
+metadata:
+  objective: "Achieve 95%+ accuracy with single models"
+  target_accuracy: 0.955
+  target_f1_macro: 0.954
+  expected_duration_hours: 48
+  gpu_requirements: "4x V100 32GB or 2x A100 40GB"
+  
+  tags:
+    - sota
+    - phase1
+    - single_model
+    - hyperparameter_optimization
+
+# Models to optimize
+models:
+  # DeBERTa-v3-xlarge (Primary candidate)
+  deberta_v3_xlarge:
+    name: "microsoft/deberta-v3-xlarge"
+    priority: 1
+    
+    # Architecture modifications
+    modifications:
+      pooling_strategy: "mean_max"  # Combine mean and max pooling
+      dropout_rate: 0.15
+      classifier_layers: 2
+      classifier_hidden_size: 768
+      
+    # Hyperparameter search space
+    hyperparameters:
+      learning_rate:
+        distribution: "log_uniform"
+        low: 5e-6
+        high: 5e-5
+        
+      batch_size:
+        values: [8, 16, 24]
+        
+      warmup_ratio:
+        distribution: "uniform"
+        low: 0.05
+        high: 0.15
+        
+      weight_decay:
+        distribution: "log_uniform"
+        low: 0.001
+        high: 0.1
+        
+      max_length:
+        values: [256, 384, 512]
+        
+      gradient_accumulation_steps:
+        values: [2, 4, 8]
+        
+    # Training configuration
+    training:
+      num_epochs: 10
+      early_stopping_patience: 3
+      label_smoothing: 0.1
+      
+    expected_performance:
+      accuracy: 0.964
+      f1_macro: 0.963
+      
+  # RoBERTa-large (Secondary candidate)
+  roberta_large:
+    name: "roberta-large"
+    priority: 2
+    
+    modifications:
+      pooling_strategy: "cls"
+      dropout_rate: 0.1
+      reinit_layers: 2  # Reinitialize top N layers
+      
+    hyperparameters:
+      learning_rate:
+        distribution: "log_uniform"
+        low: 1e-5
+        high: 4e-5
+        
+      batch_size:
+        values: [16, 24, 32]
+        
+      warmup_steps:
+        values: [500, 1000, 1500]
+        
+      max_length:
+        values: [256, 384]
+        
+    training:
+      num_epochs: 8
+      scheduler: "polynomial"
+      power: 1.0
+      
+    expected_performance:
+      accuracy: 0.958
+      f1_macro: 0.957
+      
+  # XLNet-large (Alternative architecture)
+  xlnet_large:
+    name: "xlnet-large-cased"
+    priority: 3
+    
+    modifications:
+      dropout_rate: 0.1
+      use_mems: true
+      mem_len: 512
+      
+    hyperparameters:
+      learning_rate:
+        distribution: "log_uniform"
+        low: 1e-5
+        high: 3e-5
+        
+      batch_size:
+        values: [8, 16]
+        
+      segment_len: 256
+      
+    training:
+      num_epochs: 8
+      gradient_clipping: 1.0
+      
+    expected_performance:
+      accuracy: 0.956
+      f1_macro: 0.955
+      
+  # ELECTRA-large (Discriminative pretraining)
+  electra_large:
+    name: "google/electra-large-discriminator"
+    priority: 4
+    
+    modifications:
+      pooling_strategy: "first_token"
+      dropout_rate: 0.1
+      
+    hyperparameters:
+      learning_rate:
+        values: [1e-5, 2e-5, 3e-5]
+        
+      batch_size:
+        values: [16, 32]
+        
+    training:
+      num_epochs: 6
+      
+    expected_performance:
+      accuracy: 0.952
+      f1_macro: 0.951
+
+# Training strategies
+training_strategies:
+  # Learning rate scheduling
+  lr_scheduling:
+    primary_schedule: "cosine_with_hard_restarts"
+    
+    cosine_config:
+      T_0: 2
+      T_mult: 2
+      eta_min: 1e-7
+      
+    alternative_schedules:
+      - "linear_with_warmup"
+      - "polynomial"
+      - "exponential"
+      
+  # Regularization techniques
+  regularization:
+    # Dropout variations
+    dropout:
+      standard_dropout: 0.1
+      attention_dropout: 0.1
+      hidden_dropout: 0.1
+      
+      # Advanced dropout
+      dropconnect: 
+        enabled: true
+        rate: 0.05
+        
+      spatial_dropout:
+        enabled: false
+        rate: 0.1
+        
+    # Weight decay
+    weight_decay:
+      method: "adamw"
+      rate: 0.01
+      exclude_params: ["bias", "LayerNorm"]
+      
+    # Label smoothing
+    label_smoothing:
+      enabled: true
+      epsilon: 0.1
+      
+    # Mixup/Cutmix
+    mixing:
+      mixup:
+        enabled: true
+        alpha: 0.2
+        
+      cutmix:
+        enabled: false
+        alpha: 1.0
+        
+  # Optimization techniques
+  optimization:
+    # Gradient accumulation
+    gradient_accumulation:
+      strategy: "dynamic"
+      base_steps: 4
+      scale_with_batch_size: true
+      
+    # Gradient clipping
+    gradient_clipping:
+      method: "norm"
+      max_norm: 1.0
+      
+    # Large batch training (Goyal et al., 2017)
+    large_batch:
+      enabled: true
+      effective_batch_size: 256
+      lr_scaling: "linear"
+      warmup_epochs: 0.5
+
+# Data configuration
+data:
+  # Dataset configuration
+  dataset:
+    name: "ag_news"
+    version: "standard"
+    
+  # Train/validation/test splits
+  splits:
+    train: 0.85
+    validation: 0.075
+    test: 0.075
+    
+    # Stratified splitting
+    stratified: true
+    random_state: 42
+    
+  # Preprocessing
+  preprocessing:
+    # Text cleaning
+    lowercase: false  # Keep casing for transformers
+    remove_html: true
+    normalize_whitespace: true
+    
+    # Tokenization strategy
+    tokenization:
+      add_prefix_space: true
+      truncation_strategy: "longest_first"
+      padding_strategy: "max_length"
+      
+  # Data augmentation (conservative for phase 1)
+  augmentation:
+    enabled: true
+    
+    techniques:
+      - method: "token_replacement"
+        probability: 0.1
+        mlm_probability: 0.15
+        
+      - method: "back_translation"
+        probability: 0.1
+        languages: ["fr", "de"]
+        
+    max_augmentation_factor: 1.5
+
+# Hyperparameter optimization
+hyperparameter_optimization:
+  # Search strategy
+  strategy: "bayesian"  # Options: grid, random, bayesian, hyperband
+  
+  # Optuna configuration
+  optuna:
+    n_trials: 100
+    
+    sampler:
+      type: "TPESampler"
+      n_startup_trials: 20
+      n_ei_candidates: 24
+      
+    pruner:
+      type: "HyperbandPruner"
+      min_resource: 1
+      max_resource: 10
+      reduction_factor: 3
+      
+  # Search objectives
+  objectives:
+    primary: "validation_f1_macro"
+    secondary: ["validation_accuracy", "validation_loss"]
+    
+  # Parallel trials
+  parallel:
+    n_jobs: 4
+    backend: "multiprocessing"
+
+# Evaluation protocol
+evaluation:
+  # Metrics
+  metrics:
+    classification:
+      - accuracy
+      - f1_macro
+      - f1_micro
+      - f1_weighted
+      - precision_macro
+      - recall_macro
+      - matthews_corrcoef
+      
+    calibration:
+      - expected_calibration_error
+      - maximum_calibration_error
+      - brier_score
+      
+    efficiency:
+      - inference_time
+      - memory_usage
+      - model_size
+      
+  # Evaluation strategy
+  strategy:
+    eval_steps: 200
+    save_steps: 400
+    logging_steps: 50
+    
+    # Best model selection
+    load_best_model_at_end: true
+    metric_for_best_model: "eval_f1_macro"
+    greater_is_better: true
+    
+  # Cross-validation (for final evaluation)
+  cross_validation:
+    enabled: false  # Too expensive for large models
+    n_folds: 5
+    
+  # Test-time augmentation
+  tta:
+    enabled: true
+    num_augmentations: 3
+    aggregation: "mean"
+
+# Computational optimization
+optimization:
+  # Mixed precision training
+  mixed_precision:
+    enabled: true
+    opt_level: "O1"  # Conservative for stability
+    loss_scale: "dynamic"
+    
+  # Gradient checkpointing
+  gradient_checkpointing:
+    enabled: true
+    
+  # Distributed training
+  distributed:
+    enabled: true
+    strategy: "ddp"
+    find_unused_parameters: false
+    
+  # Memory optimization
+  memory:
+    optimizer_state_offload: false
+    model_offload: false
+    pin_memory: true
+    
+  # Compilation (PyTorch 2.0+)
+  compile:
+    enabled: true
+    mode: "default"
+    fullgraph: false
+
+# Ablation studies
+ablation_studies:
+  # Components to test
+  components:
+    - name: "pooling_strategy"
+      values: ["cls", "mean", "max", "mean_max"]
+      
+    - name: "classifier_layers"
+      values: [1, 2, 3]
+      
+    - name: "dropout_rate"
+      values: [0.0, 0.1, 0.2, 0.3]
+      
+    - name: "learning_rate_schedule"
+      values: ["linear", "cosine", "polynomial"]
+      
+  # Minimal ablations for time constraints
+  priority: "high_impact_only"
+
+# Tracking and logging
+tracking:
+  # Experiment tracking
+  use_wandb: true
+  use_tensorboard: true
+  use_mlflow: false
+  
+  # W&B configuration
+  wandb:
+    project: "ag-news-sota-phase1"
+    entity: "research-team"
+    tags: ["phase1", "single_model", "hyperopt"]
+    
+  # Logging configuration
+  log_level: "info"
+  log_frequency: 100
+  save_total_limit: 3
+
+# Expected outcomes
+expected_outcomes:
+  # Performance targets
+  best_single_model:
+    name: "deberta-v3-xlarge"
+    accuracy: 0.964
+    f1_macro: 0.963
+    
+  # Model ranking
+  model_ranking:
+    1: "deberta-v3-xlarge"
+    2: "roberta-large"
+    3: "xlnet-large"
+    4: "electra-large"
+    
+  # Insights
+  key_findings:
+    - "DeBERTa-v3 consistently outperforms other architectures"
+    - "Mean-max pooling improves over CLS token alone"
+    - "Label smoothing provides 0.3-0.5% improvement"
+    - "Optimal batch size is 16 with gradient accumulation"
+
+# Timeline
+timeline:
+  total_hours: 48
+  
+  breakdown:
+    - phase: "Hyperparameter search"
+      hours: 30
+      models: ["deberta", "roberta"]
+      
+    - phase: "Final training"
+      hours: 12
+      models: ["all"]
+      
+    - phase: "Evaluation and analysis"
+      hours: 6
+      models: ["all"]
+
+# Notes
+notes: |
+  Phase 1: Single Model Optimization
+  
+  Objectives:
+  1. Establish best single-model baseline
+  2. Optimize hyperparameters for each architecture
+  3. Identify most promising models for ensemble
+  
+  Key Strategies:
+  - Systematic hyperparameter search with Bayesian optimization
+  - Conservative augmentation to maintain data distribution
+  - Focus on DeBERTa-v3 and RoBERTa as primary candidates
+  - Careful regularization to prevent overfitting
+  
+  Expected Results:
+  - Best single model: DeBERTa-v3-xlarge at ~96.4% accuracy
+  - 4-5 models above 95% accuracy for ensemble candidates
+  - Clear understanding of optimal hyperparameters
+  
+  Computational Budget:
+  - 48 GPU-hours total
+  - 100 trials for primary models
+  - Full training for top configurations
+
+references:
+  - deberta: "https://arxiv.org/abs/2111.09543"
+  - roberta: "https://arxiv.org/abs/1907.11692"
+  - large_batch: "https://arxiv.org/abs/1706.02677"
+  - hyperopt: "https://arxiv.org/abs/2003.05689"
