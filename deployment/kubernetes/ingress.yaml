@@ -1,0 +1,287 @@
+# Kubernetes Ingress Configuration for AG News Text Classification
+# ================================================================================
+# This configuration defines the ingress rules for routing external traffic to
+# AG News services, including TLS termination, path-based routing, and load
+# balancing configurations.
+#
+# Ingress features:
+#   - TLS/SSL termination
+#   - Path and host-based routing
+#   - Rate limiting and security policies
+#   - WebSocket and gRPC support
+#
+# References:
+#   - Ingress Documentation: https://kubernetes.io/docs/concepts/services-networking/ingress/
+#   - NGINX Ingress Controller: https://kubernetes.github.io/ingress-nginx/
+#   - TLS/SSL Configuration: https://kubernetes.io/docs/concepts/services-networking/ingress/#tls
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+---
+# Main Application Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: agnews-ingress
+  namespace: agnews-production
+  labels:
+    app: agnews
+    component: ingress
+  annotations:
+    # Ingress controller
+    kubernetes.io/ingress.class: nginx
+    
+    # TLS configuration
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    
+    # Security headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: SAMEORIGIN";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+      more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
+      more_set_headers "Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';";
+      more_set_headers "Strict-Transport-Security: max-age=31536000; includeSubDomains; preload";
+    
+    # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: "5"
+    nginx.ingress.kubernetes.io/limit-connections: "10"
+    
+    # Request size limits
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+    
+    # Timeouts
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    
+    # CORS configuration
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://app.agnews.ai,https://docs.agnews.ai"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization,X-API-Key"
+    nginx.ingress.kubernetes.io/cors-max-age: "86400"
+    
+    # Load balancing
+    nginx.ingress.kubernetes.io/load-balance: "round_robin"
+    nginx.ingress.kubernetes.io/upstream-hash-by: "$remote_addr"
+    
+    # Session affinity
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/affinity-mode: "persistent"
+    nginx.ingress.kubernetes.io/session-cookie-name: "agnews-session"
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "86400"
+    
+spec:
+  tls:
+  - hosts:
+    - app.agnews.ai
+    - api.agnews.ai
+    - inference.agnews.ai
+    secretName: agnews-tls-secret
+  rules:
+  # Main application
+  - host: app.agnews.ai
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-service
+            port:
+              number: 80
+              
+  # API endpoints
+  - host: api.agnews.ai
+    http:
+      paths:
+      - path: /api/v1/inference
+        pathType: Prefix
+        backend:
+          service:
+            name: inference-service
+            port:
+              number: 80
+      - path: /api/v1/training
+        pathType: Prefix
+        backend:
+          service:
+            name: training-controller-service
+            port:
+              number: 80
+      - path: /api/v1/data
+        pathType: Prefix
+        backend:
+          service:
+            name: data-processor-service
+            port:
+              number: 80
+              
+  # Inference-specific endpoint
+  - host: inference.agnews.ai
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: inference-service
+            port:
+              number: 80
+
+---
+# Monitoring Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: monitoring-ingress
+  namespace: agnews-monitoring
+  labels:
+    app: agnews
+    component: monitoring
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    
+    # Basic authentication for monitoring endpoints
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: monitoring-auth
+    nginx.ingress.kubernetes.io/auth-realm: "Monitoring Access"
+    
+spec:
+  tls:
+  - hosts:
+    - monitoring.agnews.ai
+    - grafana.agnews.ai
+    - prometheus.agnews.ai
+    secretName: monitoring-tls-secret
+  rules:
+  # Grafana
+  - host: grafana.agnews.ai
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana-service
+            port:
+              number: 80
+              
+  # Prometheus
+  - host: prometheus.agnews.ai
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus-service
+            port:
+              number: 9090
+              
+  # Combined monitoring
+  - host: monitoring.agnews.ai
+    http:
+      paths:
+      - path: /grafana
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana-service
+            port:
+              number: 80
+      - path: /prometheus
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus-service
+            port:
+              number: 9090
+
+---
+# gRPC Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grpc-ingress
+  namespace: agnews-production
+  labels:
+    app: agnews
+    component: grpc
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    
+    # gRPC specific configuration
+    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+    nginx.ingress.kubernetes.io/grpc-backend: "true"
+    
+    # Client body size for streaming
+    nginx.ingress.kubernetes.io/client-body-buffer-size: "1m"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"  # Unlimited for streaming
+    
+spec:
+  tls:
+  - hosts:
+    - grpc.agnews.ai
+    secretName: grpc-tls-secret
+  rules:
+  - host: grpc.agnews.ai
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: grpc-api-service
+            port:
+              number: 50051
+
+---
+# WebSocket Ingress for Real-time Updates
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: websocket-ingress
+  namespace: agnews-production
+  labels:
+    app: agnews
+    component: websocket
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    
+    # WebSocket configuration
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+    
+    # Increased timeouts for WebSocket
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    
+spec:
+  tls:
+  - hosts:
+    - ws.agnews.ai
+    secretName: websocket-tls-secret
+  rules:
+  - host: ws.agnews.ai
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: websocket-service
+            port:
+              number: 8080
