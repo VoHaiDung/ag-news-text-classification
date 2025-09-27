@@ -101,7 +101,7 @@ def create_mock_long_batch():
 
 
 # ============================================================================
-# Test Fixtures
+# Test Fixtures (for pytest style tests only)
 # ============================================================================
 
 @pytest.fixture
@@ -209,8 +209,11 @@ class TestDeBERTaV3(TransformerTestBase):
             self.assertIsNotNone(model)
             self.assertEqual(model.num_labels, 4)
     
-    def test_deberta_v3_forward(self, mock_batch):
-        """Test DeBERTa-v3 forward pass with fixture."""
+    def test_deberta_v3_forward(self):
+        """Test DeBERTa-v3 forward pass."""
+        # Create mock batch directly
+        mock_batch = create_mock_batch()
+        
         class MockDeBERTaV3Classifier:
             def __init__(self, config):
                 self.config = config
@@ -381,8 +384,11 @@ class TestXLNet(TransformerTestBase):
         self.assertEqual(model.summary_type, "last")
         self.assertTrue(model.use_mems)
     
-    def test_xlnet_with_memory(self, mock_batch):
-        """Test XLNet with memory mechanism using fixture."""
+    def test_xlnet_with_memory(self):
+        """Test XLNet with memory mechanism."""
+        # Create mock batch directly
+        mock_batch = create_mock_batch()
+        
         class MockXLNetClassifier:
             def __init__(self, config):
                 self.config = config
@@ -484,8 +490,11 @@ class TestLongformer(TransformerTestBase):
         self.assertEqual(model.attention_window, 512)
         self.assertEqual(model.global_attention_indices, [0])
     
-    def test_longformer_long_sequence(self, mock_long_batch):
-        """Test Longformer with long sequences using fixture."""
+    def test_longformer_long_sequence(self):
+        """Test Longformer with long sequences."""
+        # Create mock long batch directly
+        mock_long_batch = create_mock_long_batch()
+        
         class MockLongformerGlobal:
             def __init__(self, config):
                 self.config = config
@@ -518,8 +527,11 @@ class TestLongformer(TransformerTestBase):
 class TestGenerativeModels(TransformerTestBase):
     """Test suite for generative models adapted for classification."""
     
-    def test_gpt2_classifier(self, mock_batch):
-        """Test GPT-2 classifier initialization and forward pass using fixture."""
+    def test_gpt2_classifier(self):
+        """Test GPT-2 classifier initialization and forward pass."""
+        # Create mock batch directly
+        mock_batch = create_mock_batch()
+        
         class MockGPT2Classifier:
             def __init__(self, config):
                 self.config = config
