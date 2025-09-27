@@ -1,0 +1,214 @@
+# GPU-enabled Dockerfile for AG News Text Classification
+# ================================================================================
+# Specialized Dockerfile for GPU training and inference
+# Based on NVIDIA CUDA base images with optimized GPU libraries
+#
+# Features:
+#   - CUDA and cuDNN support
+#   - Mixed precision training capabilities
+#   - GPU memory optimization
+#   - Multi-GPU training support
+#
+# References:
+#   - NVIDIA Container Toolkit: https://github.com/NVIDIA/nvidia-docker
+#   - PyTorch GPU Docker: https://pytorch.org/get-started/locally/
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+ARG CUDA_VERSION=11.8.0
+ARG CUDNN_VERSION=8
+ARG UBUNTU_VERSION=20.04
+ARG PYTHON_VERSION=3.9
+
+# Use NVIDIA CUDA base image
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn${CUDNN_VERSION}-devel-ubuntu${UBUNTU_VERSION} AS gpu-base
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    CUDA_DEVICE_ORDER=PCI_BUS_ID \
+    DEBIAN_FRONTEND=noninteractive \
+    TORCH_CUDA_ARCH_LIST="6.0 6.1 7.0 7.5 8.0 8.6" \
+    FORCE_CUDA=1 \
+    CUDA_HOME=/usr/local/cuda
+
+# Install Python and system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python${PYTHON_VERSION} \
+    python${PYTHON_VERSION}-dev \
+    python3-pip \
+    build-essential \
+    cmake \
+    git \
+    curl \
+    ca-certificates \
+    libjpeg-dev \
+    libpng-dev \
+    libgomp1 \
+    libopenblas-dev \
+    liblapack-dev \
+    ninja-build \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set Python 3.9 as default
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python${PYTHON_VERSION} 1 && \
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${PYTHON_VERSION} 1
+
+# Upgrade pip
+RUN python -m pip install --upgrade pip setuptools wheel
+
+# Install PyTorch with CUDA support
+RUN pip install torch==2.0.1+cu118 torchvision==0.15.2+cu118 torchaudio==2.0.2 \
+    --index-url https://download.pytorch.org/whl/cu118
+
+# Install APEX for mixed precision training
+RUN git clone https://github.com/NVIDIA/apex /tmp/apex && \
+    cd /tmp/apex && \
+    pip install -v --disable-pip-version-check --no-cache-dir \
+    --global-option="--cpp_ext" --global-option="--cuda_ext" ./ && \
+    rm -rf /tmp/apex
+
+WORKDIR /app
+
+# Stage 2: Builder for GPU dependencies
+FROM gpu-base AS gpu-builder
+
+# Copy requirements
+COPY requirements/ /tmp/requirements/
+
+# Install GPU-specific requirements
+RUN pip install -r /tmp/requirements/base.txt && \
+    pip install -r /tmp/requirements/ml.txt && \
+    pip install transformers accelerate bitsandbytes datasets
+
+# Install additional GPU libraries
+RUN pip install \
+    cupy-cuda11x \
+    tensorrt \
+    onnxruntime-gpu \
+    triton \
+    flash-attn \
+    xformers
+
+# Stage 3: GPU Training environment
+FROM gpu-base AS gpu-training
+
+# Copy installed packages
+COPY --from=gpu-builder /usr/local/lib/python${PYTHON_VERSION}/dist-packages /usr/local/lib/python${PYTHON_VERSION}/dist-packages
+COPY --from=gpu-builder /usr/local/bin /usr/local/bin
+
+# Copy application code
+COPY src/ /app/src/
+COPY configs/ /app/configs/
+COPY scripts/ /app/scripts/
+COPY setup.py pyproject.toml README.md /app/
+
+# Install additional training tools
+RUN pip install \
+    deepspeed \
+    fairscale \
+    wandb \
+    tensorboard \
+    mlflow
+
+# Set environment for distributed training
+ENV NCCL_DEBUG=INFO \
+    NCCL_TREE_THRESHOLD=0 \
+    OMP_NUM_THREADS=8 \
+    WORLD_SIZE=1 \
+    RANK=0 \
+    LOCAL_RANK=0 \
+    MASTER_ADDR=localhost \
+    MASTER_PORT=29500
+
+# Create directories
+RUN mkdir -p /app/data /app/models /app/outputs /app/logs /app/cache
+
+# Set Python path
+ENV PYTHONPATH=/app:$PYTHONPATH
+
+# Volume for data persistence
+VOLUME ["/app/data", "/app/models", "/app/outputs"]
+
+# Health check for GPU availability
+HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=3 \
+    CMD python -c "import torch; assert torch.cuda.is_available(); print(f'GPUs: {torch.cuda.device_count()}')"
+
+# Default command for distributed training
+CMD ["python", "-m", "torch.distributed.launch", \
+     "--nproc_per_node=auto", \
+     "scripts/training/distributed_training.py"]
+
+# Stage 4: GPU Inference environment
+FROM gpu-base AS gpu-inference
+
+# Copy minimal packages for inference
+COPY --from=gpu-builder /usr/local/lib/python${PYTHON_VERSION}/dist-packages/torch /usr/local/lib/python${PYTHON_VERSION}/dist-packages/torch
+COPY --from=gpu-builder /usr/local/lib/python${PYTHON_VERSION}/dist-packages/transformers /usr/local/lib/python${PYTHON_VERSION}/dist-packages/transformers
+COPY --from=gpu-builder /usr/local/lib/python${PYTHON_VERSION}/dist-packages/accelerate /usr/local/lib/python${PYTHON_VERSION}/dist-packages/accelerate
+
+# Copy application inference code
+COPY src/models/ /app/src/models/
+COPY src/inference/ /app/src/inference/
+COPY src/core/ /app/src/core/
+COPY src/utils/ /app/src/utils/
+COPY configs/ /app/configs/
+
+# Install TensorRT for optimized inference
+RUN pip install tensorrt onnx onnxruntime-gpu
+
+# Create non-root user
+RUN groupadd -r mluser && useradd -r -g mluser mluser && \
+    chown -R mluser:mluser /app
+
+USER mluser
+
+# Set Python path
+ENV PYTHONPATH=/app:$PYTHONPATH
+
+# Environment for inference optimization
+ENV CUDA_MODULE_LOADING=LAZY \
+    CUDNN_BENCHMARK=1 \
+    TF32_ENABLE=1
+
+# Expose inference port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD python -c "import torch; assert torch.cuda.is_available()"
+
+# Inference server command
+CMD ["python", "src/inference/serving/model_server.py", "--gpu", "--optimize"]
+
+# Stage 5: GPU Development environment
+FROM gpu-training AS gpu-development
+
+# Install development tools
+RUN pip install \
+    jupyter \
+    jupyterlab \
+    ipywidgets \
+    matplotlib \
+    seaborn \
+    plotly \
+    pytest \
+    black \
+    flake8 \
+    mypy \
+    pre-commit
+
+# Install CUDA development tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cuda-nsight-systems-${CUDA_VERSION} \
+    cuda-nsight-compute-${CUDA_VERSION} \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Expose Jupyter port
+EXPOSE 8888
+
+# Jupyter notebook command
+CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root"]
