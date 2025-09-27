@@ -130,7 +130,10 @@ def create_mock_features(
 
 def create_mock_ensemble_config() -> Mock:
     """Create mock configuration for ensemble models."""
-    config = Mock()
+    # Use spec to limit attributes
+    config = Mock(spec=['num_classes', 'num_base_models', 'base_model_configs', 
+                        'aggregation_method', 'use_uncertainty', 'temperature', 
+                        'dropout_rate', 'device'])
     config.num_classes = NUM_CLASSES
     config.num_base_models = NUM_BASE_MODELS
     config.base_model_configs = [Mock() for _ in range(NUM_BASE_MODELS)]
@@ -139,6 +142,7 @@ def create_mock_ensemble_config() -> Mock:
     config.temperature = 1.0
     config.dropout_rate = 0.1
     config.device = 'cpu'
+    # Note: 'weights' is NOT in the spec, so hasattr(config, 'weights') will return False
     return config
 
 
@@ -300,7 +304,9 @@ class TestVotingEnsembles(EnsembleTestBase):
                 self.config = config
                 self.base_models = base_models
                 self.voting_type = 'soft'
-                self.weights = config.weights if hasattr(config, 'weights') else None
+                # Fix: Only set weights if explicitly provided in config
+                # Since we use spec in create_mock_ensemble_config, hasattr will work correctly
+                self.weights = getattr(config, 'weights', None)
         
         base_models = [MagicMock() for _ in range(self.num_models)]
         ensemble = MockSoftVotingEnsemble(self.config, base_models)
@@ -354,7 +360,7 @@ class TestVotingEnsembles(EnsembleTestBase):
         class MockRankAveragingEnsemble:
             def __init__(self, config):
                 self.config = config
-                self.use_weights = config.use_weights if hasattr(config, 'use_weights') else False
+                self.use_weights = getattr(config, 'use_weights', False)
             
             def compute_ranks(self, predictions):
                 # Mock rank computation
@@ -397,8 +403,8 @@ class TestStackingEnsembles(EnsembleTestBase):
                 self.config = config
                 self.base_models = base_models
                 self.meta_learner = self._create_meta_learner()
-                self.use_probabilities = config.use_probabilities
-                self.cv_folds = config.cv_folds if hasattr(config, 'cv_folds') else 5
+                self.use_probabilities = getattr(config, 'use_probabilities', True)
+                self.cv_folds = getattr(config, 'cv_folds', 5)
         
             def _create_meta_learner(self):
                 # Mock meta-learner
@@ -407,6 +413,7 @@ class TestStackingEnsembles(EnsembleTestBase):
                 meta.predict = MagicMock()
                 return meta
         
+        # Add attributes to config for this test
         self.config.use_probabilities = True
         self.config.cv_folds = 5
         
@@ -450,7 +457,7 @@ class TestStackingEnsembles(EnsembleTestBase):
             def __init__(self, config, base_models):
                 self.config = config
                 self.base_models = base_models
-                self.cv_folds = config.cv_folds
+                self.cv_folds = getattr(config, 'cv_folds', 5)
                 self.blend_predictions = []
             
             def fit_cv(self, X, y):
@@ -475,7 +482,7 @@ class TestStackingEnsembles(EnsembleTestBase):
         
         cv_stacking.fit_cv(X, y)
         
-        self.assertEqual(len(cv_stacking.blend_predictions), self.config.cv_folds)
+        self.assertEqual(len(cv_stacking.blend_predictions), 5)
         for fold_pred in cv_stacking.blend_predictions:
             self.assertEqual(len(fold_pred), self.num_models)
     
@@ -523,7 +530,7 @@ class TestBlendingEnsembles(EnsembleTestBase):
             def __init__(self, config, base_models):
                 self.config = config
                 self.base_models = base_models
-                self.blend_ratio = config.blend_ratio if hasattr(config, 'blend_ratio') else 0.2
+                self.blend_ratio = getattr(config, 'blend_ratio', 0.2)
                 self.blender = self._create_blender()
         
             def _create_blender(self):
@@ -566,7 +573,7 @@ class TestBlendingEnsembles(EnsembleTestBase):
             def __init__(self, config):
                 self.config = config
                 self.weight_network = self._create_weight_network()
-                self.temperature = config.temperature if hasattr(config, 'temperature') else 1.0
+                self.temperature = getattr(config, 'temperature', 1.0)
             
             def _create_weight_network(self):
                 # Mock weight learning network
@@ -641,7 +648,7 @@ class TestAdvancedEnsembles(EnsembleTestBase):
             def __init__(self, config, base_models):
                 self.config = config
                 self.base_models = base_models
-                self.num_samples = config.num_samples if hasattr(config, 'num_samples') else 100
+                self.num_samples = getattr(config, 'num_samples', 100)
                 self.posterior_weights = self._initialize_posterior()
             
             def _initialize_posterior(self):
@@ -712,8 +719,8 @@ class TestAdvancedEnsembles(EnsembleTestBase):
         class MockSnapshotEnsemble:
             def __init__(self, config):
                 self.config = config
-                self.num_snapshots = config.num_snapshots
-                self.cycle_length = config.cycle_length
+                self.num_snapshots = getattr(config, 'num_snapshots', 5)
+                self.cycle_length = getattr(config, 'cycle_length', 10)
                 self.snapshots = []
             
             def collect_snapshot(self, model, epoch):
@@ -763,8 +770,8 @@ class TestAdvancedEnsembles(EnsembleTestBase):
         class MockMultiLevelEnsemble:
             def __init__(self, config):
                 self.config = config
-                self.num_levels = config.num_levels
-                self.models_per_level = config.models_per_level
+                self.num_levels = getattr(config, 'num_levels', 3)
+                self.models_per_level = getattr(config, 'models_per_level', [5, 3, 1])
                 self.levels = self._create_hierarchy()
             
             def _create_hierarchy(self):
@@ -908,9 +915,9 @@ class TestEnsembleIntegration(EnsembleTestBase):
         class MockMemoryEfficientEnsemble:
             def __init__(self, config):
                 self.config = config
-                self.share_embeddings = config.share_embeddings
-                self.gradient_checkpointing = config.gradient_checkpointing
-                self.dynamic_loading = config.dynamic_loading
+                self.share_embeddings = getattr(config, 'share_embeddings', False)
+                self.gradient_checkpointing = getattr(config, 'gradient_checkpointing', False)
+                self.dynamic_loading = getattr(config, 'dynamic_loading', False)
             
             def get_memory_usage(self):
                 # Mock memory usage calculation
@@ -996,9 +1003,9 @@ class TestEnsemblePerformance(EnsembleTestBase):
         """Test parallelization capabilities of ensemble methods."""
         class MockParallelEnsemble:
             def __init__(self, config):
-                self.num_workers = config.num_workers
-                self.use_gpu = config.use_gpu
-                self.distributed = config.distributed
+                self.num_workers = getattr(config, 'num_workers', 1)
+                self.use_gpu = getattr(config, 'use_gpu', False)
+                self.distributed = getattr(config, 'distributed', False)
             
             def parallel_predict(self, X, base_models):
                 # Mock parallel prediction
