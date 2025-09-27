@@ -1,0 +1,592 @@
+# Classical Machine Learning Baseline Experiment Configuration
+# =============================================================
+#
+# This configuration establishes baseline performance metrics using
+# traditional machine learning algorithms, following experimental methodology from:
+# - Fernández-Delgado et al. (2014): "Do we Need Hundreds of Classifiers to Solve Real World Classification Problems?"
+# - Caruana & Niculescu-Mizil (2006): "An Empirical Comparison of Supervised Learning Algorithms"
+# - Zhang & Oles (2001): "Text Categorization Based on Regularized Linear Classification Methods"
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+name: classical_ml_baseline
+type: experiment
+phase: baseline
+description: "Establish classical ML baseline performance for AG News classification"
+
+# Experimental methodology (Fernández-Delgado et al., 2014)
+methodology:
+  # Reproducibility settings
+  reproducibility:
+    seeds: [42, 123, 456, 789, 2024]  # Multiple seeds for robustness
+    deterministic: true
+    log_environment: true
+    save_configs: true
+    
+  # Statistical significance testing (Demšar, 2006)
+  statistical_testing:
+    enabled: true
+    test: "friedman"  # Options: friedman, nemenyi, wilcoxon
+    confidence_level: 0.95
+    post_hoc: "nemenyi"  # For multiple comparisons
+    
+  # Score reporting (Japkowicz & Shah, 2011)
+  score_reporting:
+    report_mean: true
+    report_std: true
+    report_confidence_interval: true
+    report_percentiles: [25, 50, 75]
+    report_cv_scores: true
+
+# Feature extraction methods
+feature_extraction:
+  # TF-IDF features (Salton & Buckley, 1988)
+  tfidf:
+    max_features: [5000, 10000, 20000]
+    ngram_range: [(1, 1), (1, 2), (1, 3)]
+    min_df: [2, 5]
+    max_df: [0.95, 1.0]
+    use_idf: true
+    smooth_idf: true
+    sublinear_tf: true
+    norm: "l2"
+    
+  # Count Vectorizer
+  count_vectorizer:
+    max_features: [10000]
+    ngram_range: [(1, 2)]
+    min_df: 2
+    max_df: 0.95
+    binary: [false, true]
+    
+  # Word2Vec features (Mikolov et al., 2013)
+  word2vec:
+    enabled: true
+    vector_size: 300
+    window: 5
+    min_count: 5
+    sg: 1  # Skip-gram
+    averaging: ["mean", "max", "mean_max"]
+    
+  # FastText features (Joulin et al., 2017)
+  fasttext:
+    enabled: true
+    vector_size: 300
+    min_n: 3
+    max_n: 6
+    averaging: "mean"
+    
+  # Statistical features
+  statistical:
+    enabled: true
+    features:
+      - text_length
+      - word_count
+      - unique_words
+      - avg_word_length
+      - punctuation_count
+      - capital_ratio
+      - digit_ratio
+      - special_char_ratio
+
+# Models to evaluate
+models:
+  # Support Vector Machine (Joachims, 1998)
+  svm:
+    name: "SVM"
+    implementation: "sklearn.svm.SVC"
+    
+    hyperparameters:
+      kernel: ["linear", "rbf", "poly"]
+      C: [0.1, 1.0, 10.0, 100.0]
+      gamma: ["scale", "auto", 0.001, 0.01]
+      class_weight: ["balanced", null]
+      
+    feature_sets: ["tfidf", "word2vec"]
+    
+    expected_performance:
+      accuracy: 0.925
+      f1_macro: 0.92
+      training_time_minutes: 15
+      
+  # Logistic Regression (Hosmer et al., 2013)
+  logistic_regression:
+    name: "Logistic Regression"
+    implementation: "sklearn.linear_model.LogisticRegression"
+    
+    hyperparameters:
+      penalty: ["l1", "l2", "elasticnet"]
+      C: [0.01, 0.1, 1.0, 10.0]
+      solver: ["liblinear", "saga", "lbfgs"]
+      class_weight: ["balanced", null]
+      max_iter: 1000
+      
+    feature_sets: ["tfidf", "count_vectorizer"]
+    
+    expected_performance:
+      accuracy: 0.918
+      f1_macro: 0.912
+      training_time_minutes: 5
+      
+  # Random Forest (Breiman, 2001)
+  random_forest:
+    name: "Random Forest"
+    implementation: "sklearn.ensemble.RandomForestClassifier"
+    
+    hyperparameters:
+      n_estimators: [100, 200, 500]
+      max_depth: [10, 20, null]
+      min_samples_split: [2, 5, 10]
+      min_samples_leaf: [1, 2, 4]
+      max_features: ["sqrt", "log2", 0.3]
+      class_weight: ["balanced", "balanced_subsample", null]
+      
+    feature_sets: ["tfidf", "statistical"]
+    
+    expected_performance:
+      accuracy: 0.905
+      f1_macro: 0.898
+      training_time_minutes: 20
+      
+  # Naive Bayes (McCallum & Nigam, 1998)
+  naive_bayes:
+    name: "Multinomial Naive Bayes"
+    implementation: "sklearn.naive_bayes.MultinomialNB"
+    
+    hyperparameters:
+      alpha: [0.01, 0.1, 0.5, 1.0]
+      fit_prior: [true, false]
+      
+    feature_sets: ["tfidf", "count_vectorizer"]
+    
+    expected_performance:
+      accuracy: 0.892
+      f1_macro: 0.885
+      training_time_minutes: 1
+      
+  # XGBoost (Chen & Guestrin, 2016)
+  xgboost:
+    name: "XGBoost"
+    implementation: "xgboost.XGBClassifier"
+    
+    hyperparameters:
+      n_estimators: [100, 200, 500]
+      max_depth: [3, 6, 9]
+      learning_rate: [0.01, 0.1, 0.3]
+      subsample: [0.7, 0.8, 1.0]
+      colsample_bytree: [0.7, 0.8, 1.0]
+      reg_alpha: [0, 0.1, 1.0]
+      reg_lambda: [0, 0.1, 1.0]
+      
+    feature_sets: ["tfidf", "word2vec", "statistical"]
+    
+    expected_performance:
+      accuracy: 0.931
+      f1_macro: 0.925
+      training_time_minutes: 10
+      
+  # LightGBM (Ke et al., 2017)
+  lightgbm:
+    name: "LightGBM"
+    implementation: "lightgbm.LGBMClassifier"
+    
+    hyperparameters:
+      n_estimators: [100, 200, 500]
+      num_leaves: [31, 63, 127]
+      learning_rate: [0.01, 0.1, 0.3]
+      feature_fraction: [0.7, 0.8, 1.0]
+      bagging_fraction: [0.7, 0.8, 1.0]
+      bagging_freq: [0, 5]
+      reg_alpha: [0, 0.1]
+      reg_lambda: [0, 0.1]
+      
+    feature_sets: ["tfidf", "fasttext", "statistical"]
+    
+    expected_performance:
+      accuracy: 0.929
+      f1_macro: 0.923
+      training_time_minutes: 8
+      
+  # K-Nearest Neighbors (Cover & Hart, 1967)
+  knn:
+    name: "K-Nearest Neighbors"
+    implementation: "sklearn.neighbors.KNeighborsClassifier"
+    
+    hyperparameters:
+      n_neighbors: [3, 5, 7, 9, 11]
+      weights: ["uniform", "distance"]
+      metric: ["euclidean", "manhattan", "cosine"]
+      algorithm: ["auto", "ball_tree", "kd_tree", "brute"]
+      
+    feature_sets: ["word2vec", "fasttext"]
+    
+    expected_performance:
+      accuracy: 0.875
+      f1_macro: 0.868
+      training_time_minutes: 2
+      
+  # AdaBoost (Freund & Schapire, 1997)
+  adaboost:
+    name: "AdaBoost"
+    implementation: "sklearn.ensemble.AdaBoostClassifier"
+    
+    hyperparameters:
+      n_estimators: [50, 100, 200]
+      learning_rate: [0.5, 1.0, 1.5]
+      algorithm: ["SAMME", "SAMME.R"]
+      
+    feature_sets: ["tfidf"]
+    
+    expected_performance:
+      accuracy: 0.898
+      f1_macro: 0.891
+      training_time_minutes: 12
+      
+  # Gradient Boosting (Friedman, 2001)
+  gradient_boosting:
+    name: "Gradient Boosting"
+    implementation: "sklearn.ensemble.GradientBoostingClassifier"
+    
+    hyperparameters:
+      n_estimators: [100, 200]
+      max_depth: [3, 5, 7]
+      learning_rate: [0.01, 0.1, 0.3]
+      subsample: [0.7, 0.8, 1.0]
+      min_samples_split: [2, 5]
+      min_samples_leaf: [1, 2]
+      
+    feature_sets: ["tfidf", "statistical"]
+    
+    expected_performance:
+      accuracy: 0.915
+      f1_macro: 0.908
+      training_time_minutes: 15
+      
+  # Extra Trees (Geurts et al., 2006)
+  extra_trees:
+    name: "Extra Trees"
+    implementation: "sklearn.ensemble.ExtraTreesClassifier"
+    
+    hyperparameters:
+      n_estimators: [100, 200, 500]
+      max_depth: [10, 20, null]
+      min_samples_split: [2, 5]
+      min_samples_leaf: [1, 2]
+      max_features: ["sqrt", "log2"]
+      
+    feature_sets: ["tfidf"]
+    
+    expected_performance:
+      accuracy: 0.902
+      f1_macro: 0.895
+      training_time_minutes: 18
+
+# Data configuration
+data:
+  dataset: "ag_news"
+  
+  # Data splits
+  splits:
+    train: 0.8
+    validation: 0.1
+    test: 0.1
+    
+  # Text preprocessing (Uysal & Gunal, 2014)
+  preprocessing:
+    lowercase: true
+    remove_punctuation: false  # Keep for some models
+    remove_numbers: false
+    remove_stopwords: true
+    stemming: false  # Test both
+    lemmatization: true
+    min_word_length: 2
+    max_word_length: 20
+    
+  # No augmentation for classical ML baselines
+  augmentation:
+    enabled: false
+    
+  # Feature scaling
+  scaling:
+    method: "standard"  # Options: standard, minmax, robust, none
+    with_mean: true
+    with_std: true
+
+# Training configuration
+training:
+  # Cross-validation (Kohavi, 1995)
+  cross_validation:
+    enabled: true
+    strategy: "stratified_kfold"
+    n_folds: 5
+    shuffle: true
+    
+  # Hyperparameter optimization
+  hyperparameter_search:
+    enabled: true
+    method: "grid"  # Options: grid, random, bayesian
+    scoring: "f1_macro"
+    cv: 3
+    n_jobs: -1
+    verbose: 1
+    
+  # Class imbalance handling
+  class_balancing:
+    strategy: "class_weight"  # Options: class_weight, smote, adasyn, none
+    
+  # Feature selection (Guyon & Elisseeff, 2003)
+  feature_selection:
+    enabled: true
+    method: "chi2"  # Options: chi2, mutual_info, anova, none
+    percentile: 80
+    
+  # Model persistence
+  save_models: true
+  model_format: "pickle"  # Options: pickle, joblib, onnx
+
+# Evaluation protocol
+evaluation:
+  # Metrics (Sokolova & Lapalme, 2009)
+  metrics:
+    - accuracy
+    - precision_macro
+    - precision_micro
+    - precision_weighted
+    - precision_samples
+    - recall_macro
+    - recall_micro
+    - recall_weighted
+    - recall_samples
+    - f1_macro
+    - f1_micro
+    - f1_weighted
+    - f1_samples
+    - matthews_corrcoef
+    - cohen_kappa_score
+    - hamming_loss
+    - jaccard_score
+    - log_loss
+    - roc_auc_ovr
+    - roc_auc_ovo
+    
+  # Primary metric
+  primary_metric: "f1_macro"
+  
+  # Confusion matrix analysis
+  confusion_matrix:
+    normalize: "true"
+    display_labels: ["World", "Sports", "Business", "Sci/Tech"]
+    
+  # Learning curves (Perlich, 2003)
+  learning_curves:
+    enabled: true
+    train_sizes: [0.1, 0.25, 0.5, 0.75, 1.0]
+    cv: 3
+    
+  # Feature importance analysis
+  feature_importance:
+    enabled: true
+    top_k: 50
+    plot: true
+
+# Ensemble methods comparison
+ensemble_comparison:
+  # Voting classifier
+  voting:
+    estimators: ["svm", "logistic_regression", "xgboost"]
+    voting: "soft"
+    weights: [0.4, 0.3, 0.3]
+    
+  # Stacking
+  stacking:
+    base_estimators: ["svm", "random_forest", "xgboost"]
+    meta_estimator: "logistic_regression"
+    cv: 5
+
+# Computational resources
+resources:
+  # Resource tracking
+  track_memory: true
+  track_cpu: true
+  track_training_time: true
+  
+  # Parallelization
+  n_jobs: -1  # Use all cores
+  backend: "loky"  # Options: loky, threading, multiprocessing
+  
+  # Memory management
+  max_memory_gb: 32
+  chunking: true
+  chunk_size: 10000
+
+# Comparison with deep learning
+comparison:
+  # Deep learning baselines
+  dl_baselines:
+    - name: "BERT-base"
+      accuracy: 0.940
+      f1_macro: 0.935
+      training_time_hours: 1.5
+      inference_time_ms: 20
+      
+    - name: "CNN"
+      accuracy: 0.915
+      f1_macro: 0.908
+      training_time_hours: 0.5
+      inference_time_ms: 5
+      
+    - name: "LSTM"
+      accuracy: 0.908
+      f1_macro: 0.901
+      training_time_hours: 1.0
+      inference_time_ms: 10
+      
+  # Efficiency metrics
+  efficiency:
+    compare_training_time: true
+    compare_inference_time: true
+    compare_model_size: true
+    compare_memory_usage: true
+
+# Experiment tracking
+tracking:
+  # Platforms
+  use_mlflow: true
+  use_wandb: false
+  use_tensorboard: false
+  
+  # MLflow configuration
+  mlflow:
+    experiment_name: "ag_news_classical_ml"
+    tracking_uri: "./mlruns"
+    tags:
+      phase: "baseline"
+      type: "classical_ml"
+      
+  # Logging
+  log_frequency: 1  # Log every experiment
+  log_parameters: true
+  log_metrics: true
+  log_models: true
+  log_artifacts: true
+
+# Output configuration
+output:
+  # Results storage
+  results_dir: "./outputs/results/experiments/baselines/classical_ml"
+  
+  # Save formats
+  save_predictions: true
+  save_probabilities: true
+  save_feature_importance: true
+  save_learning_curves: true
+  
+  # Report generation
+  generate_report: true
+  report_format: ["html", "latex", "markdown"]
+  
+  # Visualizations
+  plots:
+    - confusion_matrices
+    - roc_curves
+    - precision_recall_curves
+    - learning_curves
+    - feature_importance
+    - model_comparison
+
+# Analysis
+analysis:
+  # Error analysis (Chinchor, 1992)
+  error_analysis:
+    enabled: true
+    save_misclassified: true
+    analyze_by_length: true
+    analyze_by_class: true
+    
+  # Statistical tests (Demšar, 2006)
+  statistical_tests:
+    friedman_test: true
+    nemenyi_post_hoc: true
+    wilcoxon_signed_rank: true
+    mcnemar_test: true
+    
+  # Model interpretation
+  interpretation:
+    enabled: true
+    methods:
+      - feature_importance
+      - permutation_importance
+      - partial_dependence
+      
+  # Ablation studies
+  ablations:
+    - name: "no_preprocessing"
+      description: "Raw text without preprocessing"
+    - name: "no_feature_selection"
+      description: "All features without selection"
+    - name: "single_ngram"
+      description: "Only unigrams"
+
+# Expected timeline
+timeline:
+  estimated_hours: 6
+  
+  phases:
+    - name: "Feature extraction"
+      hours: 1.5
+    - name: "Model training"
+      hours: 3
+    - name: "Evaluation"
+      hours: 1
+    - name: "Analysis"
+      hours: 0.5
+
+# Notes
+notes: |
+  Classical ML baseline experiment following best practices:
+  
+  1. Feature Engineering:
+     - TF-IDF: Standard text representation
+     - Word2Vec: Dense embeddings
+     - FastText: Subword information
+     - Statistical: Handcrafted features
+  
+  2. Models Evaluated (10 algorithms):
+     - Linear: SVM, Logistic Regression
+     - Tree-based: Random Forest, XGBoost, LightGBM, Extra Trees
+     - Probabilistic: Naive Bayes
+     - Instance-based: KNN
+     - Boosting: AdaBoost, Gradient Boosting
+  
+  3. Expected Best Performers:
+     - XGBoost: ~93.1% accuracy (best)
+     - LightGBM: ~92.9% accuracy
+     - SVM: ~92.5% accuracy
+     - Logistic Regression: ~91.8% accuracy
+  
+  4. Key Insights:
+     - Tree-based methods generally outperform linear models
+     - Feature engineering crucial for performance
+     - XGBoost/LightGBM competitive with simple neural networks
+     - Much faster training than transformers
+  
+  5. Computational Advantages:
+     - 10-100x faster training than transformers
+     - No GPU required
+     - Lower memory footprint
+     - Faster inference
+  
+  6. When to Use Classical ML:
+     - Limited computational resources
+     - Need for interpretability
+     - Small to medium datasets
+     - Real-time inference requirements
+
+references:
+  - ml_comparison: "https://jmlr.org/papers/v15/delgado14a.html"
+  - text_classification: "https://arxiv.org/abs/1904.08067"
+  - feature_engineering: "https://www.jmlr.org/papers/v3/guyon03a.html"
+  - statistical_tests: "https://www.jmlr.org/papers/v7/demsar06a.html"
+  - xgboost: "https://arxiv.org/abs/1603.02754"
+  - lightgbm: "https://papers.nips.cc/paper/6907-lightgbm-a-highly-efficient-gradient-boosting-decision-tree"
