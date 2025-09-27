@@ -38,33 +38,10 @@ import torch
 import torch.nn as nn
 
 # ============================================================================
-# Test Fixtures
+# Helper Functions for Creating Mock Data
 # ============================================================================
 
-@pytest.fixture
-def mock_config():
-    """Create mock configuration for transformer models."""
-    config = MagicMock()
-    config.model_name = "microsoft/deberta-v3-base"
-    config.num_labels = 4  # AG News has 4 classes
-    config.hidden_size = 768
-    config.num_hidden_layers = 12
-    config.num_attention_heads = 12
-    config.intermediate_size = 3072
-    config.hidden_dropout_prob = 0.1
-    config.attention_probs_dropout_prob = 0.1
-    config.max_position_embeddings = 512
-    config.gradient_checkpointing = False
-    config.use_cache = False
-    config.classifier_dropout = 0.1
-    config.pooling_strategy = "cls"
-    config.freeze_encoder = False
-    config.layer_wise_lr_decay = 1.0
-    return config
-
-
-@pytest.fixture
-def mock_batch():
+def create_mock_batch():
     """Create mock batch data for testing."""
     batch_size = 8
     seq_length = 128
@@ -97,8 +74,7 @@ def mock_batch():
     }
 
 
-@pytest.fixture
-def mock_long_batch():
+def create_mock_long_batch():
     """Create mock batch with long sequences for Longformer testing."""
     batch_size = 4
     seq_length = 1024
@@ -122,6 +98,44 @@ def mock_long_batch():
         'global_attention_mask': global_attention_mask,
         'labels': labels
     }
+
+
+# ============================================================================
+# Test Fixtures
+# ============================================================================
+
+@pytest.fixture
+def mock_config():
+    """Create mock configuration for transformer models."""
+    config = MagicMock()
+    config.model_name = "microsoft/deberta-v3-base"
+    config.num_labels = 4  # AG News has 4 classes
+    config.hidden_size = 768
+    config.num_hidden_layers = 12
+    config.num_attention_heads = 12
+    config.intermediate_size = 3072
+    config.hidden_dropout_prob = 0.1
+    config.attention_probs_dropout_prob = 0.1
+    config.max_position_embeddings = 512
+    config.gradient_checkpointing = False
+    config.use_cache = False
+    config.classifier_dropout = 0.1
+    config.pooling_strategy = "cls"
+    config.freeze_encoder = False
+    config.layer_wise_lr_decay = 1.0
+    return config
+
+
+@pytest.fixture
+def mock_batch():
+    """Create mock batch data for testing."""
+    return create_mock_batch()
+
+
+@pytest.fixture
+def mock_long_batch():
+    """Create mock batch with long sequences for Longformer testing."""
+    return create_mock_long_batch()
 
 
 # ============================================================================
@@ -195,39 +209,32 @@ class TestDeBERTaV3(TransformerTestBase):
             self.assertIsNotNone(model)
             self.assertEqual(model.num_labels, 4)
     
-    @patch('sys.modules', new_callable=dict)
-    def test_deberta_v3_forward(self, mock_modules):
-        """Test DeBERTa-v3 forward pass."""
-        mock_modules.update(sys.modules)
-        mock_modules['tqdm'] = MagicMock()
-        mock_modules['transformers'] = MagicMock()
+    def test_deberta_v3_forward(self, mock_batch):
+        """Test DeBERTa-v3 forward pass with fixture."""
+        class MockDeBERTaV3Classifier:
+            def __init__(self, config):
+                self.config = config
+                self.num_labels = config.num_labels
+            
+            def __call__(self, batch):
+                # Create mock output
+                logits = MagicMock()
+                logits.shape = (8, 4)
+                loss = MagicMock()
+                loss.item.return_value = 1.5
+                return {'logits': logits, 'loss': loss}
         
-        with patch.dict('sys.modules', mock_modules):
-            class MockDeBERTaV3Classifier:
-                def __init__(self, config):
-                    self.config = config
-                    self.num_labels = config.num_labels
-                
-                def __call__(self, batch):
-                    # Create mock output
-                    logits = MagicMock()
-                    logits.shape = (8, 4)
-                    loss = MagicMock()
-                    loss.item.return_value = 1.5
-                    return {'logits': logits, 'loss': loss}
-            
-            config = Mock()
-            config.model_name = "microsoft/deberta-v3-base"
-            config.num_labels = 4
-            
-            model = MockDeBERTaV3Classifier(config)
-            batch = mock_batch()
-            
-            output = model(batch)
-            
-            self.assertIn('logits', output)
-            self.assertIn('loss', output)
-            self.assert_output_shape(output['logits'], (8, 4))
+        config = Mock()
+        config.model_name = "microsoft/deberta-v3-base"
+        config.num_labels = 4
+        
+        model = MockDeBERTaV3Classifier(config)
+        
+        output = model(mock_batch)
+        
+        self.assertIn('logits', output)
+        self.assertIn('loss', output)
+        self.assert_output_shape(output['logits'], (8, 4))
     
     def test_deberta_sliding_window(self):
         """Test DeBERTa with sliding window approach."""
@@ -374,8 +381,8 @@ class TestXLNet(TransformerTestBase):
         self.assertEqual(model.summary_type, "last")
         self.assertTrue(model.use_mems)
     
-    def test_xlnet_with_memory(self):
-        """Test XLNet with memory mechanism."""
+    def test_xlnet_with_memory(self, mock_batch):
+        """Test XLNet with memory mechanism using fixture."""
         class MockXLNetClassifier:
             def __init__(self, config):
                 self.config = config
@@ -396,9 +403,8 @@ class TestXLNet(TransformerTestBase):
         config.mem_len = 128
         
         model = MockXLNetClassifier(config)
-        batch = mock_batch()
         
-        output = model(batch)
+        output = model(mock_batch)
         
         self.assertIn('logits', output)
         self.assertIn('mems', output)
@@ -478,8 +484,8 @@ class TestLongformer(TransformerTestBase):
         self.assertEqual(model.attention_window, 512)
         self.assertEqual(model.global_attention_indices, [0])
     
-    def test_longformer_long_sequence(self):
-        """Test Longformer with long sequences."""
+    def test_longformer_long_sequence(self, mock_long_batch):
+        """Test Longformer with long sequences using fixture."""
         class MockLongformerGlobal:
             def __init__(self, config):
                 self.config = config
@@ -495,12 +501,11 @@ class TestLongformer(TransformerTestBase):
         config.max_position_embeddings = 4096
         
         model = MockLongformerGlobal(config)
-        batch = mock_long_batch()
         
         # Set global attention for CLS token
-        batch['global_attention_mask'][:, 0] = 1
+        mock_long_batch['global_attention_mask'][:, 0] = 1
         
-        output = model(batch)
+        output = model(mock_long_batch)
         
         self.assertIn('logits', output)
         self.assert_output_shape(output['logits'], (4, 4))
@@ -513,8 +518,8 @@ class TestLongformer(TransformerTestBase):
 class TestGenerativeModels(TransformerTestBase):
     """Test suite for generative models adapted for classification."""
     
-    def test_gpt2_classifier(self):
-        """Test GPT-2 classifier initialization and forward pass."""
+    def test_gpt2_classifier(self, mock_batch):
+        """Test GPT-2 classifier initialization and forward pass using fixture."""
         class MockGPT2Classifier:
             def __init__(self, config):
                 self.config = config
@@ -534,9 +539,8 @@ class TestGenerativeModels(TransformerTestBase):
         config.pad_token_id = 50256
         
         model = MockGPT2Classifier(config)
-        batch = mock_batch()
         
-        output = model(batch)
+        output = model(mock_batch)
         
         self.assertIn('logits', output)
         self.assert_valid_logits(output['logits'])
