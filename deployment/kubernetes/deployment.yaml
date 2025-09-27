@@ -1,0 +1,527 @@
+# Kubernetes Deployment Configuration for AG News Core Services
+# ================================================================================
+# This configuration defines the main application deployments for the AG News
+# Text Classification system, including ML inference, training, and data services.
+#
+# Deployment strategies:
+#   - Rolling updates for zero-downtime deployments
+#   - Resource management for optimal performance
+#   - Health checks for reliability
+#   - Security contexts for hardening
+#
+# References:
+#   - Kubernetes Deployments: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+#   - Container Best Practices: https://cloud.google.com/solutions/best-practices-for-building-containers
+#   - ML on Kubernetes: https://www.kubeflow.org/docs/started/
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+---
+# Model Inference Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-inference
+  namespace: agnews-production
+  labels:
+    app: agnews
+    component: inference
+    tier: model
+spec:
+  replicas: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 2
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: agnews
+      component: inference
+  template:
+    metadata:
+      labels:
+        app: agnews
+        component: inference
+        tier: model
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: agnews-inference
+      
+      # Security context for container isolation
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+        
+      # Init container to download models
+      initContainers:
+      - name: model-downloader
+        image: agnews/model-downloader:latest
+        command: ["python", "scripts/download_models.py"]
+        env:
+        - name: MODEL_REGISTRY_URL
+          valueFrom:
+            configMapKeyRef:
+              name: model-config
+              key: registry_url
+        - name: MODEL_VERSION
+          valueFrom:
+            configMapKeyRef:
+              name: model-config
+              key: model_version
+        volumeMounts:
+        - name: model-storage
+          mountPath: /models
+          
+      containers:
+      - name: inference-server
+        image: agnews/inference:latest
+        imagePullPolicy: Always
+        
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 9090
+          name: metrics
+          protocol: TCP
+          
+        env:
+        - name: MODEL_NAME
+          value: "deberta-v3-xlarge"
+        - name: BATCH_SIZE
+          value: "32"
+        - name: MAX_SEQUENCE_LENGTH
+          value: "512"
+        - name: NUM_WORKERS
+          value: "4"
+        - name: CACHE_SIZE
+          value: "1000"
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: agnews-secrets
+              key: redis-url
+        - name: MODEL_PATH
+          value: "/models"
+        - name: LOG_LEVEL
+          value: "INFO"
+          
+        # Resource allocation
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1"
+            nvidia.com/gpu: "0"  # GPU optional
+          limits:
+            memory: "4Gi"
+            cpu: "2"
+            nvidia.com/gpu: "0"
+            
+        # Liveness probe
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+          
+        # Readiness probe
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+          successThreshold: 1
+          
+        # Startup probe for slow model loading
+        startupProbe:
+          httpGet:
+            path: /health/startup
+            port: 8080
+          initialDelaySeconds: 0
+          periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 30
+          
+        # Volume mounts
+        volumeMounts:
+        - name: model-storage
+          mountPath: /models
+          readOnly: true
+        - name: cache-volume
+          mountPath: /cache
+        - name: config-volume
+          mountPath: /app/configs
+          
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: model-pvc
+      - name: cache-volume
+        emptyDir:
+          sizeLimit: 2Gi
+      - name: config-volume
+        configMap:
+          name: inference-config
+          
+      # Node selection for GPU nodes if available
+      nodeSelector:
+        node-type: inference
+        
+      # Tolerations for dedicated nodes
+      tolerations:
+      - key: "inference-only"
+        operator: "Equal"
+        value: "true"
+        effect: "NoSchedule"
+        
+      # Pod anti-affinity for distribution
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: component
+                  operator: In
+                  values:
+                  - inference
+              topologyKey: kubernetes.io/hostname
+
+---
+# Training Job Controller Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: training-controller
+  namespace: agnews-production
+  labels:
+    app: agnews
+    component: training
+    tier: control
+spec:
+  replicas: 1  # Single controller instance
+  strategy:
+    type: Recreate  # Ensure single instance
+  selector:
+    matchLabels:
+      app: agnews
+      component: training-controller
+  template:
+    metadata:
+      labels:
+        app: agnews
+        component: training-controller
+        tier: control
+    spec:
+      serviceAccountName: agnews-training
+      
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        
+      containers:
+      - name: training-controller
+        image: agnews/training-controller:latest
+        imagePullPolicy: Always
+        
+        ports:
+        - containerPort: 8081
+          name: http
+          protocol: TCP
+        - containerPort: 9090
+          name: metrics
+          protocol: TCP
+          
+        env:
+        - name: CONTROLLER_NAME
+          value: "agnews-training"
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: agnews-secrets
+              key: database-url
+        - name: MLFLOW_TRACKING_URI
+          valueFrom:
+            configMapKeyRef:
+              name: training-config
+              key: mlflow_uri
+        - name: WANDB_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: agnews-secrets
+              key: wandb-api-key
+              optional: true
+              
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+            
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8081
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          
+        volumeMounts:
+        - name: config
+          mountPath: /app/configs
+        - name: job-templates
+          mountPath: /app/templates
+          
+      volumes:
+      - name: config
+        configMap:
+          name: training-config
+      - name: job-templates
+        configMap:
+          name: training-job-templates
+
+---
+# Data Processing Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-processor
+  namespace: agnews-data
+  labels:
+    app: agnews
+    component: data-processor
+    tier: data
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: agnews
+      component: data-processor
+  template:
+    metadata:
+      labels:
+        app: agnews
+        component: data-processor
+        tier: data
+    spec:
+      serviceAccountName: agnews-data
+      
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        
+      containers:
+      - name: data-processor
+        image: agnews/data-processor:latest
+        imagePullPolicy: Always
+        
+        ports:
+        - containerPort: 8082
+          name: http
+          protocol: TCP
+        - containerPort: 9090
+          name: metrics
+          protocol: TCP
+          
+        env:
+        - name: PROCESSOR_TYPE
+          value: "streaming"
+        - name: BATCH_SIZE
+          value: "1000"
+        - name: KAFKA_BROKERS
+          valueFrom:
+            configMapKeyRef:
+              name: data-config
+              key: kafka_brokers
+              optional: true
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: agnews-secrets
+              key: database-url
+        - name: S3_BUCKET
+          valueFrom:
+            configMapKeyRef:
+              name: data-config
+              key: s3_bucket
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: agnews-secrets
+              key: aws-access-key-id
+              optional: true
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: agnews-secrets
+              key: aws-secret-access-key
+              optional: true
+              
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1"
+            
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8082
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8082
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+        - name: config
+          mountPath: /app/configs
+          
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: data-pvc
+      - name: config
+        configMap:
+          name: data-config
+
+---
+# Celery Worker Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-worker
+  namespace: agnews-production
+  labels:
+    app: agnews
+    component: celery-worker
+    tier: background
+spec:
+  replicas: 4
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: agnews
+      component: celery-worker
+  template:
+    metadata:
+      labels:
+        app: agnews
+        component: celery-worker
+        tier: background
+    spec:
+      serviceAccountName: agnews-worker
+      
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        
+      containers:
+      - name: celery-worker
+        image: agnews/celery-worker:latest
+        imagePullPolicy: Always
+        
+        command: ["celery", "-A", "src.services.queue.celery_tasks", "worker"]
+        args: ["--loglevel=info", "--concurrency=4", "--max-tasks-per-child=100"]
+        
+        env:
+        - name: CELERY_BROKER_URL
+          valueFrom:
+            secretKeyRef:
+              name: agnews-secrets
+              key: redis-url
+        - name: CELERY_RESULT_BACKEND
+          valueFrom:
+            secretKeyRef:
+              name: agnews-secrets
+              key: redis-url
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: agnews-secrets
+              key: database-url
+        - name: WORKER_TYPE
+          value: "general"
+        - name: LOG_LEVEL
+          value: "INFO"
+          
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+            
+        livenessProbe:
+          exec:
+            command:
+            - celery
+            - -A
+            - src.services.queue.celery_tasks
+            - inspect
+            - ping
+          initialDelaySeconds: 30
+          periodSeconds: 60
+          timeoutSeconds: 10
+          
+        volumeMounts:
+        - name: shared-data
+          mountPath: /shared
+        - name: config
+          mountPath: /app/configs
+          
+      volumes:
+      - name: shared-data
+        emptyDir:
+          sizeLimit: 1Gi
+      - name: config
+        configMap:
+          name: celery-config
