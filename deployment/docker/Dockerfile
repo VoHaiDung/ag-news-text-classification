@@ -44,8 +44,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     vim \
     libgomp1 \
-    libopenblas-dev \
-    liblapack-dev \
+    libopenblas0 \
+    liblapack3 \
     libhdf5-dev \
     libssl-dev \
     libffi-dev \
@@ -92,7 +92,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Install additional training dependencies
 COPY requirements/ /tmp/requirements/
-RUN pip install -r /tmp/requirements/research.txt
+RUN pip install -r /tmp/requirements/research.txt || pip install -r /tmp/requirements/ml.txt
 
 # Copy application code
 COPY src/ /app/src/
@@ -104,7 +104,7 @@ COPY setup.py pyproject.toml README.md /app/
 RUN pip install -e .
 
 # Set Python path
-ENV PYTHONPATH=/app:$PYTHONPATH
+ENV PYTHONPATH="/app:${PYTHONPATH:-}"
 
 # Create volume mount points
 VOLUME ["/app/data", "/app/models", "/app/outputs", "/app/logs"]
@@ -128,7 +128,7 @@ COPY setup.py pyproject.toml /app/
 RUN pip install .
 
 # Set Python path
-ENV PYTHONPATH=/app:$PYTHONPATH
+ENV PYTHONPATH="/app:${PYTHONPATH:-}"
 
 # Create non-root user for security
 RUN groupadd -r mluser && useradd -r -g mluser mluser && \
@@ -149,7 +149,7 @@ FROM python:${PYTHON_VERSION}-slim AS production
 # Install only runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
-    libopenblas-base \
+    libopenblas0 \
     liblapack3 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -170,14 +170,14 @@ WORKDIR /app
 USER mluser
 
 # Set Python path
-ENV PYTHONPATH=/app:$PYTHONPATH
+ENV PYTHONPATH="/app:${PYTHONPATH:-}"
 
 # Expose port for serving
 EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import sys; import torch; sys.exit(0)"
+    CMD python -c "import sys; sys.exit(0)"
 
 # Production inference command
-CMD ["python", "-m", "src.inference.serving.model_server"]
+CMD ["python", "-m", "src.inference.serving.model_server", "--host", "0.0.0.0", "--port", "8080"]
