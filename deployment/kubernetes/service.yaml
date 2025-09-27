@@ -1,0 +1,302 @@
+# Kubernetes Service Configuration for AG News Text Classification
+# ================================================================================
+# This configuration defines the Kubernetes services that expose the AG News
+# application components for internal and external communication.
+#
+# Service types:
+#   - ClusterIP: Internal cluster communication
+#   - LoadBalancer: External access with cloud load balancer
+#   - NodePort: Direct node access (development only)
+#   - Headless: Direct pod-to-pod communication
+#
+# References:
+#   - Kubernetes Services: https://kubernetes.io/docs/concepts/services-networking/service/
+#   - Service Networking: https://kubernetes.io/docs/concepts/services-networking/
+#   - DNS for Services: https://kubernetes.io/docs/concepts/services-networking/dns-pod-service/
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+---
+# Inference Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: inference-service
+  namespace: agnews-production
+  labels:
+    app: agnews
+    component: inference
+    tier: model
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "tcp"
+spec:
+  type: ClusterIP
+  selector:
+    app: agnews
+    component: inference
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+
+---
+# Training Controller Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: training-controller-service
+  namespace: agnews-production
+  labels:
+    app: agnews
+    component: training-controller
+    tier: control
+spec:
+  type: ClusterIP
+  selector:
+    app: agnews
+    component: training-controller
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8081
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+
+---
+# Data Processor Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: data-processor-service
+  namespace: agnews-data
+  labels:
+    app: agnews
+    component: data-processor
+    tier: data
+spec:
+  type: ClusterIP
+  selector:
+    app: agnews
+    component: data-processor
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8082
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+
+---
+# PostgreSQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: agnews-production
+  labels:
+    app: agnews
+    component: postgres
+    tier: database
+spec:
+  type: ClusterIP
+  selector:
+    app: agnews
+    component: postgres
+  ports:
+  - name: postgres
+    port: 5432
+    targetPort: 5432
+    protocol: TCP
+
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: agnews-production
+  labels:
+    app: agnews
+    component: redis
+    tier: cache
+spec:
+  type: ClusterIP
+  selector:
+    app: agnews
+    component: redis
+  ports:
+  - name: redis
+    port: 6379
+    targetPort: 6379
+    protocol: TCP
+
+---
+# Elasticsearch Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch-service
+  namespace: agnews-production
+  labels:
+    app: agnews
+    component: elasticsearch
+    tier: search
+spec:
+  type: ClusterIP
+  selector:
+    app: agnews
+    component: elasticsearch
+  ports:
+  - name: http
+    port: 9200
+    targetPort: 9200
+    protocol: TCP
+  - name: transport
+    port: 9300
+    targetPort: 9300
+    protocol: TCP
+
+---
+# MLflow Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mlflow-service
+  namespace: agnews-production
+  labels:
+    app: agnews
+    component: mlflow
+    tier: tracking
+spec:
+  type: ClusterIP
+  selector:
+    app: agnews
+    component: mlflow
+  ports:
+  - name: http
+    port: 5000
+    targetPort: 5000
+    protocol: TCP
+
+---
+# Prometheus Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-service
+  namespace: agnews-monitoring
+  labels:
+    app: agnews
+    component: prometheus
+    tier: monitoring
+spec:
+  type: ClusterIP
+  selector:
+    app: agnews
+    component: prometheus
+  ports:
+  - name: http
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+
+---
+# Grafana Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: agnews-monitoring
+  labels:
+    app: agnews
+    component: grafana
+    tier: monitoring
+spec:
+  type: LoadBalancer
+  selector:
+    app: agnews
+    component: grafana
+  ports:
+  - name: http
+    port: 80
+    targetPort: 3000
+    protocol: TCP
+
+---
+# Headless Service for StatefulSet
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-headless
+  namespace: agnews-production
+  labels:
+    app: agnews
+    component: postgres
+    tier: database
+spec:
+  type: ClusterIP
+  clusterIP: None  # Headless service
+  selector:
+    app: agnews
+    component: postgres
+  ports:
+  - name: postgres
+    port: 5432
+    targetPort: 5432
+    protocol: TCP
+
+---
+# External Service for Cloud Database
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloud-database
+  namespace: agnews-production
+  labels:
+    app: agnews
+    component: database
+    tier: external
+spec:
+  type: ExternalName
+  externalName: agnews-db.c9s8d7f6g5h4.us-west-2.rds.amazonaws.com
+  ports:
+  - port: 5432
+    targetPort: 5432
+    protocol: TCP
+
+---
+# Service for exposing metrics
+apiVersion: v1
+kind: Service
+metadata:
+  name: metrics-aggregator
+  namespace: agnews-monitoring
+  labels:
+    app: agnews
+    component: metrics
+    tier: monitoring
+spec:
+  type: ClusterIP
+  selector:
+    app: agnews
+  ports:
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
