@@ -14,7 +14,7 @@
 #   - Docker Multi-stage Builds: https://docs.docker.com/develop/develop-images/multistage-build/
 #   - Python Docker Best Practices: https://pythonspeed.com/docker/
 #
-# Author: AG News Classification Team
+# Author: Võ Hải Dũng
 # License: MIT
 
 ARG PYTHON_VERSION=3.9
