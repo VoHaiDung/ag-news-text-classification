@@ -1,0 +1,200 @@
+# Docker Compose for AG News Classification Quick Start
+# ======================================================
+#
+# Orchestration configuration for quick start services
+# Following Docker Compose best practices from:
+# - Docker (2023): "Compose specification"
+# - Matthias & Kane (2018): "Docker: Up & Running"
+#
+# Usage:
+#   Start: docker-compose -f quickstart/docker_quickstart/docker-compose.yml up
+#   Stop: docker-compose -f quickstart/docker_quickstart/docker-compose.yml down
+
+version: '3.8'
+
+services:
+  # Demo Application Service
+  demo-app:
+    build:
+      context: ../..
+      dockerfile: quickstart/docker_quickstart/Dockerfile
+    image: agnews-quick:latest
+    container_name: agnews-demo
+    ports:
+      - "8501:8501"
+    environment:
+      - STREAMLIT_SERVER_HEADLESS=true
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+      - STREAMLIT_SERVER_PORT=8501
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Mount data directory for persistence
+      - ../../data:/app/data:ro
+      # Mount models directory
+      - agnews-models:/app/models
+      # Mount outputs for results
+      - agnews-outputs:/app/outputs
+    networks:
+      - agnews-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+
+  # REST API Service (minimal)
+  api:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile.api
+      args:
+        - API_TYPE=rest
+    image: agnews-api:latest
+    container_name: agnews-api
+    ports:
+      - "8000:8000"
+    environment:
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - LOG_LEVEL=INFO
+      - MODEL_CACHE=/app/models
+      - WORKERS=2
+    volumes:
+      - ../../data:/app/data:ro
+      - agnews-models:/app/models
+      - ../../configs:/app/configs:ro
+    networks:
+      - agnews-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      - redis
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 3G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+  # Redis Cache (for API)
+  redis:
+    image: redis:7-alpine
+    container_name: agnews-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - agnews-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # Optional: Jupyter Notebook for experimentation
+  notebook:
+    build:
+      context: ../..
+      dockerfile: quickstart/docker_quickstart/Dockerfile
+    image: agnews-quick:latest
+    container_name: agnews-notebook
+    ports:
+      - "8888:8888"
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+    volumes:
+      - ../../notebooks:/app/notebooks
+      - ../../data:/app/data
+      - agnews-models:/app/models
+      - agnews-outputs:/app/outputs
+    networks:
+      - agnews-network
+    command: >
+      bash -c "pip install jupyterlab &&
+               jupyter lab --ip=0.0.0.0 --port=8888 --no-browser
+               --allow-root --NotebookApp.token='' --NotebookApp.password=''"
+    profiles:
+      - dev
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+
+  # Optional: Model Training Service
+  trainer:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/Dockerfile.gpu
+    image: agnews-trainer:latest
+    container_name: agnews-trainer
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+      - TRAINING_CONFIG=/app/configs/training/standard/base_training.yaml
+    volumes:
+      - ../../data:/app/data
+      - agnews-models:/app/models
+      - agnews-outputs:/app/outputs
+      - ../../configs:/app/configs:ro
+    networks:
+      - agnews-network
+    profiles:
+      - training
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+# Networks
+networks:
+  agnews-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+# Volumes for persistence
+volumes:
+  agnews-models:
+    driver: local
+  agnews-outputs:
+    driver: local
+  redis-data:
+    driver: local
+
+# Extension fields for reusability
+x-common-variables: &common-variables
+  LOG_LEVEL: INFO
+  PYTHONUNBUFFERED: 1
+
+x-common-healthcheck: &common-healthcheck
+  interval: 30s
+  timeout: 10s
+  retries: 3
