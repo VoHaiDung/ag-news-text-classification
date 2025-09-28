@@ -38,24 +38,24 @@ quickstart/
 
 ```
 minimal_example.py
-    └── src.models.base.base_model
-    └── src.data.preprocessing.text_cleaner
+    └── src/models/base/base_model
+    └── src/data/preprocessing/text_cleaner
     
 train_simple.py
-    └── src.training.trainers.standard_trainer
-    └── src.data.datasets.ag_news
-    └── src.models.transformers.*
+    └── src/training/trainers/standard_trainer
+    └── src/data/datasets/ag_news
+    └── src/models/transformers/*
     
 evaluate_simple.py
-    └── src.evaluation.metrics.classification_metrics
-    └── src.evaluation.analysis.error_analysis
+    └── src/evaluation/metrics/classification_metrics
+    └── src/evaluation/analysis/error_analysis
     
 demo_app.py
-    └── app.components.prediction_component
-    └── app.utils.session_manager
+    └── app/components/prediction_component
+    └── app/utils/session_manager
     
 api_quickstart.py
-    └── src.api.rest.schemas.request_schemas
+    └── src/api/rest/schemas/request_schemas
     └── requests (external)
 ```
 
