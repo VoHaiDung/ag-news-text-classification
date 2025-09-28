@@ -3,19 +3,19 @@
 This directory contains simplified examples and quick start scripts for the AG News Text Classification project, designed for rapid prototyping and educational purposes.
 
 **Author**: Võ Hải Dũng  
-**Email**: vohaidung.work@gmail.com
+**Email**: vohaidung.work@gmail.com  
 **Date**: 2025
 
 ## Table of Contents
 
-1. [Overview](#overview)
-2. [Prerequisites](#prerequisites)
-3. [Quick Start Scripts](#quick-start-scripts)
-4. [Usage Examples](#usage-examples)
-5. [Docker Deployment](#docker-deployment)
-6. [Google Colab](#google-colab)
-7. [API Usage](#api-usage)
-8. [Troubleshooting](#troubleshooting)
+- [Overview](#overview)
+- [Prerequisites](#prerequisites)
+- [Quick Start Scripts](#quick-start-scripts)
+- [Usage Examples](#usage-examples)
+- [Docker Deployment](#docker-deployment)
+- [Google Colab](#google-colab)
+- [API Usage](#api-usage)
+- [Troubleshooting](#troubleshooting)
 
 ## Overview
 
