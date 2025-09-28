@@ -2,24 +2,6 @@
 
 This directory contains simplified examples and quick start scripts for the AG News Text Classification project, designed for rapid prototyping and educational purposes.
 
-## Table of Contents
-
-- [Overview](#overview)
-- [Module Architecture](#module-architecture)
-- [Prerequisites](#prerequisites)
-- [Quick Start Scripts](#quick-start-scripts)
-  - [Minimal Example](#1-minimal-example-minimal_examplepy)
-  - [Simple Training](#2-simple-training-train_simplepy)
-  - [Model Evaluation](#3-model-evaluation-evaluate_simplepy)
-  - [Demo Application](#4-demo-application-demo_apppy)
-  - [API Quickstart](#5-api-quickstart-api_quickstartpy)
-- [Docker Quickstart](#docker-quickstart)
-- [Google Colab Integration](#google-colab-integration)
-- [Implementation Details](#implementation-details)
-- [Performance Considerations](#performance-considerations)
-- [Troubleshooting Guide](#troubleshooting-guide)
-- [References](#references)
-
 ## Overview
 
 The quickstart module provides simplified interfaces to the main functionality of the AG News classification system, abstracting complex configurations while maintaining educational value. This module serves as an entry point for understanding the complete system architecture.
@@ -38,12 +20,12 @@ Following the principle of progressive disclosure from educational computing (Re
 
 ```
 quickstart/
-├── README.md                    # This file
-├── minimal_example.py          # Single prediction demonstration
-├── train_simple.py            # Simplified training pipeline
-├── evaluate_simple.py         # Model evaluation utilities
-├── demo_app.py               # Streamlit web interface
-├── api_quickstart.py         # API client examples
+├── README.md                # This file
+├── minimal_example.py       # Single prediction demonstration
+├── train_simple.py          # Simplified training pipeline
+├── evaluate_simple.py       # Model evaluation utilities
+├── demo_app.py              # Streamlit web interface
+├── api_quickstart.py        # API client examples
 ├── colab_notebook.ipynb     # Google Colab tutorial
 └── docker_quickstart/
     ├── Dockerfile           # Container definition
