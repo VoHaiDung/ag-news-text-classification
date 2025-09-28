@@ -722,6 +722,16 @@ docker-compose -f quickstart/docker_quickstart/docker-compose.yml up -d \
 
 ## Google Colab Integration
 
+### Quick Start in Colab
+
+1. Open `quickstart/colab_notebook.ipynb` in Google Colab
+2. Run all cells sequentially
+3. Follow interactive instructions
+
+### Direct Link
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/VoHaiDung/ag-news-text-classification/blob/main/quickstart/colab_notebook.ipynb)
+
 ### Colab Notebook Structure
 
 The `colab_notebook.ipynb` provides a complete tutorial optimized for Google Colab environment:
