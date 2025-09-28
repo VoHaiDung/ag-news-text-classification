@@ -274,9 +274,9 @@ python quickstart/train_simple.py \
 
 ```
 outputs/simple/
-├── 20240115_143022/           # Timestamp-based run directory
-│   ├── config.json            # Training configuration
-│   ├── metrics.json           # Training metrics history
+├── 20240115_143022/          # Timestamp-based run directory
+│   ├── config.json           # Training configuration
+│   ├── metrics.json          # Training metrics history
 │   ├── checkpoints/
 │   │   ├── best_model.pt     # Best validation checkpoint
 │   │   ├── last_model.pt     # Final checkpoint
