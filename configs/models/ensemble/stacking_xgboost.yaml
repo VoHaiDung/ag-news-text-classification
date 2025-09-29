@@ -1,5 +1,5 @@
 # Stacking Ensemble with XGBoost Meta-Learner Configuration
-# Advanced stacking ensemble for AG News Classification
+# Advanced stacking ensemble for AG News Text Classification
 
 name: stacking_xgboost
 type: ensemble
