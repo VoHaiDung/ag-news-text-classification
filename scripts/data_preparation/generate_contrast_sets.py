@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 """
 Contrast Set Generation Script for AG News Text Classification
 ================================================================================
