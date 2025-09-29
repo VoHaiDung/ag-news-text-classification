@@ -1,5 +1,5 @@
 # ELECTRA-Large Model Configuration
-# Discriminative pre-training approach for AG News Classification
+# Discriminative pre-training approach for AG News Text Classification
 
 name: electra_large
 type: transformer
@@ -243,7 +243,7 @@ tracking:
 
 # Model card information
 model_card:
-  description: "ELECTRA-Large discriminator fine-tuned for AG News classification"
+  description: "ELECTRA-Large discriminator fine-tuned for AG News Text classification"
   intended_use: "News article classification with efficient discriminative approach"
   training_data: "AG News dataset"
   eval_results:
