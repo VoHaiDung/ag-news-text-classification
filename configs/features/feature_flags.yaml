@@ -1,0 +1,798 @@
+# Feature Flags Configuration
+# ===========================
+#
+# This configuration manages feature toggles for controlled rollout, A/B testing,
+# and experimental features. Based on industry best practices from:
+# - Fowler (2017): "Feature Toggles (aka Feature Flags)"
+# - Harmes & Todorovic (2013): "Continuous Delivery with Feature Flags"
+# - LaunchDarkly Best Practices Guide
+#
+# Feature flag categories:
+# - Release toggles: Enable/disable features for deployment
+# - Experiment toggles: A/B testing and gradual rollouts
+# - Ops toggles: Operational controls for system behavior
+# - Permission toggles: Feature access based on user segments
+#
+# Author: Võ Hải Dũng
+# License: MIT
+
+# Global feature flag settings
+global_settings:
+  # Environment configuration
+  environment: "development"  # development | staging | production
+  
+  # Default flag behavior
+  default_enabled: false
+  default_rollout_percentage: 0
+  
+  # Flag evaluation
+  evaluation_mode: "cached"  # realtime | cached | static
+  cache_ttl: 60  # seconds
+  
+  # Monitoring
+  track_usage: true
+  track_performance_impact: true
+  
+  # Safety mechanisms
+  kill_switch_enabled: true
+  automatic_rollback_on_error: true
+  error_threshold: 0.05  # 5% error rate triggers rollback
+
+# Model-related features
+models:
+  # Transformer models
+  transformers:
+    deberta_v3:
+      enabled: true
+      rollout_percentage: 100
+      description: "DeBERTa-v3 model support"
+      environments: ["development", "staging", "production"]
+      prerequisites: []
+      
+    roberta_enhanced:
+      enabled: true
+      rollout_percentage: 100
+      description: "Enhanced RoBERTa with custom modifications"
+      environments: ["development", "staging", "production"]
+      prerequisites: []
+      
+    xlnet_support:
+      enabled: true
+      rollout_percentage: 50
+      description: "XLNet model integration"
+      environments: ["development", "staging"]
+      prerequisites: ["transformers.base"]
+      
+    electra_discriminator:
+      enabled: false
+      rollout_percentage: 0
+      description: "ELECTRA discriminator model (experimental)"
+      environments: ["development"]
+      prerequisites: ["transformers.base"]
+      
+    longformer_global:
+      enabled: false
+      rollout_percentage: 0
+      description: "Longformer with global attention"
+      environments: ["development"]
+      prerequisites: ["transformers.base", "long_sequence_support"]
+      
+  # Generative models
+  generative:
+    gpt2_classifier:
+      enabled: true
+      rollout_percentage: 25
+      description: "GPT-2 for classification tasks"
+      environments: ["development", "staging"]
+      prerequisites: ["transformers.base"]
+      
+    t5_classifier:
+      enabled: false
+      rollout_percentage: 0
+      description: "T5 model for classification"
+      environments: ["development"]
+      prerequisites: ["transformers.base", "encoder_decoder_support"]
+      
+  # Efficient models
+  efficient_models:
+    lora_finetuning:
+      enabled: true
+      rollout_percentage: 75
+      description: "LoRA parameter-efficient fine-tuning"
+      environments: ["development", "staging", "production"]
+      prerequisites: ["peft_library"]
+      
+    qlora_support:
+      enabled: false
+      rollout_percentage: 0
+      description: "QLoRA quantized fine-tuning"
+      environments: ["development"]
+      prerequisites: ["lora_finetuning", "quantization_support"]
+      
+    adapter_fusion:
+      enabled: true
+      rollout_percentage: 50
+      description: "Adapter fusion for multi-task learning"
+      environments: ["development", "staging"]
+      prerequisites: ["adapter_support"]
+      
+    int8_quantization:
+      enabled: true
+      rollout_percentage: 25
+      description: "INT8 model quantization"
+      environments: ["development", "staging"]
+      prerequisites: ["quantization_support"]
+      
+    dynamic_quantization:
+      enabled: false
+      rollout_percentage: 0
+      description: "Dynamic quantization during inference"
+      environments: ["development"]
+      prerequisites: ["quantization_support"]
+      
+  # Ensemble methods
+  ensemble:
+    soft_voting:
+      enabled: true
+      rollout_percentage: 100
+      description: "Soft voting ensemble"
+      environments: ["development", "staging", "production"]
+      prerequisites: ["base_ensemble"]
+      
+    weighted_voting:
+      enabled: true
+      rollout_percentage: 100
+      description: "Weighted voting with learned weights"
+      environments: ["development", "staging", "production"]
+      prerequisites: ["soft_voting"]
+      
+    stacking_classifier:
+      enabled: true
+      rollout_percentage: 75
+      description: "Stacking with meta-learner"
+      environments: ["development", "staging"]
+      prerequisites: ["base_ensemble"]
+      
+    bayesian_ensemble:
+      enabled: false
+      rollout_percentage: 0
+      description: "Bayesian model averaging"
+      environments: ["development"]
+      prerequisites: ["base_ensemble", "uncertainty_estimation"]
+      
+    multi_level_ensemble:
+      enabled: false
+      rollout_percentage: 0
+      description: "Hierarchical multi-level ensemble"
+      environments: ["development"]
+      prerequisites: ["stacking_classifier", "hierarchical_support"]
+      
+  # Prompt-based models
+  prompt_based:
+    soft_prompts:
+      enabled: true
+      rollout_percentage: 50
+      description: "Learnable soft prompts"
+      environments: ["development", "staging"]
+      prerequisites: ["prompt_support"]
+      
+    instruction_tuning:
+      enabled: false
+      rollout_percentage: 0
+      description: "Instruction-based fine-tuning"
+      environments: ["development"]
+      prerequisites: ["prompt_support", "instruction_datasets"]
+      
+    prompt_templates:
+      enabled: true
+      rollout_percentage: 100
+      description: "Customizable prompt templates"
+      environments: ["development", "staging", "production"]
+      prerequisites: ["prompt_support"]
+
+# Training features
+training:
+  # Standard training
+  standard:
+    mixed_precision:
+      enabled: true
+      rollout_percentage: 100
+      description: "Automatic mixed precision training"
+      environments: ["development", "staging", "production"]
+      prerequisites: ["gpu_support"]
+      
+    distributed_training:
+      enabled: true
+      rollout_percentage: 50
+      description: "Multi-GPU distributed training"
+      environments: ["development", "staging"]
+      prerequisites: ["multi_gpu_support"]
+      
+    gradient_accumulation:
+      enabled: true
+      rollout_percentage: 100
+      description: "Gradient accumulation for large batches"
+      environments: ["development", "staging", "production"]
+      prerequisites: []
+      
+  # Advanced strategies
+  advanced_strategies:
+    curriculum_learning:
+      enabled: true
+      rollout_percentage: 25
+      description: "Curriculum-based training"
+      environments: ["development", "staging"]
+      prerequisites: ["data_difficulty_scoring"]
+      
+    adversarial_training:
+      enabled: true
+      rollout_percentage: 50
+      description: "Adversarial training for robustness"
+      environments: ["development", "staging"]
+      prerequisites: ["gradient_computation"]
+      
+    knowledge_distillation:
+      enabled: true
+      rollout_percentage: 75
+      description: "Knowledge distillation from teacher models"
+      environments: ["development", "staging"]
+      prerequisites: ["teacher_models"]
+      
+    contrastive_learning:
+      enabled: false
+      rollout_percentage: 0
+      description: "Contrastive learning objectives"
+      environments: ["development"]
+      prerequisites: ["similarity_metrics"]
+      
+    meta_learning:
+      enabled: false
+      rollout_percentage: 0
+      description: "Meta-learning for few-shot scenarios"
+      environments: ["development"]
+      prerequisites: ["maml_support"]
+      
+    multi_stage_training:
+      enabled: true
+      rollout_percentage: 25
+      description: "Progressive multi-stage training"
+      environments: ["development", "staging"]
+      prerequisites: ["stage_manager"]
+      
+    gpt4_distillation:
+      enabled: false
+      rollout_percentage: 0
+      description: "Distillation from GPT-4 outputs"
+      environments: ["development"]
+      prerequisites: ["gpt4_api_access", "knowledge_distillation"]
+
+# Data processing features
+data_processing:
+  # Augmentation techniques
+  augmentation:
+    eda_techniques:
+      enabled: true
+      rollout_percentage: 100
+      description: "Easy Data Augmentation techniques"
+      environments: ["development", "staging", "production"]
+      prerequisites: []
+      
+    back_translation:
+      enabled: true
+      rollout_percentage: 50
+      description: "Back-translation augmentation"
+      environments: ["development", "staging"]
+      prerequisites: ["translation_api"]
+      
+    paraphrase_generation:
+      enabled: true
+      rollout_percentage: 25
+      description: "Neural paraphrase generation"
+      environments: ["development", "staging"]
+      prerequisites: ["paraphrase_model"]
+      
+    mixup_augmentation:
+      enabled: true
+      rollout_percentage: 75
+      description: "Mixup data augmentation"
+      environments: ["development", "staging"]
+      prerequisites: []
+      
+    adversarial_augmentation:
+      enabled: false
+      rollout_percentage: 0
+      description: "Adversarial example augmentation"
+      environments: ["development"]
+      prerequisites: ["adversarial_training"]
+      
+    contrast_sets:
+      enabled: false
+      rollout_percentage: 0
+      description: "Contrast set generation"
+      environments: ["development"]
+      prerequisites: ["nlp_transformations"]
+      
+  # Sampling strategies
+  sampling:
+    active_learning:
+      enabled: true
+      rollout_percentage: 50
+      description: "Active learning sample selection"
+      environments: ["development", "staging"]
+      prerequisites: ["uncertainty_estimation"]
+      
+    curriculum_sampling:
+      enabled: true
+      rollout_percentage: 25
+      description: "Curriculum-based data sampling"
+      environments: ["development", "staging"]
+      prerequisites: ["curriculum_learning"]
+      
+    coreset_selection:
+      enabled: false
+      rollout_percentage: 0
+      description: "Coreset selection for efficiency"
+      environments: ["development"]
+      prerequisites: ["gradient_matching"]
+      
+    uncertainty_sampling:
+      enabled: true
+      rollout_percentage: 50
+      description: "Uncertainty-based sampling"
+      environments: ["development", "staging"]
+      prerequisites: ["uncertainty_estimation"]
+      
+  # Data quality
+  quality_control:
+    quality_filtering:
+      enabled: true
+      rollout_percentage: 100
+      description: "Automatic data quality filtering"
+      environments: ["development", "staging", "production"]
+      prerequisites: []
+      
+    influence_functions:
+      enabled: false
+      rollout_percentage: 0
+      description: "Influence function-based selection"
+      environments: ["development"]
+      prerequisites: ["hessian_computation"]
+      
+    diversity_selection:
+      enabled: true
+      rollout_percentage: 50
+      description: "Diversity-based sample selection"
+      environments: ["development", "staging"]
+      prerequisites: ["embedding_computation"]
+
+# API features
+api:
+  # REST API
+  rest_api:
+    v1_endpoints:
+      enabled: true
+      rollout_percentage: 100
+      description: "REST API v1 endpoints"
+      environments: ["development", "staging", "production"]
+      prerequisites: ["fastapi"]
+      
+    v2_endpoints:
+      enabled: false
+      rollout_percentage: 0
+      description: "REST API v2 with breaking changes"
+      environments: ["development"]
+      prerequisites: ["v1_endpoints"]
+      
+    batch_prediction:
+      enabled: true
+      rollout_percentage: 100
+      description: "Batch prediction endpoint"
+      environments: ["development", "staging", "production"]
+      prerequisites: ["v1_endpoints"]
+      
+    streaming_response:
+      enabled: true
+      rollout_percentage: 50
+      description: "Server-sent events for streaming"
+      environments: ["development", "staging"]
+      prerequisites: ["v1_endpoints", "websocket_support"]
+      
+  # gRPC API
+  grpc_api:
+    grpc_service:
+      enabled: true
+      rollout_percentage: 75
+      description: "gRPC service endpoints"
+      environments: ["development", "staging"]
+      prerequisites: ["protobuf_compilation"]
+      
+    bidirectional_streaming:
+      enabled: false
+      rollout_percentage: 0
+      description: "Bidirectional streaming support"
+      environments: ["development"]
+      prerequisites: ["grpc_service"]
+      
+  # GraphQL API
+  graphql_api:
+    graphql_endpoint:
+      enabled: true
+      rollout_percentage: 25
+      description: "GraphQL query endpoint"
+      environments: ["development", "staging"]
+      prerequisites: ["graphene"]
+      
+    subscriptions:
+      enabled: false
+      rollout_percentage: 0
+      description: "GraphQL subscriptions"
+      environments: ["development"]
+      prerequisites: ["graphql_endpoint", "websocket_support"]
+      
+  # API features
+  api_features:
+    rate_limiting:
+      enabled: true
+      rollout_percentage: 100
+      description: "API rate limiting"
+      environments: ["development", "staging", "production"]
+      prerequisites: []
+      
+    api_versioning:
+      enabled: true
+      rollout_percentage: 100
+      description: "API version management"
+      environments: ["development", "staging", "production"]
+      prerequisites: []
+      
+    api_key_auth:
+      enabled: true
+      rollout_percentage: 100
+      description: "API key authentication"
+      environments: ["staging", "production"]
+      prerequisites: []
+      
+    jwt_auth:
+      enabled: true
+      rollout_percentage: 100
+      description: "JWT authentication"
+      environments: ["staging", "production"]
+      prerequisites: []
+      
+    oauth2_support:
+      enabled: false
+      rollout_percentage: 0
+      description: "OAuth2 authentication"
+      environments: ["staging", "production"]
+      prerequisites: ["jwt_auth"]
+
+# Service features
+services:
+  # Core services
+  core:
+    prediction_service:
+      enabled: true
+      rollout_percentage: 100
+      description: "Prediction service"
+      environments: ["development", "staging", "production"]
+      prerequisites: []
+      
+    training_service:
+      enabled: true
+      rollout_percentage: 100
+      description: "Training orchestration service"
+      environments: ["development", "staging", "production"]
+      prerequisites: []
+      
+    data_service:
+      enabled: true
+      rollout_percentage: 100
+      description: "Data management service"
+      environments: ["development", "staging", "production"]
+      prerequisites: []
+      
+    model_management:
+      enabled: true
+      rollout_percentage: 100
+      description: "Model lifecycle management"
+      environments: ["development", "staging", "production"]
+      prerequisites: []
+      
+  # Supporting services
+  supporting:
+    caching_service:
+      enabled: true
+      rollout_percentage: 100
+      description: "Redis/Memcached caching"
+      environments: ["development", "staging", "production"]
+      prerequisites: ["redis_connection"]
+      
+    monitoring_service:
+      enabled: true
+      rollout_percentage: 100
+      description: "Metrics and monitoring"
+      environments: ["staging", "production"]
+      prerequisites: []
+      
+    notification_service:
+      enabled: true
+      rollout_percentage: 50
+      description: "Email/Slack notifications"
+      environments: ["staging", "production"]
+      prerequisites: ["smtp_config"]
+      
+    queue_service:
+      enabled: true
+      rollout_percentage: 75
+      description: "Task queue management"
+      environments: ["development", "staging", "production"]
+      prerequisites: ["celery_broker"]
+
+# Performance optimizations
+performance:
+  # Inference optimizations
+  inference:
+    onnx_export:
+      enabled: true
+      rollout_percentage: 50
+      description: "ONNX model export"
+      environments: ["staging", "production"]
+      prerequisites: ["onnx_runtime"]
+      
+    tensorrt_optimization:
+      enabled: false
+      rollout_percentage: 0
+      description: "TensorRT optimization"
+      environments: ["production"]
+      prerequisites: ["nvidia_gpu", "tensorrt"]
+      
+    dynamic_batching:
+      enabled: true
+      rollout_percentage: 75
+      description: "Dynamic batch sizing"
+      environments: ["staging", "production"]
+      prerequisites: []
+      
+    model_caching:
+      enabled: true
+      rollout_percentage: 100
+      description: "Model caching in memory"
+      environments: ["development", "staging", "production"]
+      prerequisites: []
+      
+  # Training optimizations
+  training_opt:
+    gradient_checkpointing:
+      enabled: true
+      rollout_percentage: 50
+      description: "Gradient checkpointing for memory"
+      environments: ["development", "staging"]
+      prerequisites: []
+      
+    apex_optimization:
+      enabled: false
+      rollout_percentage: 0
+      description: "NVIDIA Apex optimizations"
+      environments: ["development"]
+      prerequisites: ["nvidia_gpu", "apex"]
+      
+    deepspeed_integration:
+      enabled: false
+      rollout_percentage: 0
+      description: "DeepSpeed training optimization"
+      environments: ["development"]
+      prerequisites: ["deepspeed"]
+
+# Experimental features
+experimental:
+  # Research features
+  research:
+    new_architectures:
+      enabled: false
+      rollout_percentage: 0
+      description: "Experimental model architectures"
+      environments: ["development"]
+      prerequisites: []
+      sunset_date: "2024-12-31"
+      
+    bleeding_edge_techniques:
+      enabled: false
+      rollout_percentage: 0
+      description: "Latest research techniques"
+      environments: ["development"]
+      prerequisites: []
+      sunset_date: "2024-12-31"
+      
+  # Beta features
+  beta:
+    auto_ml:
+      enabled: false
+      rollout_percentage: 0
+      description: "AutoML capabilities"
+      environments: ["development"]
+      prerequisites: ["hyperparameter_search"]
+      sunset_date: "2024-09-30"
+      
+    neural_architecture_search:
+      enabled: false
+      rollout_percentage: 0
+      description: "NAS for model discovery"
+      environments: ["development"]
+      prerequisites: ["auto_ml"]
+      sunset_date: "2024-09-30"
+
+# Security features
+security:
+  # Data security
+  data_security:
+    pii_detection:
+      enabled: true
+      rollout_percentage: 100
+      description: "PII detection and masking"
+      environments: ["staging", "production"]
+      prerequisites: []
+      
+    data_encryption:
+      enabled: true
+      rollout_percentage: 100
+      description: "Data encryption at rest"
+      environments: ["production"]
+      prerequisites: ["encryption_keys"]
+      
+  # Model security
+  model_security:
+    adversarial_detection:
+      enabled: true
+      rollout_percentage: 50
+      description: "Adversarial input detection"
+      environments: ["staging", "production"]
+      prerequisites: ["adversarial_training"]
+      
+    model_signing:
+      enabled: false
+      rollout_percentage: 0
+      description: "Cryptographic model signing"
+      environments: ["production"]
+      prerequisites: ["signing_keys"]
+
+# User segments for targeted rollout
+user_segments:
+  # Internal users
+  internal:
+    developers:
+      all_features: true
+      override_rollout: true
+      
+    qa_team:
+      beta_features: true
+      experimental_features: false
+      
+  # External users
+  external:
+    free_tier:
+      advanced_models: false
+      api_rate_limit: "strict"
+      
+    premium_tier:
+      all_production_features: true
+      api_rate_limit: "relaxed"
+      
+    enterprise:
+      custom_features: true
+      dedicated_resources: true
+
+# A/B testing configurations
+ab_testing:
+  # Active experiments
+  experiments:
+    model_comparison:
+      enabled: true
+      variants:
+        control: "roberta_base"
+        treatment: "deberta_v3"
+      traffic_split: [50, 50]
+      metrics: ["accuracy", "latency", "cost"]
+      
+    augmentation_impact:
+      enabled: false
+      variants:
+        control: "no_augmentation"
+        treatment: "eda_augmentation"
+      traffic_split: [70, 30]
+      metrics: ["accuracy", "f1_score"]
+
+# Feature dependencies
+dependencies:
+  # Core dependencies
+  base_requirements:
+    - transformers: ">=4.30.0"
+    - torch: ">=2.0.0"
+    - fastapi: ">=0.100.0"
+    
+  # Optional dependencies
+  optional_requirements:
+    - onnx: ">=1.14.0"
+    - tensorrt: ">=8.0.0"
+    - deepspeed: ">=0.9.0"
+
+# Monitoring and alerts
+monitoring:
+  # Feature usage tracking
+  usage_tracking:
+    enabled: true
+    metrics_backend: "prometheus"
+    
+  # Performance impact tracking
+  performance_tracking:
+    enabled: true
+    latency_threshold_ms: 1000
+    error_rate_threshold: 0.01
+    
+  # Alerting
+  alerts:
+    feature_error_rate:
+      threshold: 0.05
+      action: "disable_feature"
+      
+    performance_degradation:
+      threshold: 2.0  # 2x slower
+      action: "notify_oncall"
+
+# Rollback configuration
+rollback:
+  # Automatic rollback triggers
+  triggers:
+    error_rate_threshold: 0.1
+    latency_increase_threshold: 3.0
+    memory_usage_threshold: 0.95
+    
+  # Rollback strategy
+  strategy:
+    immediate_disable: true
+    gradual_rollback: false
+    preserve_user_sessions: true
+
+# Feature lifecycle
+lifecycle:
+  # Deprecation policy
+  deprecation:
+    warning_period_days: 30
+    sunset_period_days: 90
+    
+  # Feature graduation
+  graduation:
+    experimental_to_beta_days: 90
+    beta_to_stable_days: 180
+    
+  # Cleanup policy
+  cleanup:
+    remove_after_sunset_days: 30
+    archive_metrics: true
+
+# Notes
+notes: |
+  Feature Flag Management Guidelines
+  
+  Categories:
+  1. Release Toggles: Short-lived, removed after release
+  2. Experiment Toggles: A/B testing and gradual rollouts
+  3. Ops Toggles: Operational controls for performance/stability
+  4. Permission Toggles: Long-lived, user segment based
+  
+  Best Practices:
+  - Keep flags short-lived when possible
+  - Clean up obsolete flags regularly
+  - Monitor feature performance impact
+  - Use gradual rollouts for risky features
+  - Implement kill switches for critical features
+  - Document flag purpose and sunset dates
+  
+  Rollout Strategy:
+  - Development: 100% for testing
+  - Staging: 50-75% for validation
+  - Production: Start at 5-10%, increase gradually
+  
+  Emergency Procedures:
+  - Kill switch activation within 30 seconds
+  - Automatic rollback on error threshold
+  - On-call notification for critical features
