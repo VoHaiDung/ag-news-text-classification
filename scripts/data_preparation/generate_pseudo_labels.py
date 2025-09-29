@@ -2,13 +2,23 @@
 # -*- coding: utf-8 -*-
 
 """
-Pseudo-Label Generation for AG News Classification
-===================================================
+Pseudo-Label Generation Script for AG News Text Classification
+================================================================================
+This script generates high-confidence pseudo-labels for unlabeled data using
+trained models, implementing semi-supervised learning techniques to expand the
+training dataset. It employs confidence thresholding, iterative refinement, and
+ensemble methods to ensure label quality.
 
-Generates pseudo-labels for unlabeled data using trained models,
-following semi-supervised learning approaches from:
-- Lee (2013): "Pseudo-Label: The Simple and Efficient Semi-Supervised Learning"
-- Xie et al. (2020): "Self-training with Noisy Student improves ImageNet classification"
+The pseudo-labeling approach enables leveraging large amounts of unlabeled data
+to improve model performance, particularly in low-resource scenarios or when
+seeking to adapt models to new domains.
+
+References:
+    - Lee, D.H. (2013): Pseudo-Label - The Simple and Efficient Semi-Supervised Learning Method
+    - Xie, Q. et al. (2020): Self-training with Noisy Student improves ImageNet classification
+    - Berthelot, D. et al. (2019): MixMatch - A Holistic Approach to Semi-Supervised Learning
+    - Sohn, K. et al. (2020): FixMatch - Simplifying Semi-Supervised Learning with Consistency
+    - Yarowsky, D. (1995): Unsupervised Word Sense Disambiguation Rivaling Supervised Methods
 
 Author: Võ Hải Dũng
 License: MIT
@@ -19,6 +29,8 @@ import argparse
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 import json
+from datetime import datetime
+from dataclasses import dataclass, field
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent.parent.parent.resolve()
@@ -38,18 +50,42 @@ from configs.constants import AG_NEWS_CLASSES, MAX_SEQUENCE_LENGTH
 
 logger = setup_logging(__name__)
 
+
 class UnlabeledDataset(Dataset):
-    """Dataset for unlabeled texts."""
+    """
+    Dataset wrapper for unlabeled text data
+    
+    This class provides a PyTorch Dataset interface for unlabeled texts,
+    handling tokenization and batching for efficient model inference.
+    """
     
     def __init__(self, texts: List[str], tokenizer, max_length: int = MAX_SEQUENCE_LENGTH):
+        """
+        Initialize unlabeled dataset
+        
+        Args:
+            texts: List of unlabeled text samples
+            tokenizer: Pre-trained tokenizer for encoding
+            max_length: Maximum sequence length for truncation
+        """
         self.texts = texts
         self.tokenizer = tokenizer
         self.max_length = max_length
     
     def __len__(self):
+        """Return the number of samples in the dataset"""
         return len(self.texts)
     
     def __getitem__(self, idx):
+        """
+        Get a single tokenized sample
+        
+        Args:
+            idx: Sample index
+            
+        Returns:
+            Dictionary containing tokenized inputs and original text
+        """
         text = self.texts[idx]
         encoding = self.tokenizer(
             text,
@@ -65,13 +101,14 @@ class UnlabeledDataset(Dataset):
             "text": text
         }
 
+
 class PseudoLabelGenerator:
     """
-    Generate pseudo-labels for unlabeled data.
+    Generator for creating pseudo-labels from unlabeled data
     
-    Implements pseudo-labeling strategies from:
-    - Berthelot et al. (2019): "MixMatch: A Holistic Approach to Semi-Supervised Learning"
-    - Sohn et al. (2020): "FixMatch: Simplifying Semi-Supervised Learning"
+    This class implements state-of-the-art pseudo-labeling techniques including
+    confidence thresholding, temperature scaling, and ensemble methods to generate
+    high-quality labels for semi-supervised learning.
     """
     
     def __init__(
@@ -83,14 +120,14 @@ class PseudoLabelGenerator:
         device: Optional[str] = None
     ):
         """
-        Initialize generator.
+        Initialize the pseudo-label generator
         
         Args:
-            model_path: Path to trained model
-            confidence_threshold: Minimum confidence for pseudo-labeling
-            temperature: Temperature for softmax scaling
-            use_ensemble: Whether to use model ensemble
-            device: Device to use
+            model_path: Path to pre-trained model checkpoint
+            confidence_threshold: Minimum confidence score for accepting pseudo-labels
+            temperature: Temperature scaling for softmax calibration
+            use_ensemble: Whether to use model ensemble for predictions
+            device: Computing device (CPU/GPU)
         """
         self.model_path = Path(model_path)
         self.confidence_threshold = confidence_threshold
@@ -115,7 +152,12 @@ class PseudoLabelGenerator:
         }
     
     def _load_models(self):
-        """Load model(s) and tokenizer."""
+        """
+        Load pre-trained model(s) and tokenizer
+        
+        Loads either a single model or an ensemble of models depending on
+        configuration. Ensemble methods follow techniques from Xie et al. (2020).
+        """
         logger.info(f"Loading model from {self.model_path}")
         
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_path)
@@ -146,15 +188,19 @@ class PseudoLabelGenerator:
         use_uncertainty_sampling: bool = False
     ) -> pd.DataFrame:
         """
-        Generate pseudo-labels for texts.
+        Generate pseudo-labels for unlabeled texts
+        
+        Implements the pseudo-labeling pipeline with confidence thresholding
+        and optional uncertainty sampling following Lee (2013) and subsequent
+        improvements from MixMatch and FixMatch.
         
         Args:
-            texts: List of unlabeled texts
-            batch_size: Batch size for processing
-            use_uncertainty_sampling: Whether to use uncertainty sampling
+            texts: List of unlabeled text samples
+            batch_size: Batch size for inference
+            use_uncertainty_sampling: Whether to prioritize uncertain samples
             
         Returns:
-            DataFrame with pseudo-labels and confidence scores
+            DataFrame containing texts, pseudo-labels, and confidence scores
         """
         logger.info(f"Generating pseudo-labels for {len(texts)} texts")
         
@@ -245,7 +291,19 @@ class PseudoLabelGenerator:
         input_ids: torch.Tensor,
         attention_mask: torch.Tensor
     ) -> torch.Tensor:
-        """Get ensemble predictions."""
+        """
+        Get ensemble predictions from multiple models
+        
+        Implements model averaging for improved pseudo-label quality,
+        following ensemble techniques from Xie et al. (2020).
+        
+        Args:
+            input_ids: Tokenized input IDs
+            attention_mask: Attention mask for padding
+            
+        Returns:
+            Averaged probability distributions
+        """
         all_probs = []
         
         for model in self.models:
@@ -267,10 +325,17 @@ class PseudoLabelGenerator:
         top_k: Optional[int] = None
     ) -> pd.DataFrame:
         """
-        Apply uncertainty sampling to select most informative samples.
+        Apply uncertainty-based sampling for active learning
         
-        Following active learning principles from:
-        - Settles (2009): "Active Learning Literature Survey"
+        Selects the most informative samples based on model uncertainty,
+        following active learning principles from Settles (2009).
+        
+        Args:
+            df: DataFrame with predictions and uncertainties
+            top_k: Number of most uncertain samples to select
+            
+        Returns:
+            Filtered DataFrame with selected samples
         """
         # Sort by uncertainty (high to low)
         df_sorted = df.sort_values("uncertainty", ascending=False)
@@ -296,11 +361,19 @@ class PseudoLabelGenerator:
         batch_size: int = 32
     ) -> pd.DataFrame:
         """
-        Iterative pseudo-labeling with self-training.
+        Perform iterative self-training with pseudo-labels
         
-        Following self-training approaches from:
-        - Yarowsky (1995): "Unsupervised Word Sense Disambiguation"
-        - Riloff et al. (2003): "Learning Dictionaries for Information Extraction"
+        Implements the iterative refinement approach where high-confidence
+        predictions are used to expand the labeled dataset progressively,
+        following Yarowsky (1995) and Riloff et al. (2003).
+        
+        Args:
+            initial_texts: Initial set of unlabeled texts
+            num_iterations: Number of self-training iterations
+            batch_size: Batch size for inference
+            
+        Returns:
+            DataFrame with accumulated pseudo-labeled samples
         """
         all_results = []
         remaining_texts = initial_texts.copy()
@@ -345,7 +418,12 @@ class PseudoLabelGenerator:
         return final_df
     
     def print_statistics(self):
-        """Print pseudo-labeling statistics."""
+        """
+        Print comprehensive pseudo-labeling statistics
+        
+        Displays detailed statistics about the pseudo-labeling process
+        including confidence distributions and class balance.
+        """
         print("\n" + "=" * 60)
         print("PSEUDO-LABELING STATISTICS")
         print("=" * 60)
@@ -363,8 +441,15 @@ class PseudoLabelGenerator:
         
         print("=" * 60)
 
+
 def main():
-    """Main execution function."""
+    """
+    Main entry point for pseudo-label generation
+    
+    Orchestrates the complete pseudo-labeling pipeline including data loading,
+    model inference, confidence filtering, and result saving with comprehensive
+    statistics and reporting.
+    """
     parser = argparse.ArgumentParser(
         description="Generate pseudo-labels for unlabeled data"
     )
@@ -373,7 +458,7 @@ def main():
         "--model-path",
         type=Path,
         required=True,
-        help="Path to trained model"
+        help="Path to trained model checkpoint"
     )
     
     parser.add_argument(
@@ -393,20 +478,20 @@ def main():
         "--confidence-threshold",
         type=float,
         default=0.9,
-        help="Minimum confidence threshold"
+        help="Minimum confidence threshold for accepting pseudo-labels"
     )
     
     parser.add_argument(
         "--batch-size",
         type=int,
         default=32,
-        help="Batch size for processing"
+        help="Batch size for model inference"
     )
     
     parser.add_argument(
         "--use-external",
         action="store_true",
-        help="Use external news corpus"
+        help="Use external news corpus for unlabeled data"
     )
     
     parser.add_argument(
@@ -419,7 +504,7 @@ def main():
     parser.add_argument(
         "--iterative",
         action="store_true",
-        help="Use iterative pseudo-labeling"
+        help="Use iterative self-training approach"
     )
     
     parser.add_argument(
@@ -433,7 +518,7 @@ def main():
         "--seed",
         type=int,
         default=42,
-        help="Random seed"
+        help="Random seed for reproducibility"
     )
     
     args = parser.parse_args()
@@ -459,7 +544,7 @@ def main():
             with open(args.input_file, "r") as f:
                 texts = [line.strip() for line in f if line.strip()]
     else:
-        # Use sample texts
+        # Use sample texts for demonstration
         logger.info("Using sample texts")
         texts = [
             "The government announced new policies today.",
@@ -514,6 +599,7 @@ def main():
         json.dump(generator.stats, f, indent=2)
     
     logger.info(f"Statistics saved to {stats_path}")
+
 
 if __name__ == "__main__":
     main()
