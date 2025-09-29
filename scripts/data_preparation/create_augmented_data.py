@@ -1,13 +1,21 @@
 """
-Create Augmented Data Script
-=============================
+Data Augmentation Generation Script for AG News Text Classification System
+================================================================================
+This script generates augmented training data using state-of-the-art text 
+augmentation techniques to improve model robustness and performance. It implements
+multiple augmentation strategies including token replacement, back-translation,
+paraphrasing, and advanced mixing techniques.
 
-This script generates augmented data for AG News classification using various
-augmentation techniques following best practices from:
-- Shorten et al. (2021): "Text Data Augmentation for Deep Learning"
-- Wei & Zou (2019): "EDA: Easy Data Augmentation Techniques"
-- Zhang et al. (2018): "mixup: Beyond Empirical Risk Minimization"
-- Gardner et al. (2020): "Evaluating Models' Local Decision Boundaries via Contrast Sets"
+The augmentation pipeline follows best practices from recent research in NLP data
+augmentation, ensuring label preservation while introducing meaningful variations
+that help models generalize better to unseen data.
+
+References:
+    - Shorten et al. (2021): Text Data Augmentation for Deep Learning
+    - Wei & Zou (2019): EDA - Easy Data Augmentation Techniques
+    - Zhang et al. (2018): mixup - Beyond Empirical Risk Minimization
+    - Gardner et al. (2020): Evaluating Models' Local Decision Boundaries via Contrast Sets
+    - Cubuk et al. (2020): RandAugment - Practical automated data augmentation
 
 Author: Võ Hải Dũng
 License: MIT
@@ -69,7 +77,13 @@ logger = setup_logging(__name__)
 
 @dataclass
 class AugmentationStats:
-    """Statistics for augmentation process."""
+    """
+    Statistics tracking for the augmentation process
+    
+    This dataclass maintains comprehensive statistics about the augmentation
+    pipeline execution including counts, distributions, quality metrics and
+    performance measurements.
+    """
     
     total_original: int = 0
     total_augmented: int = 0
@@ -97,7 +111,12 @@ class AugmentationStats:
     cache_misses: int = 0
     
     def __post_init__(self):
-        """Initialize dictionaries if None."""
+        """
+        Initialize dictionary fields after dataclass creation
+        
+        Ensures all dictionary fields are properly initialized to avoid
+        NoneType errors during statistics collection.
+        """
         if self.class_distribution_original is None:
             self.class_distribution_original = {}
         if self.class_distribution_augmented is None:
@@ -110,8 +129,11 @@ class AugmentationStats:
 
 class AugmentationPipeline:
     """
-    Pipeline for data augmentation following best practices from:
-    - Bayer et al. (2022): "A Survey on Data Augmentation for Text Classification"
+    Comprehensive data augmentation pipeline for text classification
+    
+    This class orchestrates multiple augmentation techniques to generate
+    high-quality augmented training data. It supports various augmentation
+    strategies, class balancing, and detailed statistics tracking.
     """
     
     def __init__(
@@ -121,12 +143,12 @@ class AugmentationPipeline:
         device: Optional[torch.device] = None
     ):
         """
-        Initialize augmentation pipeline.
+        Initialize the augmentation pipeline
         
         Args:
-            config_path: Path to augmentation configuration
-            augmentation_methods: List of augmentation methods to use
-            device: Computing device
+            config_path: Path to augmentation configuration file
+            augmentation_methods: List of augmentation methods to initialize
+            device: Computing device (CPU/GPU) for model-based augmentations
         """
         self.config = self._load_config(config_path)
         self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -140,7 +162,15 @@ class AugmentationPipeline:
         logger.info(f"Initialized augmentation pipeline on {self.device}")
     
     def _load_config(self, config_path: Optional[str]) -> Dict[str, Any]:
-        """Load augmentation configuration."""
+        """
+        Load augmentation configuration from file or defaults
+        
+        Args:
+            config_path: Optional path to configuration file
+            
+        Returns:
+            Dictionary containing augmentation configurations
+        """
         if config_path and Path(config_path).exists():
             config_loader = ConfigLoader()
             return config_loader.load_config(config_path)
@@ -160,7 +190,16 @@ class AugmentationPipeline:
             return default_configs
     
     def _initialize_augmenters(self, methods: List[str]):
-        """Initialize specified augmentation methods."""
+        """
+        Initialize specified augmentation methods
+        
+        Creates instances of augmentation classes based on the requested
+        methods. Each augmenter is configured with appropriate parameters
+        and device settings.
+        
+        Args:
+            methods: List of augmentation method names to initialize
+        """
         for method in methods:
             try:
                 if method == "token_replacement":
@@ -203,18 +242,22 @@ class AugmentationPipeline:
         max_samples_per_class: Optional[int] = None
     ) -> Dataset:
         """
-        Augment entire dataset.
+        Augment an entire dataset with specified methods
+        
+        Applies augmentation techniques to generate synthetic training examples
+        while maintaining label correctness and data quality. Supports class
+        balancing and various augmentation strategies.
         
         Args:
-            dataset: Input dataset
-            methods: Augmentation methods to apply
-            num_augmentations: Number of augmentations per sample
-            preserve_original: Whether to keep original samples
+            dataset: Input dataset to augment
+            methods: List of augmentation methods to apply
+            num_augmentations: Number of augmented versions per sample
+            preserve_original: Whether to include original samples in output
             balance_classes: Whether to balance class distribution
-            max_samples_per_class: Maximum samples per class
+            max_samples_per_class: Maximum samples per class after augmentation
             
         Returns:
-            Augmented dataset
+            Augmented dataset with original and synthetic samples
         """
         start_time = time.time()
         
@@ -299,7 +342,15 @@ class AugmentationPipeline:
         return augmented_dataset
     
     def _extract_samples(self, dataset: Union[Dataset, List]) -> List[Tuple[str, int]]:
-        """Extract (text, label) pairs from dataset."""
+        """
+        Extract text-label pairs from various dataset formats
+        
+        Args:
+            dataset: Input dataset in HuggingFace or list format
+            
+        Returns:
+            List of (text, label) tuples
+        """
         samples = []
         
         if isinstance(dataset, Dataset):
@@ -318,7 +369,13 @@ class AugmentationPipeline:
         samples: List[Tuple[str, int]],
         distribution_type: str
     ):
-        """Calculate class distribution."""
+        """
+        Calculate and store class distribution statistics
+        
+        Args:
+            samples: List of (text, label) samples
+            distribution_type: Type of distribution ('original' or 'augmented')
+        """
         distribution = Counter(label for _, label in samples)
         
         if distribution_type == "original":
@@ -334,10 +391,20 @@ class AugmentationPipeline:
         num_augmentations: int
     ) -> Dict[int, Dict[str, Any]]:
         """
-        Create augmentation plan for each class.
+        Create strategic augmentation plan for each class
         
-        Following class balancing strategies from:
-        - Buda et al. (2018): "A systematic study of the class imbalance problem"
+        Determines how many augmentations to generate per class based on
+        the balancing strategy and constraints. Follows best practices for
+        handling class imbalance through augmentation.
+        
+        Args:
+            samples: Original dataset samples
+            balance_classes: Whether to balance class distribution
+            max_samples_per_class: Maximum samples per class constraint
+            num_augmentations: Default augmentations per sample
+            
+        Returns:
+            Dictionary mapping class IDs to augmentation specifications
         """
         class_counts = Counter(label for _, label in samples)
         max_count = max(class_counts.values())
@@ -380,10 +447,15 @@ class AugmentationPipeline:
         aug_idx: int
     ) -> str:
         """
-        Select augmentation method based on strategy.
+        Select augmentation method using round-robin strategy
         
-        Following selection strategies from:
-        - Cubuk et al. (2020): "RandAugment: Practical automated data augmentation"
+        Args:
+            methods: Available augmentation methods
+            class_id: Class identifier for the sample
+            aug_idx: Augmentation iteration index
+            
+        Returns:
+            Selected augmentation method name
         """
         # Simple round-robin selection
         # Could be enhanced with more sophisticated strategies
@@ -397,7 +469,21 @@ class AugmentationPipeline:
         method: str,
         class_samples: List[Tuple[str, int]]
     ) -> List[Tuple[str, int]]:
-        """Apply specified augmentation method."""
+        """
+        Apply specified augmentation method to a sample
+        
+        Handles different augmentation techniques with appropriate parameters
+        and fallback strategies for robust augmentation generation.
+        
+        Args:
+            text: Input text to augment
+            label: Original label
+            method: Augmentation method to apply
+            class_samples: Other samples from the same class (for mixing)
+            
+        Returns:
+            List of augmented (text, label) pairs
+        """
         augmented = []
         
         try:
@@ -456,7 +542,15 @@ class AugmentationPipeline:
         return augmented
     
     def _create_dataset(self, samples: List[Tuple]) -> Dataset:
-        """Create HuggingFace Dataset from samples."""
+        """
+        Convert augmented samples to HuggingFace Dataset format
+        
+        Args:
+            samples: List of augmented samples with metadata
+            
+        Returns:
+            HuggingFace Dataset object
+        """
         data_dict = {
             "text": [],
             "label": [],
@@ -478,10 +572,16 @@ class AugmentationPipeline:
     
     def generate_report(self, output_path: Optional[str] = None) -> Dict[str, Any]:
         """
-        Generate augmentation report.
+        Generate comprehensive augmentation statistics report
         
-        Following reporting practices from:
-        - Dodge et al. (2019): "Show Your Work: Improved Reporting of Experimental Results"
+        Creates a detailed report of the augmentation process including
+        statistics, class distributions, and method performance metrics.
+        
+        Args:
+            output_path: Optional path to save the report
+            
+        Returns:
+            Dictionary containing the complete augmentation report
         """
         report = {
             "timestamp": datetime.now().isoformat(),
@@ -511,7 +611,13 @@ class AugmentationPipeline:
 
 
 def main():
-    """Main function for data augmentation."""
+    """
+    Main entry point for data augmentation script
+    
+    Orchestrates the complete augmentation pipeline including data loading,
+    augmentation application, and result saving with comprehensive logging
+    and reporting.
+    """
     parser = argparse.ArgumentParser(
         description="Generate augmented data for AG News classification"
     )
