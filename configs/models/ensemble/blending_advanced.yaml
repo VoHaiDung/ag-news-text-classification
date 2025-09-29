@@ -1,5 +1,5 @@
 # Advanced Blending Ensemble Configuration
-# Dynamic weight blending with neural meta-learner for AG News Classification
+# Dynamic weight blending with neural meta-learner for AG News Text Classification
 
 name: blending_advanced
 type: ensemble
