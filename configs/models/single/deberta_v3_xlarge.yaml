@@ -1,5 +1,5 @@
 # DeBERTa-v3-xlarge Model Configuration
-# State-of-the-art model for AG News Classification
+# State-of-the-art model for AG News Text Classification
 
 name: deberta_v3_xlarge
 type: transformer
