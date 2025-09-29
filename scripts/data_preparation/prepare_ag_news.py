@@ -2,13 +2,24 @@
 # -*- coding: utf-8 -*-
 
 """
-AG News Dataset Preparation Script
-===================================
+AG News Dataset Preparation Script for Text Classification
+================================================================================
+This script prepares the AG News dataset for training state-of-the-art text
+classification models, implementing comprehensive data quality checks, validation
+procedures, and preprocessing pipelines. It follows data-centric AI principles
+to ensure high-quality training data that maximizes model performance.
 
-This script prepares the AG News dataset for training following best practices from:
-- Northcutt et al. (2021): "Pervasive Label Errors in Test Sets Destabilize Machine Learning Benchmarks"
-- Swayamdipta et al. (2020): "Dataset Cartography: Mapping and Diagnosing Datasets with Training Dynamics"
-- Sambasivan et al. (2021): "Everyone wants to do the model work, not the data work"
+The preprocessing pipeline addresses common data quality issues including label
+noise, duplicates, outliers, and class imbalance while maintaining data integrity
+and reproducibility throughout the preparation process.
+
+References:
+    - Northcutt, C. et al. (2021): Pervasive Label Errors in Test Sets Destabilize Machine Learning Benchmarks
+    - Swayamdipta, S. et al. (2020): Dataset Cartography - Mapping and Diagnosing Datasets with Training Dynamics
+    - Sambasivan, N. et al. (2021): Everyone wants to do the model work, not the data work
+    - Gebru, T. et al. (2021): Datasheets for Datasets
+    - Breck, E. et al. (2019): Data Validation for Machine Learning
+    - Gorman, K. & Bedrick, S. (2019): We Need to Talk about Standard Splits
 
 Author: Võ Hải Dũng
 License: MIT
@@ -59,11 +70,28 @@ except LookupError:
     logger.info("Downloading NLTK punkt tokenizer...")
     nltk.download('punkt', quiet=True)
 
+
 @dataclass
 class DatasetStatistics:
     """
-    Dataset statistics following datasheet guidelines from:
-    - Gebru et al. (2021): "Datasheets for Datasets"
+    Comprehensive dataset statistics following datasheet guidelines
+    
+    This class encapsulates all relevant statistics about the dataset following
+    the datasheet framework from Gebru et al. (2021), providing transparency
+    and accountability in dataset documentation.
+    
+    Attributes:
+        num_samples: Total number of samples in the dataset
+        num_classes: Number of distinct classes
+        class_distribution: Sample count per class
+        avg_text_length: Average character length of texts
+        std_text_length: Standard deviation of text lengths
+        min_text_length: Minimum text length in characters
+        max_text_length: Maximum text length in characters
+        avg_words: Average word count per sample
+        std_words: Standard deviation of word counts
+        vocabulary_size: Total unique words in the dataset
+        label_names: List of human-readable class names
     """
     num_samples: int
     num_classes: int
@@ -78,15 +106,21 @@ class DatasetStatistics:
     label_names: List[str]
     
     def to_dict(self) -> Dict[str, Any]:
+        """Convert statistics to dictionary for serialization"""
         return asdict(self)
+
 
 class AGNewsPreprocessor:
     """
-    Preprocessor for AG News dataset.
+    Comprehensive preprocessor for AG News dataset
     
-    Implements data quality checks from:
-    - Northcutt et al. (2021): "Pervasive Label Errors in Test Sets"
-    - Breck et al. (2019): "Data Validation for Machine Learning"
+    This class implements a robust preprocessing pipeline that addresses common
+    data quality issues identified in Northcutt et al. (2021) and follows best
+    practices from Breck et al. (2019) for production ML systems. It performs
+    validation, cleaning, splitting, and quality assessment.
+    
+    The preprocessor is designed to be reproducible, transparent, and maintainable,
+    with extensive logging and error handling throughout the pipeline.
     """
     
     def __init__(
@@ -99,13 +133,13 @@ class AGNewsPreprocessor:
         validate_labels: bool = True
     ):
         """
-        Initialize preprocessor.
+        Initialize the AG News preprocessor with configuration
         
         Args:
-            data_dir: Input data directory
-            output_dir: Output directory for processed data
-            max_length: Maximum text length
-            min_length: Minimum text length
+            data_dir: Directory containing raw AG News data files
+            output_dir: Directory for saving processed data
+            max_length: Maximum text length in words for truncation
+            min_length: Minimum text length in words for filtering
             remove_duplicates: Whether to remove duplicate samples
             validate_labels: Whether to validate label correctness
         """
@@ -132,17 +166,25 @@ class AGNewsPreprocessor:
         random_state: int = 42
     ) -> Dict[str, pd.DataFrame]:
         """
-        Prepare AG News dataset for training.
+        Prepare AG News dataset with comprehensive quality checks
+        
+        Implements the complete preprocessing pipeline including loading, validation,
+        cleaning, splitting, and quality assessment. Follows data preparation best
+        practices from Sambasivan et al. (2021) emphasizing the importance of
+        high-quality data work.
         
         Args:
-            train_file: Training data filename
-            test_file: Test data filename
-            val_split: Validation split ratio
-            stratified: Whether to use stratified split
-            random_state: Random seed for reproducibility
+            train_file: Filename of training data in data_dir
+            test_file: Filename of test data in data_dir  
+            val_split: Proportion of training data to use for validation
+            stratified: Whether to use stratified sampling for splits
+            random_state: Random seed for reproducible splits
             
         Returns:
-            Dictionary containing train, validation, and test DataFrames
+            Dictionary containing preprocessed train, validation, and test DataFrames
+            
+        Raises:
+            DataError: If data files cannot be loaded or processed
         """
         logger.info("Starting AG News dataset preparation...")
         
@@ -189,10 +231,21 @@ class AGNewsPreprocessor:
     
     def _load_raw_data(self, file_path: Path, split_name: str) -> pd.DataFrame:
         """
-        Load raw AG News data.
+        Load raw AG News data from CSV file
         
-        Following data loading best practices from:
-        - Sambasivan et al. (2021): "Everyone wants to do the model work, not the data work"
+        Handles the specific format of AG News dataset where each row contains
+        class_index, title, and description. Implements robust error handling
+        following Sambasivan et al. (2021) recommendations.
+        
+        Args:
+            file_path: Path to the CSV file to load
+            split_name: Name of the data split (train/test) for logging
+            
+        Returns:
+            DataFrame with combined text and labels
+            
+        Raises:
+            DataError: If file doesn't exist or cannot be parsed
         """
         logger.info(f"Loading {split_name} data from {file_path}...")
         
@@ -227,10 +280,18 @@ class AGNewsPreprocessor:
     
     def _validate_and_clean(self, df: pd.DataFrame, split_name: str) -> pd.DataFrame:
         """
-        Validate and clean data.
+        Validate and clean data with comprehensive quality checks
         
-        Implements validation checks from:
-        - Northcutt et al. (2021): "Pervasive Label Errors in Test Sets"
+        Implements validation procedures from Northcutt et al. (2021) to identify
+        and handle label errors, duplicates, and outliers that can destabilize
+        model training and evaluation.
+        
+        Args:
+            df: DataFrame to validate and clean
+            split_name: Name of the split for logging
+            
+        Returns:
+            Cleaned DataFrame with problematic samples removed
         """
         logger.info(f"Validating and cleaning {split_name} data...")
         
@@ -291,10 +352,20 @@ class AGNewsPreprocessor:
         random_state: int
     ) -> Tuple[pd.DataFrame, pd.DataFrame]:
         """
-        Create validation split from training data.
+        Create validation split from training data
         
-        Following splitting best practices from:
-        - Gorman & Bedrick (2019): "We Need to Talk about Standard Splits"
+        Implements careful splitting strategies from Gorman & Bedrick (2019) to
+        avoid data leakage and ensure representative validation sets that properly
+        estimate generalization performance.
+        
+        Args:
+            df: Training DataFrame to split
+            val_split: Proportion of data for validation (0-1)
+            stratified: Whether to maintain class distribution in splits
+            random_state: Random seed for reproducibility
+            
+        Returns:
+            Tuple of (train_df, val_df) after splitting
         """
         logger.info(f"Creating validation split ({val_split*100:.1f}%)...")
         
@@ -317,7 +388,20 @@ class AGNewsPreprocessor:
         return train_df.reset_index(drop=True), val_df.reset_index(drop=True)
     
     def _process_text(self, df: pd.DataFrame, split_name: str) -> pd.DataFrame:
-        """Process text data."""
+        """
+        Process text data with minimal cleaning to preserve information
+        
+        Applies light text processing following Strubell et al. (2018) which
+        showed that minimal preprocessing often works better for neural models
+        that can learn from raw text patterns.
+        
+        Args:
+            df: DataFrame containing text data
+            split_name: Name of the split for logging
+            
+        Returns:
+            DataFrame with processed text and added metadata
+        """
         if df.empty:
             return df
         
@@ -335,10 +419,17 @@ class AGNewsPreprocessor:
     
     def _clean_text(self, text: str) -> str:
         """
-        Basic text cleaning.
+        Apply minimal text cleaning to preserve information
         
-        Minimal cleaning to preserve information, following:
-        - Strubell et al. (2018): "Linguistically-Informed Self-Attention"
+        Performs only essential cleaning operations to fix encoding issues
+        and normalize whitespace while preserving linguistic features that
+        may be useful for classification.
+        
+        Args:
+            text: Raw text string to clean
+            
+        Returns:
+            Cleaned text string
         """
         # Replace multiple spaces
         text = " ".join(text.split())
@@ -355,10 +446,16 @@ class AGNewsPreprocessor:
         test_df: pd.DataFrame
     ):
         """
-        Compute dataset statistics.
+        Compute comprehensive dataset statistics
         
-        Following statistical analysis from:
-        - Swayamdipta et al. (2020): "Dataset Cartography"
+        Implements statistical analysis from Swayamdipta et al. (2020) to
+        create dataset cartography that helps understand data characteristics
+        and identify potential issues or biases.
+        
+        Args:
+            train_df: Training DataFrame
+            val_df: Validation DataFrame
+            test_df: Test DataFrame
         """
         logger.info("Computing dataset statistics...")
         
@@ -402,7 +499,16 @@ class AGNewsPreprocessor:
             logger.info(f"  Class distribution: {stats.class_distribution}")
     
     def _save_processed_data(self, datasets: Dict[str, pd.DataFrame]):
-        """Save processed datasets."""
+        """
+        Save processed datasets in multiple formats
+        
+        Saves data in various formats (CSV, JSON, Parquet) to support different
+        use cases and tools, ensuring compatibility and efficiency across the
+        ML pipeline.
+        
+        Args:
+            datasets: Dictionary mapping split names to DataFrames
+        """
         logger.info("Saving processed data...")
         
         for split_name, df in datasets.items():
@@ -438,10 +544,11 @@ class AGNewsPreprocessor:
     
     def _generate_quality_report(self):
         """
-        Generate data quality report.
+        Generate comprehensive data quality report
         
-        Following data quality assessment from:
-        - Breck et al. (2019): "Data Validation for Machine Learning"
+        Creates detailed quality assessment following Breck et al. (2019)
+        framework for data validation in ML, documenting all issues found
+        and providing actionable recommendations.
         """
         report = {
             "timestamp": datetime.now().isoformat(),
@@ -469,7 +576,16 @@ class AGNewsPreprocessor:
         logger.info(f"Data quality report saved to {report_path}")
     
     def _generate_recommendations(self) -> List[str]:
-        """Generate recommendations based on data analysis."""
+        """
+        Generate actionable recommendations based on data analysis
+        
+        Analyzes dataset characteristics to provide specific recommendations
+        for handling class imbalance, vocabulary size, and text length variation
+        that could impact model performance.
+        
+        Returns:
+            List of recommendation strings
+        """
         recommendations = []
         
         # Check class imbalance
@@ -508,6 +624,7 @@ class AGNewsPreprocessor:
         
         return recommendations
 
+
 def create_k_fold_splits(
     df: pd.DataFrame,
     n_splits: int = 5,
@@ -516,10 +633,21 @@ def create_k_fold_splits(
     output_dir: Path = None
 ) -> List[Tuple[pd.DataFrame, pd.DataFrame]]:
     """
-    Create K-fold cross-validation splits.
+    Create K-fold cross-validation splits for robust evaluation
     
-    Following cross-validation best practices from:
-    - Kohavi (1995): "A Study of Cross-Validation and Bootstrap"
+    Implements cross-validation splitting following best practices from
+    Kohavi (1995) to obtain reliable performance estimates through
+    repeated train-test splits that maximize data utilization.
+    
+    Args:
+        df: DataFrame to split into K folds
+        n_splits: Number of folds to create
+        stratified: Whether to maintain class distribution in each fold
+        random_state: Random seed for reproducibility
+        output_dir: Directory to save fold data
+        
+    Returns:
+        List of (train_fold, val_fold) tuples for each fold
     """
     logger.info(f"Creating {n_splits}-fold cross-validation splits...")
     
@@ -553,10 +681,17 @@ def create_k_fold_splits(
     
     return fold_data
 
+
 def main():
-    """Main execution function."""
+    """
+    Main entry point for AG News dataset preparation
+    
+    Orchestrates the complete data preparation pipeline with command-line
+    interface, comprehensive error handling, and detailed logging to ensure
+    reproducible and reliable dataset preparation.
+    """
     parser = argparse.ArgumentParser(
-        description="Prepare AG News dataset for training",
+        description="Prepare AG News dataset for training with quality checks and validation",
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     
@@ -564,28 +699,28 @@ def main():
         "--data-dir",
         type=Path,
         default=PROJECT_ROOT / "data" / "raw" / "ag_news",
-        help="Input data directory"
+        help="Input directory containing raw AG News data files"
     )
     
     parser.add_argument(
         "--output-dir",
         type=Path,
         default=PROJECT_ROOT / "data" / "processed",
-        help="Output directory for processed data"
+        help="Output directory for saving processed data"
     )
     
     parser.add_argument(
         "--val-split",
         type=float,
         default=0.1,
-        help="Validation split ratio (default: 0.1)"
+        help="Validation split ratio from training data (default: 0.1)"
     )
     
     parser.add_argument(
         "--max-length",
         type=int,
         default=MAX_SEQUENCE_LENGTH,
-        help=f"Maximum text length (default: {MAX_SEQUENCE_LENGTH})"
+        help=f"Maximum text length in words (default: {MAX_SEQUENCE_LENGTH})"
     )
     
     parser.add_argument(
@@ -598,7 +733,7 @@ def main():
     parser.add_argument(
         "--no-duplicates",
         action="store_true",
-        help="Keep duplicate samples"
+        help="Keep duplicate samples instead of removing them"
     )
     
     parser.add_argument(
@@ -612,7 +747,7 @@ def main():
         "--seed",
         type=int,
         default=42,
-        help="Random seed for reproducibility"
+        help="Random seed for reproducibility (default: 42)"
     )
     
     args = parser.parse_args()
@@ -648,6 +783,7 @@ def main():
     except Exception as e:
         logger.error(f"Dataset preparation failed: {e}")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())
