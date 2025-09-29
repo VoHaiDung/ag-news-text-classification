@@ -1,5 +1,5 @@
 # Stacking Ensemble with CatBoost Meta-Learner Configuration
-# Gradient boosting with categorical features support for AG News Classification
+# Gradient boosting with categorical features support for AG News Text Classification
 
 name: stacking_catboost
 type: ensemble
