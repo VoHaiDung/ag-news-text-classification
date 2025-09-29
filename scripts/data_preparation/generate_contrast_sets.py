@@ -1,12 +1,21 @@
 """
-Generate Contrast Sets Script
-==============================
+Contrast Set Generation Script for AG News Text Classification
+================================================================================
+This script generates contrast sets for robust evaluation of text classification
+models by creating minimal perturbations that change the expected label. It
+implements state-of-the-art techniques for generating counterfactual examples
+that test model decision boundaries and robustness.
 
-This script generates contrast sets for robust evaluation of AG News models following:
-- Gardner et al. (2020): "Evaluating Models' Local Decision Boundaries via Contrast Sets"
-- Kaushik et al. (2020): "Learning the Difference that Makes a Difference with Counterfactually-Augmented Data"
-- Ross et al. (2021): "Tailor: Generating and Perturbing Text with Semantic Controls"
-- Wu et al. (2021): "Polyjuice: Generating Counterfactuals for Explaining, Evaluating, and Improving Models"
+The contrast set methodology provides a more challenging and realistic evaluation
+framework compared to standard test sets, revealing model weaknesses and biases
+that may not be apparent in traditional evaluation settings.
+
+References:
+    - Gardner et al. (2020): Evaluating Models' Local Decision Boundaries via Contrast Sets
+    - Kaushik et al. (2020): Learning the Difference that Makes a Difference with Counterfactually-Augmented Data
+    - Ross et al. (2021): Tailor - Generating and Perturbing Text with Semantic Controls
+    - Wu et al. (2021): Polyjuice - Generating Counterfactuals for Explaining, Evaluating, and Improving Models
+    - Ribeiro et al. (2020): Beyond Accuracy - Behavioral Testing of NLP Models with CheckList
 
 Author: Võ Hải Dũng
 License: MIT
@@ -63,10 +72,11 @@ logger = setup_logging(__name__)
 @dataclass
 class ContrastSetStats:
     """
-    Statistics for contrast set generation.
+    Comprehensive statistics for contrast set generation process
     
-    Following evaluation metrics from:
-    - Gardner et al. (2020): "Evaluating Models' Local Decision Boundaries"
+    This dataclass tracks detailed metrics about the contrast set generation
+    including quality measures, perturbation analysis, and validation results
+    following the evaluation framework proposed in Gardner et al. (2020).
     """
     
     # Basic statistics
@@ -102,9 +112,12 @@ class ContrastSetStats:
 
 class ContrastSetPipeline:
     """
-    Pipeline for contrast set generation following:
-    - Gardner et al. (2020): "Evaluating Models' Local Decision Boundaries"
-    - Ribeiro et al. (2020): "Beyond Accuracy: Behavioral Testing of NLP Models with CheckList"
+    Pipeline for generating and validating contrast sets
+    
+    This class orchestrates the complete contrast set generation process
+    including perturbation generation, model validation, and quality assessment.
+    It implements techniques from recent research on counterfactual generation
+    and behavioral testing of NLP models.
     """
     
     def __init__(
@@ -114,12 +127,12 @@ class ContrastSetPipeline:
         model_name: Optional[str] = None
     ):
         """
-        Initialize contrast set pipeline.
+        Initialize the contrast set generation pipeline
         
         Args:
-            config_path: Path to contrast set configuration
-            device: Computing device
-            model_name: Model name for validation
+            config_path: Path to contrast set configuration file
+            device: Computing device for model inference
+            model_name: Pre-trained model name for validation
         """
         self.config = self._load_config(config_path)
         self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -137,7 +150,15 @@ class ContrastSetPipeline:
         logger.info(f"Initialized contrast set pipeline on {self.device}")
     
     def _load_config(self, config_path: Optional[str]) -> ContrastSetConfig:
-        """Load contrast set configuration."""
+        """
+        Load configuration for contrast set generation
+        
+        Args:
+            config_path: Optional path to configuration file
+            
+        Returns:
+            ContrastSetConfig object with generation parameters
+        """
         if config_path and Path(config_path).exists():
             config_loader = ConfigLoader()
             config_dict = config_loader.load_config(config_path)
@@ -153,16 +174,24 @@ class ContrastSetPipeline:
                 return ContrastSetConfig()
     
     def _initialize_generator(self) -> ContrastSetGenerator:
-        """Initialize contrast set generator."""
+        """
+        Initialize the contrast set generator with configured strategy
+        
+        Returns:
+            Configured ContrastSetGenerator instance
+        """
         logger.info(f"Initializing contrast set generator with strategy: {self.config.generation_strategy}")
         return ContrastSetGenerator(self.config)
     
     def _load_model(self, model_name: str):
         """
-        Load model for contrast validation.
+        Load pre-trained model for contrast validation
         
-        Following model loading from:
-        - Wolf et al. (2020): "Transformers: State-of-the-Art Natural Language Processing"
+        Loads a transformer model to validate that generated contrasts
+        actually change the model's predictions as expected.
+        
+        Args:
+            model_name: HuggingFace model identifier
         """
         try:
             logger.info(f"Loading model {model_name} for validation")
@@ -185,20 +214,21 @@ class ContrastSetPipeline:
         max_samples: Optional[int] = None
     ) -> Tuple[Dataset, ContrastSetStats]:
         """
-        Generate contrast sets for dataset.
+        Generate contrast sets for evaluation dataset
+        
+        Creates minimal perturbations that change the expected label while
+        preserving fluency and meaningfulness. Implements the contrast set
+        generation protocol from Gardner et al. (2020).
         
         Args:
-            dataset: Input dataset
-            num_contrasts_per_sample: Number of contrasts per original sample
-            validate_with_model: Whether to validate contrasts with model
-            stratified_sampling: Whether to use stratified sampling
+            dataset: Input dataset to generate contrasts for
+            num_contrasts_per_sample: Number of contrasts per original example
+            validate_with_model: Whether to validate contrasts with model predictions
+            stratified_sampling: Whether to use stratified sampling for class balance
             max_samples: Maximum number of samples to process
             
         Returns:
-            Tuple of (contrast_dataset, statistics)
-            
-        Following generation strategy from:
-        - Gardner et al. (2020): "Evaluating Models' Local Decision Boundaries"
+            Tuple of (contrast_dataset, generation_statistics)
         """
         start_time = time.time()
         
@@ -277,7 +307,17 @@ class ContrastSetPipeline:
         max_samples: Optional[int],
         stratified: bool
     ) -> List[Tuple[str, int]]:
-        """Extract samples from dataset."""
+        """
+        Extract samples from dataset with optional stratification
+        
+        Args:
+            dataset: Input dataset
+            max_samples: Maximum number of samples to extract
+            stratified: Whether to use stratified sampling
+            
+        Returns:
+            List of (text, label) tuples
+        """
         samples = []
         
         if isinstance(dataset, Dataset):
@@ -304,10 +344,17 @@ class ContrastSetPipeline:
         n_samples: int
     ) -> List[Tuple[str, int]]:
         """
-        Perform stratified sampling.
+        Perform stratified sampling to maintain class distribution
         
-        Following sampling strategy from:
-        - Neyman (1934): "On the Two Different Aspects of the Representative Method"
+        Implements Neyman allocation for proportional sampling across classes
+        ensuring representative samples from each category.
+        
+        Args:
+            samples: Full list of samples
+            n_samples: Number of samples to select
+            
+        Returns:
+            Stratified sample maintaining class proportions
         """
         # Group by class
         class_samples = defaultdict(list)
@@ -333,10 +380,20 @@ class ContrastSetPipeline:
         contrast_label: int
     ) -> bool:
         """
-        Validate contrast with model.
+        Validate contrast with model predictions
         
-        Following validation from:
-        - Kaushik et al. (2020): "Learning the Difference that Makes a Difference"
+        Checks that the model actually predicts the expected label for
+        the contrast example, following validation protocol from
+        Kaushik et al. (2020).
+        
+        Args:
+            original_text: Original example text
+            contrast_text: Generated contrast text
+            original_label: Original label
+            contrast_label: Expected contrast label
+            
+        Returns:
+            True if model prediction matches expected contrast label
         """
         if not self.model or not self.tokenizer:
             return True
@@ -359,10 +416,17 @@ class ContrastSetPipeline:
     
     def _identify_perturbation_type(self, original: str, contrast: str) -> str:
         """
-        Identify type of perturbation applied.
+        Identify the type of perturbation applied
         
-        Following perturbation taxonomy from:
-        - Gardner et al. (2020): "Evaluating Models' Local Decision Boundaries"
+        Classifies perturbations into categories following the taxonomy
+        from Gardner et al. (2020) for analyzing contrast mechanisms.
+        
+        Args:
+            original: Original text
+            contrast: Contrast text
+            
+        Returns:
+            Perturbation type identifier
         """
         original_lower = original.lower()
         contrast_lower = contrast.lower()
@@ -402,10 +466,18 @@ class ContrastSetPipeline:
     
     def _calculate_edit_distance(self, text1: str, text2: str) -> int:
         """
-        Calculate word-level edit distance.
+        Calculate word-level Levenshtein edit distance
         
-        Following edit distance from:
-        - Levenshtein (1966): "Binary Codes Capable of Correcting Deletions, Insertions, and Reversals"
+        Computes the minimum number of word-level edits required to
+        transform one text into another, providing a measure of
+        perturbation magnitude.
+        
+        Args:
+            text1: First text
+            text2: Second text
+            
+        Returns:
+            Word-level edit distance
         """
         words1 = text1.split()
         words2 = text2.split()
@@ -433,7 +505,13 @@ class ContrastSetPipeline:
         samples: List[Tuple[str, int]],
         distribution_type: str
     ):
-        """Calculate class distribution."""
+        """
+        Calculate and store class distribution statistics
+        
+        Args:
+            samples: List of (text, label) samples
+            distribution_type: Type of distribution ('original' or 'contrasts')
+        """
         distribution = Counter(label for _, label in samples)
         
         if distribution_type == "original":
@@ -443,10 +521,13 @@ class ContrastSetPipeline:
     
     def _calculate_final_statistics(self, contrast_data: List[Dict]):
         """
-        Calculate final statistics.
+        Calculate comprehensive statistics for the generated contrast set
         
-        Following evaluation metrics from:
-        - Gardner et al. (2020): "Evaluating Models' Local Decision Boundaries"
+        Computes quality metrics and analysis following the evaluation
+        framework from Gardner et al. (2020).
+        
+        Args:
+            contrast_data: List of generated contrast examples
         """
         if not contrast_data:
             return
@@ -482,10 +563,13 @@ class ContrastSetPipeline:
     
     def generate_report(self) -> Dict[str, Any]:
         """
-        Generate detailed report.
+        Generate comprehensive report of contrast set generation
         
-        Following reporting standards from:
-        - Dodge et al. (2019): "Show Your Work: Improved Reporting of Experimental Results"
+        Creates a detailed report following documentation standards from
+        Dodge et al. (2019) for reproducible experimental results.
+        
+        Returns:
+            Dictionary containing full generation report and statistics
         """
         report = {
             "timestamp": datetime.now().isoformat(),
@@ -526,10 +610,19 @@ def evaluate_model_on_contrast_sets(
     device: torch.device
 ) -> Dict[str, float]:
     """
-    Evaluate model on contrast sets.
+    Evaluate model performance on contrast sets
     
-    Following evaluation protocol from:
-    - Gardner et al. (2020): "Evaluating Models' Local Decision Boundaries"
+    Implements the evaluation protocol from Gardner et al. (2020) to assess
+    model robustness and consistency on contrast examples.
+    
+    Args:
+        model: Pre-trained classification model
+        tokenizer: Tokenizer for the model
+        contrast_dataset: Generated contrast set
+        device: Computing device
+        
+    Returns:
+        Dictionary of evaluation metrics
     """
     model.eval()
     
@@ -596,7 +689,13 @@ def evaluate_model_on_contrast_sets(
 
 
 def main():
-    """Main function for contrast set generation."""
+    """
+    Main entry point for contrast set generation
+    
+    Orchestrates the complete contrast set generation pipeline including
+    data loading, generation, validation, and evaluation with comprehensive
+    reporting and statistics.
+    """
     parser = argparse.ArgumentParser(
         description="Generate contrast sets for AG News classification",
         formatter_class=argparse.RawDescriptionHelpFormatter,
