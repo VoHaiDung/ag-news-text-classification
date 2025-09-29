@@ -1,5 +1,5 @@
 """
-Data Augmentation Generation Script for AG News Text Classification System
+Data Augmentation Generation Script for AG News Text Classification
 ================================================================================
 This script generates augmented training data using state-of-the-art text 
 augmentation techniques to improve model robustness and performance. It implements
