@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Data Split Creation Script for AG News Text Classification System
+Data Split Creation Script for AG News Text Classification
 ================================================================================
 This script creates train/validation/test splits from the AG News dataset using
 various splitting strategies including stratified sampling, k-fold cross-validation,
