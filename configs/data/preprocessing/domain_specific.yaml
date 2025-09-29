@@ -32,9 +32,9 @@ text_cleaning:
   
   # News-specific patterns
   remove_patterns:
-    - pattern: "\KATEX_INLINE_OPENReuters\KATEX_INLINE_CLOSE"
+    - pattern: "\\KATEX_INLINE_OPENReuters\\KATEX_INLINE_CLOSE"
       replacement: ""
-    - pattern: "\KATEX_INLINE_OPENAP\KATEX_INLINE_CLOSE"
+    - pattern: "\\KATEX_INLINE_OPENAP\\KATEX_INLINE_CLOSE"
       replacement: ""
     - pattern: "BREAKING:"
       replacement: ""
