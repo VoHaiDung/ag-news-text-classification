@@ -6,6 +6,7 @@
 # - Lee et al. (2020): "BioBERT: Domain-specific Language Model Pretraining"
 #
 # Author: Võ Hải Dũng
+# License: MIT
 
 name: domain_specific_preprocessing
 type: preprocessing
