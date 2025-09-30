@@ -308,7 +308,7 @@ deployment:
 
 # Model card
 model_card:
-  description: "Advanced neural blending ensemble for AG News classification"
+  description: "Advanced neural blending ensemble for AG News Text Classification"
   intended_use: "State-of-the-art classification with dynamic weight learning"
   architecture: "5 transformer models + neural network blender with attention"
   eval_results:
