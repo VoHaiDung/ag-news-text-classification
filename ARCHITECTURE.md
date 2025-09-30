@@ -1,643 +1,790 @@
-# ARCHITECTURE.md
-
-### Executive Summary
-
-The AG News Text Classification system represents a state-of-the-art, production-ready natural language processing platform specifically engineered for high-precision news article categorization. This comprehensive architecture document delineates the intricate design decisions, structural compositions, and technological foundations that underpin the system's capability to achieve superior classification performance across four distinct news categories: World, Sports, Business, and Science/Technology.
-
-The architecture embraces modern microservices principles, employing containerized deployments, service mesh orchestration, and multi-protocol API support to ensure scalability, maintainability, and extensibility. Through the integration of cutting-edge transformer-based models, sophisticated ensemble techniques, and advanced training strategies, the system achieves state-of-the-art performance while maintaining production-grade reliability and efficiency.
-
-### Project Structure
-
-```
-ag-news-text-classification/
-├── configs/           # Configuration management system
-├── data/             # Multi-tier data storage architecture
-├── src/              # Core source code implementation
-├── experiments/      # Experimental framework and benchmarks
-├── monitoring/       # Observability and monitoring stack
-├── security/         # Security and compliance infrastructure
-├── deployment/       # Multi-cloud deployment configurations
-├── tests/           # Comprehensive testing suite
-├── notebooks/       # Interactive development and analysis
-├── app/            # User interface applications
-├── scripts/        # Automation and utility scripts
-├── prompts/        # Prompt engineering templates
-├── docs/           # Technical documentation
-├── benchmarks/     # Performance benchmarking results
-└── tools/          # Development and debugging tools
-```
+# AG News Text Classification
 
 ## System Architecture Overview
 
-### Architectural Philosophy and Design Principles
+The AG News Text Classification system represents a comprehensive, enterprise-grade machine learning platform designed for high-performance text classification tasks. This architecture document provides an in-depth technical exposition of the system's design principles, architectural patterns, and implementation strategies that enable scalable, maintainable, and robust text classification services.
 
-The AG News Text Classification system architecture is predicated upon several fundamental design principles that guide its implementation and evolution:
-
-**1. Modularity and Separation of Concerns**: Each component within the system is designed to handle a specific responsibility, facilitating independent development, testing, and deployment. This modular approach enables teams to work on different aspects of the system simultaneously without creating interdependencies that could impede progress.
-
-**2. Scalability Through Horizontal Distribution**: The architecture prioritizes horizontal scalability over vertical scaling, allowing the system to handle increased load by adding more instances rather than upgrading individual machines. This approach provides better fault tolerance and cost efficiency at scale.
-
-**3. API-First Design**: All functionalities are exposed through well-defined APIs, ensuring that the system can be integrated with various client applications and third-party services. The multi-protocol support (REST, gRPC, GraphQL) accommodates different use cases and performance requirements.
-
-**4. Intelligence at the Edge**: By implementing caching strategies and edge computing capabilities, the system minimizes latency and reduces the load on core services, improving overall responsiveness and user experience.
-
-### High-Level System Architecture
+The architectural foundation rests upon microservices principles, implementing a layered architecture that separates concerns across presentation, business logic, and data access layers. The system employs event-driven architecture patterns for asynchronous processing, command query responsibility segregation (CQRS) for optimized read/write operations, and domain-driven design (DDD) principles for modeling complex business logic around news classification domains.
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                            Client Applications                          │
-├─────────────┬──────────────┬──────────────┬─────────────────────────────┤
-│  Web Apps   │ Mobile Apps  │  CLI Tools   │   Third-party Systems       │
-└─────────────┴──────────────┴──────────────┴─────────────────────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│                        Client Applications                      │
+│  (Web Browser, Mobile App, API Clients, Service Consumers)     │
+└────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           API Gateway Layer                             │
-│  ┌──────────────────────────────────────────────────────────────────┐   │
-│  │   Kong/Nginx: Rate Limiting, Auth, Load Balancing, SSL/TLS       │   │
-│  └──────────────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│                         API Gateway Layer                       │
+│  ┌──────────────────────────────────────────────────────────┐ │
+│  │ • Load Balancing (Round-robin, Least-connection)         │ │
+│  │ • Rate Limiting (Token bucket, Sliding window)           │ │
+│  │ • Authentication (JWT, OAuth2, API Keys)                 │ │
+│  │ • Request Routing & Protocol Translation                 │ │
+│  │ • SSL/TLS Termination                                    │ │
+│  └──────────────────────────────────────────────────────────┘ │
+└────────────────────────────────────────────────────────────────┘
+                                    │
+                ┌───────────────────┼───────────────────┐
+                ▼                   ▼                   ▼
+    ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐
+    │    REST API      │ │    gRPC API      │ │   GraphQL API    │
+    │   (FastAPI)      │ │  (gRPC-Python)   │ │   (Graphene)     │
+    └──────────────────┘ └──────────────────┘ └──────────────────┘
+                │                   │                   │
+                └───────────────────┼───────────────────┘
+                                    ▼
+    ┌────────────────────────────────────────────────────────────┐
+    │                      Service Mesh Layer                     │
+    │                         (Istio/Linkerd)                     │
+    │  • Service Discovery    • Circuit Breaking                  │
+    │  • Load Balancing       • Retry Logic                       │
+    │  • Observability        • Mutual TLS                        │
+    └────────────────────────────────────────────────────────────┘
+                                    │
+        ┌───────────────────────────┼───────────────────────────┐
+        ▼                           ▼                           ▼
+┌──────────────────┐    ┌──────────────────┐    ┌──────────────────┐
+│   Prediction     │    │    Training       │    │      Data        │
+│    Service       │    │    Service        │    │    Service       │
+└──────────────────┘    └──────────────────┘    └──────────────────┘
+        │                           │                           │
+        └───────────────────────────┼───────────────────────────┘
+                                    ▼
+    ┌────────────────────────────────────────────────────────────┐
+    │                    Data & Model Layer                       │
+    │  ┌────────────┐  ┌────────────┐  ┌────────────────────┐  │
+    │  │  Database  │  │   Cache    │  │   Model Registry   │  │
+    │  │ PostgreSQL │  │   Redis    │  │     MLflow         │  │
+    │  └────────────┘  └────────────┘  └────────────────────┘  │
+    └────────────────────────────────────────────────────────────┘
 ```
 
-The **API Gateway Layer** serves as the single entry point for all external communications, implementing critical cross-cutting concerns such as:
+## Core Architectural Principles
 
-- **Authentication and Authorization**: Validates client credentials and enforces access control policies using JWT tokens and OAuth 2.0 protocols
-- **Rate Limiting**: Implements token bucket and sliding window algorithms to prevent API abuse and ensure fair resource allocation
-- **Load Balancing**: Distributes incoming requests across multiple service instances using round-robin, least-connections, or weighted algorithms
-- **SSL/TLS Termination**: Handles encryption and decryption of HTTPS traffic, offloading this computationally intensive task from backend services
+### Separation of Concerns
+The architecture meticulously separates different aspects of the system into distinct modules and services. Each component maintains a single, well-defined responsibility, facilitating independent development, testing, and deployment cycles. The API layer handles protocol-specific concerns, services encapsulate business logic, and data access layers manage persistence operations. This separation enables teams to work on different system aspects simultaneously without creating interdependencies that could slow development velocity.
 
-### Service Layer Architecture
+### Scalability and Elasticity
+Horizontal scalability forms the cornerstone of the system's ability to handle varying loads. Each service can be independently scaled based on demand patterns. The prediction service, experiencing higher request volumes during peak hours, can scale out to multiple instances while the training service maintains fewer instances for batch processing workloads. Kubernetes Horizontal Pod Autoscaler (HPA) monitors CPU utilization, memory consumption, and custom metrics like request queue depth to automatically adjust replica counts.
 
-The service layer implements a microservices architecture pattern, where each service is responsible for a specific business capability:
+### Fault Tolerance and Resilience
+The system implements comprehensive fault tolerance mechanisms across all layers. Circuit breakers prevent cascading failures when downstream services become unavailable. The Hystrix pattern implementation monitors service health and temporarily redirects traffic when error rates exceed configured thresholds. Retry logic with exponential backoff handles transient failures, while fallback mechanisms provide degraded functionality rather than complete service unavailability. Health checks continuously monitor service status, automatically removing unhealthy instances from load balancer pools.
+
+## Project Structure Foundation
 
 ```
-                    ┌─────────────────┐
-                    │   API Gateway   │
-                    └────────┬────────┘
-                             │
-        ┌────────────────────┼────────────────────┐
-        ▼                    ▼                    ▼
-┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│  REST API    │    │   gRPC API   │    │ GraphQL API  │
-│  (FastAPI)   │    │ (gRPC-Python)│    │  (Graphene)  │
-└──────┬──────┘     └───────┬──────┘    └───────┬──────┘
-        │                   │                   │
-        └───────────────────┼───────────────────┘
-                            ▼
-                ┌───────────────────────┐
-                │   Service Registry    │
-                │     (Consul/etcd)     │
-                └───────────┬───────────┘
-                            │
-    ┌───────────┬───────────┼───────────┬───────────┬───────────┐
-    ▼           ▼           ▼           ▼           ▼           ▼
-┌──────────┐┌─────────┐┌──────────┐┌──────────┐┌──────────┐┌────────┐
-│Prediction││Training ││   Data   ││  Model   ││Monitoring││ Cache  │
-│ Service  ││Service  ││ Service  ││Management││ Service  ││Service │
-└──────────┘└─────────┘└──────────┘└──────────┘└──────────┘└────────┘
+ag-news-text-classification/
+├── src/                    # Source code repository
+├── configs/               # Configuration management
+├── data/                 # Data storage and management
+├── models/              # Model artifacts and definitions
+├── api/                # API implementations
+├── services/          # Microservices
+├── deployment/       # Deployment configurations
+├── tests/           # Testing suites
+├── docs/           # Documentation
+├── monitoring/    # Observability infrastructure
+└── scripts/      # Automation and utilities
 ```
 
-#### Prediction Service
+## API Architecture
 
-The **Prediction Service** constitutes the core inference engine of the system, responsible for processing text classification requests in real-time. This service implements several sophisticated features:
+### Multi-Protocol Support Architecture
 
-- **Batch Processing Optimization**: Aggregates multiple prediction requests into batches to leverage GPU parallelization effectively
-- **Model Versioning**: Maintains multiple model versions simultaneously, enabling A/B testing and gradual rollouts
-- **Fallback Mechanisms**: Implements circuit breaker patterns to handle model failures gracefully
-- **Response Caching**: Utilizes Redis-based caching for frequently requested predictions
-
-#### Training Service
-
-The **Training Service** orchestrates the entire model training lifecycle, from data preparation to model evaluation:
-
-- **Distributed Training Coordination**: Manages multi-GPU and multi-node training using Horovod or PyTorch Distributed
-- **Hyperparameter Optimization**: Integrates with Optuna or Ray Tune for automated hyperparameter search
-- **Experiment Tracking**: Logs all training metrics, parameters, and artifacts to MLflow or Weights & Biases
-- **Resource Management**: Implements queue-based job scheduling to optimize GPU utilization
-
-## Core Model Architecture
-
-### Deep Learning Model Foundation
-
-The system's machine learning capabilities are built upon a hierarchical architecture of transformer-based models, each contributing unique strengths to the ensemble prediction system.
-
-#### DeBERTa-v3 Architecture Analysis
-
-DeBERTa-v3 (Decoding-enhanced BERT with Disentangled Attention) represents the cornerstone of our model architecture, offering several architectural innovations that contribute to its superior performance:
+The API layer implements a polyglot approach to client communication, supporting REST, gRPC, and GraphQL protocols simultaneously. This architectural decision acknowledges that different client types have varying requirements for data exchange patterns, latency characteristics, and bandwidth constraints.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     DeBERTa-v3-XLarge Model                     │
-│                      (900M Parameters)                          │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  Input Processing Layer:                                        │
-│  ┌────────────┐    ┌────────────┐    ┌────────────┐           │
-│  │   Input    │───▶│  WordPiece │───▶│ Position &  │           │
-│  │   Text     │    │  Tokenizer │    │  Segment    │           │
-│  └────────────┘    └────────────┘    │  Embeddings │           │
-│                                       └────────────┘           │
-│                                             │                   │
-│                                             ▼                   │
-│  Disentangled Attention Mechanism:                             │
-│  ┌──────────────────────────────────────────────────────┐      │
-│  │  Content-to-Content  ⊕  Content-to-Position  ⊕      │      │
-│  │  Position-to-Content ⊕  Position-to-Position         │      │
-│  └──────────────────────────────────────────────────────┘      │
-│                                             │                   │
-│                                             ▼                   │
-│  Transformer Layers (48 layers):                               │
-│  ┌──────────────────────────────────────────────────────┐      │
-│  │  For each layer i ∈ [1, 48]:                        │      │
-│  │  ┌──────────────────────────────────────────────┐   │      │
-│  │  │  MultiHeadAttention(Q, K, V) with:           │   │      │
-│  │  │  - Hidden Size: 1536                         │   │      │
-│  │  │  - Attention Heads: 24                       │   │      │
-│  │  │  - Head Dimension: 64                        │   │      │
-│  │  └──────────────────────────────────────────────┘   │      │
-│  │                         ▼                            │      │
-│  │  ┌──────────────────────────────────────────────┐   │      │
-│  │  │  Feed-Forward Network:                       │   │      │
-│  │  │  Linear(1536, 6144) → GELU → Linear(6144, 1536)│ │      │
-│  │  └──────────────────────────────────────────────┘   │      │
-│  └──────────────────────────────────────────────────────┘      │
-│                                │                                │
-│                                ▼                                │
-│  Enhanced Mask Decoder (EMD):                                  │
-│  ┌────────────────────────────────────────────────┐           │
-│  │  Replaces [MASK] tokens with enhanced          │           │
-│  │  position-aware representations                 │           │
-│  └────────────────────────────────────────────────┘           │
-│                                │                                │
-│                                ▼                                │
-│  Classification Head:                                          │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────┐              │
-│  │   Pooling   │─▶│  Dropout    │─▶│  Linear │─▶[Logits]   │
-│  │  (CLS/Mean) │  │   (0.1)     │  │(1536, 4)│              │
-│  └─────────────┘  └─────────────┘  └─────────┘              │
+│                        API Gateway                              │
+│                    (Kong/Amazon API Gateway)                    │
 └─────────────────────────────────────────────────────────────────┘
-```
-
-**Key Architectural Innovations:**
-
-1. **Disentangled Attention Mechanism**: Unlike traditional self-attention where position and content information are combined, DeBERTa-v3 processes them separately, allowing the model to better capture relative position dependencies. The attention score is computed as:
-
-   ```
-   A[i,j] = Q_c[i] × K_c[j] + Q_c[i] × K_r[j] + K_c[j] × Q_r[i]
-   ```
-
-   Where Q_c/K_c represent content vectors and Q_r/K_r represent relative position vectors.
-
-2. **Enhanced Mask Decoder**: The EMD layer specifically optimizes for masked language modeling tasks by incorporating absolute position information when replacing masked tokens, improving the model's understanding of contextual relationships.
-
-3. **Gradient Disentanglement**: The separated attention computation allows for more stable gradient flow during backpropagation, reducing the vanishing gradient problem in deep networks.
-
-### Ensemble Architecture Strategy
-
-The ensemble architecture employs a sophisticated multi-level combination strategy that leverages the complementary strengths of different model architectures:
-
-```
-                    ┌─────────────────────────┐
-                    │    Input Text Sample    │
-                    │   "Tech giant announces │
-                    │    new AI breakthrough"  │
-                    └────────────┬────────────┘
-                                 │
-                    ┌────────────▼────────────┐
-                    │   Text Preprocessing    │
-                    │  • Normalize Unicode    │
-                    │  • Remove HTML tags     │
-                    │  • Expand contractions  │
-                    └────────────┬────────────┘
-                                 │
-        ┌────────────────────────┼────────────────────────┐
-        ▼                        ▼                        ▼
-┌───────────────┐      ┌───────────────┐      ┌───────────────┐
-│   DeBERTa-v3  │      │    RoBERTa    │      │   ELECTRA     │
-│   Processor   │      │   Processor   │      │   Processor   │
-├───────────────┤      ├───────────────┤      ├───────────────┤
-│ • Disentangled│      │ • Byte-level  │      │ • Discrimin.  │
-│   Attention   │      │   BPE         │      │   Pretraining │
-│ • EMD Layer   │      │ • Dynamic Mask│      │ • RTD Task    │
-└───────┬───────┘      └───────┬───────┘      └───────┬───────┘
-        │                       │                       │
-        ▼                       ▼                       ▼
-   Logits:[2.3,            Logits:[2.1,           Logits:[2.2,
-    -1.2, -0.8, 0.5]        -1.0, -0.9, 0.4]       -1.1, -0.7, 0.3]
-        │                       │                       │
-        └───────────────────────┼───────────────────────┘
                                 │
-                    ┌───────────▼───────────┐
-                    │   Ensemble Strategy   │
-                    └───────────┬───────────┘
-                                │
-                ┌───────────────┼───────────────┐
-                ▼               ▼               ▼
-        ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-        │Weighted Vote │ │   Stacking   │ │   Bayesian   │
-        │  α₁=0.45     │ │  XGBoost     │ │  Model Avg.  │
-        │  α₂=0.35     │ │  CatBoost    │ │  with MCMC   │
-        │  α₃=0.20     │ │  LightGBM    │ │              │
-        └──────┬───────┘ └──────┬───────┘ └──────┬───────┘
-                │               │               │
-                └───────────────┼───────────────┘
-                                │
-                    ┌───────────▼────────────┐
-                    │  Confidence Calibration│
-                    │  • Temperature Scaling │
-                    │  • Platt Scaling       │
-                    │  • Isotonic Regression │
-                    └───────────┬────────────┘
-                                │
-                    ┌───────────▼───────────┐
-                    │   Final Prediction    │
-                    │  Class: Technology    │
-                    │  Confidence: 0.943    │
-                    │  Uncertainty: ±0.021  │
-                    └───────────────────────┘
+        ┌───────────────────────┼───────────────────────────┐
+        ▼                       ▼                           ▼
+┌──────────────────┐   ┌──────────────────┐   ┌──────────────────┐
+│   REST API       │   │    gRPC API      │   │  GraphQL API     │
+│                  │   │                  │   │                  │
+│ • HTTP/1.1      │   │ • HTTP/2         │   │ • HTTP/1.1/2     │
+│ • JSON payload  │   │ • Protobuf       │   │ • JSON queries   │
+│ • Stateless     │   │ • Bidirectional  │   │ • Single endpoint│
+│ • CRUD ops      │   │   streaming      │   │ • Flexible query │
+│                  │   │ • Type-safe      │   │ • Batching       │
+└──────────────────┘   └──────────────────┘   └──────────────────┘
+        │                       │                           │
+        └───────────────────────┼───────────────────────────┘
+                                ▼
+                    ┌──────────────────────┐
+                    │   Service Router     │
+                    │  (Pattern Matching)  │
+                    └──────────────────────┘
 ```
 
-#### Ensemble Combination Strategies
+### REST API Implementation
 
-**1. Weighted Voting Ensemble**
+The REST API, built upon FastAPI framework, provides a familiar interface for web applications and traditional HTTP clients. FastAPI's asynchronous request handling enables high concurrency without thread proliferation. The implementation leverages Pydantic models for automatic request/response validation, ensuring data integrity at API boundaries. OpenAPI specification generation provides interactive documentation through Swagger UI, facilitating developer onboarding and API exploration.
 
-The weighted voting mechanism assigns learned weights to each model based on their individual performance metrics. The final prediction is computed as:
+Request flow through the REST API follows a middleware pipeline pattern. Authentication middleware validates JWT tokens or API keys before request processing. Rate limiting middleware enforces quota policies using token bucket algorithms. Logging middleware captures request/response pairs for audit trails. Error handling middleware standardizes error responses across all endpoints, providing consistent client experiences even during failure scenarios.
+
+### gRPC Service Architecture
+
+The gRPC implementation addresses requirements for high-performance, strongly-typed communication between internal services. Protocol Buffers provide efficient binary serialization, reducing network overhead compared to JSON payloads. Bidirectional streaming enables real-time model updates and continuous prediction streams for high-throughput scenarios.
+
+Service definitions in proto files establish contracts between clients and servers, enabling code generation for multiple programming languages. This approach ensures type safety across service boundaries and eliminates runtime serialization errors. The gRPC interceptor chain implements cross-cutting concerns like authentication, logging, and metrics collection without polluting service logic.
+
+### GraphQL Federation
+
+GraphQL API provides flexible query capabilities, allowing clients to request precisely the data they need. This approach reduces over-fetching and under-fetching problems common in REST APIs. The schema-first design approach ensures that API evolution maintains backward compatibility through field deprecation rather than version proliferation.
+
+DataLoader pattern implementation prevents N+1 query problems by batching and caching database requests. Subscription support enables real-time updates for training progress monitoring and prediction result streaming. The federation architecture allows composition of multiple GraphQL services into a unified graph, enabling domain team autonomy while maintaining API coherence.
+
+## Service Layer Architecture
+
+### Microservices Decomposition
+
+The service layer decomposes the monolithic text classification system into focused, independently deployable services. Each service encapsulates specific business capabilities and maintains its own data store, following database-per-service patterns to ensure loose coupling.
 
 ```
-P(y|x) = Σᵢ αᵢ × Pᵢ(y|x)
+┌────────────────────────────────────────────────────────────────────┐
+│                          Service Mesh                              │
+│                                                                    │
+│  ┌──────────────────────────────────────────────────────────────┐ │
+│  │                    Service Discovery                          │ │
+│  │                     (Consul/Eureka)                          │ │
+│  └──────────────────────────────────────────────────────────────┘ │
+│                                                                    │
+│  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐     │
+│  │   Prediction   │  │    Training    │  │      Data      │     │
+│  │    Service     │  │    Service     │  │    Service     │     │
+│  │                │  │                │  │                │     │
+│  │ • Inference    │  │ • Model train  │  │ • Data load    │     │
+│  │ • Batching     │  │ • Hyperparam   │  │ • Preprocess   │     │
+│  │ • Caching      │  │ • Distributed  │  │ • Augmentation │     │
+│  └────────────────┘  └────────────────┘  └────────────────┘     │
+│                                                                    │
+│  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐     │
+│  │     Model      │  │  Monitoring    │  │  Orchestration │     │
+│  │   Management   │  │    Service     │  │    Service     │     │
+│  │                │  │                │  │                │     │
+│  │ • Versioning   │  │ • Metrics      │  │ • Workflow     │     │
+│  │ • Registry     │  │ • Alerting     │  │ • Scheduling   │     │
+│  │ • Deployment   │  │ • Logging      │  │ • State mgmt   │     │
+│  └────────────────┘  └────────────────┘  └────────────────┘     │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
-Where αᵢ represents the weight for model i, optimized through cross-validation to minimize the ensemble's classification error.
+### Prediction Service Architecture
 
-**2. Stacking Meta-Learning**
+The prediction service handles real-time and batch inference requests, implementing sophisticated request handling patterns to optimize throughput and latency. Dynamic batching aggregates multiple prediction requests within configurable time windows, amortizing model loading overhead across requests. Request prioritization ensures that premium tier clients receive preferential treatment during high load periods.
 
-The stacking approach uses the base model predictions as features for a second-level meta-learner:
+Model warm-up procedures preload frequently used models into memory, eliminating cold start latencies. The service maintains a model cache with LRU eviction policies, balancing memory constraints with performance requirements. Prediction results pass through post-processing pipelines that apply confidence calibration, threshold optimization, and output formatting specific to client requirements.
 
-- **Level 0 Models**: DeBERTa-v3, RoBERTa, ELECTRA generate probability distributions
-- **Level 1 Meta-Learner**: XGBoost/CatBoost trained on out-of-fold predictions
-- **Feature Engineering**: Includes prediction entropy, confidence scores, and pairwise differences
+### Training Service Architecture
 
-**3. Bayesian Model Averaging**
+The training service orchestrates the complete model development lifecycle, from data preparation through model evaluation and deployment. The service implements distributed training strategies using data parallelism and model parallelism approaches. Horovod integration enables efficient multi-GPU training with ring-allreduce communication patterns that scale linearly with GPU count.
 
-Implements a probabilistic approach to model combination, accounting for model uncertainty:
+Hyperparameter optimization leverages Optuna's Tree-structured Parzen Estimator (TPE) algorithm for efficient search space exploration. The service maintains experiment tracking through MLflow integration, capturing metrics, parameters, and artifacts for reproducibility. Automated model selection pipelines evaluate trained models against holdout datasets, promoting best performers to production registries.
 
-```
-P(y|x, D) = Σₘ P(y|x, m) × P(m|D)
-```
+### Data Service Architecture
 
-This approach naturally handles model uncertainty and provides calibrated confidence estimates.
+The data service manages the complete data pipeline, from raw text ingestion through feature engineering and dataset preparation. The service implements streaming data processing using Apache Kafka for real-time data ingestion and Apache Spark for distributed batch processing. Data versioning through DVC ensures reproducibility across experiments while enabling efficient storage through content-addressable deduplication.
 
-## Data Pipeline Architecture
+The augmentation pipeline implements sophisticated text manipulation techniques including back-translation through multiple languages, paraphrase generation using T5 models, and adversarial example generation through gradient-based perturbations. Data quality monitoring continuously tracks statistical properties of incoming data, detecting distribution shifts that might impact model performance.
 
-### Comprehensive Data Processing Framework
+## Model Architecture
 
-The data pipeline architecture implements a sophisticated multi-stage processing framework designed to handle diverse data sources, apply advanced augmentation techniques, and ensure data quality throughout the machine learning lifecycle.
+### Transformer-Based Models
+
+The system implements state-of-the-art transformer architectures optimized for news text classification. Each model incorporates domain-specific adaptations that enhance performance on news content characteristics.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        Data Ingestion Layer                         │
-├─────────────────────────────────────────────────────────────────────┤
+│                        Model Architecture                           │
 │                                                                     │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐               │
-│  │   AG News    │  │   External   │  │  Synthetic   │               │
-│  │   Dataset    │  │  News Corpus │  │   GPT-4 Gen  │               │
-│  │  (120K docs) │  │  (500K docs) │  │  (50K docs)  │               │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘               │
-│         │                  │                  │                     │
-│         └──────────────────┼──────────────────┘                     │
-│                            ▼                                        │
-│                 ┌──────────────────┐                                │
-│                 │  Data Validator  │                                │
-│                 │ • Schema Check   │                                │
-│                 │ • Quality Metrics│                                │
-│                 │ • Deduplication  │                                │
-│                 └─────────┬────────┘                                │
-└───────────────────────────┼─────────────────────────────────────────┘
-                            ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                      Processing Pipeline                            │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  Stage 1: Text Cleaning                                            │
-│  ┌────────────────────────────────────────────────────────┐       │
-│  │ • HTML/XML tag removal                                 │       │
-│  │ • Unicode normalization (NFKC)                         │       │
-│  │ • Whitespace standardization                           │       │
-│  │ • URL/Email pattern handling                           │       │
-│  │ • Special character processing                         │       │
-│  └────────────────────────────────────────────────────────┘       │
-│                            ▼                                        │
-│  Stage 2: Linguistic Processing                                    │
-│  ┌────────────────────────────────────────────────────────┐       │
-│  │ • Sentence segmentation (spaCy)                        │       │
-│  │ • Tokenization (BPE/WordPiece)                        │       │
-│  │ • Part-of-speech tagging                              │       │
-│  │ • Named entity recognition                            │       │
-│  │ • Dependency parsing                                  │       │
-│  └────────────────────────────────────────────────────────┘       │
-│                            ▼                                        │
-│  Stage 3: Feature Engineering                                      │
-│  ┌────────────────────────────────────────────────────────┐       │
-│  │ • TF-IDF vectors (baseline)                           │       │
-│  │ • Word embeddings (GloVe/Word2Vec)                    │       │
-│  │ • Contextual embeddings (BERT-based)                  │       │
-│  │ • Statistical features (length, complexity)           │       │
-│  │ • Domain-specific features                            │       │
-│  └────────────────────────────────────────────────────────┘       │
-└─────────────────────────────────────────────────────────────────────┘
-                            ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                     Augmentation Pipeline                          │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐               │
-│  │   Back      │  │  Paraphrase │  │  Adversarial│               │
-│  │Translation  │  │  Generation │  │   Examples  │               │
-│  │ • EN→DE→EN  │  │ • T5-based  │  │ • TextFooler│               │
-│  │ • EN→FR→EN  │  │ • GPT-based │  │ • BERT-Attack│              │
-│  └─────┬───────┘  └─────┬───────┘  └─────┬───────┘               │
-│         │                │                 │                        │
-│         └────────────────┼─────────────────┘                        │
-│                          ▼                                          │
-│  ┌────────────────────────────────────────────────────────┐       │
-│  │              Augmentation Controller                    │       │
-│  │  • Maintains class balance                             │       │
-│  │  • Controls augmentation ratio (1:3)                   │       │
-│  │  • Ensures semantic preservation                       │       │
-│  │  • Quality filtering (perplexity-based)               │       │
-│  └────────────────────────────────────────────────────────┘       │
+│  ┌─────────────────────────────────────────────────────────────┐  │
+│  │                    Input Processing Layer                    │  │
+│  │                                                              │  │
+│  │  Text → Tokenization → Subword Encoding → Position Encoding │  │
+│  └─────────────────────────────────────────────────────────────┘  │
+│                                ▼                                    │
+│  ┌─────────────────────────────────────────────────────────────┐  │
+│  │                    Transformer Backbone                      │  │
+│  │  ┌─────────────────────────────────────────────────────┐   │  │
+│  │  │            DeBERTa-v3-XLarge (24 layers)            │   │  │
+│  │  │      Disentangled Attention + Enhanced Decoder       │   │  │
+│  │  └─────────────────────────────────────────────────────┘   │  │
+│  │  ┌─────────────────────────────────────────────────────┐   │  │
+│  │  │            RoBERTa-Large (24 layers)                │   │  │
+│  │  │         Dynamic Masking + Robust Training            │   │  │
+│  │  └─────────────────────────────────────────────────────┘   │  │
+│  └─────────────────────────────────────────────────────────────┘  │
+│                                ▼                                    │
+│  ┌─────────────────────────────────────────────────────────────┐  │
+│  │                    Pooling Strategies                        │  │
+│  │                                                              │  │
+│  │  • [CLS] Token      • Mean Pooling     • Max Pooling       │  │
+│  │  • Attention Pool   • Hierarchical     • Last Hidden       │  │
+│  └─────────────────────────────────────────────────────────────┘  │
+│                                ▼                                    │
+│  ┌─────────────────────────────────────────────────────────────┐  │
+│  │                  Classification Head                         │  │
+│  │                                                              │  │
+│  │     Dense(768) → LayerNorm → Dropout → Dense(4) → Softmax   │  │
+│  └─────────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### Data Augmentation Strategies
+### DeBERTa-v3 Implementation
 
-#### Back-Translation Augmentation
+DeBERTa-v3 serves as the primary model architecture, leveraging disentangled attention mechanisms that separately model content and positional information. This architectural innovation improves the model's ability to capture long-range dependencies in news articles. The enhanced mask decoder replaces traditional output softmax layers with a more sophisticated mechanism that considers absolute word positions during pre-training.
 
-Back-translation leverages neural machine translation models to generate semantically equivalent variations of the original text:
+The implementation incorporates gradient checkpointing to reduce memory consumption during training, enabling larger batch sizes on limited GPU memory. Mixed precision training using Apex O1 optimization level accelerates training while maintaining numerical stability. The model employs adversarial training through Fast Gradient Method (FGM) perturbations, improving robustness against adversarial examples and distribution shifts.
 
-**Process Flow:**
-1. **Forward Translation**: Translate original English text to intermediate language (German/French/Spanish)
-2. **Back Translation**: Translate back to English using a different model
-3. **Quality Filtering**: Filter based on semantic similarity (cosine similarity > 0.85)
-4. **Diversity Check**: Ensure lexical diversity (Jaccard distance > 0.2)
+### Ensemble Architecture
 
-**Mathematical Formulation:**
-```
-Given text x in English:
-x' = T_back(T_forward(x, L_intermediate), English)
-where T represents translation function and L represents language
-```
-
-#### MixUp and Manifold Mixup
-
-MixUp creates synthetic training examples by interpolating between pairs of examples in the feature space:
+The ensemble architecture implements multiple aggregation strategies to combine predictions from diverse base models, leveraging the statistical principle that aggregating multiple estimators reduces variance and improves generalization. The system employs hierarchical ensemble structures where first-level models generate predictions that serve as features for second-level meta-learners.
 
 ```
-x̃ = λ × x_i + (1 - λ) × x_j
-ỹ = λ × y_i + (1 - λ) × y_j
-where λ ~ Beta(α, α), typically α = 0.2
+┌──────────────────────────────────────────────────────────────────────┐
+│                        Ensemble Architecture                         │
+│                                                                      │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                      Level 1: Base Models                       │ │
+│  │                                                                 │ │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐     │ │
+│  │  │ DeBERTa  │  │ RoBERTa  │  │  XLNet   │  │ ELECTRA  │     │ │
+│  │  │   v3     │  │  Large   │  │  Large   │  │  Large   │     │ │
+│  │  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘     │ │
+│  │       │              │              │              │           │ │
+│  │       └──────────────┼──────────────┼──────────────┘           │ │
+│  │                      ▼              ▼                          │ │
+│  │              ┌──────────────────────────────┐                  │ │
+│  │              │   Prediction Aggregation     │                  │ │
+│  │              │  • Soft Voting (Weighted)    │                  │ │
+│  │              │  • Rank Averaging            │                  │ │
+│  │              │  • Probability Calibration   │                  │ │
+│  │              └──────────────────────────────┘                  │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                ▼                                     │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                   Level 2: Meta-Learning                        │ │
+│  │                                                                 │ │
+│  │  ┌──────────────────────────────────────────────────────────┐ │ │
+│  │  │                  Stacking Architecture                    │ │ │
+│  │  │                                                           │ │ │
+│  │  │   Base Predictions → Feature Engineering → Meta-Learner   │ │ │
+│  │  │                                                           │ │ │
+│  │  │   Meta-Learners: • XGBoost  • CatBoost  • LightGBM      │ │ │
+│  │  │                  • Neural Network Meta-Learner           │ │ │
+│  │  └──────────────────────────────────────────────────────────┘ │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                ▼                                     │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                  Level 3: Blending & Optimization               │ │
+│  │                                                                 │ │
+│  │     Bayesian Optimization for Weight Selection                  │ │
+│  │     Dynamic Weight Adjustment based on Input Characteristics    │ │
+│  │     Confidence-Weighted Averaging                               │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
-**Implementation Details:**
-- Applied at embedding layer (Manifold Mixup) for better regularization
-- Sampling strategy ensures inter-class mixing for improved decision boundaries
-- Adaptive λ based on training progress (curriculum-based adjustment)
+Stacking implementation employs k-fold cross-validation to generate out-of-fold predictions, preventing overfitting in meta-learner training. The system maintains separate validation sets for base model training and meta-learner optimization, ensuring unbiased performance estimation. Blending strategies utilize hold-out validation sets for simpler, more robust ensemble construction when computational resources are constrained.
+
+The Bayesian ensemble approach models uncertainty in both individual predictions and ensemble weights, providing calibrated confidence estimates crucial for production deployments. Snapshot ensembling leverages cyclic learning rate schedules to collect multiple models from single training runs, reducing computational costs while maintaining diversity. Multi-level ensemble architectures cascade predictions through multiple aggregation layers, with each level specializing in correcting specific error patterns from previous levels.
+
+### Efficient Model Architectures
+
+Resource-constrained deployment scenarios necessitate efficient model architectures that maintain performance while reducing computational requirements. The system implements parameter-efficient fine-tuning methods that adapt large pre-trained models with minimal parameter updates.
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    Efficient Training Architecture                   │
+│                                                                      │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                         LoRA (Low-Rank Adaptation)              │ │
+│  │                                                                 │ │
+│  │    Pre-trained Weights (Frozen) + Low-Rank Matrices (Trainable) │ │
+│  │                                                                 │ │
+│  │    W = W₀ + ΔW = W₀ + BA   where B ∈ ℝᵈˣʳ, A ∈ ℝʳˣᵏ, r << d,k  │ │
+│  │                                                                 │ │
+│  │    • Reduces trainable parameters by 10,000x                    │ │
+│  │    • Maintains 99%+ of full fine-tuning performance             │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                        QLoRA (Quantized LoRA)                   │ │
+│  │                                                                 │ │
+│  │    4-bit Quantization + LoRA + Paged Optimizers                 │ │
+│  │                                                                 │ │
+│  │    • NormalFloat4 data type for normally distributed weights    │ │
+│  │    • Double quantization for additional memory savings           │ │
+│  │    • Gradient checkpointing for activation memory reduction     │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                      Adapter Architecture                       │ │
+│  │                                                                 │ │
+│  │    Transformer Layer → Adapter Module → Next Layer              │ │
+│  │                          ↑                                      │ │
+│  │                    Bottleneck Architecture                      │ │
+│  │                    (Down-project → ReLU → Up-project)           │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+LoRA implementation decomposes weight updates into low-rank matrices, dramatically reducing memory footprint during training. The rank selection algorithm analyzes singular value decomposition of weight gradients to determine optimal rank values for each layer. Dynamic rank allocation assigns higher ranks to layers exhibiting greater gradient variance, optimizing the parameter budget allocation.
+
+Prefix tuning prepends trainable continuous vectors to input sequences, modulating model behavior without modifying internal parameters. The prefix vectors learn task-specific transformations that guide the frozen model toward desired outputs. P-tuning v2 extends this concept by adding trainable parameters to every transformer layer, improving performance on downstream tasks while maintaining parameter efficiency.
 
 ## Training Pipeline Architecture
 
-### Advanced Training Framework
+### Multi-Stage Training Strategy
 
-The training pipeline implements a sophisticated multi-stage approach incorporating curriculum learning, adversarial training, and knowledge distillation:
+The training pipeline implements sophisticated multi-stage strategies that progressively refine model capabilities through curriculum learning, domain adaptation, and task-specific fine-tuning phases.
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                     Training Orchestration System                    │
-├─────────────────────────────────────────────────────────────────────┤
+┌──────────────────────────────────────────────────────────────────────┐
+│                    Multi-Stage Training Pipeline                     │
 │                                                                      │
-│  ┌──────────────────────────────────────────────────────────┐      │
-│  │                 Stage 1: Preprocessing                    │      │
-│  ├──────────────────────────────────────────────────────────┤      │
-│  │  • Data loading and validation                           │      │
-│  │  • Train/Val/Test splitting (60/20/20)                  │      │
-│  │  • Stratified sampling for class balance                 │      │
-│  │  • Cross-validation fold generation (5-fold)             │      │
-│  └─────────────────────────┬────────────────────────────────┘      │
-│                            ▼                                        │
-│  ┌──────────────────────────────────────────────────────────┐      │
-│  │              Stage 2: Curriculum Learning                 │      │
-│  ├──────────────────────────────────────────────────────────┤      │
-│  │                                                           │      │
-│  │  Epoch 1-5: Easy samples                                 │      │
-│  │  ┌─────────────────────────────────────────┐            │      │
-│  │  │ • Short texts (< 50 tokens)             │            │      │
-│  │  │ • High confidence labels                │            │      │
-│  │  │ • Clear category distinctions           │            │      │
-│  │  │ • Learning rate: 5e-5                   │            │      │
-│  │  └─────────────────────────────────────────┘            │      │
-│  │                                                           │      │
-│  │  Epoch 6-15: Medium difficulty                           │      │
-│  │  ┌─────────────────────────────────────────┐            │      │
-│  │  │ • Standard length (50-200 tokens)       │            │      │
-│  │  │ • Include augmented samples             │            │      │
-│  │  │ • Mixed difficulty examples             │            │      │
-│  │  │ • Learning rate: 3e-5                   │            │      │
-│  │  └─────────────────────────────────────────┘            │      │
-│  │                                                           │      │
-│  │  Epoch 16-25: Hard samples                               │      │
-│  │  ┌─────────────────────────────────────────┐            │      │
-│  │  │ • Long texts (> 200 tokens)             │            │      │
-│  │  │ • Ambiguous/borderline cases            │            │      │
-│  │  │ • Adversarial examples                  │            │      │
-│  │  │ • Learning rate: 1e-5                   │            │      │
-│  │  └─────────────────────────────────────────┘            │      │
-│  └─────────────────────────┬────────────────────────────────┘      │
-│                            ▼                                        │
-│  ┌──────────────────────────────────────────────────────────┐      │
-│  │           Stage 3: Adversarial Training                  │      │
-│  ├──────────────────────────────────────────────────────────┤      │
-│  │                                                           │      │
-│  │  FGM (Fast Gradient Method):                             │      │
-│  │  ┌─────────────────────────────────────────┐            │      │
-│  │  │  x_adv = x + ε × sign(∇_x L(θ, x, y))  │            │      │
-│  │  │  where ε = 0.5 (embedding perturbation) │            │      │
-│  │  └─────────────────────────────────────────┘            │      │
-│  │                                                           │      │
-│  │  PGD (Projected Gradient Descent):                       │      │
-│  │  ┌─────────────────────────────────────────┐            │      │
-│  │  │  For k iterations:                      │            │      │
-│  │  │  x^(k+1) = Π(x^k + α × sign(∇L))       │            │      │
-│  │  │  where Π projects onto ε-ball          │            │      │
-│  │  └─────────────────────────────────────────┘            │      │
-│  └─────────────────────────┬────────────────────────────────┘      │
-│                            ▼                                        │
-│  ┌──────────────────────────────────────────────────────────┐      │
-│  │          Stage 4: Knowledge Distillation                 │      │
-│  ├──────────────────────────────────────────────────────────┤      │
-│  │                                                           │      │
-│  │  Teacher: GPT-4 / Ensemble Model                         │      │
-│  │  Student: Target Model                                   │      │
-│  │                                                           │      │
-│  │  Loss = α × CE(y_true, y_student) +                      │      │
-│  │         β × KL(y_teacher, y_student) +                   │      │
-│  │         γ × MSE(h_teacher, h_student)                    │      │
-│  │                                                           │      │
-│  │  where: α=0.5, β=0.3, γ=0.2                             │      │
-│  └──────────────────────────────────────────────────────────┘      │
-└─────────────────────────────────────────────────────────────────────┘
+│  Stage 1: Domain-Adaptive Pre-training (DAPT)                       │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │   News Corpus (100M tokens) → MLM Training → Domain-Adapted    │ │
+│  │   • CNN/DailyMail  • Reuters  • BBC News  • Reddit News        │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                ▼                                     │
+│  Stage 2: Task-Adaptive Pre-training (TAPT)                         │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │   AG News Unlabeled Data → Self-Supervised Learning            │ │
+│  │   • Masked Language Modeling  • Next Sentence Prediction       │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                ▼                                     │
+│  Stage 3: Supervised Fine-tuning                                    │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │   AG News Labeled Data → Classification Training               │ │
+│  │   • Curriculum Learning (Easy → Hard samples)                  │ │
+│  │   • Progressive Unfreezing (Top layers → Bottom layers)        │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                ▼                                     │
+│  Stage 4: Adversarial Training & Robustification                    │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │   Adversarial Examples + Contrast Sets → Robust Training       │ │
+│  │   • FGM/PGD Adversarial Training  • Virtual Adversarial        │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                ▼                                     │
+│  Stage 5: Knowledge Distillation from GPT-4                         │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │   GPT-4 Pseudo-labels + Explanations → Student Training        │ │
+│  │   • Soft target distillation  • Feature matching               │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
-### Optimization Strategies
+Domain-adaptive pre-training leverages large-scale news corpora to align model representations with news domain characteristics. The curriculum learning implementation uses competence-based progression, where sample difficulty increases based on model performance metrics. Self-paced learning allows the model to determine its own curriculum, selecting samples that maximize learning progress while avoiding catastrophic forgetting.
 
-#### Learning Rate Scheduling
+### Advanced Training Techniques
 
-The system implements sophisticated learning rate scheduling strategies to optimize convergence:
+Adversarial training incorporates perturbations during training to improve model robustness. Fast Gradient Method (FGM) adds adversarial perturbations to word embeddings, while Projected Gradient Descent (PGD) performs iterative perturbation refinement. FreeLB implements adversarial training in the embedding space with multiple ascent steps per descent step, balancing robustness gains with computational efficiency.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│              Learning Rate Schedule                      │
-├─────────────────────────────────────────────────────────┤
-│                                                          │
-│  Cosine Annealing with Warm Restarts:                  │
-│                                                          │
-│  LR ▲                                                   │
-│     │     ╱\      ╱\      ╱\                          │
-│ 5e-5├────╱  \    ╱  \    ╱  \                         │
-│     │   ╱    \  ╱    \  ╱    \                        │
-│ 3e-5├──╱      \╱      \╱      \                       │
-│     │                           \                      │
-│ 1e-5├─────────────────────────────\___                │
-│     │                                                   │
-│   0 └────┬────┬────┬────┬────┬────┬────▶             │
-│         5    10   15   20   25   30      Epochs       │
-│                                                          │
-│  Formula: lr = lr_min + 0.5 × (lr_max - lr_min) ×      │
-│           (1 + cos(π × T_cur / T_max))                 │
-└─────────────────────────────────────────────────────────┘
-```
+Contrastive learning objectives encourage the model to learn discriminative representations by pulling similar samples together while pushing dissimilar samples apart. SimCSE framework generates positive pairs through dropout-based augmentation, while negative samples come from in-batch instances. The temperature-scaled InfoNCE loss optimizes the contrastive objective, with temperature parameters controlling the concentration of similarity distributions.
 
-#### Gradient Accumulation and Clipping
+### Distributed Training Architecture
 
-To handle large models with limited GPU memory:
-
-```python
-Gradient Accumulation Strategy:
-- Accumulation steps: 4
-- Effective batch size: physical_batch × accumulation_steps
-- Gradient clipping: max_norm = 1.0
-- Mixed precision training: FP16 with dynamic loss scaling
-```
-
-## API and Service Architecture
-
-### Multi-Protocol API Design
-
-The system implements a sophisticated API architecture supporting multiple protocols to accommodate diverse client requirements:
+The distributed training infrastructure enables efficient utilization of multiple GPUs across multiple nodes, implementing both data and model parallelism strategies.
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        API Architecture                              │
-├─────────────────────────────────────────────────────────────────────┤
+┌──────────────────────────────────────────────────────────────────────┐
+│                    Distributed Training Architecture                 │
 │                                                                      │
-│  ┌──────────────────────────────────────────────────────────┐      │
-│  │                    REST API (FastAPI)                     │      │
-│  ├──────────────────────────────────────────────────────────┤      │
-│  │                                                           │      │
-│  │  Endpoints:                                               │      │
-│  │  ┌─────────────────────────────────────────────────┐    │      │
-│  │  │ POST   /api/v1/predict                          │    │      │
-│  │  │ POST   /api/v1/batch_predict                    │    │      │
-│  │  │ GET    /api/v1/models                           │    │      │
-│  │  │ POST   /api/v1/train                            │    │      │
-│  │  │ GET    /api/v1/metrics                          │    │      │
-│  │  │ WS     /api/v1/stream                           │    │      │
-│  │  └─────────────────────────────────────────────────┘    │      │
-│  │                                                           │      │
-│  │  Request Flow:                                            │      │
-│  │  Client → Validation → Auth → Rate Limit → Handler       │      │
-│  │         → Service → Response → Logging                   │      │
-│  └──────────────────────────────────────────────────────────┘      │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                     Parameter Server Architecture                │ │
+│  │                                                                 │ │
+│  │   ┌──────────┐      ┌──────────────────┐      ┌──────────┐   │ │
+│  │   │ Worker 1 │◄────►│ Parameter Server │◄────►│ Worker N │   │ │
+│  │   │  GPU 1   │      │   (CPU/GPU)      │      │  GPU N   │   │ │
+│  │   └──────────┘      └──────────────────┘      └──────────┘   │ │
+│  └────────────────────────────────────────────────────────────────┘ │
 │                                                                      │
-│  ┌──────────────────────────────────────────────────────────┐      │
-│  │                   gRPC Service                            │      │
-│  ├──────────────────────────────────────────────────────────┤      │
-│  │                                                           │      │
-│  │  Service Definitions:                                     │      │
-│  │  ┌─────────────────────────────────────────────────┐    │      │
-│  │  │ service ClassificationService {                  │    │      │
-│  │  │   rpc Predict(PredictRequest)                   │    │      │
-│  │  │       returns (PredictResponse);                │    │      │
-│  │  │   rpc StreamPredict(stream PredictRequest)      │    │      │
-│  │  │       returns (stream PredictResponse);         │    │      │
-│  │  │   rpc BatchPredict(BatchPredictRequest)         │    │      │
-│  │  │       returns (BatchPredictResponse);           │    │      │
-│  │  │ }                                                │    │      │
-│  │  └─────────────────────────────────────────────────┘    │      │
-│  │                                                           │      │
-│  │  Features:                                                │      │
-│  │  • Binary protocol (Protocol Buffers)                    │      │
-│  │  • Bidirectional streaming                               │      │
-│  │  • Multiplexing over single connection                   │      │
-│  │  • Built-in load balancing                              │      │
-│  └──────────────────────────────────────────────────────────┘      │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                    Ring-AllReduce Architecture                  │ │
+│  │                         (Horovod/NCCL)                          │ │
+│  │                                                                 │ │
+│  │   GPU1 ←→ GPU2 ←→ GPU3 ←→ GPU4 ←→ GPU5 ←→ GPU6 ←→ GPU7 ←→ GPU8 │ │
+│  │                                                                 │ │
+│  │   • Bandwidth-optimal gradient aggregation                      │ │
+│  │   • Linear scaling with number of GPUs                          │ │
+│  └────────────────────────────────────────────────────────────────┘ │
 │                                                                      │
-│  ┌──────────────────────────────────────────────────────────┐      │
-│  │                    GraphQL API                            │      │
-│  ├──────────────────────────────────────────────────────────┤      │
-│  │                                                           │      │
-│  │  Schema:                                                  │      │
-│  │  ┌─────────────────────────────────────────────────┐    │      │
-│  │  │ type Query {                                     │    │      │
-│  │  │   predict(text: String!): Prediction            │    │      │
-│  │  │   models: [Model]                               │    │      │
-│  │  │   metrics(modelId: ID!): Metrics                │    │      │
-│  │  │ }                                                │    │      │
-│  │  │                                                  │    │      │
-│  │  │ type Mutation {                                  │    │      │
-│  │  │   trainModel(config: TrainConfig): Job          │    │      │
-│  │  │   updateModel(id: ID!, params: ModelParams)     │    │      │
-│  │  │ }                                                │    │      │
-│  │  │                                                  │    │      │
-│  │  │ type Subscription {                              │    │      │
-│  │  │   trainingProgress(jobId: ID!): TrainingStatus  │    │      │
-│  │  │ }                                                │    │      │
-│  │  └─────────────────────────────────────────────────┘    │      │
-│  └──────────────────────────────────────────────────────────┘      │
-└─────────────────────────────────────────────────────────────────────┘
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                      Pipeline Parallelism                       │ │
+│  │                                                                 │ │
+│  │   Model Layers: [L1-L6] → [L7-L12] → [L13-L18] → [L19-L24]     │ │
+│  │   GPUs:           GPU1      GPU2       GPU3        GPU4         │ │
+│  │                                                                 │ │
+│  │   • Micro-batching for pipeline efficiency                      │ │
+│  │   • Gradient accumulation across micro-batches                  │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
-### Service Mesh Architecture
+## Data Pipeline Architecture
 
-The service mesh provides advanced traffic management, security, and observability:
+### Data Ingestion and Processing
+
+The data pipeline implements a sophisticated multi-stage processing system that handles data from initial ingestion through final feature preparation. The architecture supports both batch and streaming processing paradigms, enabling real-time model updates and continuous learning scenarios.
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                      Istio Service Mesh                             │
-├─────────────────────────────────────────────────────────────────────┤
+┌──────────────────────────────────────────────────────────────────────┐
+│                      Data Pipeline Architecture                      │
 │                                                                      │
-│  ┌──────────────┐        ┌──────────────┐        ┌──────────────┐ │
-│  │   Service A  │◀──────▶│   Service B  │◀──────▶│   Service C  │ │
-│  │   ┌──────┐   │        │   ┌──────┐   │        │   ┌──────┐   │ │
-│  │   │Envoy │   │        │   │Envoy │   │        │   │Envoy │   │ │
-│  │   │Proxy │   │        │   │Proxy │   │        │   │Proxy │   │ │
-│  │   └──────┘   │        │   └──────┘   │        │   └──────┘   │ │
-│  └──────────────┘        └──────────────┘        └──────────────┘ │
-│         ▲                        ▲                        ▲        │
-│         │                        │                        │        │
-│         └────────────────────────┼────────────────────────┘        │
-│                                  │                                  │
-│                         ┌────────▼────────┐                        │
-│                         │   Control Plane │                        │
-│                         │   • Pilot       │                        │
-│                         │   • Citadel     │                        │
-│                         │   • Galley      │                        │
-│                         └─────────────────┘                        │
-│                                                                      │
-│  Features:                                                          │
-│  • Automatic load balancing (Round-robin, Least request)           │
-│  • Fine-grained traffic control (A/B testing, Canary)              │
-│  • Circuit breaking and retry logic                                │
-│  • Mutual TLS for service-to-service communication                 │
-│  • Distributed tracing with Jaeger                                 │
-│  • Metrics collection with Prometheus                              │
-└─────────────────────────────────────────────────────────────────────┘
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                      Data Ingestion Layer                       │ │
+│  │                                                                 │ │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐     │ │
+│  │  │  AG News │  │ External │  │ Streaming│  │    API   │     │ │
+│  │  │  Dataset │  │  Corpora │  │   Kafka  │  │  Sources │     │ │
+│  │  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘     │ │
+│  │       └──────────────┼──────────────┼──────────────┘           │ │
+│  │                      ▼                                          │ │
+│  │              ┌──────────────────┐                               │ │
+│  │              │   Data Validation│                               │ │
+│  │              │   & Quality Check│                               │ │
+│  │              └──────────────────┘                               │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                ▼                                     │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                    Preprocessing Pipeline                       │ │
+│  │                                                                 │ │
+│  │   Raw Text → Cleaning → Normalization → Tokenization           │ │
+│  │      ↓                                                          │ │
+│  │   Feature Extraction → Encoding → Padding/Truncation           │ │
+│  │      ↓                                                          │ │
+│  │   Sliding Window → Hierarchical Representation                 │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                ▼                                     │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                    Augmentation Pipeline                        │ │
+│  │                                                                 │ │
+│  │  • Back-Translation (EN→DE→FR→EN)                              │ │
+│  │  • Paraphrase Generation (T5/GPT-3)                            │ │
+│  │  • Token Replacement (WordNet/BERT)                            │ │
+│  │  • Mixup/Manifold Mixup                                        │ │
+│  │  • Adversarial Augmentation                                     │ │
+│  │  • Contrast Set Generation                                      │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                ▼                                     │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                      Data Storage Layer                         │ │
+│  │                                                                 │ │
+│  │   ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    │ │
+│  │   │ Feature  │  │  Vector  │  │  Cache   │  │  Archive │    │ │
+│  │   │  Store   │  │  Database│  │  (Redis) │  │   (S3)   │    │ │
+│  │   └──────────┘  └──────────┘  └──────────┘  └──────────┘    │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
 ```
+
+### Data Quality and Validation
+
+Data quality assurance implements multi-level validation strategies ensuring training data integrity. Schema validation verifies structural consistency using Pydantic models and JSON schemas. Statistical validation monitors distributional properties, detecting anomalies through isolation forests and statistical process control charts. Semantic validation employs pre-trained language models to identify corrupted or adversarial samples that could compromise model training.
+
+The data versioning system, built on Data Version Control (DVC), tracks dataset evolution while maintaining reproducibility. Content-addressable storage deduplicates data at the file level, reducing storage requirements for similar datasets. Metadata tracking captures data lineage, transformation history, and quality metrics, enabling comprehensive data governance and compliance reporting.
+
+### Augmentation Strategies
+
+Back-translation augmentation leverages neural machine translation models to generate paraphrases while preserving semantic content. The pipeline translates text through multiple intermediate languages, introducing linguistic diversity that improves model robustness. Quality filtering using semantic similarity metrics ensures augmented samples maintain label consistency with original data.
+
+Contextual augmentation employs large language models to generate semantically consistent variations. The system uses carefully crafted prompts to guide generation toward specific augmentation objectives. GPT-4 based augmentation provides high-quality synthetic samples with explanations, serving dual purposes of data augmentation and knowledge distillation. Adversarial augmentation generates challenging examples near decision boundaries, improving model calibration and robustness.
+
+## Deployment Architecture
+
+### Container Orchestration
+
+The deployment architecture leverages containerization and orchestration technologies to ensure scalable, reliable service delivery across diverse infrastructure environments.
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    Kubernetes Deployment Architecture                │
+│                                                                      │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                      Ingress Controller                         │ │
+│  │                    (NGINX/Traefik/Istio)                       │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                ▼                                     │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                         Services                                │ │
+│  │                                                                 │ │
+│  │  ┌──────────────────┐  ┌──────────────────┐                   │ │
+│  │  │ Prediction Service│  │ Training Service │                   │ │
+│  │  │   (Deployment)    │  │     (StatefulSet)│                   │ │
+│  │  │                   │  │                   │                   │ │
+│  │  │ Replicas: 5-20    │  │ Replicas: 1-3    │                   │ │
+│  │  │ HPA: CPU/Memory   │  │ PVC: 100Gi       │                   │ │
+│  │  └──────────────────┘  └──────────────────┘                   │ │
+│  │                                                                 │ │
+│  │  ┌──────────────────┐  ┌──────────────────┐                   │ │
+│  │  │   API Gateway    │  │ Model Registry   │                   │ │
+│  │  │   (Deployment)   │  │  (StatefulSet)   │                   │ │
+│  │  │                  │  │                   │                   │ │
+│  │  │ Replicas: 3-10   │  │ Replicas: 3      │                   │ │
+│  │  │ HPA: RPS        │  │ PVC: 500Gi       │                   │ │
+│  │  └──────────────────┘  └──────────────────┘                   │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                     Persistent Storage                          │ │
+│  │                                                                 │ │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐        │ │
+│  │  │ Model Store  │  │ Data Store   │  │ Log Store    │        │ │
+│  │  │ (NFS/EFS)    │  │ (PostgreSQL) │  │ (Elasticsearch)│      │ │
+│  │  └──────────────┘  └──────────────┘  └──────────────┘        │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### Blue-Green Deployment Strategy
+
+Blue-green deployment enables zero-downtime updates by maintaining two identical production environments. The blue environment serves current traffic while green environment receives updates. Traffic switching occurs instantaneously through load balancer reconfiguration after green environment validation. Automated rollback mechanisms revert to blue environment upon detecting anomalies in green environment metrics.
+
+Canary deployment progressively routes traffic percentages to new versions, enabling gradual rollout with continuous monitoring. The system implements sophisticated traffic splitting based on user segments, geographic regions, or request characteristics. Automated canary analysis compares metrics between versions, halting deployments when regression detection algorithms identify performance degradation.
+
+### Edge Deployment
+
+Edge deployment strategies optimize inference latency by positioning models closer to data sources. The architecture supports model quantization and compilation for edge devices through TensorFlow Lite and ONNX Runtime. Model pruning removes redundant parameters while maintaining accuracy thresholds. Knowledge distillation creates smaller student models suitable for resource-constrained environments.
+
+## Monitoring and Observability
+
+### Metrics Collection Architecture
+
+The observability infrastructure implements comprehensive monitoring across all system components, providing real-time insights into system health, performance, and business metrics.
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    Observability Architecture                        │
+│                                                                      │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                     Metrics Collection                          │ │
+│  │                                                                 │ │
+│  │  Application Metrics          System Metrics                    │ │
+│  │  • Request Rate               • CPU Utilization                 │ │
+│  │  • Response Time              • Memory Usage                    │ │
+│  │  • Error Rate                 • Disk I/O                        │ │
+│  │  • Model Accuracy             • Network Traffic                 │ │
+│  │  • Prediction Confidence      • GPU Utilization                 │ │
+│  │                                                                 │ │
+│  │                    Prometheus Exporters                         │ │
+│  │                           ▼                                     │ │
+│  │                    Time Series Database                         │ │
+│  │                     (Prometheus/InfluxDB)                       │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                ▼                                     │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                      Logging Pipeline                           │ │
+│  │                                                                 │ │
+│  │   Applications → Fluentd → Elasticsearch → Kibana              │ │
+│  │                     ↓                                           │ │
+│  │                Log Analysis & Alerting                          │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                ▼                                     │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                    Distributed Tracing                          │ │
+│  │                                                                 │ │
+│  │   Request → API Gateway → Service A → Service B → Response     │ │
+│  │       ↓           ↓            ↓           ↓           ↓        │ │
+│  │              Jaeger/Zipkin Trace Collection                     │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                ▼                                     │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                   Visualization & Alerting                      │ │
+│  │                                                                 │ │
+│  │   Grafana Dashboards    AlertManager    PagerDuty              │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### Model Performance Monitoring
+
+Model performance monitoring extends beyond traditional accuracy metrics to encompass prediction drift, feature importance shifts, and fairness indicators. The system implements statistical tests for distribution shift detection, comparing incoming data distributions against training baselines. Prediction confidence calibration monitoring ensures model uncertainty estimates remain reliable over time.
+
+A/B testing infrastructure enables controlled experimentation with new model versions. The platform automatically allocates traffic between model variants while tracking performance differentials. Statistical significance testing determines when sufficient evidence exists to declare winning variants. Multi-armed bandit algorithms optimize traffic allocation to maximize overall system performance during experiments.
+
+## Security Architecture
+
+### Defense in Depth Strategy
+
+The security architecture implements multiple defensive layers protecting against various threat vectors. Each layer provides independent security controls, ensuring that compromise of one layer doesn't result in complete system breach.
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                      Security Architecture                           │
+│                                                                      │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                    Network Security Layer                       │ │
+│  │                                                                 │ │
+│  │  • Web Application Firewall (WAF)                               │ │
+│  │  • DDoS Protection (CloudFlare/AWS Shield)                      │ │
+│  │  • TLS 1.3 Encryption                                           │ │
+│  │  • Network Segmentation (VPC/Subnets)                           │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                ▼                                     │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                  Application Security Layer                     │ │
+│  │                                                                 │ │
+│  │  • OAuth 2.0 / JWT Authentication                               │ │
+│  │  • Role-Based Access Control (RBAC)                             │ │
+│  │  • API Rate Limiting                                            │ │
+│  │  • Input Validation & Sanitization                              │ │
+│  │  • OWASP Security Headers                                       │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                ▼                                     │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                     Data Security Layer                         │ │
+│  │                                                                 │ │
+│  │  • Encryption at Rest (AES-256)                                 │ │
+│  │  • Encryption in Transit (TLS)                                  │ │
+│  │  • Data Masking & Tokenization                                  │ │
+│  │  • Personally Identifiable Information (PII) Detection          │ │
+│  │  • Differential Privacy                                         │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                ▼                                     │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                    Model Security Layer                         │ │
+│  │                                                                 │ │
+│  │  • Adversarial Attack Detection                                 │ │
+│  │  • Model Stealing Prevention                                    │ │
+│  │  • Membership Inference Protection                              │ │
+│  │  • Secure Model Serving (Intel SGX/Homomorphic)                 │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### Adversarial Defense Mechanisms
+
+The system implements comprehensive defenses against adversarial attacks targeting machine learning models. Input validation employs anomaly detection algorithms to identify potentially adversarial samples before model inference. Adversarial training incorporates attack samples during model training, improving robustness against known attack vectors.
+
+Defensive distillation trains models on soft labels from teacher networks, smoothing decision boundaries and reducing susceptibility to gradient-based attacks. Ensemble diversity ensures that successful attacks against individual models don't compromise overall system predictions. Runtime monitoring tracks prediction entropy and confidence distributions, flagging suspicious patterns indicative of adversarial manipulation.
+
+## Performance Optimization
+
+### Inference Optimization Pipeline
+
+The inference optimization pipeline transforms trained models into highly efficient inference engines suitable for production deployment at scale.
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                    Inference Optimization Pipeline                   │
+│                                                                      │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                      Model Optimization                         │ │
+│  │                                                                 │ │
+│  │   Original Model → Quantization → Pruning → Knowledge           │ │
+│  │                         ↓            ↓         Distillation     │ │
+│  │                    INT8/FP16    Magnitude/      ↓               │ │
+│  │                    Conversion   Structured   Student Model      │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                ▼                                     │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                    Runtime Optimization                         │ │
+│  │                                                                 │ │
+│  │  • ONNX Conversion & Optimization                               │ │
+│  │  • TensorRT Engine Building                                     │ │
+│  │  • Graph Optimization (Operator Fusion)                         │ │
+│  │  • Dynamic Batching                                             │ │
+│  │  • Memory Pool Allocation                                       │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                ▼                                     │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                     Serving Infrastructure                      │ │
+│  │                                                                 │ │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐        │ │
+│  │  │   Triton     │  │  TorchServe  │  │  TF Serving  │        │ │
+│  │  │   Inference  │  │              │  │              │        │ │
+│  │  │   Server     │  │              │  │              │        │ │
+│  │  └──────────────┘  └──────────────┘  └──────────────┘        │ │
+│  │                                                                 │ │
+│  │  • Multi-Model Serving                                          │ │
+│  │  • Dynamic Batching                                             │ │
+│  │  • GPU Sharing                                                  │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### Caching Strategies
+
+Multi-level caching reduces latency and computational overhead for frequently accessed predictions. Request-level caching stores complete prediction results for identical inputs, serving cached responses with sub-millisecond latency. Feature-level caching preserves expensive feature computations across requests sharing similar characteristics. Model-level caching maintains loaded models in GPU memory, eliminating model loading overhead for consecutive requests.
+
+Cache invalidation strategies ensure prediction freshness while maximizing cache hit rates. Time-based expiration removes stale entries after configurable durations. Event-based invalidation updates caches when underlying models change. Least Recently Used (LRU) eviction maintains cache size within memory constraints while preserving frequently accessed entries.
+
+## System Integration Architecture
+
+### Service Mesh Implementation
+
+The service mesh provides transparent service-to-service communication with built-in observability, security, and reliability features. Istio implementation enables sophisticated traffic management including canary deployments, fault injection, and circuit breaking without application code modifications.
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│                      Service Mesh Architecture                       │
+│                         (Istio/Linkerd)                             │
+│                                                                      │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                        Data Plane                               │ │
+│  │                                                                 │ │
+│  │  ┌─────────────┐     Sidecar Proxy     ┌─────────────┐        │ │
+│  │  │  Service A  │◄──────(Envoy)─────────►│  Service B  │        │ │
+│  │  │             │                         │             │        │ │
+│  │  └─────────────┘                         └─────────────┘        │ │
+│  │         ▲                                       ▲                │ │
+│  │         │         Mutual TLS, Telemetry        │                │ │
+│  │         └───────────────┬───────────────────────┘                │ │
+│  │                         ▼                                        │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+│                                                                      │
+│  ┌────────────────────────────────────────────────────────────────┐ │
+│  │                       Control Plane                             │ │
+│  │                                                                 │ │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐      │ │
+│  │  │   Pilot  │  │  Citadel │  │  Galley  │  │  Mixer   │      │ │
+│  │  │ (Traffic)│  │(Security)│  │ (Config) │  │(Telemetry)│      │ │
+│  │  └──────────┘  └──────────┘  └──────────┘  └──────────┘      │ │
+│  └────────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+### Event-Driven Architecture
+
+Event-driven architecture decouples system components through asynchronous message passing. Apache Kafka serves as the central event streaming platform, providing durable, ordered event logs with exactly-once processing semantics. Event sourcing captures all state changes as immutable events, enabling complete audit trails and temporal queries.
+
+The SAGA pattern orchestrates distributed transactions across microservices without two-phase commit overhead. Each service publishes events upon completing local transactions, triggering compensating transactions upon failures. Event choreography eliminates central orchestrators, improving system resilience through autonomous service coordination.
+
+## References
+
+Devlin, J., Chang, M. W., Lee, K., & Toutanova, K. (2019). BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding. *Proceedings of NAACL-HLT*, 4171-4186.
+
+He, P., Liu, X., Gao, J., & Chen, W. (2021). DeBERTa: Decoding-enhanced BERT with Disentangled Attention. *International Conference on Learning Representations*.
+
+Liu, Y., Ott, M., Goyal, N., Du, J., Joshi, M., Chen, D., ... & Stoyanov, V. (2019). RoBERTa: A Robustly Optimized BERT Pretraining Approach. *arXiv preprint arXiv:1907.11692*.
+
+Hu, E. J., Shen, Y., Wallis, P., Allen-Zhu, Z., Li, Y., Wang, S., ... & Chen, W. (2021). LoRA: Low-Rank Adaptation of Large Language Models. *International Conference on Learning Representations*.
+
+Dettmers, T., Pagnoni, A., Holtzman, A., & Zettlemoyer, L. (2023). QLoRA: Efficient Finetuning of Quantized LLMs. *arXiv preprint arXiv:2305.14314*.
+
+Gururangan, S., Marasović, A., Swayamdipta, S., Lo, K., Beltagy, I., Downey, D., & Smith, N. A. (2020). Don't Stop Pretraining: Adapt Language Models to Domains and Tasks. *Proceedings of ACL*, 8342-8360.
+
+Miyato, T., Dai, A. M., & Goodfellow, I. (2017). Adversarial Training Methods for Semi-Supervised Text Classification. *International Conference on Learning Representations*.
+
+Zhang, H., Cisse, M., Dauphin, Y. N., & Lopez-Paz, D. (2018). mixup: Beyond Empirical Risk Minimization. *International Conference on Learning Representations*.
+
+Hendrycks, D., & Gimpel, K. (2016). Gaussian Error Linear Units (GELUs). *arXiv preprint arXiv:1606.08415*.
+
+Brown, T., Mann, B., Ryder, N., Subbiah, M., Kaplan, J. D., Dhariwal, P., ... & Amodei, D. (2020). Language Models are Few-Shot Learners. *Advances in Neural Information Processing Systems*, 33, 1877-1901.
+
+Raffel, C., Shazeer, N., Roberts, A., Lee, K., Narang, S., Matena, M., ... & Liu, P. J. (2020). Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer. *Journal of Machine Learning Research*, 21(140), 1-67.
+
+Wolf, T., Debut, L., Sanh, V., Chaumond, J., Delangue, C., Moi, A., ... & Rush, A. M. (2020). Transformers: State-of-the-Art Natural Language Processing. *Proceedings of EMNLP: System Demonstrations*, 38-45.
+
+Lhoest, Q., Villanova del Moral, A., Jernite, Y., Thakur, A., von Platen, P., Patil, S., ... & Wolf, T. (2021). Datasets: A Community Library for Natural Language Processing. *Proceedings of EMNLP: System Demonstrations*, 175-184.
+
+Richardson, C. (2018). *Microservices Patterns: With Examples in Java*. Manning Publications.
+
+Newman, S. (2021). *Building Microservices: Designing Fine-Grained Systems* (2nd ed.). O'Reilly Media.
+
+Burns, B., Beda, J., & Hightower, K. (2022). *Kubernetes: Up and Running* (3rd ed.). O'Reilly Media.
