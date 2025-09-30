@@ -9,7 +9,7 @@
   // Author: Võ Hải Dũng
   // License: MIT
   
-  "name": "AG News Classification Dev Environment",
+  "name": "AG News Text Classification Dev Environment",
   "dockerFile": "Dockerfile",
   
   // Build arguments for flexibility
