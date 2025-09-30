@@ -247,7 +247,7 @@ tracking:
 
 # Model card information
 model_card:
-  description: "DeBERTa-v3-xlarge fine-tuned for AG News classification"
+  description: "DeBERTa-v3-xlarge fine-tuned for AG News Text Classification"
   intended_use: "News article classification into 4 categories"
   training_data: "AG News dataset with augmentation"
   eval_results:
