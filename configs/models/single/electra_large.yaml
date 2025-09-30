@@ -243,7 +243,7 @@ tracking:
 
 # Model card information
 model_card:
-  description: "ELECTRA-Large discriminator fine-tuned for AG News Text classification"
+  description: "ELECTRA-Large discriminator fine-tuned for AG News Text Classification"
   intended_use: "News article classification with efficient discriminative approach"
   training_data: "AG News dataset"
   eval_results:
