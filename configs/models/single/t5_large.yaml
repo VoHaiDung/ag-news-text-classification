@@ -1,5 +1,5 @@
 # T5-Large Model Configuration
-# Text-to-Text Transfer Transformer for AG News Classification
+# Text-to-Text Transfer Transformer for AG News Text Classification
 
 name: t5_large
 type: transformer
@@ -276,7 +276,7 @@ tracking:
 
 # Model card information
 model_card:
-  description: "T5-Large fine-tuned for AG News classification in text-to-text format"
+  description: "T5-Large fine-tuned for AG News Text Classification in text-to-text format"
   intended_use: "News classification using unified text-to-text framework"
   training_data: "AG News dataset formatted for T5"
   eval_results:
