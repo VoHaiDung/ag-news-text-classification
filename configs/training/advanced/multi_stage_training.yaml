@@ -439,7 +439,7 @@ experimental:
 
 # Notes
 notes: |
-  Multi-Stage Training Configuration for AG News:
+  Multi-Stage Training Configuration for AG News Text Classification:
   
   Stage progression:
   1. Feature extraction: Train top layers only (5 epochs)
