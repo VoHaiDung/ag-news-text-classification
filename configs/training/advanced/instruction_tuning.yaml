@@ -390,7 +390,7 @@ debugging:
 
 # Notes
 notes: |
-  Instruction Tuning Configuration for AG News:
+  Instruction Tuning Configuration for AG News Text Classification:
   
   Instruction templates:
   1. "Classify this news article into World, Sports, Business, or Tech."
