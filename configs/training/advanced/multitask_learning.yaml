@@ -31,9 +31,9 @@ multitask:
   
   # Task definitions
   tasks:
-    # Primary task: AG News classification
+    # Primary task: AG News Text Classification
     primary_classification:
-      name: ag_news_classification
+      name: ag-news-text-classification
       type: classification
       num_classes: 4
       weight: 1.0
@@ -428,7 +428,7 @@ monitoring:
 
 # Notes
 notes: |
-  Multi-Task Learning Configuration for AG News:
+  Multi-Task Learning Configuration for AG News Text Classification:
   
   Architecture choices:
   - Shared bottom: Simple, effective for related tasks
