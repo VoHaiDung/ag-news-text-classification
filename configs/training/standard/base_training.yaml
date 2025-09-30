@@ -1,282 +1,343 @@
 # Base Training Configuration
-# Standard training setup for AG News models
+# ===========================
+# Configuration for standard training following best practices from:
+# - Smith et al. (2018): "A Disciplined Approach to Neural Network Hyper-Parameters"
+# - Loshchilov & Hutter (2019): "Decoupled Weight Decay Regularization"
+# - Zhang et al. (2021): "Improved Regularization of Convolutional Neural Networks"
+# - Howard & Ruder (2018): "Universal Language Model Fine-tuning for Text Classification"
+#
+# Mathematical Foundation:
+# Loss: L = L_CE(y, ŷ) + λ||W||₂ where L_CE is cross-entropy, λ is weight decay
+# Learning rate schedule: η(t) = η_min + 0.5(η_max - η_min)(1 + cos(πt/T))
+# Gradient clipping: g = g * min(1, max_norm/||g||)
+#
+# Author: Võ Hải Dũng
+# License: MIT
 
 name: base_training
 type: standard
-description: "Base training configuration with best practices"
+description: "Base training configuration with best practices for AG News Text Classification"
 
-# General training settings
+# General Training Settings
 general:
-  seed: 42
-  deterministic: true
-  num_train_epochs: 10
-  max_steps: -1  # -1 means use num_train_epochs
-  early_stopping: true
-  early_stopping_patience: 3
-  early_stopping_threshold: 0.001
+  # Reproducibility
+  seed: 42  # Random seed for reproducibility
+  deterministic: true  # Enable deterministic algorithms
   
-  # Gradient accumulation
-  gradient_accumulation_steps: 1
-  gradient_checkpointing: false
+  # Training duration
+  num_train_epochs: 10  # Number of training epochs
+  max_steps: -1  # Maximum training steps (-1 = use epochs)
   
-  # Mixed precision
-  fp16: true
-  fp16_opt_level: O1
-  fp16_backend: auto
-  bf16: false  # For A100 GPUs
+  # Early stopping configuration
+  early_stopping: true  # Enable early stopping
+  early_stopping_patience: 3  # Epochs without improvement
+  early_stopping_threshold: 0.001  # Minimum improvement threshold
   
-  # Distributed training
-  local_rank: -1
-  ddp_backend: nccl
-  ddp_find_unused_parameters: false
+  # Gradient accumulation for effective batch size
+  gradient_accumulation_steps: 1  # Steps before optimizer step
+  gradient_checkpointing: false  # Trade compute for memory
   
-  # DeepSpeed
-  deepspeed: null  # Path to DeepSpeed config
+  # Mixed precision training
+  fp16: true  # Use FP16 mixed precision
+  fp16_opt_level: O1  # Options: O0, O1, O2, O3
+  fp16_backend: auto  # Options: auto, amp, apex
+  bf16: false  # Use BF16 (for A100/newer GPUs)
+  
+  # Distributed training settings
+  local_rank: -1  # Local rank for distributed (-1 = disabled)
+  ddp_backend: nccl  # Options: nccl, gloo, mpi
+  ddp_find_unused_parameters: false  # Find unused parameters in DDP
+  
+  # DeepSpeed integration
+  deepspeed: null  # Path to DeepSpeed config file
 
-# Batch configuration
+# Batch Configuration
 batch:
-  per_device_train_batch_size: 32
-  per_device_eval_batch_size: 64
+  # Batch sizes per device
+  per_device_train_batch_size: 32  # Training batch size per GPU
+  per_device_eval_batch_size: 64  # Evaluation batch size per GPU
   
   # Dynamic batching
-  auto_find_batch_size: false
+  auto_find_batch_size: false  # Automatically find optimal batch size
   
-  # DataLoader settings
-  dataloader_num_workers: 4
-  dataloader_pin_memory: true
-  dataloader_drop_last: false
-  dataloader_persistent_workers: true
+  # DataLoader configuration
+  dataloader_num_workers: 4  # Number of data loading workers
+  dataloader_pin_memory: true  # Pin memory for faster GPU transfer
+  dataloader_drop_last: false  # Drop incomplete last batch
+  dataloader_persistent_workers: true  # Keep workers alive between epochs
 
-# Optimizer configuration
+# Optimizer Configuration
 optimizer:
-  name: adamw
-  learning_rate: 2e-5
-  weight_decay: 0.01
-  adam_beta1: 0.9
-  adam_beta2: 0.999
-  adam_epsilon: 1e-8
+  # Optimizer selection
+  name: adamw  # Options: adamw, adam, sgd, adafactor
+  
+  # Learning rate settings
+  learning_rate: 2e-5  # Initial learning rate
+  weight_decay: 0.01  # L2 regularization coefficient
+  
+  # Adam/AdamW specific parameters
+  adam_beta1: 0.9  # Exponential decay for first moment
+  adam_beta2: 0.999  # Exponential decay for second moment
+  adam_epsilon: 1e-8  # Epsilon for numerical stability
   
   # Gradient clipping
-  max_grad_norm: 1.0
+  max_grad_norm: 1.0  # Maximum gradient norm
   
-  # Layer-wise learning rate decay
-  layer_decay: 0.95
+  # Layer-wise learning rate decay (for fine-tuning)
+  layer_decay: 0.95  # Decay factor per layer
   
-  # Bias correction
-  correct_bias: true
+  # Bias correction (for Adam variants)
+  correct_bias: true  # Apply bias correction
 
-# Learning rate scheduler
+# Learning Rate Scheduler
 scheduler:
-  name: cosine
-  warmup_ratio: 0.1
-  warmup_steps: 0  # If > 0, overrides warmup_ratio
+  # Scheduler type
+  name: cosine  # Options: linear, cosine, polynomial, constant
   
-  # Scheduler-specific params
-  num_cycles: 0.5  # For cosine
-  power: 1.0  # For polynomial
+  # Warmup configuration
+  warmup_ratio: 0.1  # Proportion of training for warmup
+  warmup_steps: 0  # Absolute warmup steps (overrides ratio if > 0)
   
-  # Learning rate range
-  lr_end: 1e-7
+  # Scheduler-specific parameters
+  num_cycles: 0.5  # Number of cosine cycles
+  power: 1.0  # Power for polynomial decay
+  
+  # Final learning rate
+  lr_end: 1e-7  # Final learning rate value
 
-# Loss configuration
+# Loss Configuration
 loss:
-  name: cross_entropy
-  label_smoothing_factor: 0.1
+  # Loss function
+  name: cross_entropy  # Options: cross_entropy, focal, label_smoothing
   
-  # Class weights for imbalanced data
-  use_class_weights: false
-  class_weights: auto  # Or specify [1.0, 1.0, 1.0, 1.0]
+  # Label smoothing
+  label_smoothing_factor: 0.1  # Label smoothing coefficient
   
-  # Focal loss parameters
-  focal_loss_gamma: 2.0
-  focal_loss_alpha: 0.25
+  # Class weighting for imbalanced data
+  use_class_weights: false  # Enable class weighting
+  class_weights: auto  # Options: auto, balanced, or [1.0, 1.0, 1.0, 1.0]
+  
+  # Focal loss parameters (for imbalanced datasets)
+  focal_loss_gamma: 2.0  # Focusing parameter γ
+  focal_loss_alpha: 0.25  # Balance parameter α
 
-# Regularization
+# Regularization Techniques
 regularization:
-  dropout_rate: 0.1
-  attention_dropout_rate: 0.1
-  hidden_dropout_rate: 0.1
+  # Dropout rates
+  dropout_rate: 0.1  # General dropout rate
+  attention_dropout_rate: 0.1  # Attention layer dropout
+  hidden_dropout_rate: 0.1  # Hidden layer dropout
   
-  # Weight decay
-  weight_decay: 0.01
-  weight_decay_exclude: ["bias", "LayerNorm", "layer_norm"]
+  # Weight decay configuration
+  weight_decay: 0.01  # L2 regularization strength
+  weight_decay_exclude: ["bias", "LayerNorm", "layer_norm"]  # Exclude from decay
   
-  # Stochastic depth
-  stochastic_depth_rate: 0.0
+  # Stochastic depth (layer dropout)
+  stochastic_depth_rate: 0.0  # Drop layer probability
   
-  # Mixup/CutMix
-  mixup_alpha: 0.0
-  cutmix_alpha: 0.0
+  # Data augmentation regularization
+  mixup_alpha: 0.0  # Mixup interpolation coefficient
+  cutmix_alpha: 0.0  # CutMix interpolation coefficient
 
-# Evaluation settings
+# Evaluation Settings
 evaluation:
+  # Evaluation strategy
   evaluation_strategy: steps  # Options: no, steps, epoch
-  eval_steps: 500
-  eval_delay: 0
-  eval_accumulation_steps: null
+  eval_steps: 500  # Evaluation frequency (if strategy=steps)
+  eval_delay: 0  # Delay before first evaluation
+  eval_accumulation_steps: null  # Gradient accumulation for eval
   
-  # Metrics
-  metric_for_best_model: f1_macro
-  greater_is_better: true
+  # Metrics configuration
+  metric_for_best_model: f1_macro  # Metric for model selection
+  greater_is_better: true  # Whether higher metric is better
   
   # Prediction settings
-  prediction_loss_only: false
+  prediction_loss_only: false  # Only compute loss (no metrics)
   
-  # Evaluation during training
-  do_eval: true
-  do_predict: true
+  # Evaluation flags
+  do_eval: true  # Perform evaluation during training
+  do_predict: true  # Perform prediction after training
 
-# Checkpointing
+# Checkpointing Configuration
 checkpointing:
+  # Save strategy
   save_strategy: steps  # Options: no, steps, epoch
-  save_steps: 500
-  save_total_limit: 3
-  save_on_each_node: false
+  save_steps: 500  # Save frequency (if strategy=steps)
+  save_total_limit: 3  # Maximum number of checkpoints
+  save_on_each_node: false  # Save on all nodes (distributed)
   
-  # Best model
-  load_best_model_at_end: true
-  save_best_only: true
+  # Best model handling
+  load_best_model_at_end: true  # Load best model after training
+  save_best_only: true  # Only save best model
   
   # Resume training
-  resume_from_checkpoint: null  # Path to checkpoint
+  resume_from_checkpoint: null  # Path to resume checkpoint
   
-  # Checkpoint management
-  save_safetensors: true
-  save_optimizer: true
-  save_scheduler: true
+  # Checkpoint format
+  save_safetensors: true  # Use SafeTensors format
+  save_optimizer: true  # Save optimizer state
+  save_scheduler: true  # Save scheduler state
 
-# Logging and monitoring
+# Logging and Monitoring
 logging:
-  logging_dir: ./outputs/logs
-  logging_strategy: steps
-  logging_first_step: true
-  logging_steps: 50
-  logging_nan_inf_filter: true
+  # Logging directories
+  logging_dir: ./outputs/logs  # Main logging directory
   
-  # Experiment tracking
-  report_to: ["tensorboard", "wandb"]
+  # Logging strategy
+  logging_strategy: steps  # Options: no, steps, epoch
+  logging_first_step: true  # Log first training step
+  logging_steps: 50  # Logging frequency
+  logging_nan_inf_filter: true  # Filter NaN/Inf values
   
-  # WandB settings
-  wandb_project: ag-news-training
-  wandb_entity: null
-  wandb_run_name: null
-  wandb_tags: ["training", "standard"]
+  # Experiment tracking platforms
+  report_to: ["tensorboard", "wandb"]  # Tracking services
   
-  # TensorBoard
-  tensorboard_dir: ./outputs/logs/tensorboard
+  # Weights & Biases configuration
+  wandb_project: ag-news-text-classification  # W&B project name
+  wandb_entity: null  # W&B entity/team
+  wandb_run_name: null  # W&B run name
+  wandb_tags: ["training", "standard"]  # W&B tags
   
-  # Metrics logging
-  log_level: info
-  log_level_replica: warning
+  # TensorBoard configuration
+  tensorboard_dir: ./outputs/logs/tensorboard  # TensorBoard directory
+  
+  # Logging levels
+  log_level: info  # Options: debug, info, warning, error, critical
+  log_level_replica: warning  # Replica log level
   
   # System metrics
-  log_gpu_memory: true
-  log_learning_rate: true
+  log_gpu_memory: true  # Log GPU memory usage
+  log_learning_rate: true  # Log learning rate changes
 
-# Data configuration
+# Data Configuration
 data:
-  # Data paths
-  train_file: ./data/processed/train.csv
-  validation_file: ./data/processed/validation.csv
-  test_file: ./data/processed/test.csv
+  # Data file paths
+  train_file: ./data/processed/train.csv  # Training data path
+  validation_file: ./data/processed/validation.csv  # Validation data path
+  test_file: ./data/processed/test.csv  # Test data path
   
-  # Processing
-  max_seq_length: 512
-  preprocessing_num_workers: 4
-  overwrite_cache: false
+  # Text processing
+  max_seq_length: 512  # Maximum sequence length
+  preprocessing_num_workers: 4  # Preprocessing workers
+  overwrite_cache: false  # Overwrite cached data
   
-  # Sampling
-  max_train_samples: null
-  max_eval_samples: null
-  max_predict_samples: null
+  # Data sampling
+  max_train_samples: null  # Limit training samples (null = all)
+  max_eval_samples: null  # Limit evaluation samples
+  max_predict_samples: null  # Limit prediction samples
   
-  # Data collator
-  pad_to_max_length: true
-  pad_to_multiple_of: 8
-  label_pad_token_id: -100
+  # Data collator configuration
+  pad_to_max_length: true  # Pad to max length
+  pad_to_multiple_of: 8  # Pad to multiple (efficient for TPU/GPU)
+  label_pad_token_id: -100  # Padding token ID for labels
 
-# Advanced training strategies
+# Advanced Training Strategies
 advanced:
   # Gradient accumulation
-  gradient_accumulation_steps: 1
-  eval_accumulation_steps: null
+  gradient_accumulation_steps: 1  # Steps before update
+  eval_accumulation_steps: null  # Eval accumulation steps
   
-  # Training resume
-  ignore_data_skip: false
+  # Training continuation
+  ignore_data_skip: false  # Ignore data skip on resume
   
-  # Push to hub
-  push_to_hub: false
-  hub_model_id: null
-  hub_strategy: every_save
-  hub_token: null
+  # Model hub integration
+  push_to_hub: false  # Push to HuggingFace Hub
+  hub_model_id: null  # Hub model identifier
+  hub_strategy: every_save  # Options: end, every_save, checkpoint
+  hub_token: null  # HuggingFace API token
   
-  # Ray integration
-  ray_scope: last
+  # Ray integration for hyperparameter tuning
+  ray_scope: last  # Options: last, all
   
-  # Skip memory metrics
-  skip_memory_metrics: true
+  # Memory optimization
+  skip_memory_metrics: true  # Skip memory profiling
   
-  # Torch compile
-  torch_compile: false
-  torch_compile_backend: inductor
-  torch_compile_mode: default
+  # PyTorch 2.0 compilation
+  torch_compile: false  # Enable torch.compile
+  torch_compile_backend: inductor  # Compilation backend
+  torch_compile_mode: default  # Options: default, reduce-overhead, max-autotune
 
-# Hardware settings
+# Hardware Settings
 hardware:
-  no_cuda: false
-  use_mps_device: false  # For Apple Silicon
-  use_cpu: false
+  # Device selection
+  no_cuda: false  # Disable CUDA (use CPU)
+  use_mps_device: false  # Use Apple Metal Performance Shaders
+  use_cpu: false  # Force CPU usage
   
-  # Device placement
-  device: cuda
-  n_gpu: 1
+  # Device configuration
+  device: cuda  # Device type: cuda, cpu, mps
+  n_gpu: 1  # Number of GPUs to use
   
   # Memory management
-  per_device_train_batch_size: 32
-  auto_find_batch_size: false
-  full_determinism: false
+  per_device_train_batch_size: 32  # Batch size per device
+  auto_find_batch_size: false  # Auto-tune batch size
+  full_determinism: false  # Full reproducibility (slower)
   
-  # Performance
-  tf32: true  # For Ampere GPUs
-  dataloader_prefetch_factor: 2
+  # Performance optimizations
+  tf32: true  # Use TensorFloat-32 (Ampere GPUs)
+  dataloader_prefetch_factor: 2  # Prefetch batches
 
-# Callbacks
+# Training Callbacks
 callbacks:
+  # Early stopping callback
   - name: EarlyStoppingCallback
-    patience: 3
-    threshold: 0.001
+    patience: 3  # Patience epochs
+    threshold: 0.001  # Minimum improvement
     
+  # Model checkpoint callback
   - name: ModelCheckpointCallback
-    save_best: true
+    save_best: true  # Save best model
     
+  # TensorBoard callback
   - name: TensorBoardCallback
     log_dir: ./outputs/logs/tensorboard
     
+  # Weights & Biases callback
   - name: WandbCallback
-    project: ag-news
+    project: ag-news-text-classification
     
+  # Progress bar callback
   - name: ProgressBarCallback
     
+  # Console printer callback
   - name: PrinterCallback
 
-# Environment variables
+# Environment Variables
 env_vars:
-  TOKENIZERS_PARALLELISM: false
-  CUDA_LAUNCH_BLOCKING: 0
-  WANDB_DISABLED: false
-  HF_DATASETS_CACHE: ./.cache/datasets
+  TOKENIZERS_PARALLELISM: false  # Disable tokenizer parallelism warnings
+  CUDA_LAUNCH_BLOCKING: 0  # CUDA synchronous execution (0=async)
+  WANDB_DISABLED: false  # Disable W&B logging
+  HF_DATASETS_CACHE: ./.cache/datasets  # HuggingFace datasets cache
 
 # Notes
 notes: |
-  Base training configuration optimized for:
-  - Single GPU training (can scale to multi-GPU)
-  - Mixed precision training (FP16)
-  - Gradient accumulation for larger effective batch sizes
+  Base Training Configuration for AG News Text Classification:
+  
+  Key features:
+  - Standard supervised training with cross-entropy loss
+  - AdamW optimizer with cosine learning rate schedule
+  - Mixed precision training (FP16) for efficiency
   - Early stopping to prevent overfitting
   - Comprehensive logging and monitoring
   
-  Recommended adjustments:
+  Recommended configurations:
+  1. Small GPU (8GB): batch_size=16, gradient_accumulation=2
+  2. Medium GPU (16GB): batch_size=32, gradient_accumulation=1
+  3. Large GPU (32GB+): batch_size=64, gradient_accumulation=1
+  
+  Performance expectations:
+  - Training time: ~2-3 hours on V100
+  - Memory usage: ~12GB with batch_size=32
+  - Expected accuracy: 94-95%
+  
+  Common adjustments:
   - Increase batch size for larger GPUs
-  - Enable gradient checkpointing for large models
-  - Use BF16 for A100 GPUs
-  - Adjust learning rate based on batch size
+  - Enable gradient checkpointing for memory-constrained scenarios
+  - Use BF16 instead of FP16 for A100/H100 GPUs
+  - Scale learning rate with batch size (linear or sqrt scaling)
+  
+  Debugging tips:
+  - Set deterministic=true for reproducibility
+  - Enable CUDA_LAUNCH_BLOCKING=1 for better error messages
+  - Use smaller batch sizes to debug OOM errors
+  - Monitor gradient norms for training stability
