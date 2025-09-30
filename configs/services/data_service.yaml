@@ -14,7 +14,7 @@
 service:
   name: "data-service"
   version: "1.0.0"
-  description: "Data management and processing service for AG News"
+  description: "Data management and processing service for AG News Text Classification"
   namespace: "agnews"
   
 # Data Sources Configuration
