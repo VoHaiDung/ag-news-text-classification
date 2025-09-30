@@ -55,7 +55,7 @@ instruction_tuning:
 task_instructions:
   # AG News classification instruction
   ag_news:
-    task_name: "News Classification"
+    task_name: "AG News Text Classification"
     description: "Classify the given news article into one of four categories: World, Sports, Business, or Science/Technology."
     
     # Detailed instructions
