@@ -1,39 +1,43 @@
 # LoRA/PEFT Training Configuration
 # =================================
-#
-# Parameter-Efficient Fine-Tuning using Low-Rank Adaptation
-# Based on:
+# Configuration for Low-Rank Adaptation following methodologies from:
 # - Hu et al. (2022): "LoRA: Low-Rank Adaptation of Large Language Models"
+# - Dettmers et al. (2023): "QLoRA: Efficient Finetuning of Quantized LLMs"
 # - Liu et al. (2022): "Few-Shot Parameter-Efficient Fine-Tuning is Better and Cheaper than In-Context Learning"
 # - He et al. (2022): "Towards a Unified View of Parameter-Efficient Transfer Learning"
+#
+# Mathematical Foundation:
+# LoRA decomposition: W = W₀ + ΔW = W₀ + BA where B ∈ R^{d×r}, A ∈ R^{r×k}
+# Update rule: h = W₀x + ΔWx = W₀x + BAx with scaling α/r
+# Parameters: O(2Lr(d₁ + d₂)) where L=layers, r=rank, d₁,d₂=dimensions
 #
 # Author: Võ Hải Dũng
 # License: MIT
 
 name: lora_peft_training
-type: efficient_training
-description: "Parameter-efficient fine-tuning using LoRA for AG News"
+type: efficient_lora
+description: "Parameter-efficient fine-tuning using LoRA for AG News Text Classification"
 
-# LoRA configuration (Hu et al., 2022)
+# LoRA Configuration
 lora:
   # Rank parameters
-  r: 8  # Rank of adaptation (r << d)
-  lora_alpha: 16  # Scaling parameter (α)
-  lora_dropout: 0.1  # Dropout in LoRA layers
+  r: 8  # Low-rank decomposition rank (r << min(d₁, d₂))
+  lora_alpha: 16  # Scaling parameter α (typically α = 2r)
+  lora_dropout: 0.1  # Dropout probability in LoRA layers
   
-  # Target modules (which layers to apply LoRA)
+  # Target modules for LoRA adaptation
   target_modules:
-    # Attention modules (most effective)
+    # Attention projection matrices (most effective)
     - q_proj  # Query projection
-    - v_proj  # Value projection
+    - v_proj  # Value projection  
     - k_proj  # Key projection
     - o_proj  # Output projection
     
-    # MLP modules (optional)
-    - fc1  # First FC layer
-    - fc2  # Second FC layer
+    # Feed-forward network (optional, increases parameters)
+    - fc1  # First fully connected layer
+    - fc2  # Second fully connected layer
     
-    # Model-specific modules
+    # Model-specific module paths
     deberta:
       - attention.self.query_proj
       - attention.self.value_proj
@@ -46,289 +50,297 @@ lora:
       - attention.self.key
       - attention.output.dense
   
-  # Initialization
-  init_lora_weights: true
+  # Weight initialization
+  init_lora_weights: true  # Initialize LoRA weights
   lora_init_type: "gaussian"  # Options: gaussian, uniform, xavier
   
   # Advanced LoRA variants
-  use_rslora: false  # Rank-Stabilized LoRA
-  use_dora: false    # Weight-Decomposed LoRA
+  use_rslora: false  # Rank-Stabilized LoRA for better stability
+  use_dora: false    # Weight-Decomposed LoRA for improved capacity
   
-  # Module replacement strategy
+  # Modules to keep trainable
   modules_to_save:
-    - classifier  # Always train classifier
-    - pooler      # Optional: train pooler
+    - classifier  # Classification head always trainable
+    - pooler      # Pooling layer (optional)
 
-# QLoRA configuration (Dettmers et al., 2023)
+# QLoRA Configuration (4-bit Quantized LoRA)
 qlora:
   enabled: false
   
-  # Quantization settings
-  bits: 4  # 4-bit quantization
-  bnb_4bit_compute_dtype: "float16"
-  bnb_4bit_quant_type: "nf4"  # Options: fp4, nf4
-  bnb_4bit_use_double_quant: true  # Double quantization
+  # Quantization parameters
+  bits: 4  # 4-bit quantization for base model
+  bnb_4bit_compute_dtype: "float16"  # Computation dtype
+  bnb_4bit_quant_type: "nf4"  # Options: fp4, nf4 (normalized float4)
+  bnb_4bit_use_double_quant: true  # Double quantization for constants
   
-  # Memory optimization
-  gradient_checkpointing: true
-  gradient_accumulation_steps: 4
+  # Memory efficiency
+  gradient_checkpointing: true  # Trade compute for memory
+  gradient_accumulation_steps: 4  # Accumulate gradients
 
-# Training configuration
+# Training Configuration
 training:
-  # Learning rate (higher for LoRA)
+  # Learning rate settings
   learning_rate: 3e-4  # 10x higher than full fine-tuning
   
-  # Batch size (can be larger due to memory savings)
-  per_device_train_batch_size: 64
-  per_device_eval_batch_size: 128
+  # Batch configuration  
+  per_device_train_batch_size: 64  # Larger batch due to memory savings
+  per_device_eval_batch_size: 128  # Even larger for evaluation
   
-  # Training duration
-  num_epochs: 20  # More epochs due to fewer parameters
-  warmup_ratio: 0.03
+  # Training schedule
+  num_epochs: 20  # More epochs needed (fewer parameters)
+  warmup_ratio: 0.03  # 3% warmup steps
   
-  # Optimizer
-  optimizer: "adamw_torch"
-  weight_decay: 0.001
+  # Optimizer settings
+  optimizer: "adamw_torch"  # AdamW optimizer
+  weight_decay: 0.001  # L2 regularization
   
-  # Scheduler
-  lr_scheduler_type: "cosine"
+  # Learning rate schedule
+  lr_scheduler_type: "cosine"  # Cosine annealing
   
-  # Mixed precision
-  fp16: true
-  bf16: false  # Use bf16 for A100
+  # Mixed precision training
+  fp16: true   # FP16 for V100/older GPUs
+  bf16: false  # BF16 for A100/newer GPUs
 
-# Adapter configuration (alternative to LoRA)
+# Adapter Configuration (Alternative to LoRA)
 adapters:
   enabled: false
   
-  # Adapter architecture (Houlsby et al., 2019)
+  # Adapter architecture
   adapter_config:
-    hidden_dim: 64
+    hidden_dim: 64  # Bottleneck dimension
     adapter_type: "houlsby"  # Options: houlsby, pfeiffer
     
-  # Multi-adapter
-  use_parallel_adapters: false
-  adapter_fusion: false
+  # Multi-adapter settings
+  use_parallel_adapters: false  # Parallel adapter insertion
+  adapter_fusion: false  # Fuse multiple adapters
 
-# Prefix tuning (Li & Liang, 2021)
+# Prefix Tuning Configuration
 prefix_tuning:
   enabled: false
   
-  prefix_length: 20
-  prefix_projection: true
-  prefix_hidden_size: 512
+  prefix_length: 20  # Number of prefix tokens
+  prefix_projection: true  # Use projection for prefix
+  prefix_hidden_size: 512  # Hidden size for projection
   
-  # Virtual tokens
-  num_virtual_tokens: 20
-  virtual_token_init: "random"
+  # Virtual token parameters
+  num_virtual_tokens: 20  # Number of virtual tokens
+  virtual_token_init: "random"  # Initialization method
 
-# Prompt tuning (Lester et al., 2021)
+# Prompt Tuning Configuration
 prompt_tuning:
   enabled: false
   
-  num_prompt_tokens: 20
+  num_prompt_tokens: 20  # Number of soft prompt tokens
   prompt_init_type: "random"  # Options: random, text, vocab
-  prompt_init_text: "Classify the following news article:"
+  prompt_init_text: "Classify the following news article:"  # Init text
 
-# P-tuning v2 (Liu et al., 2022)
+# P-Tuning v2 Configuration
 p_tuning:
   enabled: false
   
-  num_layers: 12
-  num_tokens_per_layer: 20
-  encoder_hidden_size: 128
+  num_layers: 12  # Number of layers with prompts
+  num_tokens_per_layer: 20  # Tokens per layer
+  encoder_hidden_size: 128  # Prompt encoder hidden size
   
-  # Reparameterization
-  use_reparameterization: true
-  reparam_type: "lstm"
+  # Reparameterization settings
+  use_reparameterization: true  # Use prompt encoder
+  reparam_type: "lstm"  # Options: lstm, mlp
 
-# BitFit (Ben Zaken et al., 2022)
+# BitFit Configuration (Bias-only Fine-tuning)
 bitfit:
   enabled: false
   
-  # Only train bias terms
-  train_bias_only: true
+  # Bias-only training
+  train_bias_only: true  # Only train bias parameters
   bias_modules:
-    - ".*bias"
-    - ".*LayerNorm.*"
+    - ".*bias"  # All bias terms
+    - ".*LayerNorm.*"  # LayerNorm parameters
 
-# IA³ (Liu et al., 2022)
+# IA³ Configuration (Infused Adapter by Inhibiting and Amplifying)
 ia3:
   enabled: false
   
+  # Target modules for IA³
   target_modules:
-    - k_proj
-    - v_proj
-    - fc2
+    - k_proj  # Key projection
+    - v_proj  # Value projection
+    - fc2     # Feed-forward output
   
+  # Feed-forward specific modules
   feedforward_modules:
-    - fc2
+    - fc2  # Output layer of FFN
 
-# Comparison with full fine-tuning
+# Efficiency Comparison
 comparison:
-  # Full fine-tuning baseline
+  # Full fine-tuning baseline metrics
   full_finetuning:
-    trainable_params: 335000000  # 335M for DeBERTa-large
-    memory_usage_gb: 24
-    training_time_hours: 12
-    accuracy: 0.956
+    trainable_params: 335000000  # 335M parameters (DeBERTa-large)
+    memory_usage_gb: 24  # GPU memory requirement
+    training_time_hours: 12  # Training duration
+    accuracy: 0.956  # Expected accuracy
     
-  # LoRA efficiency
+  # LoRA efficiency metrics
   lora_metrics:
-    trainable_params: 2949120  # ~3M (0.88% of full)
-    memory_usage_gb: 8
-    training_time_hours: 4
-    expected_accuracy: 0.954  # -0.2% accuracy
+    trainable_params: 2949120  # ~3M parameters (0.88% of full)
+    memory_usage_gb: 8  # Reduced memory requirement
+    training_time_hours: 4  # Faster training
+    expected_accuracy: 0.954  # Minimal accuracy drop (-0.2%)
     
-  # Efficiency gains
-  parameter_reduction: 0.9912  # 99.12% reduction
-  memory_reduction: 0.667  # 66.7% reduction
-  speedup: 3.0  # 3x faster
+  # Computed efficiency gains
+  parameter_reduction: 0.9912  # 99.12% fewer parameters
+  memory_reduction: 0.667  # 66.7% memory savings
+  speedup: 3.0  # 3x training speedup
 
-# Multi-task PEFT
+# Multi-Task PEFT Configuration
 multi_task:
   enabled: false
   
-  # Task-specific LoRA modules
+  # Task-specific LoRA configurations
   tasks:
     - name: "classification"
-      lora_r: 8
-      lora_alpha: 16
+      lora_r: 8  # Rank for classification
+      lora_alpha: 16  # Scaling for classification
       
     - name: "sentiment"
-      lora_r: 4
-      lora_alpha: 8
+      lora_r: 4  # Lower rank for simpler task
+      lora_alpha: 8  # Corresponding scaling
       
-  # Shared modules
+  # Shared frozen modules
   shared_modules:
-    - embeddings
-    - encoder.layer.0
+    - embeddings  # Share embeddings
+    - encoder.layer.0  # Share early layers
 
-# Hyperparameter search for PEFT
+# Hyperparameter Search Configuration
 hyperparameter_search:
   enabled: true
   
+  # Search space definition
   search_space:
     lora_r:
       type: "categorical"
-      choices: [4, 8, 16, 32]
+      choices: [4, 8, 16, 32]  # Rank options
       
     lora_alpha:
-      type: "categorical"
-      choices: [8, 16, 32, 64]
+      type: "categorical"  
+      choices: [8, 16, 32, 64]  # Alpha options
       
     lora_dropout:
       type: "float"
-      low: 0.0
-      high: 0.2
+      low: 0.0  # No dropout
+      high: 0.2  # Maximum dropout
       
     learning_rate:
       type: "float"
-      low: 1e-4
-      high: 1e-3
-      log: true
+      low: 1e-4  # Minimum LR
+      high: 1e-3  # Maximum LR
+      log: true  # Log scale
   
-  # Search strategy
-  strategy: "bayesian"
-  n_trials: 20
-  metric: "eval_f1_macro"
+  # Search strategy parameters
+  strategy: "bayesian"  # Bayesian optimization
+  n_trials: 20  # Number of trials
+  metric: "eval_f1_macro"  # Optimization metric
 
-# Memory optimization
+# Memory Optimization
 memory_optimization:
   # Gradient checkpointing
-  gradient_checkpointing: true
+  gradient_checkpointing: true  # Trade compute for memory
   
   # CPU offloading
-  offload_to_cpu: false
+  offload_to_cpu: false  # Keep on GPU
   
-  # Optimizer state sharding
-  use_8bit_adam: true
+  # 8-bit optimizer
+  use_8bit_adam: true  # Use bitsandbytes 8-bit Adam
   
   # Activation checkpointing
-  activation_checkpointing: true
+  activation_checkpointing: true  # Checkpoint activations
 
-# Deployment optimization
+# Deployment Configuration
 deployment:
-  # Merge LoRA weights
-  merge_and_save: true
+  # LoRA weight merging
+  merge_and_save: true  # Merge LoRA weights into base model
   merged_model_path: "./outputs/models/lora_merged"
   
   # Export formats
-  export_onnx: true
-  export_tensorrt: false
+  export_onnx: true  # Export to ONNX
+  export_tensorrt: false  # TensorRT optimization
   
-  # Quantization after training
-  post_training_quantization: true
-  quantization_bits: 8
+  # Post-training optimization
+  post_training_quantization: true  # Quantize after training
+  quantization_bits: 8  # INT8 quantization
 
-# Evaluation
+# Evaluation Configuration
 evaluation:
-  # Compare with full model
-  compare_with_full: true
+  # Comparison settings
+  compare_with_full: true  # Compare with full fine-tuning
   
   # Efficiency metrics
-  measure_inference_speed: true
-  measure_memory_usage: true
+  measure_inference_speed: true  # Measure inference latency
+  measure_memory_usage: true  # Track memory consumption
   
-  # Robustness testing
-  test_robustness: true
-  adversarial_evaluation: false
+  # Robustness evaluation
+  test_robustness: true  # Test model robustness
+  adversarial_evaluation: false  # Skip adversarial testing
 
-# Expected results
+# Expected Results
 expected_results:
-  # Performance
-  accuracy: 0.954
-  f1_macro: 0.953
+  # Performance metrics
+  accuracy: 0.954  # Classification accuracy
+  f1_macro: 0.953  # Macro F1 score
   
-  # Efficiency
-  training_speedup: 3.0
-  inference_speedup: 1.0  # Same after merging
-  memory_reduction: 0.67
+  # Efficiency metrics
+  training_speedup: 3.0  # 3x faster training
+  inference_speedup: 1.0  # Same speed after merging
+  memory_reduction: 0.67  # 67% memory savings
   
-  # Model size
-  checkpoint_size_mb: 25  # vs 1350MB full model
-  merged_size_mb: 1350  # Same as full after merging
+  # Model size metrics
+  checkpoint_size_mb: 25  # LoRA checkpoint size
+  merged_size_mb: 1350  # Same as full model after merging
 
 # Notes
 notes: |
-  LoRA/PEFT configuration for efficient fine-tuning:
+  LoRA/PEFT Configuration for AG News Text Classification:
   
-  1. LoRA Parameters (Hu et al., 2022):
-     - r=8: Good balance of performance and efficiency
-     - α=16: Standard scaling (α = 2r)
-     - Target attention modules for best results
+  Architecture choices:
+  - Rank r=8: Optimal for AG News complexity
+  - Alpha α=16: Standard 2r scaling
+  - Target attention modules: Maximum impact
   
-  2. Efficiency Gains:
-     - 99% fewer trainable parameters
-     - 67% memory reduction
-     - 3x training speedup
-     - Only 0.2% accuracy drop
+  Parameter efficiency:
+  - Base model: 335M params (DeBERTa-large)
+  - LoRA params: 3M (0.88% of base)
+  - Training only LoRA: 100x fewer gradients
   
-  3. Best Practices:
-     - Higher learning rate (3e-4) than full fine-tuning
-     - More epochs due to fewer parameters
-     - Target attention modules first
-     - Use gradient checkpointing for memory
+  Performance expectations:
+  - 99.8% of full fine-tuning accuracy
+  - 3x faster training
+  - 67% memory reduction
+  - 25MB checkpoint vs 1.35GB full model
   
-  4. When to Use:
-     - Limited GPU memory (<16GB)
-     - Need to train multiple models
-     - Rapid prototyping
-     - Multi-task learning
+  Best practices:
+  - Use r ∈ [4, 16] for most tasks
+  - Set α = 2r for standard scaling
+  - Higher LR (3e-4) than full fine-tuning
+  - Target attention modules first
   
-  5. Advanced Techniques:
-     - QLoRA for 4-bit training
-     - Adapter fusion for multi-task
-     - IA³ for even fewer parameters
+  Advanced techniques:
+  - QLoRA: 4-bit training for large models
+  - DoRA: Weight decomposition for capacity
+  - RSLoRA: Rank stabilization for consistency
   
-  6. Deployment:
-     - Merge LoRA weights for standard inference
-     - Or keep separate for multi-task switching
+  Common issues:
+  - Underfitting: Increase rank r
+  - Overfitting: Add dropout or reduce r
+  - Slow convergence: Increase learning rate
+  - Memory issues: Enable gradient checkpointing
 
+# References
 references:
   - lora: "https://arxiv.org/abs/2106.09685"
   - qlora: "https://arxiv.org/abs/2305.14314"
+  - dora: "https://arxiv.org/abs/2402.09353"
+  - rslora: "https://arxiv.org/abs/2312.03732"
   - adapters: "https://arxiv.org/abs/1902.00751"
   - prefix_tuning: "https://arxiv.org/abs/2101.00190"
   - prompt_tuning: "https://arxiv.org/abs/2104.08691"
   - ia3: "https://arxiv.org/abs/2205.05638"
+  - unified_peft: "https://arxiv.org/abs/2110.04366"
