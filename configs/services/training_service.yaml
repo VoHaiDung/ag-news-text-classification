@@ -14,7 +14,7 @@
 service:
   name: "training-service"
   version: "1.0.0"
-  description: "Model training service for AG News classification"
+  description: "Model training service for AG News Text Classification"
   namespace: "agnews"
   
 # Job Management Configuration
