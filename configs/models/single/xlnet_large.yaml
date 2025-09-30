@@ -1,5 +1,5 @@
 # XLNet-Large Model Configuration
-# Autoregressive pretraining for AG News
+# Autoregressive pretraining for AG News Text Classification
 
 name: xlnet_large
 type: transformer
