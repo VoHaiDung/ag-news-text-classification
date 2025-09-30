@@ -1253,7 +1253,7 @@ Configuration management is centralized in the `configs/` directory, implementin
 
 The system architecture establishes clear dependency relationships between modules, following the Dependency Inversion Principle to ensure high-level modules do not depend on low-level implementation details. The dependency graph forms a directed acyclic graph (DAG), preventing circular dependencies and enabling clean separation of concerns.
 
-![Module Dependency Diagram](images/ARCHITECTURE/Module Dependency Diagram.png)
+![Module Dependency Diagram](images/ARCHITECTURE/Module%Dependency%Diagram.png)
 
 The core interfaces module defines abstract base classes and type definitions that establish contracts between system components. This architectural pattern enables polymorphic behavior and facilitates testing through dependency injection. The model layer depends only on these interfaces, not on concrete implementations of data loading or training logic, allowing for flexible substitution of components.
 
