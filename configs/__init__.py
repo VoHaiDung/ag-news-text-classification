@@ -1,5 +1,5 @@
 """
-Configuration Module for AG News Classification
+Configuration Module for AG News Text Classification
 ================================================
 
 Central configuration management following:
