@@ -425,7 +425,7 @@ optimization:
 
 # Notes
 notes: |
-  Meta-Learning Configuration for AG News:
+  Meta-Learning Configuration for AG News Text Classification:
   
   Algorithm selection:
   - MAML: Best for gradient-based adaptation
