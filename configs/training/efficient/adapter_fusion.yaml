@@ -328,7 +328,7 @@ experimental:
 
 # Notes
 notes: |
-  Adapter Fusion Configuration for AG News:
+  Adapter Fusion Configuration for AG News Text Classification:
   
   Architecture choices:
   - Pfeiffer adapters: Simple and effective
