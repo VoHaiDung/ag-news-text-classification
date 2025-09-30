@@ -314,7 +314,7 @@ deployment:
 
 # Model card
 model_card:
-  description: "Stacking ensemble with CatBoost meta-learner for AG News classification"
+  description: "Stacking ensemble with CatBoost meta-learner for AG News Text Classification"
   intended_use: "High-performance classification with gradient boosting meta-learner"
   architecture: "Two-level stacking: 4 transformer base models + CatBoost meta-learner"
   eval_results:
