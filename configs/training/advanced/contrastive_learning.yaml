@@ -363,7 +363,7 @@ ablation:
 
 # Notes
 notes: |
-  Contrastive Learning Configuration for AG News:
+  Contrastive Learning Configuration for AG News Text Classification:
   
   Key insights:
   1. Contrastive learning improves representation quality
