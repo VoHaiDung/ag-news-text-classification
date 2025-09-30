@@ -267,7 +267,7 @@ expected_results:
 
 # Notes
 notes: |
-  Adversarial Training Configuration for AG News:
+  Adversarial Training Configuration for AG News Text Classification:
   
   Key insights:
   1. FreeLB provides best trade-off between robustness and efficiency
