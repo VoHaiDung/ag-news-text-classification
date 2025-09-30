@@ -294,7 +294,7 @@ deployment:
 
 # Model card
 model_card:
-  description: "Stacking ensemble with XGBoost meta-learner for AG News classification"
+  description: "Stacking ensemble with XGBoost meta-learner for AG News Text Classification"
   intended_use: "High-accuracy classification with interpretable meta-features"
   architecture: "Two-level stacking: 5 transformer base models + XGBoost meta-learner"
   eval_results:
