@@ -368,7 +368,7 @@ ablation:
 
 # Notes and best practices
 notes: |
-  Curriculum Learning Configuration for AG News Classification:
+  Curriculum Learning Configuration for AG News Text Classification:
   
   Key principles:
   1. Start with easy samples (short, clear texts)
