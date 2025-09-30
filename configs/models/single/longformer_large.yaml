@@ -1,5 +1,5 @@
 # Longformer-Large Model Configuration
-# Efficient attention mechanism for long documents in AG News Classification
+# Efficient attention mechanism for long documents in AG News Text Classification
 
 name: longformer_large
 type: transformer
