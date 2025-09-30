@@ -338,7 +338,7 @@ comparison:
 
 # Notes
 notes: |
-  Prefix Tuning Configuration for AG News:
+  Prefix Tuning Configuration for AG News Text Classification:
   
   Key design choices:
   - Prefix length 20: Good balance between performance and efficiency
