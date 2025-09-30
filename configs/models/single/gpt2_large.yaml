@@ -1,5 +1,5 @@
 # GPT-2-Large Model Configuration
-# Generative pre-trained transformer adapted for AG News Classification
+# Generative pre-trained transformer adapted for AG News Text Classification
 
 name: gpt2_large
 type: transformer
@@ -262,7 +262,7 @@ tracking:
 
 # Model card information
 model_card:
-  description: "GPT-2-Large adapted for AG News classification task"
+  description: "GPT-2-Large adapted for AG News Text Classification task"
   intended_use: "News article classification using autoregressive language model"
   training_data: "AG News dataset with special formatting for GPT-2"
   eval_results:
