@@ -428,7 +428,7 @@ experimental:
 
 # Notes
 notes: |
-  QLoRA Configuration for AG News Classification:
+  QLoRA Configuration for AG News Text Classification:
   
   Key features:
   - 4-bit NormalFloat quantization with double quantization
