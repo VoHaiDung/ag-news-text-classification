@@ -112,41 +112,572 @@ This comprehensive data infrastructure, detailed in the project structure under 
 
 ## Installation
 
-This project requires Python 3.9+ and the following libraries:
+### System Requirements
 
-- `torch` – for model training and inference with PyTorch
-- `transformers` – for loading and fine‑tuning DeBERTa‑v3 and Longformer via Hugging Face
-- `datasets` – for accessing and handling the AG News dataset efficiently
-- `evaluate` – for computing evaluation metrics like accuracy, precision, recall, and F1
-- `peft` – for Low‑Rank Adaptation (LoRA) fine‑tuning
-- `numpy` – for numerical operations
-- `pandas` – for data manipulation and I/O
-- `scikit‑learn` – for classification reports, cross‑validation, and utility functions
-- `tqdm` – for progress bars during training, evaluation, and inference
-- `matplotlib` – for plotting (attention heatmaps, training curves)
-- `shap` – for SHAP‑based explainability (force plots, summary plots)
-- `joblib` – for serializing stacking models and fast I/O
-- `gradio` – for launching an interactive web demo
-- `jupyterlab` – for interactive notebook exploration
-
-Install dependencies via pip:
-
-```bash
-pip install transformers datasets torch evaluate peft numpy pandas scikit‑learn tqdm matplotlib shap joblib gradio jupyterlab
+#### Minimum Hardware Requirements
+```yaml
+Processor: Intel Core i5 8th Gen / AMD Ryzen 5 3600 or equivalent
+Memory: 16GB RAM (32GB recommended for ensemble training)
+Storage: 50GB available disk space (SSD recommended)
+GPU: NVIDIA GPU with 8GB+ VRAM (optional for CPU-only execution)
+CUDA: 11.7+ with cuDNN 8.6+ (for GPU acceleration)
+Operating System: Ubuntu 20.04+ / macOS 11+ / Windows 10+ with WSL2
 ```
 
-Or install them all at once with:
-
-```bash
-pip install -r requirements.txt
+#### Optimal Configuration for Research
+```yaml
+Processor: Intel Core i9 / AMD Ryzen 9 / Apple M2 Pro
+Memory: 64GB RAM for large-scale experiments
+Storage: 200GB NVMe SSD for dataset caching
+GPU: NVIDIA RTX 4090 (24GB) / A100 (40GB) for transformer training
+CUDA: 11.8 with cuDNN 8.9 for optimal performance
+Network: Stable internet for downloading pretrained models (~20GB)
 ```
 
-Install dependencies via conda:
+### Software Prerequisites
 
 ```bash
-conda env create -f environment.yml
-conda activate agnews-classification
+# Core Requirements
+Python: 3.8-3.11 (3.9.16 recommended for compatibility)
+pip: 22.0+ 
+git: 2.25+
+virtualenv or conda: Latest stable version
+
+# Optional but Recommended
+Docker: 20.10+ for containerized deployment
+nvidia-docker2: For GPU support in containers
+Make: GNU Make 4.2+ for automation scripts
 ```
+
+### Installation Methods
+
+#### Method 1: Standard Installation (Recommended)
+
+##### Step 1: Clone Repository
+```bash
+# Clone with full history for experiment tracking
+git clone https://github.com/VoHaiDung/ag-news-text-classification.git
+cd ag-news-text-classification
+
+# For shallow clone (faster, limited history)
+git clone --depth 1 https://github.com/VoHaiDung/ag-news-text-classification.git
+```
+
+##### Step 2: Create Virtual Environment
+```bash
+# Using venv (Python standard library)
+python3 -m venv venv
+source venv/bin/activate  # Linux/macOS
+# venv\Scripts\activate  # Windows
+
+# Using conda (recommended for complex dependencies)
+conda create -n agnews python=3.9.16
+conda activate agnews
+```
+
+##### Step 3: Install Dependencies
+```bash
+# Upgrade pip and essential tools
+pip install --upgrade pip setuptools wheel
+
+# Install base requirements (minimal setup)
+pip install -r requirements/base.txt
+
+# Install ML requirements (includes PyTorch, Transformers)
+pip install -r requirements/ml.txt
+
+# Install all requirements (complete setup)
+pip install -r requirements/all.txt
+
+# Install package in development mode
+pip install -e .
+```
+
+##### Step 4: Download and Prepare Data
+```bash
+# Download AG News dataset and external corpora
+python scripts/setup/download_all_data.py
+
+# Prepare processed datasets
+python scripts/data_preparation/prepare_ag_news.py
+
+# Create augmented data (optional, time-intensive)
+python scripts/data_preparation/create_augmented_data.py
+
+# Generate contrast sets for robustness testing
+python scripts/data_preparation/generate_contrast_sets.py
+```
+
+##### Step 5: Verify Installation
+```bash
+# Run comprehensive verification script
+python scripts/setup/verify_installation.py
+
+# Test core imports
+python -c "from src.models import *; print('Models: OK')"
+python -c "from src.data import *; print('Data: OK')"
+python -c "from src.training import *; print('Training: OK')"
+python -c "from src.api import *; print('API: OK')"
+python -c "from src.services import *; print('Services: OK')"
+```
+
+#### Method 2: Docker Installation
+
+##### Using Pre-built Images
+```bash
+# Pull and run CPU version
+docker run -it --rm \
+  -v $(pwd)/data:/workspace/data \
+  -v $(pwd)/outputs:/workspace/outputs \
+  agnews/classification:latest
+
+# Pull and run GPU version
+docker run -it --rm --gpus all \
+  -v $(pwd)/data:/workspace/data \
+  -v $(pwd)/outputs:/workspace/outputs \
+  agnews/classification:gpu
+
+# Run API services
+docker run -d -p 8000:8000 -p 50051:50051 \
+  --name agnews-api \
+  agnews/api:latest
+```
+
+##### Building from Source
+```bash
+# Build base image
+docker build -f deployment/docker/Dockerfile -t agnews:latest .
+
+# Build GPU-enabled image
+docker build -f deployment/docker/Dockerfile.gpu -t agnews:gpu .
+
+# Build API service image
+docker build -f deployment/docker/Dockerfile.api -t agnews:api .
+
+# Build complete services stack
+docker build -f deployment/docker/Dockerfile.services -t agnews:services .
+```
+
+##### Docker Compose Deployment
+```bash
+# Development environment with hot-reload
+docker-compose -f deployment/docker/docker-compose.yml up -d
+
+# Production environment with optimizations
+docker-compose -f deployment/docker/docker-compose.prod.yml up -d
+
+# Quick start with minimal setup
+cd quickstart/docker_quickstart
+docker-compose up
+```
+
+#### Method 3: Google Colab Installation
+
+##### Initial Setup Cell
+```python
+# Clone repository
+!git clone https://github.com/VoHaiDung/ag-news-text-classification.git
+%cd ag-news-text-classification
+
+# Install dependencies
+!bash scripts/setup/setup_colab.sh
+
+# Mount Google Drive for persistent storage
+from google.colab import drive
+drive.mount('/content/drive')
+
+# Create symbolic links for data persistence
+!ln -s /content/drive/MyDrive/ag_news_data data/external
+!ln -s /content/drive/MyDrive/ag_news_outputs outputs
+```
+
+##### Environment Configuration Cell
+```python
+import sys
+import os
+
+# Add project to path
+PROJECT_ROOT = '/content/ag-news-text-classification'
+sys.path.insert(0, PROJECT_ROOT)
+os.chdir(PROJECT_ROOT)
+
+# Configure environment variables
+os.environ['AGNEWS_DATA_DIR'] = f'{PROJECT_ROOT}/data'
+os.environ['AGNEWS_OUTPUT_DIR'] = f'{PROJECT_ROOT}/outputs'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+
+# Import and verify
+from src.models import *
+from src.data import *
+from src.training import *
+
+# Check GPU availability
+import torch
+print(f"GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'}")
+print(f"CUDA Version: {torch.version.cuda}")
+```
+
+##### Quick Start Cell
+```python
+# Run minimal example
+!python quickstart/minimal_example.py
+
+# Train simple model
+!python quickstart/train_simple.py --epochs 3 --batch_size 16
+
+# Evaluate model
+!python quickstart/evaluate_simple.py
+```
+
+##### Using Pre-configured Notebook
+```python
+# Option 1: Open provided notebook
+from google.colab import files
+uploaded = files.upload()  # Upload quickstart/colab_notebook.ipynb
+
+# Option 2: Direct execution
+!wget https://raw.githubusercontent.com/VoHaiDung/ag-news-text-classification/main/quickstart/colab_notebook.ipynb
+# Then File -> Open notebook -> Upload
+```
+
+#### Method 4: Development Container (VS Code)
+
+##### Prerequisites
+```bash
+# Install VS Code extensions
+code --install-extension ms-vscode-remote.remote-containers
+code --install-extension ms-python.python
+```
+
+##### Using Dev Container
+```bash
+# Open project in VS Code
+code .
+
+# VS Code will detect .devcontainer/devcontainer.json
+# Click "Reopen in Container" when prompted
+
+# Or use Command Palette (Ctrl+Shift+P):
+# > Dev Containers: Reopen in Container
+```
+
+##### Manual Dev Container Setup
+```bash
+# Build development container
+docker build -f .devcontainer/Dockerfile -t agnews:devcontainer .
+
+# Run with volume mounts
+docker run -it --rm \
+  -v $(pwd):/workspace \
+  -v ~/.ssh:/home/vscode/.ssh:ro \
+  -v ~/.gitconfig:/home/vscode/.gitconfig:ro \
+  --gpus all \
+  agnews:devcontainer
+```
+
+### Environment-Specific Installation
+
+#### Research Environment
+```bash
+# Install research-specific dependencies
+pip install -r requirements/research.txt
+pip install -r requirements/robustness.txt
+
+# Setup Jupyter environment
+pip install jupyterlab ipywidgets
+jupyter labextension install @jupyter-widgets/jupyterlab-manager
+
+# Install experiment tracking
+pip install wandb mlflow tensorboard
+wandb login  # Configure Weights & Biases
+```
+
+#### Production Environment
+```bash
+# Install production dependencies
+pip install -r requirements/prod.txt
+pip install -r requirements/api.txt
+pip install -r requirements/services.txt
+
+# Compile protocol buffers for gRPC
+bash scripts/api/compile_protos.sh
+
+# Setup monitoring
+pip install prometheus-client grafana-api
+
+# Configure environment
+cp configs/environments/prod.yaml configs/active_config.yaml
+```
+
+#### Development Environment
+```bash
+# Install development tools
+pip install -r requirements/dev.txt
+
+# Setup pre-commit hooks
+pre-commit install
+pre-commit run --all-files
+
+# Install testing frameworks
+pip install pytest pytest-cov pytest-xdist
+
+# Setup linting
+pip install black isort flake8 mypy
+```
+
+### GPU/CUDA Configuration
+
+#### CUDA Installation
+```bash
+# Install CUDA toolkit (Ubuntu)
+bash scripts/setup/install_cuda.sh
+
+# Verify CUDA installation
+nvidia-smi
+nvcc --version
+
+# Install PyTorch with CUDA support
+pip install torch==2.0.1+cu118 torchvision==0.15.2+cu118 \
+  -f https://download.pytorch.org/whl/torch_stable.html
+```
+
+#### Multi-GPU Setup
+```bash
+# Configure visible devices
+export CUDA_VISIBLE_DEVICES=0,1,2,3
+
+# Test multi-GPU availability
+python -c "import torch; print(f'GPUs: {torch.cuda.device_count()}')"
+
+# Enable distributed training
+pip install accelerate
+accelerate config  # Interactive configuration
+```
+
+### Quick Start Commands
+
+#### Using Makefile
+```bash
+# Complete installation
+make install-all
+
+# Setup development environment
+make setup-dev
+
+# Download all data
+make download-data
+
+# Run tests
+make test
+
+# Start services
+make run-services
+
+# Clean environment
+make clean
+```
+
+#### Direct Execution
+```bash
+# Train a simple model
+python quickstart/train_simple.py \
+  --model deberta-v3 \
+  --epochs 3 \
+  --batch_size 16
+
+# Run evaluation
+python quickstart/evaluate_simple.py \
+  --model_path outputs/models/checkpoints/best_model.pt
+
+# Launch interactive demo
+streamlit run quickstart/demo_app.py
+
+# Start API server
+python quickstart/api_quickstart.py
+```
+
+### Platform-Specific Instructions
+
+#### macOS (Apple Silicon)
+```bash
+# Install MPS-accelerated PyTorch
+pip install torch torchvision torchaudio
+
+# Verify MPS availability
+python -c "import torch; print(f'MPS: {torch.backends.mps.is_available()}')"
+
+# Configure for M1/M2
+export PYTORCH_ENABLE_MPS_FALLBACK=1
+```
+
+#### Windows (WSL2)
+```bash
+# Update WSL2
+wsl --update
+
+# Install CUDA in WSL2
+wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-wsl-ubuntu.pin
+sudo mv cuda-wsl-ubuntu.pin /etc/apt/preferences.d/cuda-repository-pin-600
+sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/7fa2af80.pub
+sudo apt-get update
+sudo apt-get -y install cuda
+```
+
+#### HPC Clusters
+```bash
+# Load modules (example for SLURM)
+module load python/3.9
+module load cuda/11.8
+module load cudnn/8.6
+
+# Create virtual environment
+python -m venv $HOME/agnews_env
+source $HOME/agnews_env/bin/activate
+
+# Install with cluster-optimized settings
+pip install --no-cache-dir -r requirements/all.txt
+```
+
+### Verification and Testing
+
+#### Component Verification
+```bash
+# Test data pipeline
+python -c "from src.data.datasets.ag_news import AGNewsDataset; print('Data: OK')"
+
+# Test model loading
+python -c "from src.models.transformers.deberta.deberta_v3 import DeBERTaV3Model; print('Models: OK')"
+
+# Test training pipeline
+python -c "from src.training.trainers.standard_trainer import StandardTrainer; print('Training: OK')"
+
+# Test API endpoints
+python scripts/api/test_api_endpoints.py
+
+# Test services
+python scripts/services/service_health_check.py
+```
+
+#### Run Test Suite
+```bash
+# Run all tests
+pytest tests/
+
+# Run specific test categories
+pytest tests/unit/data/
+pytest tests/unit/models/
+pytest tests/integration/
+
+# Run with coverage
+pytest --cov=src --cov-report=html tests/
+```
+
+### Troubleshooting
+
+#### Common Issues and Solutions
+
+##### Out of Memory Errors
+```bash
+# Reduce batch size
+export BATCH_SIZE=8
+
+# Enable gradient accumulation
+export GRADIENT_ACCUMULATION_STEPS=4
+
+# Use mixed precision training
+export USE_AMP=true
+
+# Clear CUDA cache
+python -c "import torch; torch.cuda.empty_cache()"
+```
+
+##### Import Errors
+```bash
+# Ensure package is installed in development mode
+pip install -e .
+
+# Add to PYTHONPATH
+export PYTHONPATH="${PYTHONPATH}:$(pwd)"
+
+# Verify Python path
+python -c "import sys; print('\n'.join(sys.path))"
+```
+
+##### Data Download Issues
+```bash
+# Use alternative download method
+python scripts/setup/download_all_data.py --mirror
+
+# Manual download with wget
+wget -P data/raw/ https://example.com/ag_news.csv
+
+# Use cached data
+export USE_CACHED_DATA=true
+```
+
+##### CUDA Version Mismatch
+```bash
+# Check CUDA version
+nvidia-smi  # System CUDA
+python -c "import torch; print(torch.version.cuda)"  # PyTorch CUDA
+
+# Reinstall PyTorch with correct CUDA
+pip uninstall torch torchvision torchaudio
+pip install torch==2.0.1+cu118 -f https://download.pytorch.org/whl/torch_stable.html
+```
+
+### Post-Installation Steps
+
+#### Configure Environment Variables
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Edit configuration
+nano .env
+
+# Required variables
+export AGNEWS_DATA_DIR="./data"
+export AGNEWS_OUTPUT_DIR="./outputs"
+export AGNEWS_CACHE_DIR="./cache"
+export WANDB_API_KEY="your-key"  # Optional
+export HUGGINGFACE_TOKEN="your-token"  # Optional
+```
+
+#### Download Pretrained Models
+```bash
+# Download base models
+python -c "from transformers import AutoModel; AutoModel.from_pretrained('microsoft/deberta-v3-large')"
+python -c "from transformers import AutoModel; AutoModel.from_pretrained('roberta-large')"
+
+# Cache models locally
+export TRANSFORMERS_CACHE="./cache/models"
+export HF_HOME="./cache/huggingface"
+```
+
+#### Initialize Experiment Tracking
+```bash
+# Setup MLflow
+mlflow ui --host 0.0.0.0 --port 5000
+
+# Setup TensorBoard
+tensorboard --logdir outputs/logs/tensorboard
+
+# Setup Weights & Biases
+wandb init --project ag-news-classification
+```
+
+### Next Steps
+
+After successful installation:
+
+1. **Explore Tutorials**: Begin with `notebooks/tutorials/00_environment_setup.ipynb`
+2. **Run Baseline**: Execute `python scripts/training/train_single_model.py`
+3. **Test API**: Launch `python scripts/api/start_all_services.py`
+4. **Read Documentation**: Comprehensive guides in `docs/getting_started/`
+5. **Join Community**: Contribute via GitHub Issues and Pull Requests
+
+For detailed configuration options, refer to `configs/` directory. For production deployment guidelines, consult `deployment/` documentation.
 
 ## Project Structure
 
@@ -1370,56 +1901,3 @@ ag-news-text-classification/
 ```
 
 ## Usage
-
-
-
-## Evaluation Metrics
-
-To assess the model’s performance on the AG News classification task, we evaluate it using standard classification metrics:
-
-- **Accuracy**: Overall correctness of the model.
-- **Precision**: Proportion of positive identifications that were actually correct.
-- **Recall**: Proportion of actual positives that were correctly identified.
-- **F1-Score**: Harmonic mean of precision and recall.
-
-### Evaluation Code
-
-Use the following code snippet to compute metrics during training or evaluation:
-
-```python
-from sklearn.metrics import classification_report, accuracy_score, precision_score, recall_score, f1_score
-
-def compute_metrics(pred):
-    labels = pred.label_ids
-    preds = pred.predictions.argmax(-1)
-    print("Classification Report:")
-    print(classification_report(labels, preds, target_names=label_names, digits=4))
-    acc = accuracy_score(labels, preds)
-    return {
-        'accuracy': acc,
-        'precision': precision_score(labels, preds, average='weighted'),
-        'recall': recall_score(labels, preds, average='weighted'),
-        'f1': f1_score(labels, preds, average='weighted')
-    }
-```
-
-**Note**: Replace label_names with your actual class labels, for example:
-
-```python
-label_names = ['World', 'Sports', 'Business', 'Sci/Tech']
-```
-
-### Sample Results
-
-| Class        | Precision | Recall | F1-Score   |
-| ------------ | --------- | ------ | ---------- |
-| World        | 0.94      | 0.93   | 0.94       |
-| Sports       | 0.97      | 0.96   | 0.96       |
-| Business     | 0.93      | 0.93   | 0.93       |
-| Sci/Tech     | 0.93      | 0.94   | 0.93       |
-| **Macro**    | 0.94      | 0.94   | 0.94       |
-| **Weighted** | 0.94      | 0.94   | 0.94       |
-| **Accuracy** |           |        | **0.9402** |
-
-These scores indicate that the BERT-based model performs consistently well across all four categories in AG News.
-
