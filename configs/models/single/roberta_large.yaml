@@ -1,5 +1,5 @@
 # RoBERTa-large Model Configuration
-# High-performance model for AG News Classification
+# High-performance model for AG News Text Classification
 
 name: roberta_large
 type: transformer
@@ -188,7 +188,7 @@ hardware_requirements:
 
 # Model card information
 model_card:
-  description: "RoBERTa-large fine-tuned for AG News classification"
+  description: "RoBERTa-large fine-tuned for AG News Text Classification"
   intended_use: "News article classification into 4 categories"
   eval_results:
     accuracy: 0.957
