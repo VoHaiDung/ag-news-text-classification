@@ -390,9 +390,9 @@ debugging:
 
 # Notes
 notes: |
-  Prompt-Based Tuning Configuration for AG News:
+  Prompt-Based Tuning Configuration for AG News Text Classification:
   
-  Template design for AG News:
+  Template design for AG News Text Classification:
   - "This is a [MASK] news article: {text}"
   - "Category: [MASK]. Article: {text}"
   - "{text} This article is about [MASK]."
