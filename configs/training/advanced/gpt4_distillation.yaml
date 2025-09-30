@@ -504,7 +504,7 @@ debugging:
 
 # Notes
 notes: |
-  GPT-4 Distillation Configuration for AG News:
+  GPT-4 Distillation Configuration for AG News Text Classification:
   
   Key strategies:
   1. Progressive distillation with temperature scheduling
