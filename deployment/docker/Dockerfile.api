@@ -13,7 +13,7 @@
 # License: MIT
 
 # Stage 1: Python base with system dependencies
-FROM python:3.9-slim AS python-base
+FROM python:3.13.7-slim AS python-base
 
 # Set environment variables for Python optimization
 ENV PYTHONUNBUFFERED=1 \
