@@ -719,6 +719,1178 @@ ag-news-text-classification/
 │   ├── docs.txt
 │   ├── api.txt
 │   ├── services.txt
+│   ├── minimal.txt
+│   ├── research.txt
+│   ├── robustness.txt
+│   └── all.txt
+│
+├── .devcontainer/
+│   ├── devcontainer.json
+│   └── Dockerfile
+│
+├── .husky/
+│   ├── pre-commit
+│   └── commit-msg
+│
+├── images/
+│   ├── pipeline.png
+│   ├── api_architecture.png
+│   └── service_flow.png
+│
+├── configs/
+│   ├── __init__.py
+│   ├── config_loader.py
+│   ├── constants.py
+│   │
+│   ├── api/
+│   │   ├── rest_config.yaml
+│   │   ├── grpc_config.yaml
+│   │   ├── graphql_config.yaml
+│   │   ├── auth_config.yaml
+│   │   └── rate_limit_config.yaml
+│   │
+│   ├── services/
+│   │   ├── prediction_service.yaml
+│   │   ├── training_service.yaml
+│   │   ├── data_service.yaml
+│   │   ├── model_service.yaml
+│   │   ├── monitoring_service.yaml
+│   │   └── orchestration.yaml
+│   │
+│   ├── environments/
+│   │   ├── dev.yaml
+│   │   ├── staging.yaml
+│   │   └── prod.yaml
+│   │
+│   ├── features/
+│   │   └── feature_flags.yaml
+│   │
+│   ├── secrets/
+│   │   ├── secrets.template.yaml
+│   │   └── api_keys.template.yaml
+│   │
+│   ├── models/
+│   │   ├── single/
+│   │   │   ├── deberta_v3_xlarge.yaml
+│   │   │   ├── roberta_large.yaml
+│   │   │   ├── xlnet_large.yaml
+│   │   │   ├── electra_large.yaml
+│   │   │   ├── longformer_large.yaml
+│   │   │   ├── gpt2_large.yaml
+│   │   │   └── t5_large.yaml
+│   │   └── ensemble/
+│   │       ├── voting_ensemble.yaml
+│   │       ├── stacking_xgboost.yaml
+│   │       ├── stacking_catboost.yaml
+│   │       ├── blending_advanced.yaml
+│   │       └── bayesian_ensemble.yaml
+│   │
+│   ├── training/
+│   │   ├── standard/
+│   │   │   ├── base_training.yaml
+│   │   │   ├── mixed_precision.yaml
+│   │   │   └── distributed.yaml
+│   │   ├── advanced/
+│   │   │   ├── curriculum_learning.yaml
+│   │   │   ├── adversarial_training.yaml
+│   │   │   ├── multitask_learning.yaml
+│   │   │   ├── contrastive_learning.yaml
+│   │   │   ├── knowledge_distillation.yaml
+│   │   │   ├── meta_learning.yaml
+│   │   │   ├── prompt_based_tuning.yaml
+│   │   │   ├── instruction_tuning.yaml
+│   │   │   ├── multi_stage_training.yaml
+│   │   │   └── gpt4_distillation.yaml
+│   │   └── efficient/
+│   │       ├── lora_peft.yaml
+│   │       ├── qlora.yaml
+│   │       ├── adapter_fusion.yaml
+│   │       ├── prefix_tuning.yaml
+│   │       └── prompt_tuning.yaml
+│   │
+│   ├── data/
+│   │   ├── preprocessing/
+│   │   │   ├── standard.yaml
+│   │   │   ├── advanced.yaml
+│   │   │   └── domain_specific.yaml
+│   │   ├── augmentation/
+│   │   │   ├── basic_augment.yaml
+│   │   │   ├── back_translation.yaml
+│   │   │   ├── paraphrase_generation.yaml
+│   │   │   ├── mixup_strategies.yaml
+│   │   │   ├── adversarial_augment.yaml
+│   │   │   └── contrast_sets.yaml
+│   │   ├── selection/
+│   │   │   ├── coreset_selection.yaml
+│   │   │   ├── influence_functions.yaml
+│   │   │   └── active_selection.yaml
+│   │   └── external/
+│   │       ├── news_corpus.yaml
+│   │       ├── wikipedia.yaml
+│   │       ├── domain_adaptive.yaml
+│   │       └── gpt4_generated.yaml
+│   │
+│   └── experiments/
+│       ├── baselines/
+│       │   ├── classical_ml.yaml
+│       │   └── transformer_baseline.yaml
+│       ├── ablations/
+│       │   ├── model_size.yaml
+│       │   ├── data_amount.yaml
+│       │   ├── augmentation_impact.yaml
+│       │   └── ensemble_components.yaml
+│       ├── sota_attempts/
+│       │   ├── phase1_single_models.yaml
+│       │   ├── phase2_ensemble.yaml
+│       │   ├── phase3_dapt.yaml
+│       │   ├── phase4_final_sota.yaml
+│       │   └── phase5_bleeding_edge.yaml
+│       └── reproducibility/
+│           ├── seeds.yaml
+│           └── hardware_specs.yaml
+│
+├── data/
+│   ├── raw/
+│   │   ├── ag_news/
+│   │   └── .gitkeep
+│   ├── processed/
+│   │   ├── train/
+│   │   ├── validation/
+│   │   ├── test/
+│   │   └── stratified_folds/
+│   ├── augmented/
+│   │   ├── back_translated/
+│   │   ├── paraphrased/
+│   │   ├── synthetic/
+│   │   ├── mixup/
+│   │   ├── contrast_sets/
+│   │   └── gpt4_augmented/
+│   ├── external/
+│   │   ├── news_corpus/
+│   │   ├── pretrain_data/
+│   │   └── distillation_data/
+│   ├── pseudo_labeled/
+│   ├── selected_subsets/
+│   ├── test_samples/
+│   │   ├── api_test_cases.json
+│   │   ├── service_test_data.json
+│   │   └── mock_responses.json
+│   └── cache/
+│       ├── api_cache/
+│       ├── service_cache/
+│       └── model_cache/
+│
+├── src/
+│   ├── __init__.py
+│   ├── __version__.py
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── registry.py
+│   │   ├── factory.py
+│   │   ├── types.py
+│   │   ├── exceptions.py
+│   │   └── interfaces.py
+│   │
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── base/
+│   │   │   ├── __init__.py
+│   │   │   ├── base_handler.py
+│   │   │   ├── auth.py
+│   │   │   ├── rate_limiter.py
+│   │   │   ├── error_handler.py
+│   │   │   ├── cors_handler.py
+│   │   │   └── request_validator.py
+│   │   │
+│   │   ├── rest/
+│   │   │   ├── __init__.py
+│   │   │   ├── app.py
+│   │   │   ├── routers/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── classification.py
+│   │   │   │   ├── training.py
+│   │   │   │   ├── models.py
+│   │   │   │   ├── data.py
+│   │   │   │   ├── health.py
+│   │   │   │   ├── metrics.py
+│   │   │   │   └── admin.py
+│   │   │   ├── schemas/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── request_schemas.py
+│   │   │   │   ├── response_schemas.py
+│   │   │   │   ├── error_schemas.py
+│   │   │   │   └── common_schemas.py
+│   │   │   ├── middleware/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── logging_middleware.py
+│   │   │   │   ├── metrics_middleware.py
+│   │   │   │   └── security_middleware.py
+│   │   │   ├── dependencies.py
+│   │   │   ├── validators.py
+│   │   │   └── websocket_handler.py
+│   │   │
+│   │   ├── grpc/
+│   │   │   ├── __init__.py
+│   │   │   ├── server.py
+│   │   │   ├── services/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── classification_service.py
+│   │   │   │   ├── training_service.py
+│   │   │   │   ├── model_service.py
+│   │   │   │   └── data_service.py
+│   │   │   ├── interceptors/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── auth_interceptor.py
+│   │   │   │   ├── logging_interceptor.py
+│   │   │   │   ├── metrics_interceptor.py
+│   │   │   │   └── error_interceptor.py
+│   │   │   ├── protos/
+│   │   │   │   ├── classification.proto
+│   │   │   │   ├── model_management.proto
+│   │   │   │   ├── training.proto
+│   │   │   │   ├── data_service.proto
+│   │   │   │   ├── health.proto
+│   │   │   │   ├── monitoring.proto
+│   │   │   │   └── common/
+│   │   │   │       ├── types.proto
+│   │   │   │       └── status.proto
+│   │   │   └── compiled/
+│   │   │       ├── __init__.py
+│   │   │       ├── classification_pb2.py
+│   │   │       ├── classification_pb2_grpc.py
+│   │   │       ├── model_management_pb2.py
+│   │   │       ├── model_management_pb2_grpc.py
+│   │   │       ├── training_pb2.py
+│   │   │       ├── training_pb2_grpc.py
+│   │   │       ├── data_service_pb2.py
+│   │   │       ├── data_service_pb2_grpc.py
+│   │   │       ├── health_pb2.py
+│   │   │       ├── health_pb2_grpc.py
+│   │   │       ├── monitoring_pb2.py
+│   │   │       ├── monitoring_pb2_grpc.py
+│   │   │       └── common/
+│   │   │           ├── __init__.py
+│   │   │           ├── types_pb2.py
+│   │   │           └── status_pb2.py
+│   │   │
+│   │   └── graphql/
+│   │       ├── __init__.py
+│   │       ├── server.py
+│   │       ├── schema.py
+│   │       ├── resolvers.py
+│   │       ├── mutations.py
+│   │       ├── queries.py
+│   │       ├── subscriptions.py
+│   │       ├── types.py
+│   │       ├── context.py
+│   │       └── dataloaders.py
+│   │
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── base_service.py
+│   │   ├── service_registry.py
+│   │   │
+│   │   ├── core/
+│   │   │   ├── __init__.py
+│   │   │   ├── prediction_service.py
+│   │   │   ├── training_service.py
+│   │   │   ├── data_service.py
+│   │   │   └── model_management_service.py
+│   │   │
+│   │   ├── orchestration/
+│   │   │   ├── __init__.py
+│   │   │   ├── workflow_orchestrator.py
+│   │   │   ├── pipeline_manager.py
+│   │   │   ├── job_scheduler.py
+│   │   │   └── state_manager.py
+│   │   │
+│   │   ├── monitoring/
+│   │   │   ├── __init__.py
+│   │   │   ├── metrics_service.py
+│   │   │   ├── health_service.py
+│   │   │   ├── alerting_service.py
+│   │   │   └── logging_service.py
+│   │   │
+│   │   ├── caching/
+│   │   │   ├── __init__.py
+│   │   │   ├── cache_service.py
+│   │   │   ├── cache_strategies.py
+│   │   │   ├── redis_cache.py
+│   │   │   └── memory_cache.py
+│   │   │
+│   │   ├── queue/
+│   │   │   ├── __init__.py
+│   │   │   ├── task_queue.py
+│   │   │   ├── message_broker.py
+│   │   │   ├── celery_tasks.py
+│   │   │   └── job_processor.py
+│   │   │
+│   │   ├── notification/
+│   │   │   ├── __init__.py
+│   │   │   ├── notification_service.py
+│   │   │   ├── email_notifier.py
+│   │   │   ├── slack_notifier.py
+│   │   │   └── webhook_notifier.py
+│   │   │
+│   │   └── storage/
+│   │       ├── __init__.py
+│   │       ├── storage_service.py
+│   │       ├── s3_storage.py
+│   │       ├── gcs_storage.py
+│   │       └── local_storage.py
+│   │
+│   ├── data/
+│   │   ├── __init__.py
+│   │   ├── datasets/
+│   │   │   ├── ag_news.py
+│   │   │   ├── external_news.py
+│   │   │   ├── combined_dataset.py
+│   │   │   └── prompted_dataset.py
+│   │   ├── preprocessing/
+│   │   │   ├── text_cleaner.py
+│   │   │   ├── tokenization.py
+│   │   │   ├── feature_extraction.py
+│   │   │   ├── sliding_window.py
+│   │   │   └── prompt_formatter.py
+│   │   ├── augmentation/
+│   │   │   ├── base_augmenter.py
+│   │   │   ├── back_translation.py
+│   │   │   ├── paraphrase.py
+│   │   │   ├── token_replacement.py
+│   │   │   ├── mixup.py
+│   │   │   ├── cutmix.py
+│   │   │   ├── adversarial.py
+│   │   │   └── contrast_set_generator.py
+│   │   ├── sampling/
+│   │   │   ├── balanced_sampler.py
+│   │   │   ├── curriculum_sampler.py
+│   │   │   ├── active_learning.py
+│   │   │   ├── uncertainty_sampling.py
+│   │   │   └── coreset_sampler.py
+│   │   ├── selection/
+│   │   │   ├── __init__.py
+│   │   │   ├── influence_function.py
+│   │   │   ├── gradient_matching.py
+│   │   │   ├── diversity_selection.py
+│   │   │   └── quality_filtering.py
+│   │   └── loaders/
+│   │       ├── dataloader.py
+│   │       ├── dynamic_batching.py
+│   │       └── prefetch_loader.py
+│   │
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── base/
+│   │   │   ├── base_model.py
+│   │   │   ├── model_wrapper.py
+│   │   │   └── pooling_strategies.py
+│   │   ├── transformers/
+│   │   │   ├── deberta/
+│   │   │   │   ├── deberta_v3.py
+│   │   │   │   ├── deberta_sliding.py
+│   │   │   │   └── deberta_hierarchical.py
+│   │   │   ├── roberta/
+│   │   │   │   ├── roberta_enhanced.py
+│   │   │   │   └── roberta_domain.py
+│   │   │   ├── xlnet/
+│   │   │   │   └── xlnet_classifier.py
+│   │   │   ├── electra/
+│   │   │   │   └── electra_discriminator.py
+│   │   │   ├── longformer/
+│   │   │   │   └── longformer_global.py
+│   │   │   └── generative/
+│   │   │       ├── gpt2_classifier.py
+│   │   │       └── t5_classifier.py
+│   │   ├── prompt_based/
+│   │   │   ├── __init__.py
+│   │   │   ├── prompt_model.py
+│   │   │   ├── soft_prompt.py
+│   │   │   ├── instruction_model.py
+│   │   │   └── template_manager.py
+│   │   ├── efficient/
+│   │   │   ├── lora/
+│   │   │   │   ├── lora_model.py
+│   │   │   │   ├── lora_config.py
+│   │   │   │   └── lora_layers.py
+│   │   │   ├── adapters/
+│   │   │   │   ├── adapter_model.py
+│   │   │   │   └── adapter_fusion.py
+│   │   │   ├── quantization/
+│   │   │   │   ├── int8_quantization.py
+│   │   │   │   └── dynamic_quantization.py
+│   │   │   └── pruning/
+│   │   │       └── magnitude_pruning.py
+│   │   ├── ensemble/
+│   │   │   ├── base_ensemble.py
+│   │   │   ├── voting/
+│   │   │   │   ├── soft_voting.py
+│   │   │   │   ├── weighted_voting.py
+│   │   │   │   └── rank_averaging.py
+│   │   │   ├── stacking/
+│   │   │   │   ├── stacking_classifier.py
+│   │   │   │   ├── meta_learners.py
+│   │   │   │   └── cross_validation_stacking.py
+│   │   │   ├── blending/
+│   │   │   │   ├── blending_ensemble.py
+│   │   │   │   └── dynamic_blending.py
+│   │   │   └── advanced/
+│   │   │       ├── bayesian_ensemble.py
+│   │   │       ├── snapshot_ensemble.py
+│   │   │       └── multi_level_ensemble.py
+│   │   └── heads/
+│   │       ├── classification_head.py
+│   │       ├── multitask_head.py
+│   │       ├── hierarchical_head.py
+│   │       ├── attention_head.py
+│   │       └── prompt_head.py
+│   │
+│   ├── training/
+│   │   ├── __init__.py
+│   │   ├── trainers/
+│   │   │   ├── base_trainer.py
+│   │   │   ├── standard_trainer.py
+│   │   │   ├── distributed_trainer.py
+│   │   │   ├── apex_trainer.py
+│   │   │   ├── prompt_trainer.py
+│   │   │   ├── instruction_trainer.py
+│   │   │   └── multi_stage_trainer.py
+│   │   ├── strategies/
+│   │   │   ├── curriculum/
+│   │   │   │   ├── curriculum_learning.py
+│   │   │   │   ├── self_paced.py
+│   │   │   │   └── competence_based.py
+│   │   │   ├── adversarial/
+│   │   │   │   ├── fgm.py
+│   │   │   │   ├── pgd.py
+│   │   │   │   └── freelb.py
+│   │   │   ├── regularization/
+│   │   │   │   ├── r_drop.py
+│   │   │   │   ├── mixout.py
+│   │   │   │   └── spectral_norm.py
+│   │   │   ├── distillation/
+│   │   │   │   ├── knowledge_distill.py
+│   │   │   │   ├── feature_distill.py
+│   │   │   │   ├── self_distill.py
+│   │   │   │   └── gpt4_distill.py
+│   │   │   ├── meta/
+│   │   │   │   ├── maml.py
+│   │   │   │   └── reptile.py
+│   │   │   ├── prompt_based/
+│   │   │   │   ├── prompt_tuning.py
+│   │   │   │   ├── prefix_tuning.py
+│   │   │   │   ├── p_tuning.py
+│   │   │   │   └── soft_prompt_tuning.py
+│   │   │   └── multi_stage/
+│   │   │       ├── stage_manager.py
+│   │   │       ├── progressive_training.py
+│   │   │       └── iterative_refinement.py
+│   │   ├── objectives/
+│   │   │   ├── losses/
+│   │   │   │   ├── focal_loss.py
+│   │   │   │   ├── label_smoothing.py
+│   │   │   │   ├── contrastive_loss.py
+│   │   │   │   ├── triplet_loss.py
+│   │   │   │   ├── custom_ce_loss.py
+│   │   │   │   └── instruction_loss.py
+│   │   │   └── regularizers/
+│   │   │       ├── l2_regularizer.py
+│   │   │       └── gradient_penalty.py
+│   │   ├── optimization/
+│   │   │   ├── optimizers/
+│   │   │   │   ├── adamw_custom.py
+│   │   │   │   ├── lamb.py
+│   │   │   │   ├── lookahead.py
+│   │   │   │   └── sam.py
+│   │   │   ├── schedulers/
+│   │   │   │   ├── cosine_warmup.py
+│   │   │   │   ├── polynomial_decay.py
+│   │   │   │   └── cyclic_scheduler.py
+│   │   │   └── gradient/
+│   │   │       ├── gradient_accumulation.py
+│   │   │       └── gradient_clipping.py
+│   │   └── callbacks/
+│   │       ├── early_stopping.py
+│   │       ├── model_checkpoint.py
+│   │       ├── tensorboard_logger.py
+│   │       ├── wandb_logger.py
+│   │       └── learning_rate_monitor.py
+│   │
+│   ├── evaluation/
+│   │   ├── __init__.py
+│   │   ├── metrics/
+│   │   │   └── classification_metrics.py
+│   │   └── analysis/
+│   │       └── error_analysis.py
+│   │
+│   ├── inference/
+│   │   ├── __init__.py
+│   │   └── predictors/
+│   │       └── single_predictor.py
+│   │
+│   └── utils/
+│       ├── __init__.py
+│       ├── io_utils.py
+│       ├── logging_config.py
+│       ├── reproducibility.py
+│       ├── distributed_utils.py
+│       ├── memory_utils.py
+│       ├── profiling_utils.py
+│       ├── experiment_tracking.py
+│       ├── prompt_utils.py
+│       ├── api_utils.py
+│       └── service_utils.py
+│
+├── experiments/
+│   ├── __init__.py
+│   ├── experiment_runner.py
+│   ├── hyperparameter_search/
+│   │   ├── optuna_search.py
+│   │   ├── ray_tune_search.py
+│   │   ├── hyperband.py
+│   │   └── bayesian_optimization.py
+│   ├── benchmarks/
+│   │   ├── speed_benchmark.py
+│   │   ├── memory_benchmark.py
+│   │   ├── accuracy_benchmark.py
+│   │   ├── robustness_benchmark.py
+│   │   └── sota_comparison.py
+│   ├── baselines/
+│   │   ├── classical/
+│   │   │   ├── naive_bayes.py
+│   │   │   ├── svm_baseline.py
+│   │   │   ├── random_forest.py
+│   │   │   └── logistic_regression.py
+│   │   └── neural/
+│   │       ├── lstm_baseline.py
+│   │       ├── cnn_baseline.py
+│   │       └── bert_vanilla.py
+│   ├── ablation_studies/
+│   │   ├── component_ablation.py
+│   │   ├── data_ablation.py
+│   │   ├── model_size_ablation.py
+│   │   ├── feature_ablation.py
+│   │   └── prompt_ablation.py
+│   ├── sota_experiments/
+│   │   ├── single_model_sota.py
+│   │   ├── ensemble_sota.py
+│   │   ├── full_pipeline_sota.py
+│   │   ├── production_sota.py
+│   │   ├── prompt_based_sota.py
+│   │   └── gpt4_distilled_sota.py
+│   └── results/
+│       ├── experiment_tracker.py
+│       ├── result_aggregator.py
+│       └── leaderboard_generator.py
+│
+├── monitoring/
+│   ├── README.md
+│   ├── docker-compose.yml
+│   ├── Makefile
+│   ├── .env.example
+│   │
+│   ├── dashboards/
+│   │   ├── grafana/
+│   │   │   ├── model_performance.json
+│   │   │   ├── training_metrics.json
+│   │   │   ├── system_monitoring.json
+│   │   │   └── experiment_tracking.json
+│   │   ├── prometheus/
+│   │   │   ├── prometheus.yml
+│   │   │   ├── alert_rules.yml
+│   │   │   └── recording_rules.yml
+│   │   └── kibana/
+│   │       ├── experiment_dashboard.json
+│   │       ├── error_analysis.json
+│   │       └── log_patterns.json
+│   │
+│   ├── alerts/
+│   │   ├── alert_rules.yaml
+│   │   ├── notification_config.yaml
+│   │   └── escalation_policy.yaml
+│   │
+│   ├── metrics/
+│   │   ├── __init__.py
+│   │   ├── custom_metrics.py
+│   │   ├── metric_collectors.py
+│   │   ├── api_metrics.py
+│   │   ├── service_metrics.py
+│   │   ├── model_metrics.py
+│   │   └── training_metrics.py
+│   │
+│   ├── logs_analysis/
+│   │   ├── __init__.py
+│   │   ├── log_parser.py
+│   │   ├── anomaly_detector.py
+│   │   └── log_aggregator.py
+│   │
+│   ├── scripts/
+│   │   ├── setup.sh
+│   │   ├── start_monitoring.sh
+│   │   ├── health_check.py
+│   │   └── export_metrics.py
+│   │
+│   └── tests/
+│       ├── test_metrics.py
+│       ├── test_alerts.py
+│       └── test_dashboards.py
+│
+├── security/
+│   ├── api_auth/
+│   │   ├── jwt_handler.py
+│   │   ├── api_keys.py
+│   │   ├── oauth2_handler.py
+│   │   └── rbac.py
+│   ├── data_privacy/
+│   │   ├── pii_detector.py
+│   │   └── data_masking.py
+│   ├── model_security/
+│   │   ├── adversarial_defense.py
+│   │   └── model_encryption.py
+│   └── audit_logs/
+│       ├── audit_logger.py
+│       └── compliance_reports/
+│
+├── plugins/
+│   ├── custom_models/
+│   │   ├── __init__.py
+│   │   └── plugin_interface.py
+│   ├── data_sources/
+│   │   ├── __init__.py
+│   │   └── custom_loaders/
+│   ├── evaluators/
+│   │   ├── __init__.py
+│   │   └── custom_metrics/
+│   └── processors/
+│       ├── __init__.py
+│       └── custom_preprocessors/
+│
+├── migrations/
+│   ├── data/
+│   │   ├── 001_initial_schema.py
+│   │   └── migration_runner.py
+│   ├── models/
+│   │   ├── version_converter.py
+│   │   └── compatibility_layer.py
+│   ├── configs/
+│   │   └── config_migrator.py
+│   └── api/
+│       ├── api_version_manager.py
+│       └── schema_migrations/
+│
+├── cache/
+│   ├── redis/
+│   │   └── redis_config.yaml
+│   ├── memcached/
+│   │   └── memcached_config.yaml
+│   └── local/
+│       └── disk_cache.py
+│
+├── load_testing/
+│   ├── scenarios/
+│   │   ├── basic_load.yaml
+│   │   ├── stress_test.yaml
+│   │   └── api_load_test.yaml
+│   ├── scripts/
+│   │   ├── locust_test.py
+│   │   ├── k6_test.js
+│   │   └── jmeter_test.jmx
+│   └── reports/
+│       └── performance_report_template.md
+│
+├── backup/
+│   ├── strategies/
+│   │   ├── incremental_backup.yaml
+│   │   └── full_backup.yaml
+│   ├── scripts/
+│   │   ├── backup_runner.sh
+│   │   └── restore_runner.sh
+│   └── recovery/
+│       ├── disaster_recovery_plan.md
+│       └── recovery_procedures/
+│
+├── quickstart/
+│   ├── README.md
+│   ├── minimal_example.py
+│   ├── train_simple.py
+│   ├── evaluate_simple.py
+│   ├── demo_app.py
+│   ├── api_quickstart.py
+│   ├── colab_notebook.ipynb
+│   └── docker_quickstart/
+│       ├── Dockerfile
+│       └── docker-compose.yml
+│
+├── templates/
+│   ├── experiment/
+│   │   ├── experiment_template.py
+│   │   └── config_template.yaml
+│   ├── model/
+│   │   ├── model_template.py
+│   │   └── README_template.md
+│   ├── dataset/
+│   │   └── dataset_template.py
+│   ├── evaluation/
+│   │   └── metric_template.py
+│   └── api/
+│       ├── endpoint_template.py
+│       └── service_template.py
+│
+├── notebooks/
+│   ├── tutorials/
+│   │   ├── 00_environment_setup.ipynb
+│   │   ├── 01_data_loading_basics.ipynb
+│   │   ├── 02_preprocessing_tutorial.ipynb
+│   │   ├── 03_model_training_basics.ipynb
+│   │   ├── 04_evaluation_tutorial.ipynb
+│   │   ├── 05_prompt_engineering.ipynb
+│   │   ├── 06_instruction_tuning.ipynb
+│   │   ├── 07_api_usage.ipynb
+│   │   └── 08_service_integration.ipynb
+│   ├── exploratory/
+│   │   ├── 01_data_exploration.ipynb
+│   │   ├── 02_data_statistics.ipynb
+│   │   ├── 03_label_distribution.ipynb
+│   │   ├── 04_text_length_analysis.ipynb
+│   │   ├── 05_vocabulary_analysis.ipynb
+│   │   └── 06_contrast_set_exploration.ipynb
+│   ├── experiments/
+│   │   ├── 01_baseline_experiments.ipynb
+│   │   ├── 02_single_model_experiments.ipynb
+│   │   ├── 03_ensemble_experiments.ipynb
+│   │   ├── 04_ablation_studies.ipynb
+│   │   ├── 05_sota_reproduction.ipynb
+│   │   ├── 06_prompt_experiments.ipynb
+│   │   └── 07_distillation_experiments.ipynb
+│   ├── analysis/
+│   │   ├── 01_error_analysis.ipynb
+│   │   ├── 02_model_interpretability.ipynb
+│   │   ├── 03_attention_visualization.ipynb
+│   │   ├── 04_embedding_analysis.ipynb
+│   │   └── 05_failure_cases.ipynb
+│   ├── deployment/
+│   │   ├── 01_model_optimization.ipynb
+│   │   ├── 02_inference_pipeline.ipynb
+│   │   ├── 03_api_testing.ipynb
+│   │   └── 04_service_monitoring.ipynb
+│   └── platform_specific/
+│       ├── colab/
+│       │   ├── quick_start_colab.ipynb
+│       │   ├── full_training_colab.ipynb
+│       │   └── inference_demo_colab.ipynb
+│       ├── kaggle/
+│       │   └── kaggle_submission.ipynb
+│       └── sagemaker/
+│           └── sagemaker_training.ipynb
+│
+├── app/
+│   ├── __init__.py
+│   ├── streamlit_app.py
+│   ├── pages/
+│   │   ├── 01_Home.py
+│   │   ├── 02_Single_Prediction.py
+│   │   ├── 03_Batch_Analysis.py
+│   │   ├── 04_Model_Comparison.py
+│   │   ├── 05_Interpretability.py
+│   │   ├── 06_Performance_Dashboard.py
+│   │   ├── 07_Real_Time_Demo.py
+│   │   ├── 08_Model_Selection.py
+│   │   ├── 09_Documentation.py
+│   │   ├── 10_Prompt_Testing.py
+│   │   ├── 11_API_Explorer.py
+│   │   └── 12_Service_Status.py
+│   ├── components/
+│   │   ├── __init__.py
+│   │   ├── prediction_component.py
+│   │   ├── visualization_component.py
+│   │   ├── model_selector.py
+│   │   ├── file_uploader.py
+│   │   ├── result_display.py
+│   │   ├── performance_monitor.py
+│   │   ├── prompt_builder.py
+│   │   ├── api_tester.py
+│   │   └── service_monitor.py
+│   ├── utils/
+│   │   ├── session_manager.py
+│   │   ├── caching.py
+│   │   ├── theming.py
+│   │   └── helpers.py
+│   └── assets/
+│       ├── css/
+│       │   └── custom.css
+│       ├── js/
+│       │   └── custom.js
+│       └── images/
+│           ├── logo.png
+│           └── banner.png
+│
+├── scripts/
+│   ├── setup/
+│   │   ├── download_all_data.py
+│   │   ├── setup_environment.sh
+│   │   ├── install_cuda.sh
+│   │   ├── setup_colab.sh
+│   │   └── verify_installation.py
+│   ├── data_preparation/
+│   │   ├── prepare_ag_news.py
+│   │   ├── prepare_external_data.py
+│   │   ├── create_augmented_data.py
+│   │   ├── generate_pseudo_labels.py
+│   │   ├── create_data_splits.py
+│   │   ├── generate_contrast_sets.py
+│   │   ├── select_quality_data.py
+│   │   └── prepare_instruction_data.py
+│   ├── training/
+│   │   ├── train_all_models.sh
+│   │   ├── train_single_model.py
+│   │   ├── train_ensemble.py
+│   │   ├── distributed_training.py
+│   │   ├── resume_training.py
+│   │   ├── train_with_prompts.py
+│   │   ├── instruction_tuning.py
+│   │   ├── multi_stage_training.py
+│   │   └── distill_from_gpt4.py
+│   ├── domain_adaptation/
+│   │   ├── pretrain_on_news.py
+│   │   ├── download_news_corpus.py
+│   │   └── run_dapt.sh
+│   ├── evaluation/
+│   │   ├── evaluate_all_models.py
+│   │   ├── generate_reports.py
+│   │   ├── create_leaderboard.py
+│   │   ├── statistical_analysis.py
+│   │   └── evaluate_contrast_sets.py
+│   ├── optimization/
+│   │   ├── hyperparameter_search.py
+│   │   ├── architecture_search.py
+│   │   ├── ensemble_optimization.py
+│   │   └── prompt_optimization.py
+│   ├── deployment/
+│   │   ├── export_models.py
+│   │   ├── optimize_for_inference.py
+│   │   ├── create_docker_image.sh
+│   │   └── deploy_to_cloud.py
+│   ├── api/
+│   │   ├── compile_protos.sh
+│   │   ├── start_all_services.py
+│   │   ├── test_api_endpoints.py
+│   │   ├── generate_api_docs.py
+│   │   └── update_api_schemas.py
+│   └── services/
+│       ├── service_health_check.py
+│       ├── restart_services.sh
+│       ├── service_diagnostics.py
+│       └── cleanup_services.sh
+│
+├── prompts/
+│   ├── classification/
+│   │   ├── zero_shot.txt
+│   │   ├── few_shot.txt
+│   │   └── chain_of_thought.txt
+│   ├── instruction/
+│   │   ├── base_instruction.txt
+│   │   ├── detailed_instruction.txt
+│   │   └── task_specific.txt
+│   └── distillation/
+│       ├── gpt4_prompts.txt
+│       └── explanation_prompts.txt
+│
+├── tests/
+│   ├── __init__.py
+│   ├── conftest.py
+│   ├── unit/
+│   │   ├── data/
+│   │   │   ├── test_preprocessing.py
+│   │   │   ├── test_augmentation.py
+│   │   │   ├── test_dataloader.py
+│   │   │   └── test_contrast_sets.py
+│   │   ├── models/
+│   │   │   ├── test_transformers.py
+│   │   │   ├── test_ensemble.py
+│   │   │   ├── test_efficient.py
+│   │   │   └── test_prompt_models.py
+│   │   ├── training/
+│   │   │   ├── test_trainers.py
+│   │   │   ├── test_strategies.py
+│   │   │   ├── test_callbacks.py
+│   │   │   └── test_multi_stage.py
+│   │   ├── api/
+│   │   │   ├── test_rest_api.py
+│   │   │   ├── test_grpc_services.py
+│   │   │   ├── test_graphql_api.py
+│   │   │   ├── test_auth.py
+│   │   │   └── test_middleware.py
+│   │   ├── services/
+│   │   │   ├── test_prediction_service.py
+│   │   │   ├── test_training_service.py
+│   │   │   ├── test_data_service.py
+│   │   │   ├── test_orchestration.py
+│   │   │   └── test_cache_service.py
+│   │   └── utils/
+│   │       └── test_utilities.py
+│   ├── integration/
+│   │   ├── test_full_pipeline.py
+│   │   ├── test_ensemble_pipeline.py
+│   │   ├── test_inference_pipeline.py
+│   │   ├── test_api_endpoints.py
+│   │   ├── test_service_integration.py
+│   │   ├── test_api_service_flow.py
+│   │   └── test_prompt_pipeline.py
+│   ├── performance/
+│   │   ├── test_model_speed.py
+│   │   ├── test_memory_usage.py
+│   │   ├── test_accuracy_benchmarks.py
+│   │   ├── test_api_performance.py
+│   │   └── test_service_scalability.py
+│   ├── e2e/
+│   │   ├── test_complete_workflow.py
+│   │   ├── test_user_scenarios.py
+│   │   └── test_production_flow.py
+│   └── fixtures/
+│       ├── sample_data.py
+│       ├── mock_models.py
+│       ├── test_configs.py
+│       ├── mock_services.py
+│       └── api_fixtures.py
+│
+├── outputs/
+│   ├── models/
+│   │   ├── checkpoints/
+│   │   ├── pretrained/
+│   │   ├── fine_tuned/
+│   │   ├── ensembles/
+│   │   ├── optimized/
+│   │   ├── exported/
+│   │   ├── prompted/
+│   │   └── distilled/
+│   ├── results/
+│   │   ├── experiments/
+│   │   ├── ablations/
+│   │   ├── benchmarks/
+│   │   └── reports/
+│   ├── analysis/
+│   │   ├── error_analysis/
+│   │   ├── interpretability/
+│   │   └── statistical/
+│   ├── logs/
+│   │   ├── training/
+│   │   ├── tensorboard/
+│   │   ├── wandb/
+│   │   ├── mlflow/
+│   │   ├── api_logs/
+│   │   └── service_logs/
+│   └── artifacts/
+│       ├── figures/
+│       ├── tables/
+│       └── presentations/
+│
+├── docs/
+│   ├── index.md
+│   ├── getting_started/
+│   │   ├── installation.md
+│   │   ├── quickstart.md
+│   │   └── troubleshooting.md
+│   ├── user_guide/
+│   │   ├── data_preparation.md
+│   │   ├── model_training.md
+│   │   ├── evaluation.md
+│   │   ├── deployment.md
+│   │   ├── prompt_engineering.md
+│   │   └── advanced_techniques.md
+│   ├── developer_guide/
+│   │   ├── architecture.md
+│   │   ├── adding_models.md
+│   │   ├── custom_datasets.md
+│   │   ├── api_development.md
+│   │   ├── service_development.md
+│   │   └── contributing.md
+│   ├── api_reference/
+│   │   ├── rest_api.md
+│   │   ├── grpc_api.md
+│   │   ├── graphql_api.md
+│   │   ├── data_api.md
+│   │   ├── models_api.md
+│   │   ├── training_api.md
+│   │   └── evaluation_api.md
+│   ├── service_reference/
+│   │   ├── prediction_service.md
+│   │   ├── training_service.md
+│   │   ├── data_service.md
+│   │   └── orchestration.md
+│   ├── tutorials/
+│   │   ├── basic_usage.md
+│   │   ├── advanced_features.md
+│   │   ├── api_integration.md
+│   │   └── best_practices.md
+│   ├── architecture/
+│   │   ├── decisions/
+│   │   │   ├── 001-model-selection.md
+│   │   │   ├── 002-ensemble-strategy.md
+│   │   │   ├── 003-api-design.md
+│   │   │   └── 004-service-architecture.md
+│   │   ├── diagrams/
+│   │   │   ├── system-overview.puml
+│   │   │   ├── data-flow.puml
+│   │   │   ├── api-architecture.puml
+│   │   │   └── service-flow.puml
+│   │   └── patterns/
+│   │       ├── factory-pattern.md
+│   │       ├── strategy-pattern.md
+│   │       └── service-pattern.md
+│   ├── operations/
+│   │   ├── runbooks/
+│   │   │   ├── deployment.md
+│   │   │   ├── troubleshooting.md
+│   │   │   └── api_operations.md
+│   │   ├── sops/
+│   │   │   ├── model-update.md
+│   │   │   ├── data-refresh.md
+│   │   │   └── service-maintenance.md
+│   │   └── incidents/
+│   │       └── incident-response.md
+│   └── _static/
+│       └── custom.css
+│
+├── deployment/
+│   ├── docker/
+│   │   ├── Dockerfile
+│   │   ├── Dockerfile.gpu
+│   │   ├── Dockerfile.api
+│   │   ├── Dockerfile.services
+│   │   ├── docker-compose.yml
+│   │   ├── docker-compose.prod.yml
+│   │   └── .dockerignore
+│   ├── kubernetes/
+│   │   ├── namespace.yaml
+│   │   ├── deployment.yaml
+│   │   ├── service.yaml
+│   │   ├── ingress.yaml
+│   │   ├── configmap.yaml
+│   │   ├── hpa.yaml
+│   │   ├── api-deployment.yaml
+│   │   └── services-deployment.yaml
+│   ├── cloud/
+│   │   ├── aws/
+│   │   │   ├── sagemaker/
+│   │   │   ├── lambda/
+│   │   │   └── ecs/
+│   │   ├── gcp/
+│   │   │   ├── vertex-ai/
+│   │   │   └── cloud-run/
+│   │   └── azure/
+│   │       └── ml-studio/
+│   ├── edge/
+│   │   ├── mobile/
+│   │   │   ├── tflite/
+│   │   │   └── coreml/
+│   │   └── iot/
+│   │       └── nvidia-jetson/
+│   ├── serverless/
+│   │   ├── functions/
+│   │   └── api-gateway/
+│   └── orchestration/
+│       ├── airflow/
+│       └── kubeflow/
+│
+├── benchmarks/
+│   ├── accuracy/
+│   │   ├── model_comparison.json
+│   │   └── ensemble_results.json
+│   ├── speed/
+│   │   ├── inference_benchmarks.json
+│   │   ├── training_benchmarks.json
+│   │   └── api_benchmarks.json
+│   ├── efficiency/
+│   │   ├── memory_usage.json
+│   │   └── energy_consumption.json
+│   ├── robustness/
+│   │   ├── adversarial_results.json
+│   │   ├── ood_detection.json
+│   │   └── contrast_set_results.json
+│   └── scalability/
+│       ├── concurrent_users.json
+│       └── throughput_results.json
+│
+├── .github/
+│   ├── workflows/
+│   │   ├── ci.yml
+│   │   ├── cd.yml
+│   │   ├── tests.yml
+│   │   ├── docker-publish.yml
+│   │   ├── documentation.yml
+│   │   ├── benchmarks.yml
+│   │   ├── api_tests.yml
+│   │   └── service_tests.yml
+│   ├── ISSUE_TEMPLATE/
+│   │   ├── bug_report.md
+│   │   └── feature_request.md
+│   ├── PULL_REQUEST_TEMPLATE.md
+│   └── dependabot.yml
+│
+├── .vscode/
+│   ├── settings.json
+│   ├── launch.json
+│   ├── tasks.json
+│   └── extensions.json
+│
+├── ci/
+│   ├── run_tests.sh
+│   ├── run_benchmarks.sh
+│   ├── build_docker.sh
+│   ├── deploy.sh
+│   ├── test_api.sh
+│   └── test_services.sh
+│
+└── tools/
+    ├── profiling/
+    │   ├── memory_profiler.py
+    │   ├── speed_profiler.py
+    │   └── api_profiler.py
+    ├── debugging/
+    │   ├── model_debugger.py
+    │   ├── data_validator.py
+    │   └── service_debugger.py
+    └── visualization/
+        ├── training_monitor.py
+        ├── result_plotter.py
+        └── api_dashboard.py
+```
+
+```plaintext
+ag-news-text-classification/
+├── README.md
+├── LICENSE
+├── CITATION.cff
+├── CHANGELOG.md
+├── ARCHITECTURE.md
+├── PERFORMANCE.md
+├── SECURITY.md
+├── TROUBLESHOOTING.md
+├── ROADMAP.md
+├── setup.py
+├── setup.cfg
+├── MANIFEST.in
+├── pyproject.toml
+├── Makefile
+├── .env.example
+├── .env.test
+├── .gitignore
+├── .dockerignore
+├── .editorconfig
+├── .pre-commit-config.yaml
+├── .flake8
+├── commitlint.config.js
+│
+├── requirements/
+│   ├── base.txt
+│   ├── ml.txt
+│   ├── prod.txt
+│   ├── dev.txt
+│   ├── data.txt
+│   ├── llm.txt
+│   ├── ui.txt
+│   ├── docs.txt
+│   ├── api.txt
+│   ├── services.txt
 │   └── all.txt
 │
 ├── .devcontainer/
