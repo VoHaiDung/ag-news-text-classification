@@ -1865,14 +1865,24 @@ ag-news-text-classification/
 ├── PERFORMANCE.md
 ├── SECURITY.md
 ├── TROUBLESHOOTING.md
+├── SOTA_MODELS_GUIDE.md
+├── OVERFITTING_PREVENTION.md
 ├── ROADMAP.md
+├── FREE_DEPLOYMENT_GUIDE.md
+├── IDE_SETUP_GUIDE.md
+├── LOCAL_MONITORING_GUIDE.md
+├── QUICK_START.md
+├── HEALTH_CHECK.md
 ├── setup.py
 ├── setup.cfg
 ├── MANIFEST.in
 ├── pyproject.toml
+├── poetry.lock
 ├── Makefile
+├── install.sh
 ├── .env.example
 ├── .env.test
+├── .env.local
 ├── .gitignore
 ├── .dockerignore
 ├── .editorconfig
@@ -1883,15 +1893,27 @@ ag-news-text-classification/
 ├── requirements/
 │   ├── base.txt
 │   ├── ml.txt
-│   ├── prod.txt
+│   ├── llm.txt
+│   ├── efficient.txt
+│   ├── local_prod.txt
 │   ├── dev.txt
 │   ├── data.txt
-│   ├── llm.txt
 │   ├── ui.txt
 │   ├── docs.txt
-│   ├── api.txt
-│   ├── services.txt
-│   └── all.txt
+│   ├── minimal.txt
+│   ├── research.txt
+│   ├── robustness.txt
+│   ├── all_local.txt
+│   ├── colab.txt
+│   ├── kaggle.txt
+│   ├── free_tier.txt
+│   ├── local_monitoring.txt
+│   └── lock/
+│       ├── base.lock
+│       ├── ml.lock
+│       ├── llm.lock
+│       ├── all.lock
+│       └── README.md
 │
 ├── .devcontainer/
 │   ├── devcontainer.json
@@ -1901,20 +1923,111 @@ ag-news-text-classification/
 │   ├── pre-commit
 │   └── commit-msg
 │
+├── .ide/
+│   ├── SOURCE_OF_TRUTH.yaml
+│   │
+│   ├── vscode/
+│   │   ├── settings.json
+│   │   ├── launch.json
+│   │   ├── tasks.json
+│   │   ├── extensions.json
+│   │   └── snippets/
+│   │       ├── python.json
+│   │       └── yaml.json
+│   │
+│   ├── pycharm/
+│   │   ├── .idea/
+│   │   │   ├── workspace.xml
+│   │   │   ├── misc.xml
+│   │   │   ├── modules.xml
+│   │   │   ├── inspectionProfiles/
+│   │   │   ├── runConfigurations/
+│   │   │   │   ├── train_model.xml
+│   │   │   │   ├── run_tests.xml
+│   │   │   │   └── start_api.xml
+│   │   │   └── codeStyles/
+│   │   │       └── Project.xml
+│   │   ├── README_PYCHARM.md
+│   │   └── settings.zip
+│   │
+│   ├── jupyter/
+│   │   ├── jupyter_notebook_config.py
+│   │   ├── jupyter_lab_config.py
+│   │   ├── custom/
+│   │   │   ├── custom.css
+│   │   │   └── custom.js
+│   │   ├── nbextensions_config.json
+│   │   ├── lab/
+│   │   │   ├── user-settings/
+│   │   │   └── workspaces/
+│   │   └── kernels/
+│   │       └── ag-news/
+│   │           └── kernel.json
+│   │
+│   ├── vim/
+│   │   ├── .vimrc
+│   │   ├── coc-settings.json
+│   │   ├── ultisnips/
+│   │   │   └── python.snippets
+│   │   └── README_VIM.md
+│   │
+│   ├── neovim/
+│   │   ├── init.lua
+│   │   ├── lua/
+│   │   │   ├── plugins.lua
+│   │   │   ├── lsp.lua
+│   │   │   ├── keymaps.lua
+│   │   │   └── ag-news/
+│   │   │       ├── config.lua
+│   │   │       └── commands.lua
+│   │   ├── coc-settings.json
+│   │   └── README_NEOVIM.md
+│   │
+│   ├── sublime/
+│   │   ├── ag-news.sublime-project
+│   │   ├── ag-news.sublime-workspace
+│   │   ├── Preferences.sublime-settings
+│   │   ├── Python.sublime-settings
+│   │   ├── snippets/
+│   │   │   ├── pytorch-model.sublime-snippet
+│   │   │   └── lora-config.sublime-snippet
+│   │   ├── build_systems/
+│   │   │   ├── Train Model.sublime-build
+│   │   │   └── Run Tests.sublime-build
+│   │   └── README_SUBLIME.md
+│   │
+│   └── cloud_ides/
+│       ├── gitpod/
+│       │   ├── .gitpod.yml
+│       │   └── .gitpod.Dockerfile
+│       ├── codespaces/
+│       │   └── .devcontainer.json
+│       ├── colab/
+│       │   ├── colab_setup.py
+│       │   └── drive_mount.py
+│       └── kaggle/
+│           └── kaggle_setup.py
+│
 ├── images/
 │   ├── pipeline.png
 │   ├── api_architecture.png
-│   └── service_flow.png
+│   ├── local_deployment_flow.png
+│   ├── overfitting_prevention_flow.png
+│   ├── sota_model_architecture.png
+│   ├── decision_tree.png
+│   └── progressive_disclosure.png
 │
 ├── configs/
 │   ├── __init__.py
 │   ├── config_loader.py
+│   ├── config_validator.py
+│   ├── config_schema.py
 │   ├── constants.py
+│   ├── compatibility_matrix.yaml
+│   ├── smart_defaults.py
 │   │
 │   ├── api/
 │   │   ├── rest_config.yaml
-│   │   ├── grpc_config.yaml
-│   │   ├── graphql_config.yaml
 │   │   ├── auth_config.yaml
 │   │   └── rate_limit_config.yaml
 │   │
@@ -1923,97 +2036,408 @@ ag-news-text-classification/
 │   │   ├── training_service.yaml
 │   │   ├── data_service.yaml
 │   │   ├── model_service.yaml
-│   │   ├── monitoring_service.yaml
-│   │   └── orchestration.yaml
+│   │   └── local_monitoring.yaml
 │   │
 │   ├── environments/
 │   │   ├── dev.yaml
-│   │   ├── staging.yaml
-│   │   └── prod.yaml
+│   │   ├── local_prod.yaml
+│   │   └── colab.yaml
 │   │
 │   ├── features/
 │   │   └── feature_flags.yaml
 │   │
 │   ├── secrets/
 │   │   ├── secrets.template.yaml
-│   │   └── api_keys.template.yaml
+│   │   └── local_secrets.yaml
+│   │
+│   ├── templates/
+│   │   ├── README.md
+│   │   ├── deberta_template.yaml.j2
+│   │   ├── roberta_template.yaml.j2
+│   │   ├── llm_template.yaml.j2
+│   │   ├── ensemble_template.yaml.j2
+│   │   └── training_template.yaml.j2
+│   │
+│   ├── generation/
+│   │   ├── model_specs.yaml
+│   │   ├── training_specs.yaml
+│   │   └── ensemble_specs.yaml
 │   │
 │   ├── models/
+│   │   ├── __init__.py
+│   │   ├── README.md
+│   │   ├── SELECTION_GUIDE.md
+│   │   │
+│   │   ├── recommended/
+│   │   │   ├── README.md
+│   │   │   ├── ag_news_best_practices.yaml
+│   │   │   ├── quick_start.yaml
+│   │   │   ├── balanced.yaml
+│   │   │   ├── sota_accuracy.yaml
+│   │   │   │
+│   │   │   ├── tier_1_sota/
+│   │   │   │   ├── deberta_v3_xlarge_lora.yaml
+│   │   │   │   ├── deberta_v2_xxlarge_qlora.yaml
+│   │   │   │   ├── roberta_large_lora.yaml
+│   │   │   │   ├── electra_large_lora.yaml
+│   │   │   │   └── xlnet_large_lora.yaml
+│   │   │   │
+│   │   │   ├── tier_2_llm/
+│   │   │   │   ├── llama2_7b_qlora.yaml
+│   │   │   │   ├── llama2_13b_qlora.yaml
+│   │   │   │   ├── llama3_8b_qlora.yaml
+│   │   │   │   ├── mistral_7b_qlora.yaml
+│   │   │   │   ├── mixtral_8x7b_qlora.yaml
+│   │   │   │   ├── falcon_7b_qlora.yaml
+│   │   │   │   ├── phi_3_qlora.yaml
+│   │   │   │   └── mpt_7b_qlora.yaml
+│   │   │   │
+│   │   │   ├── tier_3_ensemble/
+│   │   │   │   ├── xlarge_ensemble.yaml
+│   │   │   │   ├── llm_ensemble.yaml
+│   │   │   │   ├── hybrid_ensemble.yaml
+│   │   │   │   └── open_source_llm_ensemble.yaml
+│   │   │   │
+│   │   │   ├── tier_4_distilled/
+│   │   │   │   ├── llama_distilled_deberta.yaml
+│   │   │   │   ├── mistral_distilled_roberta.yaml
+│   │   │   │   └── ensemble_distilled.yaml
+│   │   │   │
+│   │   │   └── tier_5_free_optimized/
+│   │   │       ├── colab_friendly/
+│   │   │       │   ├── deberta_large_lora_colab.yaml
+│   │   │       │   ├── distilroberta_efficient.yaml
+│   │   │       │   └── ensemble_lightweight.yaml
+│   │   │       └── cpu_friendly/
+│   │   │           ├── distilled_cpu_optimized.yaml
+│   │   │           └── quantized_int8.yaml
+│   │   │
 │   │   ├── single/
-│   │   │   ├── deberta_v3_xlarge.yaml
-│   │   │   ├── roberta_large.yaml
-│   │   │   ├── xlnet_large.yaml
-│   │   │   ├── electra_large.yaml
-│   │   │   ├── longformer_large.yaml
-│   │   │   ├── gpt2_large.yaml
-│   │   │   └── t5_large.yaml
+│   │   │   ├── transformers/
+│   │   │   │   ├── deberta/
+│   │   │   │   │   ├── deberta_v3_base.yaml
+│   │   │   │   │   ├── deberta_v3_large.yaml
+│   │   │   │   │   ├── deberta_v3_xlarge.yaml
+│   │   │   │   │   ├── deberta_v2_xlarge.yaml
+│   │   │   │   │   ├── deberta_v2_xxlarge.yaml
+│   │   │   │   │   └── deberta_sliding_window.yaml
+│   │   │   │   │
+│   │   │   │   ├── roberta/
+│   │   │   │   │   ├── roberta_base.yaml
+│   │   │   │   │   ├── roberta_large.yaml
+│   │   │   │   │   ├── roberta_large_mnli.yaml
+│   │   │   │   │   └── xlm_roberta_large.yaml
+│   │   │   │   │
+│   │   │   │   ├── electra/
+│   │   │   │   │   ├── electra_base.yaml
+│   │   │   │   │   ├── electra_large.yaml
+│   │   │   │   │   └── electra_discriminator.yaml
+│   │   │   │   │
+│   │   │   │   ├── xlnet/
+│   │   │   │   │   ├── xlnet_base.yaml
+│   │   │   │   │   └── xlnet_large.yaml
+│   │   │   │   │
+│   │   │   │   ├── longformer/
+│   │   │   │   │   ├── longformer_base.yaml
+│   │   │   │   │   └── longformer_large.yaml
+│   │   │   │   │
+│   │   │   │   └── t5/
+│   │   │   │       ├── t5_base.yaml
+│   │   │   │       ├── t5_large.yaml
+│   │   │   │       ├── t5_3b.yaml
+│   │   │   │       └── flan_t5_xl.yaml
+│   │   │   │
+│   │   │   └── llm/
+│   │   │       ├── llama/
+│   │   │       │   ├── llama2_7b.yaml
+│   │   │       │   ├── llama2_13b.yaml
+│   │   │       │   ├── llama2_70b.yaml
+│   │   │       │   ├── llama3_8b.yaml
+│   │   │       │   └── llama3_70b.yaml
+│   │   │       │
+│   │   │       ├── mistral/
+│   │   │       │   ├── mistral_7b.yaml
+│   │   │       │   ├── mistral_7b_instruct.yaml
+│   │   │       │   └── mixtral_8x7b.yaml
+│   │   │       │
+│   │   │       ├── falcon/
+│   │   │       │   ├── falcon_7b.yaml
+│   │   │       │   └── falcon_40b.yaml
+│   │   │       │
+│   │   │       ├── mpt/
+│   │   │       │   ├── mpt_7b.yaml
+│   │   │       │   └── mpt_30b.yaml
+│   │   │       │
+│   │   │       └── phi/
+│   │   │           ├── phi_2.yaml
+│   │   │           └── phi_3.yaml
+│   │   │
 │   │   └── ensemble/
-│   │       ├── voting_ensemble.yaml
-│   │       ├── stacking_xgboost.yaml
-│   │       ├── stacking_catboost.yaml
-│   │       ├── blending_advanced.yaml
-│   │       └── bayesian_ensemble.yaml
+│   │       ├── ENSEMBLE_SELECTION_GUIDE.yaml
+│   │       ├── presets/
+│   │       │   ├── quick_start.yaml
+│   │       │   ├── sota_accuracy.yaml
+│   │       │   └── balanced.yaml
+│   │       │
+│   │       ├── voting/
+│   │       │   ├── soft_voting_xlarge.yaml
+│   │       │   ├── weighted_voting_llm.yaml
+│   │       │   └── rank_voting_hybrid.yaml
+│   │       │
+│   │       ├── stacking/
+│   │       │   ├── stacking_xlarge_xgboost.yaml
+│   │       │   ├── stacking_llm_lightgbm.yaml
+│   │       │   └── stacking_hybrid_catboost.yaml
+│   │       │
+│   │       ├── blending/
+│   │       │   ├── blending_xlarge.yaml
+│   │       │   └── dynamic_blending_llm.yaml
+│   │       │
+│   │       └── advanced/
+│   │           ├── bayesian_ensemble_xlarge.yaml
+│   │           ├── snapshot_ensemble_llm.yaml
+│   │           └── multi_level_ensemble.yaml
 │   │
 │   ├── training/
+│   │   ├── __init__.py
+│   │   │
 │   │   ├── standard/
 │   │   │   ├── base_training.yaml
 │   │   │   ├── mixed_precision.yaml
 │   │   │   └── distributed.yaml
+│   │   │
+│   │   ├── efficient/
+│   │   │   ├── lora/
+│   │   │   │   ├── lora_config.yaml
+│   │   │   │   ├── lora_xlarge.yaml
+│   │   │   │   ├── lora_llm.yaml
+│   │   │   │   ├── lora_rank_experiments.yaml
+│   │   │   │   └── lora_target_modules_experiments.yaml
+│   │   │   │
+│   │   │   ├── qlora/
+│   │   │   │   ├── qlora_4bit.yaml
+│   │   │   │   ├── qlora_8bit.yaml
+│   │   │   │   ├── qlora_nf4.yaml
+│   │   │   │   └── qlora_llm.yaml
+│   │   │   │
+│   │   │   ├── adapters/
+│   │   │   │   ├── adapter_houlsby.yaml
+│   │   │   │   ├── adapter_pfeiffer.yaml
+│   │   │   │   ├── adapter_parallel.yaml
+│   │   │   │   ├── adapter_fusion.yaml
+│   │   │   │   └── adapter_stacking.yaml
+│   │   │   │
+│   │   │   ├── prefix_tuning/
+│   │   │   │   ├── prefix_tuning.yaml
+│   │   │   │   ├── prefix_tuning_llm.yaml
+│   │   │   │   └── prefix_length_experiments.yaml
+│   │   │   │
+│   │   │   ├── prompt_tuning/
+│   │   │   │   ├── soft_prompt_tuning.yaml
+│   │   │   │   ├── p_tuning_v2.yaml
+│   │   │   │   └── prompt_length_experiments.yaml
+│   │   │   │
+│   │   │   ├── ia3/
+│   │   │   │   └── ia3_config.yaml
+│   │   │   │
+│   │   │   └── combined/
+│   │   │       ├── lora_plus_adapters.yaml
+│   │   │       ├── qlora_plus_prompt.yaml
+│   │   │       └── multi_method_fusion.yaml
+│   │   │
 │   │   ├── advanced/
 │   │   │   ├── curriculum_learning.yaml
 │   │   │   ├── adversarial_training.yaml
 │   │   │   ├── multitask_learning.yaml
 │   │   │   ├── contrastive_learning.yaml
-│   │   │   ├── knowledge_distillation.yaml
+│   │   │   ├── knowledge_distillation/
+│   │   │   │   ├── standard_distillation.yaml
+│   │   │   │   ├── llama_distillation.yaml
+│   │   │   │   ├── mistral_distillation.yaml
+│   │   │   │   ├── llm_to_xlarge_distillation.yaml
+│   │   │   │   ├── xlarge_to_large_distillation.yaml
+│   │   │   │   ├── ensemble_distillation.yaml
+│   │   │   │   └── self_distillation.yaml
+│   │   │   │
 │   │   │   ├── meta_learning.yaml
-│   │   │   ├── prompt_based_tuning.yaml
-│   │   │   ├── instruction_tuning.yaml
-│   │   │   ├── multi_stage_training.yaml
-│   │   │   └── gpt4_distillation.yaml
-│   │   └── efficient/
-│   │       ├── lora_peft.yaml
-│   │       ├── qlora.yaml
-│   │       ├── adapter_fusion.yaml
-│   │       ├── prefix_tuning.yaml
-│   │       └── prompt_tuning.yaml
+│   │   │   ├── instruction_tuning/
+│   │   │   │   ├── alpaca_style.yaml
+│   │   │   │   ├── dolly_style.yaml
+│   │   │   │   ├── vicuna_style.yaml
+│   │   │   │   └── custom_instructions.yaml
+│   │   │   │
+│   │   │   └── multi_stage/
+│   │   │       ├── stage_manager.yaml
+│   │   │       ├── progressive_training.yaml
+│   │   │       ├── iterative_refinement.yaml
+│   │   │       └── base_to_xlarge_progressive.yaml
+│   │   │
+│   │   ├── regularization/
+│   │   │   ├── dropout_strategies/
+│   │   │   │   ├── standard_dropout.yaml
+│   │   │   │   ├── variational_dropout.yaml
+│   │   │   │   ├── dropconnect.yaml
+│   │   │   │   ├── adaptive_dropout.yaml
+│   │   │   │   ├── monte_carlo_dropout.yaml
+│   │   │   │   └── scheduled_dropout.yaml
+│   │   │   │
+│   │   │   ├── advanced_regularization/
+│   │   │   │   ├── r_drop.yaml
+│   │   │   │   ├── mixout.yaml
+│   │   │   │   ├── spectral_normalization.yaml
+│   │   │   │   ├── gradient_penalty.yaml
+│   │   │   │   ├── weight_decay_schedule.yaml
+│   │   │   │   └── elastic_weight_consolidation.yaml
+│   │   │   │
+│   │   │   ├── data_regularization/
+│   │   │   │   ├── mixup.yaml
+│   │   │   │   ├── cutmix.yaml
+│   │   │   │   ├── cutout.yaml
+│   │   │   │   ├── manifold_mixup.yaml
+│   │   │   │   └── augmax.yaml
+│   │   │   │
+│   │   │   └── combined/
+│   │   │       ├── heavy_regularization.yaml
+│   │   │       ├── xlarge_safe_config.yaml
+│   │   │       └── llm_safe_config.yaml
+│   │   │
+│   │   └── safe/
+│   │       ├── xlarge_safe_training.yaml
+│   │       ├── llm_safe_training.yaml
+│   │       ├── ensemble_safe_training.yaml
+│   │       └── ultra_safe_training.yaml
+│   │
+│   ├── overfitting_prevention/
+│   │   ├── __init__.py
+│   │   │
+│   │   ├── constraints/
+│   │   │   ├── model_size_constraints.yaml
+│   │   │   ├── xlarge_constraints.yaml
+│   │   │   ├── llm_constraints.yaml
+│   │   │   ├── ensemble_constraints.yaml
+│   │   │   ├── training_constraints.yaml
+│   │   │   └── parameter_efficiency_requirements.yaml
+│   │   │
+│   │   ├── monitoring/
+│   │   │   ├── realtime_monitoring.yaml
+│   │   │   ├── thresholds.yaml
+│   │   │   ├── metrics_to_track.yaml
+│   │   │   └── reporting_schedule.yaml
+│   │   │
+│   │   ├── validation/
+│   │   │   ├── cross_validation_strategy.yaml
+│   │   │   ├── holdout_validation.yaml
+│   │   │   ├── test_set_protection.yaml
+│   │   │   ├── data_split_rules.yaml
+│   │   │   └── hyperparameter_tuning_rules.yaml
+│   │   │
+│   │   ├── recommendations/
+│   │   │   ├── dataset_specific/
+│   │   │   │   ├── ag_news_recommendations.yaml
+│   │   │   │   ├── small_dataset.yaml
+│   │   │   │   ├── medium_dataset.yaml
+│   │   │   │   └── large_dataset.yaml
+│   │   │   │
+│   │   │   ├── model_recommendations/
+│   │   │   │   ├── xlarge_models.yaml
+│   │   │   │   ├── llm_models.yaml
+│   │   │   │   └── model_selection_guide.yaml
+│   │   │   │
+│   │   │   └── technique_recommendations/
+│   │   │       ├── lora_recommendations.yaml
+│   │   │       ├── qlora_recommendations.yaml
+│   │   │       ├── distillation_recommendations.yaml
+│   │   │       └── ensemble_recommendations.yaml
+│   │   │
+│   │   └── safe_defaults/
+│   │       ├── xlarge_safe_defaults.yaml
+│   │       ├── llm_safe_defaults.yaml
+│   │       └── beginner_safe_defaults.yaml
 │   │
 │   ├── data/
 │   │   ├── preprocessing/
 │   │   │   ├── standard.yaml
 │   │   │   ├── advanced.yaml
+│   │   │   ├── llm_preprocessing.yaml
+│   │   │   ├── instruction_formatting.yaml
 │   │   │   └── domain_specific.yaml
+│   │   │
 │   │   ├── augmentation/
-│   │   │   ├── basic_augment.yaml
+│   │   │   ├── safe_augmentation.yaml
+│   │   │   ├── basic_augmentation.yaml
 │   │   │   ├── back_translation.yaml
 │   │   │   ├── paraphrase_generation.yaml
+│   │   │   ├── llm_augmentation/
+│   │   │   │   ├── llama_augmentation.yaml
+│   │   │   │   ├── mistral_augmentation.yaml
+│   │   │   │   └── controlled_generation.yaml
+│   │   │   │
 │   │   │   ├── mixup_strategies.yaml
-│   │   │   ├── adversarial_augment.yaml
+│   │   │   ├── adversarial_augmentation.yaml
 │   │   │   └── contrast_sets.yaml
+│   │   │
 │   │   ├── selection/
 │   │   │   ├── coreset_selection.yaml
 │   │   │   ├── influence_functions.yaml
 │   │   │   └── active_selection.yaml
+│   │   │
+│   │   ├── validation/
+│   │   │   ├── stratified_split.yaml
+│   │   │   ├── k_fold_cv.yaml
+│   │   │   ├── nested_cv.yaml
+│   │   │   ├── time_based_split.yaml
+│   │   │   └── holdout_validation.yaml
+│   │   │
 │   │   └── external/
 │   │       ├── news_corpus.yaml
 │   │       ├── wikipedia.yaml
-│   │       ├── domain_adaptive.yaml
-│   │       └── gpt4_generated.yaml
+│   │       ├── domain_adaptive_pretraining.yaml
+│   │       └── synthetic_data/
+│   │           ├── llm_generated.yaml
+│   │           └── quality_filtering.yaml
+│   │
+│   ├── deployment/
+│   │   ├── local/
+│   │   │   ├── docker_local.yaml
+│   │   │   ├── api_local.yaml
+│   │   │   └── inference_local.yaml
+│   │   │
+│   │   └── free_tier/
+│   │       ├── colab_deployment.yaml
+│   │       ├── kaggle_deployment.yaml
+│   │       └── huggingface_spaces.yaml
 │   │
 │   └── experiments/
 │       ├── baselines/
 │       │   ├── classical_ml.yaml
 │       │   └── transformer_baseline.yaml
+│       │
 │       ├── ablations/
-│       │   ├── model_size.yaml
+│       │   ├── model_size_ablation.yaml
 │       │   ├── data_amount.yaml
+│       │   ├── lora_rank_ablation.yaml
+│       │   ├── qlora_bits_ablation.yaml
+│       │   ├── regularization_ablation.yaml
 │       │   ├── augmentation_impact.yaml
-│       │   └── ensemble_components.yaml
-│       ├── sota_attempts/
-│       │   ├── phase1_single_models.yaml
-│       │   ├── phase2_ensemble.yaml
-│       │   ├── phase3_dapt.yaml
-│       │   ├── phase4_final_sota.yaml
-│       │   └── phase5_bleeding_edge.yaml
+│       │   ├── ensemble_size_ablation.yaml
+│       │   ├── ensemble_components.yaml
+│       │   ├── prompt_ablation.yaml
+│       │   └── distillation_temperature_ablation.yaml
+│       │
+│       ├── hyperparameter_search/
+│       │   ├── lora_search.yaml
+│       │   ├── qlora_search.yaml
+│       │   ├── regularization_search.yaml
+│       │   └── ensemble_weights_search.yaml
+│       │
+│       ├── sota_experiments/
+│       │   ├── phase1_xlarge_models.yaml
+│       │   ├── phase2_llm_models.yaml
+│       │   ├── phase3_llm_distillation.yaml
+│       │   ├── phase4_ensemble_sota.yaml
+│       │   ├── phase5_ultimate_sota.yaml
+│       │   └── phase6_production_sota.yaml
+│       │
 │       └── reproducibility/
 │           ├── seeds.yaml
 │           └── hardware_specs.yaml
@@ -2021,53 +2445,157 @@ ag-news-text-classification/
 ├── data/
 │   ├── raw/
 │   │   ├── ag_news/
+│   │   │   ├── train.csv
+│   │   │   ├── test.csv
+│   │   │   └── README.md
 │   │   └── .gitkeep
+│   │
 │   ├── processed/
 │   │   ├── train/
 │   │   ├── validation/
 │   │   ├── test/
-│   │   └── stratified_folds/
+│   │   ├── stratified_folds/
+│   │   ├── instruction_formatted/
+│   │   └── .test_set_hash
+│   │
 │   ├── augmented/
 │   │   ├── back_translated/
 │   │   ├── paraphrased/
 │   │   ├── synthetic/
+│   │   ├── llm_generated/
+│   │   │   ├── llama2/
+│   │   │   ├── mistral/
+│   │   │   └── mixtral/
 │   │   ├── mixup/
-│   │   ├── contrast_sets/
-│   │   └── gpt4_augmented/
+│   │   └── contrast_sets/
+│   │
 │   ├── external/
 │   │   ├── news_corpus/
-│   │   │   ├── cnn_dailymail/
-│   │   │   ├── reuters/
-│   │   │   ├── bbc_news/
-│   │   │   └── reddit_news/
 │   │   ├── pretrain_data/
 │   │   └── distillation_data/
-│   │       ├── gpt4_annotations/
-│   │       └── teacher_predictions/
+│   │       ├── llama_outputs/
+│   │       ├── mistral_outputs/
+│   │       └── teacher_ensemble_outputs/
+│   │
 │   ├── pseudo_labeled/
 │   ├── selected_subsets/
+│   │
 │   ├── test_samples/
 │   │   ├── api_test_cases.json
-│   │   ├── service_test_data.json
 │   │   └── mock_responses.json
+│   │
+│   ├── metadata/
+│   │   ├── split_info.json
+│   │   ├── statistics.json
+│   │   ├── leakage_check.json
+│   │   └── model_predictions/
+│   │       ├── xlarge_predictions.json
+│   │       ├── llm_predictions.json
+│   │       └── ensemble_predictions.json
+│   │
+│   ├── test_access_log.json
+│   │
 │   └── cache/
-│       ├── api_cache/
-│       ├── service_cache/
-│       └── model_cache/
+│       ├── local_cache/
+│       ├── model_cache/
+│       └── huggingface_cache/
 │
 ├── src/
 │   ├── __init__.py
 │   ├── __version__.py
+│   ├── cli.py
+│   │
 │   ├── core/
 │   │   ├── __init__.py
 │   │   ├── registry.py
 │   │   ├── factory.py
 │   │   ├── types.py
 │   │   ├── exceptions.py
-│   │   └── interfaces.py
+│   │   ├── interfaces.py
+│   │   │
+│   │   ├── health/
+│   │   │   ├── __init__.py
+│   │   │   ├── health_checker.py
+│   │   │   ├── dependency_checker.py
+│   │   │   ├── gpu_checker.py
+│   │   │   ├── config_checker.py
+│   │   │   └── data_checker.py
+│   │   │
+│   │   ├── auto_fix/
+│   │   │   ├── __init__.py
+│   │   │   ├── config_fixer.py
+│   │   │   ├── dependency_fixer.py
+│   │   │   ├── cache_cleaner.py
+│   │   │   └── ide_sync_fixer.py
+│   │   │
+│   │   └── overfitting_prevention/
+│   │       ├── __init__.py
+│   │       │
+│   │       ├── validators/
+│   │       │   ├── __init__.py
+│   │       │   ├── test_set_validator.py
+│   │       │   ├── config_validator.py
+│   │       │   ├── data_leakage_detector.py
+│   │       │   ├── hyperparameter_validator.py
+│   │       │   ├── split_validator.py
+│   │       │   ├── model_size_validator.py
+│   │       │   ├── lora_config_validator.py
+│   │       │   └── ensemble_validator.py
+│   │       │
+│   │       ├── monitors/
+│   │       │   ├── __init__.py
+│   │       │   ├── training_monitor.py
+│   │       │   ├── overfitting_detector.py
+│   │       │   ├── complexity_monitor.py
+│   │       │   ├── benchmark_comparator.py
+│   │       │   ├── metrics_tracker.py
+│   │       │   ├── gradient_monitor.py
+│   │       │   └── lora_rank_monitor.py
+│   │       │
+│   │       ├── constraints/
+│   │       │   ├── __init__.py
+│   │       │   ├── model_constraints.py
+│   │       │   ├── ensemble_constraints.py
+│   │       │   ├── augmentation_constraints.py
+│   │       │   ├── training_constraints.py
+│   │       │   ├── constraint_enforcer.py
+│   │       │   └── parameter_efficiency_enforcer.py
+│   │       │
+│   │       ├── guards/
+│   │       │   ├── __init__.py
+│   │       │   ├── test_set_guard.py
+│   │       │   ├── validation_guard.py
+│   │       │   ├── experiment_guard.py
+│   │       │   ├── access_control.py
+│   │       │   └── parameter_freeze_guard.py
+│   │       │
+│   │       ├── recommendations/
+│   │       │   ├── __init__.py
+│   │       │   ├── model_recommender.py
+│   │       │   ├── config_recommender.py
+│   │       │   ├── prevention_recommender.py
+│   │       │   ├── ensemble_recommender.py
+│   │       │   ├── lora_recommender.py
+│   │       │   ├── distillation_recommender.py
+│   │       │   └── parameter_efficiency_recommender.py
+│   │       │
+│   │       ├── reporting/
+│   │       │   ├── __init__.py
+│   │       │   ├── overfitting_reporter.py
+│   │       │   ├── risk_scorer.py
+│   │       │   ├── comparison_reporter.py
+│   │       │   ├── html_report_generator.py
+│   │       │   └── parameter_efficiency_reporter.py
+│   │       │
+│   │       └── utils/
+│   │           ├── __init__.py
+│   │           ├── hash_utils.py
+│   │           ├── statistical_tests.py
+│   │           └── visualization_utils.py
 │   │
 │   ├── api/
 │   │   ├── __init__.py
+│   │   │
 │   │   ├── base/
 │   │   │   ├── __init__.py
 │   │   │   ├── base_handler.py
@@ -2088,76 +2616,32 @@ ag-news-text-classification/
 │   │   │   │   ├── data.py
 │   │   │   │   ├── health.py
 │   │   │   │   ├── metrics.py
+│   │   │   │   ├── overfitting.py
+│   │   │   │   ├── llm.py
 │   │   │   │   └── admin.py
+│   │   │   │
 │   │   │   ├── schemas/
 │   │   │   │   ├── __init__.py
 │   │   │   │   ├── request_schemas.py
 │   │   │   │   ├── response_schemas.py
 │   │   │   │   ├── error_schemas.py
 │   │   │   │   └── common_schemas.py
+│   │   │   │
 │   │   │   ├── middleware/
 │   │   │   │   ├── __init__.py
 │   │   │   │   ├── logging_middleware.py
 │   │   │   │   ├── metrics_middleware.py
 │   │   │   │   └── security_middleware.py
+│   │   │   │
 │   │   │   ├── dependencies.py
 │   │   │   ├── validators.py
 │   │   │   └── websocket_handler.py
 │   │   │
-│   │   ├── grpc/
-│   │   │   ├── __init__.py
-│   │   │   ├── server.py
-│   │   │   ├── services/
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── classification_service.py
-│   │   │   │   ├── training_service.py
-│   │   │   │   ├── model_service.py
-│   │   │   │   └── data_service.py
-│   │   │   ├── interceptors/
-│   │   │   │   ├── __init__.py
-│   │   │   │   ├── auth_interceptor.py
-│   │   │   │   ├── logging_interceptor.py
-│   │   │   │   ├── metrics_interceptor.py
-│   │   │   │   └── error_interceptor.py
-│   │   │   ├── protos/
-│   │   │   │   ├── classification.proto
-│   │   │   │   ├── model_management.proto
-│   │   │   │   ├── training.proto
-│   │   │   │   ├── data_service.proto
-│   │   │   │   ├── health.proto
-│   │   │   │   ├── monitoring.proto
-│   │   │   │   └── common/
-│   │   │   │       ├── types.proto
-│   │   │   │       └── status.proto
-│   │   │   └── compiled/
-│   │   │       ├── __init__.py
-│   │   │       ├── classification_pb2.py
-│   │   │       ├── classification_pb2_grpc.py
-│   │   │       ├── model_management_pb2.py
-│   │   │       ├── model_management_pb2_grpc.py
-│   │   │       ├── training_pb2.py
-│   │   │       ├── training_pb2_grpc.py
-│   │   │       ├── data_service_pb2.py
-│   │   │       ├── data_service_pb2_grpc.py
-│   │   │       ├── health_pb2.py
-│   │   │       ├── health_pb2_grpc.py
-│   │   │       ├── monitoring_pb2.py
-│   │   │       ├── monitoring_pb2_grpc.py
-│   │   │       └── common/
-│   │   │           ├── __init__.py
-│   │   │           ├── types_pb2.py
-│   │   │           └── status_pb2.py
-│   │   │
-│   │   └── graphql/
+│   │   └── local/
 │   │       ├── __init__.py
-│   │       ├── server.py
-│   │       ├── schema.py
-│   │       ├── resolvers.py
-│   │       ├── mutations.py
-│   │       ├── queries.py
-│   │       ├── subscriptions.py
-│   │       ├── types.py
-│   │       └── dataloaders.py
+│   │       ├── simple_api.py
+│   │       ├── batch_api.py
+│   │       └── streaming_api.py
 │   │
 │   ├── services/
 │   │   ├── __init__.py
@@ -2169,64 +2653,47 @@ ag-news-text-classification/
 │   │   │   ├── prediction_service.py
 │   │   │   ├── training_service.py
 │   │   │   ├── data_service.py
-│   │   │   └── model_management_service.py
+│   │   │   ├── model_management_service.py
+│   │   │   └── llm_service.py
 │   │   │
-│   │   ├── orchestration/
+│   │   ├── local/
 │   │   │   ├── __init__.py
-│   │   │   ├── workflow_orchestrator.py
-│   │   │   ├── pipeline_manager.py
-│   │   │   ├── job_scheduler.py
-│   │   │   └── state_manager.py
+│   │   │   ├── local_cache_service.py
+│   │   │   ├── local_queue_service.py
+│   │   │   └── file_storage_service.py
 │   │   │
-│   │   ├── monitoring/
-│   │   │   ├── __init__.py
-│   │   │   ├── metrics_service.py
-│   │   │   ├── health_service.py
-│   │   │   ├── alerting_service.py
-│   │   │   └── logging_service.py
-│   │   │
-│   │   ├── caching/
-│   │   │   ├── __init__.py
-│   │   │   ├── cache_service.py
-│   │   │   ├── cache_strategies.py
-│   │   │   ├── redis_cache.py
-│   │   │   └── memory_cache.py
-│   │   │
-│   │   ├── queue/
-│   │   │   ├── __init__.py
-│   │   │   ├── task_queue.py
-│   │   │   ├── message_broker.py
-│   │   │   ├── celery_tasks.py
-│   │   │   └── job_processor.py
-│   │   │
-│   │   ├── notification/
-│   │   │   ├── __init__.py
-│   │   │   ├── notification_service.py
-│   │   │   ├── email_notifier.py
-│   │   │   ├── slack_notifier.py
-│   │   │   └── webhook_notifier.py
-│   │   │
-│   │   └── storage/
+│   │   └── monitoring/
 │   │       ├── __init__.py
-│   │       ├── storage_service.py
-│   │       ├── s3_storage.py
-│   │       ├── gcs_storage.py
-│   │       └── local_storage.py
+│   │       ├── monitoring_router.py
+│   │       ├── tensorboard_service.py
+│   │       ├── mlflow_service.py
+│   │       ├── wandb_service.py
+│   │       ├── local_metrics_service.py
+│   │       └── logging_service.py
 │   │
 │   ├── data/
 │   │   ├── __init__.py
+│   │   │
 │   │   ├── datasets/
+│   │   │   ├── __init__.py
 │   │   │   ├── ag_news.py
 │   │   │   ├── external_news.py
 │   │   │   ├── combined_dataset.py
-│   │   │   └── prompted_dataset.py
+│   │   │   ├── prompted_dataset.py
+│   │   │   ├── instruction_dataset.py
+│   │   │   └── distillation_dataset.py
+│   │   │
 │   │   ├── preprocessing/
+│   │   │   ├── __init__.py
 │   │   │   ├── text_cleaner.py
 │   │   │   ├── tokenization.py
 │   │   │   ├── feature_extraction.py
 │   │   │   ├── sliding_window.py
-│   │   │   └── prompt_formatter.py
+│   │   │   ├── prompt_formatter.py
+│   │   │   └── instruction_formatter.py
+│   │   │
 │   │   ├── augmentation/
+│   │   │   ├── __init__.py
 │   │   │   ├── base_augmenter.py
 │   │   │   ├── back_translation.py
 │   │   │   ├── paraphrase.py
@@ -2234,248 +2701,425 @@ ag-news-text-classification/
 │   │   │   ├── mixup.py
 │   │   │   ├── cutmix.py
 │   │   │   ├── adversarial.py
-│   │   │   └── contrast_set_generator.py
+│   │   │   ├── contrast_set_generator.py
+│   │   │   └── llm_augmenter/
+│   │   │       ├── __init__.py
+│   │   │       ├── llama_augmenter.py
+│   │   │       ├── mistral_augmenter.py
+│   │   │       └── controlled_generation.py
+│   │   │
 │   │   ├── sampling/
+│   │   │   ├── __init__.py
 │   │   │   ├── balanced_sampler.py
 │   │   │   ├── curriculum_sampler.py
 │   │   │   ├── active_learning.py
 │   │   │   ├── uncertainty_sampling.py
 │   │   │   └── coreset_sampler.py
+│   │   │
 │   │   ├── selection/
 │   │   │   ├── __init__.py
 │   │   │   ├── influence_function.py
 │   │   │   ├── gradient_matching.py
 │   │   │   ├── diversity_selection.py
 │   │   │   └── quality_filtering.py
+│   │   │
+│   │   ├── validation/
+│   │   │   ├── __init__.py
+│   │   │   ├── split_strategies.py
+│   │   │   ├── cross_validator.py
+│   │   │   ├── nested_cross_validator.py
+│   │   │   └── holdout_manager.py
+│   │   │
 │   │   └── loaders/
+│   │       ├── __init__.py
 │   │       ├── dataloader.py
 │   │       ├── dynamic_batching.py
 │   │       └── prefetch_loader.py
 │   │
 │   ├── models/
 │   │   ├── __init__.py
+│   │   │
 │   │   ├── base/
 │   │   │   ├── base_model.py
 │   │   │   ├── model_wrapper.py
+│   │   │   ├── complexity_tracker.py
 │   │   │   └── pooling_strategies.py
+│   │   │
 │   │   ├── transformers/
+│   │   │   ├── __init__.py
+│   │   │   │
 │   │   │   ├── deberta/
-│   │   │   │   ├── deberta_v3.py
-│   │   │   │   ├── deberta_sliding.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── deberta_v3_base.py
+│   │   │   │   ├── deberta_v3_large.py
+│   │   │   │   ├── deberta_v3_xlarge.py
+│   │   │   │   ├── deberta_v2_xlarge.py
+│   │   │   │   ├── deberta_v2_xxlarge.py
+│   │   │   │   ├── deberta_sliding_window.py
 │   │   │   │   └── deberta_hierarchical.py
+│   │   │   │
 │   │   │   ├── roberta/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── roberta_base.py
+│   │   │   │   ├── roberta_large.py
+│   │   │   │   ├── roberta_large_mnli.py
 │   │   │   │   ├── roberta_enhanced.py
-│   │   │   │   └── roberta_domain.py
-│   │   │   ├── xlnet/
-│   │   │   │   └── xlnet_classifier.py
+│   │   │   │   ├── roberta_domain.py
+│   │   │   │   └── xlm_roberta_large.py
+│   │   │   │
 │   │   │   ├── electra/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── electra_base.py
+│   │   │   │   ├── electra_large.py
 │   │   │   │   └── electra_discriminator.py
+│   │   │   │
+│   │   │   ├── xlnet/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── xlnet_base.py
+│   │   │   │   ├── xlnet_large.py
+│   │   │   │   └── xlnet_classifier.py
+│   │   │   │
 │   │   │   ├── longformer/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── longformer_large.py
 │   │   │   │   └── longformer_global.py
-│   │   │   └── generative/
-│   │   │       ├── gpt2_classifier.py
+│   │   │   │
+│   │   │   └── t5/
+│   │   │       ├── __init__.py
+│   │   │       ├── t5_base.py
+│   │   │       ├── t5_large.py
+│   │   │       ├── t5_3b.py
+│   │   │       ├── flan_t5_xl.py
 │   │   │       └── t5_classifier.py
+│   │   │
+│   │   ├── llm/
+│   │   │   ├── __init__.py
+│   │   │   │
+│   │   │   ├── llama/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── llama2_7b.py
+│   │   │   │   ├── llama2_13b.py
+│   │   │   │   ├── llama2_70b.py
+│   │   │   │   ├── llama3_8b.py
+│   │   │   │   ├── llama3_70b.py
+│   │   │   │   └── llama_for_classification.py
+│   │   │   │
+│   │   │   ├── mistral/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── mistral_7b.py
+│   │   │   │   ├── mistral_7b_instruct.py
+│   │   │   │   ├── mixtral_8x7b.py
+│   │   │   │   └── mistral_for_classification.py
+│   │   │   │
+│   │   │   ├── falcon/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── falcon_7b.py
+│   │   │   │   ├── falcon_40b.py
+│   │   │   │   └── falcon_for_classification.py
+│   │   │   │
+│   │   │   ├── mpt/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── mpt_7b.py
+│   │   │   │   ├── mpt_30b.py
+│   │   │   │   └── mpt_for_classification.py
+│   │   │   │
+│   │   │   └── phi/
+│   │   │       ├── __init__.py
+│   │   │       ├── phi_2.py
+│   │   │       ├── phi_3.py
+│   │   │       └── phi_for_classification.py
+│   │   │
 │   │   ├── prompt_based/
 │   │   │   ├── __init__.py
 │   │   │   ├── prompt_model.py
 │   │   │   ├── soft_prompt.py
 │   │   │   ├── instruction_model.py
 │   │   │   └── template_manager.py
+│   │   │
 │   │   ├── efficient/
+│   │   │   ├── __init__.py
+│   │   │   │
 │   │   │   ├── lora/
+│   │   │   │   ├── __init__.py
 │   │   │   │   ├── lora_model.py
 │   │   │   │   ├── lora_config.py
-│   │   │   │   └── lora_layers.py
+│   │   │   │   ├── lora_layers.py
+│   │   │   │   ├── lora_utils.py
+│   │   │   │   ├── rank_selection.py
+│   │   │   │   └── target_modules_selector.py
+│   │   │   │
+│   │   │   ├── qlora/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── qlora_model.py
+│   │   │   │   ├── qlora_config.py
+│   │   │   │   ├── quantization.py
+│   │   │   │   └── dequantization.py
+│   │   │   │
 │   │   │   ├── adapters/
+│   │   │   │   ├── __init__.py
 │   │   │   │   ├── adapter_model.py
-│   │   │   │   └── adapter_fusion.py
+│   │   │   │   ├── adapter_config.py
+│   │   │   │   ├── houlsby_adapter.py
+│   │   │   │   ├── pfeiffer_adapter.py
+│   │   │   │   ├── parallel_adapter.py
+│   │   │   │   ├── adapter_fusion.py
+│   │   │   │   └── adapter_stacking.py
+│   │   │   │
+│   │   │   ├── prefix_tuning/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── prefix_tuning_model.py
+│   │   │   │   ├── prefix_encoder.py
+│   │   │   │   └── prefix_length_selector.py
+│   │   │   │
+│   │   │   ├── prompt_tuning/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── soft_prompt_model.py
+│   │   │   │   ├── prompt_encoder.py
+│   │   │   │   ├── p_tuning_v2.py
+│   │   │   │   └── prompt_initialization.py
+│   │   │   │
+│   │   │   ├── ia3/
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── ia3_model.py
+│   │   │   │
 │   │   │   ├── quantization/
+│   │   │   │   ├── __init__.py
 │   │   │   │   ├── int8_quantization.py
 │   │   │   │   └── dynamic_quantization.py
-│   │   │   └── pruning/
-│   │   │       └── magnitude_pruning.py
+│   │   │   │
+│   │   │   ├── pruning/
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── magnitude_pruning.py
+│   │   │   │
+│   │   │   └── combined/
+│   │   │       ├── __init__.py
+│   │   │       ├── lora_plus_adapter.py
+│   │   │       └── multi_method_model.py
+│   │   │
 │   │   ├── ensemble/
+│   │   │   ├── __init__.py
 │   │   │   ├── base_ensemble.py
+│   │   │   ├── ensemble_selector.py
+│   │   │   │
 │   │   │   ├── voting/
+│   │   │   │   ├── __init__.py
 │   │   │   │   ├── soft_voting.py
+│   │   │   │   ├── hard_voting.py
 │   │   │   │   ├── weighted_voting.py
-│   │   │   │   └── rank_averaging.py
+│   │   │   │   ├── rank_averaging.py
+│   │   │   │   └── confidence_weighted_voting.py
+│   │   │   │
 │   │   │   ├── stacking/
+│   │   │   │   ├── __init__.py
 │   │   │   │   ├── stacking_classifier.py
 │   │   │   │   ├── meta_learners.py
-│   │   │   │   └── cross_validation_stacking.py
+│   │   │   │   ├── cross_validation_stacking.py
+│   │   │   │   └── neural_stacking.py
+│   │   │   │
 │   │   │   ├── blending/
+│   │   │   │   ├── __init__.py
 │   │   │   │   ├── blending_ensemble.py
 │   │   │   │   └── dynamic_blending.py
-│   │   │   └── advanced/
-│   │   │       ├── bayesian_ensemble.py
-│   │   │       ├── snapshot_ensemble.py
-│   │   │       └── multi_level_ensemble.py
+│   │   │   │
+│   │   │   ├── advanced/
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── bayesian_ensemble.py
+│   │   │   │   ├── snapshot_ensemble.py
+│   │   │   │   ├── multi_level_ensemble.py
+│   │   │   │   └── mixture_of_experts.py
+│   │   │   │
+│   │   │   └── diversity/
+│   │   │       ├── __init__.py
+│   │   │       ├── diversity_calculator.py
+│   │   │       ├── diversity_optimizer.py
+│   │   │       └── ensemble_pruning.py
+│   │   │
 │   │   └── heads/
+│   │       ├── __init__.py
 │   │       ├── classification_head.py
 │   │       ├── multitask_head.py
 │   │       ├── hierarchical_head.py
 │   │       ├── attention_head.py
-│   │       └── prompt_head.py
+│   │       ├── prompt_head.py
+│   │       └── adaptive_head.py
 │   │
 │   ├── training/
 │   │   ├── __init__.py
+│   │   │
 │   │   ├── trainers/
+│   │   │   ├── __init__.py
 │   │   │   ├── base_trainer.py
 │   │   │   ├── standard_trainer.py
 │   │   │   ├── distributed_trainer.py
 │   │   │   ├── apex_trainer.py
+│   │   │   ├── safe_trainer.py
+│   │   │   ├── lora_trainer.py
+│   │   │   ├── qlora_trainer.py
+│   │   │   ├── adapter_trainer.py
 │   │   │   ├── prompt_trainer.py
 │   │   │   ├── instruction_trainer.py
 │   │   │   └── multi_stage_trainer.py
+│   │   │
 │   │   ├── strategies/
+│   │   │   ├── __init__.py
+│   │   │   │
 │   │   │   ├── curriculum/
+│   │   │   │   ├── __init__.py
 │   │   │   │   ├── curriculum_learning.py
 │   │   │   │   ├── self_paced.py
 │   │   │   │   └── competence_based.py
+│   │   │   │
 │   │   │   ├── adversarial/
+│   │   │   │   ├── __init__.py
 │   │   │   │   ├── fgm.py
 │   │   │   │   ├── pgd.py
-│   │   │   │   └── freelb.py
+│   │   │   │   ├── freelb.py
+│   │   │   │   └── smart.py
+│   │   │   │
 │   │   │   ├── regularization/
+│   │   │   │   ├── __init__.py
 │   │   │   │   ├── r_drop.py
 │   │   │   │   ├── mixout.py
-│   │   │   │   └── spectral_norm.py
+│   │   │   │   ├── spectral_norm.py
+│   │   │   │   ├── adaptive_dropout.py
+│   │   │   │   ├── gradient_penalty.py
+│   │   │   │   ├── elastic_weight_consolidation.py
+│   │   │   │   └── sharpness_aware_minimization.py
+│   │   │   │
 │   │   │   ├── distillation/
-│   │   │   │   ├── knowledge_distill.py
-│   │   │   │   ├── feature_distill.py
-│   │   │   │   ├── self_distill.py
-│   │   │   │   └── gpt4_distill.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── knowledge_distillation.py
+│   │   │   │   ├── feature_distillation.py
+│   │   │   │   ├── self_distillation.py
+│   │   │   │   ├── llama_distillation.py
+│   │   │   │   ├── mistral_distillation.py
+│   │   │   │   ├── ensemble_distillation.py
+│   │   │   │   └── progressive_distillation.py
+│   │   │   │
 │   │   │   ├── meta/
+│   │   │   │   ├── __init__.py
 │   │   │   │   ├── maml.py
 │   │   │   │   └── reptile.py
+│   │   │   │
 │   │   │   ├── prompt_based/
+│   │   │   │   ├── __init__.py
 │   │   │   │   ├── prompt_tuning.py
 │   │   │   │   ├── prefix_tuning.py
 │   │   │   │   ├── p_tuning.py
 │   │   │   │   └── soft_prompt_tuning.py
+│   │   │   │
 │   │   │   └── multi_stage/
+│   │   │       ├── __init__.py
 │   │   │       ├── stage_manager.py
 │   │   │       ├── progressive_training.py
-│   │   │       └── iterative_refinement.py
+│   │   │       ├── iterative_refinement.py
+│   │   │       └── base_to_xlarge_progression.py
+│   │   │
 │   │   ├── objectives/
+│   │   │   ├── __init__.py
+│   │   │   │
 │   │   │   ├── losses/
+│   │   │   │   ├── __init__.py
 │   │   │   │   ├── focal_loss.py
 │   │   │   │   ├── label_smoothing.py
 │   │   │   │   ├── contrastive_loss.py
 │   │   │   │   ├── triplet_loss.py
 │   │   │   │   ├── custom_ce_loss.py
-│   │   │   │   └── instruction_loss.py
+│   │   │   │   ├── instruction_loss.py
+│   │   │   │   └── distillation_loss.py
+│   │   │   │
 │   │   │   └── regularizers/
+│   │   │       ├── __init__.py
 │   │   │       ├── l2_regularizer.py
-│   │   │       └── gradient_penalty.py
+│   │   │       ├── gradient_penalty.py
+│   │   │       ├── complexity_regularizer.py
+│   │   │       └── parameter_norm_regularizer.py
+│   │   │
 │   │   ├── optimization/
+│   │   │   ├── __init__.py
+│   │   │   │
 │   │   │   ├── optimizers/
+│   │   │   │   ├── __init__.py
 │   │   │   │   ├── adamw_custom.py
 │   │   │   │   ├── lamb.py
 │   │   │   │   ├── lookahead.py
-│   │   │   │   └── sam.py
+│   │   │   │   ├── sam.py
+│   │   │   │   └── adafactor.py
+│   │   │   │
 │   │   │   ├── schedulers/
+│   │   │   │   ├── __init__.py
 │   │   │   │   ├── cosine_warmup.py
 │   │   │   │   ├── polynomial_decay.py
-│   │   │   │   └── cyclic_scheduler.py
+│   │   │   │   ├── cyclic_scheduler.py
+│   │   │   │   └── inverse_sqrt_scheduler.py
+│   │   │   │
 │   │   │   └── gradient/
+│   │   │       ├── __init__.py
 │   │   │       ├── gradient_accumulation.py
-│   │   │       └── gradient_clipping.py
+│   │   │       ├── gradient_clipping.py
+│   │   │       └── gradient_checkpointing.py
+│   │   │
 │   │   └── callbacks/
+│   │       ├── __init__.py
 │   │       ├── early_stopping.py
 │   │       ├── model_checkpoint.py
 │   │       ├── tensorboard_logger.py
 │   │       ├── wandb_logger.py
-│   │       └── learning_rate_monitor.py
-│   │
-│   ├── domain_adaptation/
-│   │   ├── __init__.py
-│   │   ├── pretraining/
-│   │   │   ├── mlm_pretrain.py
-│   │   │   ├── news_corpus_builder.py
-│   │   │   └── adaptive_pretrain.py
-│   │   ├── fine_tuning/
-│   │   │   ├── gradual_unfreezing.py
-│   │   │   └── discriminative_lr.py
-│   │   └── pseudo_labeling/
-│   │       ├── confidence_based.py
-│   │       ├── uncertainty_filter.py
-│   │       └── self_training.py
-│   │
-│   ├── distillation/
-│   │   ├── __init__.py
-│   │   ├── gpt4_api/
-│   │   │   ├── api_client.py
-│   │   │   ├── prompt_builder.py
-│   │   │   └── response_parser.py
-│   │   ├── teacher_models/
-│   │   │   ├── gpt4_teacher.py
-│   │   │   ├── ensemble_teacher.py
-│   │   │   └── multi_teacher.py
-│   │   └── distillation_data/
-│   │       ├── data_generator.py
-│   │       └── quality_filter.py
+│   │       ├── mlflow_logger.py
+│   │       ├── learning_rate_monitor.py
+│   │       ├── overfitting_monitor.py
+│   │       ├── complexity_regularizer_callback.py
+│   │       ├── test_protection_callback.py
+│   │       ├── lora_rank_callback.py
+│   │       └── memory_monitor_callback.py
 │   │
 │   ├── evaluation/
 │   │   ├── __init__.py
+│   │   │
 │   │   ├── metrics/
+│   │   │   ├── __init__.py
 │   │   │   ├── classification_metrics.py
-│   │   │   ├── ensemble_metrics.py
-│   │   │   ├── robustness_metrics.py
-│   │   │   ├── efficiency_metrics.py
-│   │   │   ├── fairness_metrics.py
-│   │   │   ├── environmental_impact.py
-│   │   │   └── contrast_consistency.py
+│   │   │   ├── overfitting_metrics.py
+│   │   │   ├── diversity_metrics.py
+│   │   │   └── efficiency_metrics.py
+│   │   │
 │   │   ├── analysis/
+│   │   │   ├── __init__.py
 │   │   │   ├── error_analysis.py
-│   │   │   ├── confusion_analysis.py
-│   │   │   ├── class_wise_analysis.py
-│   │   │   ├── failure_case_analysis.py
-│   │   │   ├── dataset_shift_analysis.py
-│   │   │   ├── bias_analysis.py
-│   │   │   └── contrast_set_analysis.py
-│   │   ├── interpretability/
-│   │   │   ├── attention_analysis.py
-│   │   │   ├── shap_interpreter.py
-│   │   │   ├── lime_interpreter.py
-│   │   │   ├── integrated_gradients.py
-│   │   │   ├── layer_wise_relevance.py
-│   │   │   ├── probing_classifier.py
-│   │   │   └── prompt_analysis.py
-│   │   ├── statistical/
-│   │   │   ├── significance_tests.py
-│   │   │   ├── bootstrap_confidence.py
-│   │   │   ├── mcnemar_test.py
-│   │   │   └── effect_size.py
-│   │   └── visualization/
-│   │       ├── performance_plots.py
-│   │       ├── learning_curves.py
-│   │       ├── attention_heatmaps.py
-│   │       ├── embedding_visualizer.py
-│   │       └── report_generator.py
+│   │   │   ├── overfitting_analysis.py
+│   │   │   ├── train_val_test_comparison.py
+│   │   │   ├── lora_rank_analysis.py
+│   │   │   └── ensemble_analysis.py
+│   │   │
+│   │   └── visualizations/
+│   │       ├── __init__.py
+│   │       ├── training_curves.py
+│   │       ├── confusion_matrix.py
+│   │       ├── attention_visualization.py
+│   │       └── lora_weight_visualization.py
 │   │
 │   ├── inference/
 │   │   ├── __init__.py
+│   │   │
 │   │   ├── predictors/
+│   │   │   ├── __init__.py
 │   │   │   ├── single_predictor.py
-│   │   │   ├── batch_predictor.py
-│   │   │   ├── streaming_predictor.py
 │   │   │   ├── ensemble_predictor.py
-│   │   │   └── prompt_predictor.py
+│   │   │   ├── lora_predictor.py
+│   │   │   └── qlora_predictor.py
+│   │   │
 │   │   ├── optimization/
-│   │   │   ├── onnx_converter.py
-│   │   │   ├── tensorrt_optimizer.py
-│   │   │   ├── quantization_optimizer.py
-│   │   │   └── pruning_optimizer.py
-│   │   ├── serving/
-│   │   │   ├── model_server.py
-│   │   │   ├── batch_server.py
-│   │   │   └── load_balancer.py
-│   │   └── post_processing/
-│   │       ├── confidence_calibration.py
-│   │       ├── threshold_optimization.py
-│   │       └── output_formatter.py
+│   │   │   ├── __init__.py
+│   │   │   ├── model_quantization.py
+│   │   │   ├── model_pruning.py
+│   │   │   ├── onnx_export.py
+│   │   │   └── openvino_optimization.py
+│   │   │
+│   │   └── serving/
+│   │       ├── __init__.py
+│   │       ├── local_server.py
+│   │       ├── batch_predictor.py
+│   │       └── streaming_predictor.py
 │   │
 │   └── utils/
 │       ├── __init__.py
@@ -2488,84 +3132,133 @@ ag-news-text-classification/
 │       ├── experiment_tracking.py
 │       ├── prompt_utils.py
 │       ├── api_utils.py
-│       └── service_utils.py
+│       └── local_utils.py
 │
 ├── experiments/
 │   ├── __init__.py
 │   ├── experiment_runner.py
+│   ├── experiment_tagger.py
+│   │
 │   ├── hyperparameter_search/
+│   │   ├── __init__.py
 │   │   ├── optuna_search.py
 │   │   ├── ray_tune_search.py
 │   │   ├── hyperband.py
-│   │   └── bayesian_optimization.py
+│   │   ├── bayesian_optimization.py
+│   │   ├── lora_rank_search.py
+│   │   └── ensemble_weight_search.py
+│   │
 │   ├── benchmarks/
+│   │   ├── __init__.py
 │   │   ├── speed_benchmark.py
 │   │   ├── memory_benchmark.py
 │   │   ├── accuracy_benchmark.py
 │   │   ├── robustness_benchmark.py
-│   │   └── sota_comparison.py
+│   │   ├── sota_comparison.py
+│   │   ├── overfitting_benchmark.py
+│   │   └── parameter_efficiency_benchmark.py
+│   │
 │   ├── baselines/
+│   │   ├── __init__.py
 │   │   ├── classical/
+│   │   │   ├── __init__.py
 │   │   │   ├── naive_bayes.py
 │   │   │   ├── svm_baseline.py
 │   │   │   ├── random_forest.py
 │   │   │   └── logistic_regression.py
 │   │   └── neural/
+│   │       ├── __init__.py
 │   │       ├── lstm_baseline.py
 │   │       ├── cnn_baseline.py
 │   │       └── bert_vanilla.py
+│   │
 │   ├── ablation_studies/
+│   │   ├── __init__.py
 │   │   ├── component_ablation.py
 │   │   ├── data_ablation.py
 │   │   ├── model_size_ablation.py
 │   │   ├── feature_ablation.py
-│   │   └── prompt_ablation.py
+│   │   ├── lora_rank_ablation.py
+│   │   ├── qlora_bits_ablation.py
+│   │   ├── regularization_ablation.py
+│   │   ├── prompt_ablation.py
+│   │   └── distillation_temperature_ablation.py
+│   │
 │   ├── sota_experiments/
+│   │   ├── __init__.py
+│   │   ├── phase1_xlarge_lora.py
+│   │   ├── phase2_llm_qlora.py
+│   │   ├── phase3_llm_distillation.py
+│   │   ├── phase4_ensemble_xlarge.py
+│   │   ├── phase5_ultimate_sota.py
 │   │   ├── single_model_sota.py
 │   │   ├── ensemble_sota.py
 │   │   ├── full_pipeline_sota.py
 │   │   ├── production_sota.py
 │   │   ├── prompt_based_sota.py
-│   │   └── gpt4_distilled_sota.py
+│   │   └── compare_all_approaches.py
+│   │
 │   └── results/
+│       ├── __init__.py
 │       ├── experiment_tracker.py
 │       ├── result_aggregator.py
 │       └── leaderboard_generator.py
 │
 ├── monitoring/
+│   ├── README.md
+│   ├── local/
+│   │   ├── docker-compose.local.yml
+│   │   ├── tensorboard_config.yaml
+│   │   ├── mlflow_config.yaml
+│   │   └── setup_local_monitoring.sh
+│   │
 │   ├── dashboards/
-│   │   ├── grafana/
-│   │   ├── prometheus/
-│   │   └── kibana/
-│   ├── alerts/
-│   │   ├── alert_rules.yaml
-│   │   ├── notification_config.yaml
-│   │   └── escalation_policy.yaml
+│   │   ├── tensorboard/
+│   │   │   ├── scalar_config.json
+│   │   │   ├── image_config.json
+│   │   │   └── custom_scalars.json
+│   │   │
+│   │   ├── mlflow/
+│   │   │   ├── experiment_dashboard.py
+│   │   │   └── model_registry.py
+│   │   │
+│   │   └── wandb/
+│   │       ├── training_dashboard.json
+│   │       ├── overfitting_dashboard.json
+│   │       └── parameter_efficiency_dashboard.json
+│   │
 │   ├── metrics/
+│   │   ├── __init__.py
 │   │   ├── custom_metrics.py
 │   │   ├── metric_collectors.py
-│   │   ├── api_metrics.py
-│   │   └── service_metrics.py
-│   └── logs_analysis/
-│       ├── log_parser.py
-│       ├── anomaly_detector.py
-│       └── log_aggregator.py
+│   │   ├── local_metrics.py
+│   │   ├── model_metrics.py
+│   │   ├── training_metrics.py
+│   │   └── overfitting_metrics.py
+│   │
+│   ├── logs_analysis/
+│   │   ├── __init__.py
+│   │   ├── log_parser.py
+│   │   ├── anomaly_detector.py
+│   │   └── log_aggregator.py
+│   │
+│   └── scripts/
+│       ├── start_tensorboard.sh
+│       ├── start_mlflow.sh
+│       ├── start_wandb.sh
+│       ├── export_metrics.py
+│       └── generate_report.py
 │
 ├── security/
-│   ├── api_auth/
-│   │   ├── jwt_handler.py
-│   │   ├── api_keys.py
-│   │   ├── oauth2_handler.py
-│   │   └── rbac.py
+│   ├── local_auth/
+│   │   ├── simple_token.py
+│   │   └── local_rbac.py
 │   ├── data_privacy/
 │   │   ├── pii_detector.py
 │   │   └── data_masking.py
-│   ├── model_security/
-│   │   ├── adversarial_defense.py
-│   │   └── model_encryption.py
-│   └── audit_logs/
-│       ├── audit_logger.py
-│       └── compliance_reports/
+│   └── model_security/
+│       ├── adversarial_defense.py
+│       └── model_checksum.py
 │
 ├── plugins/
 │   ├── custom_models/
@@ -2588,54 +3281,51 @@ ag-news-text-classification/
 │   ├── models/
 │   │   ├── version_converter.py
 │   │   └── compatibility_layer.py
-│   ├── configs/
-│   │   └── config_migrator.py
-│   └── api/
-│       ├── api_version_manager.py
-│       └── schema_migrations/
+│   └── configs/
+│       └── config_migrator.py
 │
 ├── cache/
-│   ├── redis/
-│   │   └── redis_config.yaml
-│   ├── memcached/
-│   │   └── memcached_config.yaml
-│   └── local/
-│       └── disk_cache.py
-│
-├── load_testing/
-│   ├── scenarios/
-│   │   ├── basic_load.yaml
-│   │   ├── stress_test.yaml
-│   │   └── api_load_test.yaml
-│   ├── scripts/
-│   │   ├── locust_test.py
-│   │   ├── k6_test.js
-│   │   └── jmeter_test.jmx
-│   └── reports/
-│       └── performance_report_template.md
+│   ├── local/
+│   │   ├── disk_cache.py
+│   │   ├── memory_cache.py
+│   │   └── lru_cache.py
+│   │
+│   └── sqlite/
+│       └── cache_db_schema.sql
 │
 ├── backup/
 │   ├── strategies/
 │   │   ├── incremental_backup.yaml
-│   │   └── full_backup.yaml
+│   │   └── local_backup.yaml
 │   ├── scripts/
-│   │   ├── backup_runner.sh
-│   │   └── restore_runner.sh
+│   │   ├── backup_local.sh
+│   │   └── restore_local.sh
 │   └── recovery/
-│       ├── disaster_recovery_plan.md
-│       └── recovery_procedures/
+│       └── local_recovery_plan.md
 │
 ├── quickstart/
 │   ├── README.md
+│   ├── SIMPLE_START.md
+│   ├── setup_wizard.py
+│   ├── interactive_cli.py
+│   ├── decision_tree.py
 │   ├── minimal_example.py
 │   ├── train_simple.py
 │   ├── evaluate_simple.py
 │   ├── demo_app.py
-│   ├── api_quickstart.py
+│   ├── local_api_quickstart.py
 │   ├── colab_notebook.ipynb
+│   ├── kaggle_notebook.ipynb
+│   │
+│   ├── use_cases/
+│   │   ├── quick_demo_5min.py
+│   │   ├── research_experiment_30min.py
+│   │   ├── production_deployment_1hr.py
+│   │   └── learning_exploration.py
+│   │
 │   └── docker_quickstart/
-│       ├── Dockerfile
-│       └── docker-compose.yml
+│       ├── Dockerfile.local
+│       └── docker-compose.local.yml
 │
 ├── templates/
 │   ├── experiment/
@@ -2648,155 +3338,128 @@ ag-news-text-classification/
 │   │   └── dataset_template.py
 │   ├── evaluation/
 │   │   └── metric_template.py
-│   └── api/
-│       ├── endpoint_template.py
-│       └── service_template.py
-│
-├── notebooks/
-│   ├── tutorials/
-│   │   ├── 00_environment_setup.ipynb
-│   │   ├── 01_data_loading_basics.ipynb
-│   │   ├── 02_preprocessing_tutorial.ipynb
-│   │   ├── 03_model_training_basics.ipynb
-│   │   ├── 04_evaluation_tutorial.ipynb
-│   │   ├── 05_prompt_engineering.ipynb
-│   │   ├── 06_instruction_tuning.ipynb
-│   │   ├── 07_api_usage.ipynb
-│   │   └── 08_service_integration.ipynb
-│   ├── exploratory/
-│   │   ├── 01_data_exploration.ipynb
-│   │   ├── 02_data_statistics.ipynb
-│   │   ├── 03_label_distribution.ipynb
-│   │   ├── 04_text_length_analysis.ipynb
-│   │   ├── 05_vocabulary_analysis.ipynb
-│   │   └── 06_contrast_set_exploration.ipynb
-│   ├── experiments/
-│   │   ├── 01_baseline_experiments.ipynb
-│   │   ├── 02_single_model_experiments.ipynb
-│   │   ├── 03_ensemble_experiments.ipynb
-│   │   ├── 04_ablation_studies.ipynb
-│   │   ├── 05_sota_reproduction.ipynb
-│   │   ├── 06_prompt_experiments.ipynb
-│   │   └── 07_distillation_experiments.ipynb
-│   ├── analysis/
-│   │   ├── 01_error_analysis.ipynb
-│   │   ├── 02_model_interpretability.ipynb
-│   │   ├── 03_attention_visualization.ipynb
-│   │   ├── 04_embedding_analysis.ipynb
-│   │   └── 05_failure_cases.ipynb
-│   ├── deployment/
-│   │   ├── 01_model_optimization.ipynb
-│   │   ├── 02_inference_pipeline.ipynb
-│   │   ├── 03_api_testing.ipynb
-│   │   └── 04_service_monitoring.ipynb
-│   └── platform_specific/
-│       ├── colab/
-│       │   ├── quick_start_colab.ipynb
-│       │   ├── full_training_colab.ipynb
-│       │   └── inference_demo_colab.ipynb
-│       ├── kaggle/
-│       │   └── kaggle_submission.ipynb
-│       └── sagemaker/
-│           └── sagemaker_training.ipynb
-│
-├── app/
-│   ├── __init__.py
-│   ├── streamlit_app.py
-│   ├── pages/
-│   │   ├── 01_Home.py
-│   │   ├── 02_Single_Prediction.py
-│   │   ├── 03_Batch_Analysis.py
-│   │   ├── 04_Model_Comparison.py
-│   │   ├── 05_Interpretability.py
-│   │   ├── 06_Performance_Dashboard.py
-│   │   ├── 07_Real_Time_Demo.py
-│   │   ├── 08_Model_Selection.py
-│   │   ├── 09_Documentation.py
-│   │   ├── 10_Prompt_Testing.py
-│   │   ├── 11_API_Explorer.py
-│   │   └── 12_Service_Status.py
-│   ├── components/
-│   │   ├── __init__.py
-│   │   ├── prediction_component.py
-│   │   ├── visualization_component.py
-│   │   ├── model_selector.py
-│   │   ├── file_uploader.py
-│   │   ├── result_display.py
-│   │   ├── performance_monitor.py
-│   │   ├── prompt_builder.py
-│   │   ├── api_tester.py
-│   │   └── service_monitor.py
-│   ├── utils/
-│   │   ├── session_manager.py
-│   │   ├── caching.py
-│   │   ├── theming.py
-│   │   └── helpers.py
-│   └── assets/
-│       ├── css/
-│       │   └── custom.css
-│       ├── js/
-│       │   └── custom.js
-│       └── images/
-│           ├── logo.png
-│           └── banner.png
+│   └── ide/
+│       ├── pycharm_run_config.xml
+│       ├── vscode_task.json
+│       └── jupyter_template.ipynb
 │
 ├── scripts/
 │   ├── setup/
 │   │   ├── download_all_data.py
-│   │   ├── setup_environment.sh
-│   │   ├── install_cuda.sh
+│   │   ├── setup_local_environment.sh
 │   │   ├── setup_colab.sh
-│   │   └── verify_installation.py
+│   │   ├── setup_kaggle.sh
+│   │   ├── verify_installation.py
+│   │   ├── verify_dependencies.py
+│   │   └── download_pretrained_models.py
+│   │
 │   ├── data_preparation/
 │   │   ├── prepare_ag_news.py
 │   │   ├── prepare_external_data.py
 │   │   ├── create_augmented_data.py
+│   │   ├── create_instruction_data.py
+│   │   ├── generate_with_llama.py
+│   │   ├── generate_with_mistral.py
 │   │   ├── generate_pseudo_labels.py
 │   │   ├── create_data_splits.py
 │   │   ├── generate_contrast_sets.py
 │   │   ├── select_quality_data.py
-│   │   └── prepare_instruction_data.py
+│   │   ├── verify_data_splits.py
+│   │   └── register_test_set.py
+│   │
 │   ├── training/
+│   │   ├── __init__.py
+│   │   │
+│   │   ├── single_model/
+│   │   │   ├── train_xlarge_lora.py
+│   │   │   ├── train_xxlarge_qlora.py
+│   │   │   ├── train_llm_qlora.py
+│   │   │   └── train_with_adapters.py
+│   │   │
+│   │   ├── ensemble/
+│   │   │   ├── train_xlarge_ensemble.py
+│   │   │   ├── train_llm_ensemble.py
+│   │   │   └── train_hybrid_ensemble.py
+│   │   │
+│   │   ├── distillation/
+│   │   │   ├── distill_from_llama.py
+│   │   │   ├── distill_from_mistral.py
+│   │   │   ├── distill_from_ensemble.py
+│   │   │   └── progressive_distillation.py
+│   │   │
+│   │   ├── instruction_tuning/
+│   │   │   ├── instruction_tuning_llama.py
+│   │   │   └── instruction_tuning_mistral.py
+│   │   │
+│   │   ├── multi_stage/
+│   │   │   ├── base_to_xlarge.py
+│   │   │   └── pretrain_finetune_distill.py
+│   │   │
 │   │   ├── train_all_models.sh
 │   │   ├── train_single_model.py
 │   │   ├── train_ensemble.py
-│   │   ├── distributed_training.py
+│   │   ├── train_local.py
 │   │   ├── resume_training.py
-│   │   ├── train_with_prompts.py
-│   │   ├── instruction_tuning.py
-│   │   ├── multi_stage_training.py
-│   │   └── distill_from_gpt4.py
+│   │   └── train_with_prompts.py
+│   │
 │   ├── domain_adaptation/
 │   │   ├── pretrain_on_news.py
 │   │   ├── download_news_corpus.py
 │   │   └── run_dapt.sh
+│   │
 │   ├── evaluation/
 │   │   ├── evaluate_all_models.py
+│   │   ├── evaluate_with_guard.py
+│   │   ├── final_evaluation.py
 │   │   ├── generate_reports.py
 │   │   ├── create_leaderboard.py
+│   │   ├── check_overfitting.py
+│   │   ├── evaluate_parameter_efficiency.py
 │   │   ├── statistical_analysis.py
 │   │   └── evaluate_contrast_sets.py
+│   │
 │   ├── optimization/
 │   │   ├── hyperparameter_search.py
-│   │   ├── architecture_search.py
+│   │   ├── lora_rank_search.py
 │   │   ├── ensemble_optimization.py
+│   │   ├── quantization_optimization.py
+│   │   ├── architecture_search.py
 │   │   └── prompt_optimization.py
+│   │
 │   ├── deployment/
 │   │   ├── export_models.py
 │   │   ├── optimize_for_inference.py
-│   │   ├── create_docker_image.sh
-│   │   └── deploy_to_cloud.py
-│   ├── api/
-│   │   ├── compile_protos.sh
-│   │   ├── start_all_services.py
-│   │   ├── test_api_endpoints.py
-│   │   ├── generate_api_docs.py
-│   │   └── update_api_schemas.py
-│   └── services/
-│       ├── service_health_check.py
-│       ├── restart_services.sh
-│       ├── service_diagnostics.py
-│       └── cleanup_services.sh
+│   │   ├── create_docker_local.sh
+│   │   ├── deploy_to_local.py
+│   │   └── deploy_to_hf_spaces.py
+│   │
+│   ├── overfitting_prevention/
+│   │   ├── get_model_recommendations.py
+│   │   ├── validate_experiment_config.py
+│   │   ├── check_data_leakage.py
+│   │   ├── monitor_training_live.py
+│   │   └── generate_overfitting_report.py
+│   │
+│   ├── ide/
+│   │   ├── setup_pycharm.py
+│   │   ├── setup_vscode.py
+│   │   ├── setup_jupyter.py
+│   │   ├── setup_vim.py
+│   │   └── setup_all_ides.sh
+│   │
+│   ├── local/
+│   │   ├── start_local_api.sh
+│   │   ├── start_monitoring.sh
+│   │   ├── cleanup_cache.sh
+│   │   └── backup_experiments.sh
+│   │
+│   └── ci/
+│       ├── run_tests.sh
+│       ├── run_benchmarks.sh
+│       ├── build_docker_local.sh
+│       ├── test_local_deployment.sh
+│       ├── check_docs_sync.py
+│       └── verify_all.sh
 │
 ├── prompts/
 │   ├── classification/
@@ -2808,12 +3471,379 @@ ag-news-text-classification/
 │   │   ├── detailed_instruction.txt
 │   │   └── task_specific.txt
 │   └── distillation/
-│       ├── gpt4_prompts.txt
+│       ├── llm_prompts.txt
 │       └── explanation_prompts.txt
+│
+├── notebooks/
+│   ├── README.md
+│   │
+│   ├── 00_setup/
+│   │   ├── 00_local_setup.ipynb
+│   │   ├── 01_colab_setup.ipynb
+│   │   ├── 02_kaggle_setup.ipynb
+│   │   ├── 03_vscode_setup.ipynb
+│   │   ├── 04_pycharm_setup.ipynb
+│   │   └── 05_jupyterlab_setup.ipynb
+│   │
+│   ├── 01_tutorials/
+│   │   ├── 00_environment_setup.ipynb
+│   │   ├── 01_data_loading_basics.ipynb
+│   │   ├── 02_preprocessing_tutorial.ipynb
+│   │   ├── 03_model_training_basics.ipynb
+│   │   ├── 04_lora_tutorial.ipynb
+│   │   ├── 05_qlora_tutorial.ipynb
+│   │   ├── 06_distillation_tutorial.ipynb
+│   │   ├── 07_ensemble_tutorial.ipynb
+│   │   ├── 08_overfitting_prevention.ipynb
+│   │   ├── 09_safe_training_workflow.ipynb
+│   │   ├── 10_evaluation_tutorial.ipynb
+│   │   ├── 11_prompt_engineering.ipynb
+│   │   ├── 12_instruction_tuning.ipynb
+│   │   ├── 13_local_api_usage.ipynb
+│   │   └── 14_monitoring_setup.ipynb
+│   │
+│   ├── 02_exploratory/
+│   │   ├── 01_data_exploration.ipynb
+│   │   ├── 02_model_size_analysis.ipynb
+│   │   ├── 03_parameter_efficiency_analysis.ipynb
+│   │   ├── 04_data_statistics.ipynb
+│   │   ├── 05_label_distribution.ipynb
+│   │   ├── 06_text_length_analysis.ipynb
+│   │   ├── 07_vocabulary_analysis.ipynb
+│   │   └── 08_contrast_set_exploration.ipynb
+│   │
+│   ├── 03_experiments/
+│   │   ├── 01_baseline_experiments.ipynb
+│   │   ├── 02_xlarge_lora_experiments.ipynb
+│   │   ├── 03_llm_qlora_experiments.ipynb
+│   │   ├── 04_ensemble_experiments.ipynb
+│   │   ├── 05_distillation_experiments.ipynb
+│   │   ├── 06_sota_experiments.ipynb
+│   │   ├── 07_ablation_studies.ipynb
+│   │   ├── 08_sota_reproduction.ipynb
+│   │   ├── 09_prompt_experiments.ipynb
+│   │   └── 10_single_model_experiments.ipynb
+│   │
+│   ├── 04_analysis/
+│   │   ├── 01_error_analysis.ipynb
+│   │   ├── 02_overfitting_analysis.ipynb
+│   │   ├── 03_lora_rank_analysis.ipynb
+│   │   ├── 04_ensemble_diversity_analysis.ipynb
+│   │   ├── 05_parameter_efficiency_comparison.ipynb
+│   │   ├── 06_model_interpretability.ipynb
+│   │   ├── 07_attention_visualization.ipynb
+│   │   ├── 08_embedding_analysis.ipynb
+│   │   └── 09_failure_cases.ipynb
+│   │
+│   ├── 05_deployment/
+│   │   ├── 01_model_export.ipynb
+│   │   ├── 02_quantization.ipynb
+│   │   ├── 03_local_serving.ipynb
+│   │   ├── 04_model_optimization.ipynb
+│   │   ├── 05_inference_pipeline.ipynb
+│   │   ├── 06_api_demo.ipynb
+│   │   └── 07_hf_spaces_deploy.ipynb
+│   │
+│   └── 06_platform_specific/
+│       ├── local/
+│       │   ├── cpu_training.ipynb
+│       │   ├── gpu_training.ipynb
+│       │   └── inference_demo.ipynb
+│       ├── colab/
+│       │   ├── quick_start_colab.ipynb
+│       │   ├── full_training_colab.ipynb
+│       │   └── inference_demo_colab.ipynb
+│       ├── kaggle/
+│       │   ├── kaggle_submission.ipynb
+│       │   └── kaggle_training.ipynb
+│       └── huggingface/
+│           └── spaces_demo.ipynb
+│
+├── app/
+│   ├── __init__.py
+│   ├── streamlit_app.py
+│   ├── gradio_app.py
+│   │
+│   ├── pages/
+│   │   ├── 01_Home.py
+│   │   ├── 02_Single_Prediction.py
+│   │   ├── 03_Batch_Analysis.py
+│   │   ├── 04_Model_Comparison.py
+│   │   ├── 05_Overfitting_Dashboard.py
+│   │   ├── 06_Model_Recommender.py
+│   │   ├── 07_Parameter_Efficiency_Dashboard.py
+│   │   ├── 08_Interpretability.py
+│   │   ├── 09_Performance_Dashboard.py
+│   │   ├── 10_Real_Time_Demo.py
+│   │   ├── 11_Model_Selection.py
+│   │   ├── 12_Documentation.py
+│   │   ├── 13_Prompt_Testing.py
+│   │   ├── 14_Local_Monitoring.py
+│   │   ├── 15_IDE_Setup_Guide.py
+│   │   └── 16_Experiment_Tracker.py
+│   │
+│   ├── components/
+│   │   ├── __init__.py
+│   │   ├── prediction_component.py
+│   │   ├── overfitting_monitor.py
+│   │   ├── lora_config_selector.py
+│   │   ├── ensemble_builder.py
+│   │   ├── visualization_component.py
+│   │   ├── model_selector.py
+│   │   ├── file_uploader.py
+│   │   ├── result_display.py
+│   │   ├── performance_monitor.py
+│   │   ├── prompt_builder.py
+│   │   └── ide_configurator.py
+│   │
+│   ├── utils/
+│   │   ├── session_manager.py
+│   │   ├── caching.py
+│   │   ├── theming.py
+│   │   └── helpers.py
+│   │
+│   └── assets/
+│       ├── css/
+│       │   └── custom.css
+│       ├── js/
+│       │   └── custom.js
+│       └── images/
+│           ├── logo.png
+│           └── banner.png
+│
+├── outputs/
+│   ├── models/
+│   │   ├── checkpoints/
+│   │   ├── pretrained/
+│   │   ├── fine_tuned/
+│   │   ├── lora_adapters/
+│   │   ├── qlora_adapters/
+│   │   ├── ensembles/
+│   │   ├── distilled/
+│   │   ├── optimized/
+│   │   ├── exported/
+│   │   └── prompted/
+│   │
+│   ├── results/
+│   │   ├── experiments/
+│   │   ├── benchmarks/
+│   │   ├── overfitting_reports/
+│   │   ├── parameter_efficiency_reports/
+│   │   ├── ablations/
+│   │   └── reports/
+│   │
+│   ├── analysis/
+│   │   ├── error_analysis/
+│   │   ├── interpretability/
+│   │   └── statistical/
+│   │
+│   ├── logs/
+│   │   ├── training/
+│   │   ├── tensorboard/
+│   │   ├── mlflow/
+│   │   ├── wandb/
+│   │   └── local/
+│   │
+│   ├── profiling/
+│   │   ├── memory/
+│   │   ├── speed/
+│   │   └── traces/
+│   │
+│   └── artifacts/
+│       ├── figures/
+│       ├── tables/
+│       ├── lora_visualizations/
+│       └── presentations/
+│
+├── docs/
+│   ├── index.md
+│   ├── 00_START_HERE.md
+│   ├── limitations.md
+│   ├── ethical_considerations.md
+│   │
+│   ├── getting_started/
+│   │   ├── installation.md
+│   │   ├── local_setup.md
+│   │   ├── ide_setup.md
+│   │   ├── quickstart.md
+│   │   ├── overfitting_prevention_quickstart.md
+│   │   ├── choosing_model.md
+│   │   ├── free_deployment.md
+│   │   └── troubleshooting.md
+│   │
+│   ├── level_1_beginner/
+│   │   ├── README.md
+│   │   ├── 01_installation.md
+│   │   ├── 02_first_model.md
+│   │   ├── 03_evaluation.md
+│   │   ├── 04_deployment.md
+│   │   └── quick_demo.md
+│   │
+│   ├── level_2_intermediate/
+│   │   ├── README.md
+│   │   ├── 01_lora_qlora.md
+│   │   ├── 02_ensemble.md
+│   │   ├── 03_distillation.md
+│   │   └── 04_optimization.md
+│   │
+│   ├── level_3_advanced/
+│   │   ├── README.md
+│   │   ├── 01_sota_pipeline.md
+│   │   ├── 02_custom_models.md
+│   │   └── 03_research_workflow.md
+│   │
+│   ├── user_guide/
+│   │   ├── data_preparation.md
+│   │   ├── model_training.md
+│   │   ├── lora_guide.md
+│   │   ├── qlora_guide.md
+│   │   ├── distillation_guide.md
+│   │   ├── ensemble_guide.md
+│   │   ├── overfitting_prevention.md
+│   │   ├── safe_training_practices.md
+│   │   ├── evaluation.md
+│   │   ├── local_deployment.md
+│   │   ├── prompt_engineering.md
+│   │   └── advanced_techniques.md
+│   │
+│   ├── developer_guide/
+│   │   ├── architecture.md
+│   │   ├── adding_models.md
+│   │   ├── custom_datasets.md
+│   │   ├── local_api_development.md
+│   │   └── contributing.md
+│   │
+│   ├── api_reference/
+│   │   ├── rest_api.md
+│   │   ├── data_api.md
+│   │   ├── models_api.md
+│   │   ├── training_api.md
+│   │   ├── lora_api.md
+│   │   ├── ensemble_api.md
+│   │   ├── overfitting_prevention_api.md
+│   │   └── evaluation_api.md
+│   │
+│   ├── ide_guides/
+│   │   ├── vscode_guide.md
+│   │   ├── pycharm_guide.md
+│   │   ├── jupyter_guide.md
+│   │   ├── vim_guide.md
+│   │   ├── sublime_guide.md
+│   │   └── comparison.md
+│   │
+│   ├── tutorials/
+│   │   ├── basic_usage.md
+│   │   ├── xlarge_model_tutorial.md
+│   │   ├── llm_tutorial.md
+│   │   ├── distillation_tutorial.md
+│   │   ├── sota_pipeline_tutorial.md
+│   │   ├── local_training_tutorial.md
+│   │   ├── free_deployment_tutorial.md
+│   │   └── best_practices.md
+│   │
+│   ├── best_practices/
+│   │   ├── model_selection.md
+│   │   ├── parameter_efficient_finetuning.md
+│   │   ├── avoiding_overfitting.md
+│   │   ├── local_optimization.md
+│   │   └── ensemble_building.md
+│   │
+│   ├── examples/
+│   │   ├── 00_hello_world.md
+│   │   ├── 01_train_baseline.md
+│   │   ├── 02_sota_pipeline.md
+│   │   └── 03_custom_model.md
+│   │
+│   ├── cheatsheets/
+│   │   ├── model_selection_cheatsheet.pdf
+│   │   ├── overfitting_prevention_checklist.pdf
+│   │   ├── free_deployment_comparison.pdf
+│   │   ├── cli_commands.pdf
+│   │   └── config_reference.pdf
+│   │
+│   ├── architecture/
+│   │   ├── decisions/
+│   │   │   ├── 001-model-selection.md
+│   │   │   ├── 002-ensemble-strategy.md
+│   │   │   ├── 003-local-first-design.md
+│   │   │   ├── 004-overfitting-prevention.md
+│   │   │   └── 005-parameter-efficiency.md
+│   │   ├── diagrams/
+│   │   │   ├── system-overview.puml
+│   │   │   ├── data-flow.puml
+│   │   │   ├── local-deployment.puml
+│   │   │   └── overfitting-prevention-flow.puml
+│   │   └── patterns/
+│   │       ├── factory-pattern.md
+│   │       └── strategy-pattern.md
+│   │
+│   ├── operations/
+│   │   ├── runbooks/
+│   │   │   ├── local_deployment.md
+│   │   │   └── troubleshooting.md
+│   │   └── sops/
+│   │       ├── model-update.md
+│   │       └── data-refresh.md
+│   │
+│   └── _static/
+│       └── custom.css
+│
+├── deployment/
+│   ├── docker/
+│   │   ├── Dockerfile.local
+│   │   ├── Dockerfile.gpu.local
+│   │   ├── docker-compose.local.yml
+│   │   └── .dockerignore
+│   │
+│   ├── huggingface/
+│   │   ├── spaces_config.yaml
+│   │   ├── requirements.txt
+│   │   ├── app.py
+│   │   └── README.md
+│   │
+│   ├── streamlit_cloud/
+│   │   ├── .streamlit/
+│   │   │   └── config.toml
+│   │   └── requirements.txt
+│   │
+│   └── local/
+│       ├── systemd/
+│       │   ├── ag-news-api.service
+│       │   └── ag-news-monitor.service
+│       ├── nginx/
+│       │   └── ag-news.conf
+│       └── scripts/
+│           ├── start_all.sh
+│           └── stop_all.sh
+│
+├── benchmarks/
+│   ├── accuracy/
+│   │   ├── model_comparison.json
+│   │   ├── xlarge_models.json
+│   │   ├── llm_models.json
+│   │   ├── ensemble_results.json
+│   │   └── sota_benchmarks.json
+│   │
+│   ├── efficiency/
+│   │   ├── parameter_efficiency.json
+│   │   ├── memory_usage.json
+│   │   ├── training_time.json
+│   │   └── inference_speed.json
+│   │
+│   ├── robustness/
+│   │   ├── adversarial_results.json
+│   │   ├── ood_detection.json
+│   │   └── contrast_set_results.json
+│   │
+│   └── overfitting/
+│       ├── train_val_gaps.json
+│       ├── lora_ranks.json
+│       └── prevention_effectiveness.json
 │
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py
+│   │
 │   ├── unit/
 │   │   ├── data/
 │   │   │   ├── test_preprocessing.py
@@ -2832,244 +3862,149 @@ ag-news-text-classification/
 │   │   │   └── test_multi_stage.py
 │   │   ├── api/
 │   │   │   ├── test_rest_api.py
-│   │   │   ├── test_grpc_services.py
-│   │   │   ├── test_graphql_api.py
-│   │   │   ├── test_auth.py
-│   │   │   └── test_middleware.py
-│   │   ├── services/
-│   │   │   ├── test_prediction_service.py
-│   │   │   ├── test_training_service.py
-│   │   │   ├── test_data_service.py
-│   │   │   ├── test_orchestration.py
-│   │   │   └── test_cache_service.py
+│   │   │   ├── test_local_api.py
+│   │   │   └── test_auth.py
+│   │   ├── overfitting_prevention/
+│   │   │   ├── test_validators.py
+│   │   │   ├── test_monitors.py
+│   │   │   ├── test_constraints.py
+│   │   │   ├── test_guards.py
+│   │   │   └── test_recommenders.py
 │   │   └── utils/
+│   │       ├── test_memory_utils.py
 │   │       └── test_utilities.py
+│   │
 │   ├── integration/
 │   │   ├── test_full_pipeline.py
 │   │   ├── test_ensemble_pipeline.py
 │   │   ├── test_inference_pipeline.py
-│   │   ├── test_api_endpoints.py
-│   │   ├── test_service_integration.py
-│   │   ├── test_api_service_flow.py
-│   │   └── test_prompt_pipeline.py
+│   │   ├── test_local_api_flow.py
+│   │   ├── test_prompt_pipeline.py
+│   │   ├── test_llm_integration.py
+│   │   └── test_overfitting_prevention_flow.py
+│   │
 │   ├── performance/
 │   │   ├── test_model_speed.py
 │   │   ├── test_memory_usage.py
 │   │   ├── test_accuracy_benchmarks.py
-│   │   ├── test_api_performance.py
-│   │   └── test_service_scalability.py
+│   │   ├── test_local_performance.py
+│   │   ├── test_sla_compliance.py
+│   │   └── test_throughput.py
+│   │
 │   ├── e2e/
 │   │   ├── test_complete_workflow.py
 │   │   ├── test_user_scenarios.py
-│   │   └── test_production_flow.py
+│   │   ├── test_local_deployment.py
+│   │   ├── test_free_deployment.py
+│   │   ├── test_quickstart_pipeline.py
+│   │   └── test_sota_pipeline.py
+│   │
+│   ├── regression/
+│   │   ├── __init__.py
+│   │   ├── test_model_accuracy.py
+│   │   ├── test_ensemble_diversity.py
+│   │   ├── test_inference_speed.py
+│   │   └── baseline_results.json
+│   │
+│   ├── chaos/
+│   │   ├── __init__.py
+│   │   ├── test_fault_tolerance.py
+│   │   ├── test_corrupted_config.py
+│   │   ├── test_oom_handling.py
+│   │   └── test_network_failures.py
+│   │
+│   ├── compatibility/
+│   │   ├── __init__.py
+│   │   ├── test_torch_versions.py
+│   │   ├── test_transformers_versions.py
+│   │   └── test_cross_platform.py
+│   │
 │   └── fixtures/
 │       ├── sample_data.py
 │       ├── mock_models.py
 │       ├── test_configs.py
-│       ├── mock_services.py
-│       └── api_fixtures.py
-│
-├── outputs/
-│   ├── models/
-│   │   ├── checkpoints/
-│   │   ├── pretrained/
-│   │   ├── fine_tuned/
-│   │   ├── ensembles/
-│   │   ├── optimized/
-│   │   ├── exported/
-│   │   ├── prompted/
-│   │   └── distilled/
-│   ├── results/
-│   │   ├── experiments/
-│   │   ├── ablations/
-│   │   ├── benchmarks/
-│   │   └── reports/
-│   ├── analysis/
-│   │   ├── error_analysis/
-│   │   ├── interpretability/
-│   │   └── statistical/
-│   ├── logs/
-│   │   ├── training/
-│   │   ├── tensorboard/
-│   │   ├── wandb/
-│   │   ├── mlflow/
-│   │   ├── api_logs/
-│   │   └── service_logs/
-│   └── artifacts/
-│       ├── figures/
-│       ├── tables/
-│       └── presentations/
-│
-├── docs/
-│   ├── index.md
-│   ├── getting_started/
-│   │   ├── installation.md
-│   │   ├── quickstart.md
-│   │   └── troubleshooting.md
-│   ├── user_guide/
-│   │   ├── data_preparation.md
-│   │   ├── model_training.md
-│   │   ├── evaluation.md
-│   │   ├── deployment.md
-│   │   ├── prompt_engineering.md
-│   │   └── advanced_techniques.md
-│   ├── developer_guide/
-│   │   ├── architecture.md
-│   │   ├── adding_models.md
-│   │   ├── custom_datasets.md
-│   │   ├── api_development.md
-│   │   ├── service_development.md
-│   │   └── contributing.md
-│   ├── api_reference/
-│   │   ├── rest_api.md
-│   │   ├── grpc_api.md
-│   │   ├── graphql_api.md
-│   │   ├── data_api.md
-│   │   ├── models_api.md
-│   │   ├── training_api.md
-│   │   └── evaluation_api.md
-│   ├── service_reference/
-│   │   ├── prediction_service.md
-│   │   ├── training_service.md
-│   │   ├── data_service.md
-│   │   └── orchestration.md
-│   ├── tutorials/
-│   │   ├── basic_usage.md
-│   │   ├── advanced_features.md
-│   │   ├── api_integration.md
-│   │   └── best_practices.md
-│   ├── architecture/
-│   │   ├── decisions/
-│   │   │   ├── 001-model-selection.md
-│   │   │   ├── 002-ensemble-strategy.md
-│   │   │   ├── 003-api-design.md
-│   │   │   └── 004-service-architecture.md
-│   │   ├── diagrams/
-│   │   │   ├── system-overview.puml
-│   │   │   ├── data-flow.puml
-│   │   │   ├── api-architecture.puml
-│   │   │   └── service-flow.puml
-│   │   └── patterns/
-│   │       ├── factory-pattern.md
-│   │       ├── strategy-pattern.md
-│   │       └── service-pattern.md
-│   ├── operations/
-│   │   ├── runbooks/
-│   │   │   ├── deployment.md
-│   │   │   ├── troubleshooting.md
-│   │   │   └── api_operations.md
-│   │   ├── sops/
-│   │   │   ├── model-update.md
-│   │   │   ├── data-refresh.md
-│   │   │   └── service-maintenance.md
-│   │   └── incidents/
-│   │       └── incident-response.md
-│   └── _static/
-│       └── custom.css
-│
-├── deployment/
-│   ├── docker/
-│   │   ├── Dockerfile
-│   │   ├── Dockerfile.gpu
-│   │   ├── Dockerfile.api
-│   │   ├── Dockerfile.services
-│   │   ├── docker-compose.yml
-│   │   ├── docker-compose.prod.yml
-│   │   └── .dockerignore
-│   ├── kubernetes/
-│   │   ├── namespace.yaml
-│   │   ├── deployment.yaml
-│   │   ├── service.yaml
-│   │   ├── ingress.yaml
-│   │   ├── configmap.yaml
-│   │   ├── hpa.yaml
-│   │   ├── api-deployment.yaml
-│   │   └── services-deployment.yaml
-│   ├── cloud/
-│   │   ├── aws/
-│   │   │   ├── sagemaker/
-│   │   │   ├── lambda/
-│   │   │   └── ecs/
-│   │   ├── gcp/
-│   │   │   ├── vertex-ai/
-│   │   │   └── cloud-run/
-│   │   └── azure/
-│   │       └── ml-studio/
-│   ├── edge/
-│   │   ├── mobile/
-│   │   │   ├── tflite/
-│   │   │   └── coreml/
-│   │   └── iot/
-│   │       └── nvidia-jetson/
-│   ├── serverless/
-│   │   ├── functions/
-│   │   └── api-gateway/
-│   └── orchestration/
-│       ├── airflow/
-│       └── kubeflow/
-│
-├── benchmarks/
-│   ├── accuracy/
-│   │   ├── model_comparison.json
-│   │   └── ensemble_results.json
-│   ├── speed/
-│   │   ├── inference_benchmarks.json
-│   │   ├── training_benchmarks.json
-│   │   └── api_benchmarks.json
-│   ├── efficiency/
-│   │   ├── memory_usage.json
-│   │   └── energy_consumption.json
-│   ├── robustness/
-│   │   ├── adversarial_results.json
-│   │   ├── ood_detection.json
-│   │   └── contrast_set_results.json
-│   └── scalability/
-│       ├── concurrent_users.json
-│       └── throughput_results.json
+│       └── local_fixtures.py
 │
 ├── .github/
 │   ├── workflows/
 │   │   ├── ci.yml
-│   │   ├── cd.yml
 │   │   ├── tests.yml
-│   │   ├── docker-publish.yml
 │   │   ├── documentation.yml
 │   │   ├── benchmarks.yml
-│   │   ├── api_tests.yml
-│   │   └── service_tests.yml
+│   │   ├── overfitting_checks.yml
+│   │   ├── docs_sync_check.yml
+│   │   ├── local_deployment_test.yml
+│   │   ├── dependency_updates.yml
+│   │   ├── compatibility_matrix.yml
+│   │   └── regression_tests.yml
+│   │
 │   ├── ISSUE_TEMPLATE/
 │   │   ├── bug_report.md
-│   │   └── feature_request.md
+│   │   ├── feature_request.md
+│   │   ├── ide_support_request.md
+│   │   └── overfitting_report.md
+│   │
 │   ├── PULL_REQUEST_TEMPLATE.md
 │   └── dependabot.yml
 │
-├── .vscode/
-│   ├── settings.json
-│   ├── launch.json
-│   ├── tasks.json
-│   └── extensions.json
-│
-├── ci/
-│   ├── run_tests.sh
-│   ├── run_benchmarks.sh
-│   ├── build_docker.sh
-│   ├── deploy.sh
-│   ├── test_api.sh
-│   └── test_services.sh
-│
 └── tools/
+    │
     ├── profiling/
     │   ├── memory_profiler.py
     │   ├── speed_profiler.py
-    │   └── api_profiler.py
+    │   ├── parameter_counter.py
+    │   └── local_profiler.py
+    │
     ├── debugging/
     │   ├── model_debugger.py
+    │   ├── overfitting_debugger.py
+    │   ├── lora_debugger.py
     │   ├── data_validator.py
-    │   └── service_debugger.py
-    └── visualization/
-        ├── training_monitor.py
-        ├── result_plotter.py
-        └── api_dashboard.py
+    │   └── local_debugger.py
+    │
+    ├── visualization/
+    │   ├── training_monitor.py
+    │   ├── lora_weight_plotter.py
+    │   ├── ensemble_diversity_plotter.py
+    │   └── result_plotter.py
+    │
+    ├── config_tools/
+    │   ├── __init__.py
+    │   ├── config_generator.py
+    │   ├── config_explainer.py
+    │   ├── config_comparator.py
+    │   ├── config_optimizer.py
+    │   ├── sync_manager.py
+    │   ├── auto_sync.sh
+    │   └── validate_all_configs.py
+    │
+    ├── ide_tools/
+    │   ├── pycharm_config_generator.py
+    │   ├── vscode_tasks_generator.py
+    │   ├── jupyter_kernel_setup.py
+    │   ├── vim_plugin_installer.sh
+    │   ├── universal_ide_generator.py
+    │   └── sync_ide_configs.py
+    │
+    ├── compatibility/
+    │   ├── __init__.py
+    │   ├── compatibility_checker.py
+    │   ├── version_matrix_tester.py
+    │   └── upgrade_path_finder.py
+    │
+    ├── automation/
+    │   ├── __init__.py
+    │   ├── health_check_runner.py
+    │   ├── auto_fix_runner.py
+    │   ├── batch_config_generator.py
+    │   └── nightly_tasks.sh
+    │
+    └── cli_helpers/
+        ├── __init__.py
+        ├── rich_console.py
+        ├── progress_bars.py
+        ├── interactive_prompts.py
+        └── ascii_art.py
 ```
 
 ## Usage
