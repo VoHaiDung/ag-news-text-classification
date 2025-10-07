@@ -380,7 +380,7 @@ pymdown-extensions>=10.5.0,<10.9.0
 #      * Full precision (FP32): 28GB VRAM
 #      * Half precision (FP16): 14GB VRAM
 #      * 8-bit (int8): 7GB VRAM
-#      * 4-bit (QLoRA): 4-5GB VRAM ✓ Colab/Kaggle compatible
+#      * 4-bit (QLoRA): 4-5GB VRAM Colab/Kaggle compatible
 #
 #    - 13B models (LLaMA-2-13B):
 #      * Full precision: 52GB VRAM
