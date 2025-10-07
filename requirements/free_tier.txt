@@ -1,0 +1,407 @@
+# ============================================================================
+# Free Tier Requirements for AG News Text Classification
+# ============================================================================
+# Project: AG News Text Classification (ag-news-text-classification)
+# Description: Unified dependencies for all free cloud platforms
+# Author: Võ Hải Dũng
+# License: MIT
+# Python: >=3.8,<3.12
+# ============================================================================
+# This file contains packages optimized for:
+# - Google Colab free tier (T4 GPU, 12GB RAM)
+# - Kaggle kernels (P100/T4 GPU, 16GB RAM)
+# - Hugging Face Spaces free tier (CPU, 16GB RAM)
+# - Streamlit Cloud free tier (CPU, 1GB RAM)
+# - GitHub Codespaces free tier (2 cores, 4GB RAM)
+# - Gitpod free tier (4 cores, 8GB RAM)
+#
+# This is a minimal, unified requirements file that works across all
+# free cloud platforms with resource constraints.
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# Core Deep Learning (Essential)
+# ----------------------------------------------------------------------------
+# PyTorch (may be pre-installed on some platforms)
+torch>=2.1.0,<2.3.0
+
+# Transformers ecosystem
+transformers>=4.36.0,<4.41.0
+tokenizers>=0.15.0,<0.16.0
+datasets>=2.16.0,<2.20.0
+accelerate>=0.25.0,<0.31.0
+safetensors>=0.4.0,<0.5.0
+huggingface-hub>=0.20.0,<0.24.0
+
+# ----------------------------------------------------------------------------
+# Parameter-Efficient Fine-Tuning (Critical for free tiers)
+# ----------------------------------------------------------------------------
+# PEFT for LoRA/QLoRA
+peft>=0.7.0,<0.12.0
+
+# BitsAndBytes for quantization (GPU only)
+bitsandbytes>=0.41.0,<0.44.0
+
+# ----------------------------------------------------------------------------
+# Scientific Computing
+# ----------------------------------------------------------------------------
+# NumPy and Pandas (may be pre-installed)
+numpy>=1.24.0,<1.27.0
+pandas>=2.0.0,<2.3.0
+scikit-learn>=1.3.0,<1.5.0
+
+# ----------------------------------------------------------------------------
+# Configuration
+# ----------------------------------------------------------------------------
+# YAML and environment variables
+pyyaml>=6.0.1,<7.0.0
+python-dotenv>=1.0.0,<1.1.0
+omegaconf>=2.3.0,<2.4.0
+pydantic>=2.5.0,<2.8.0
+
+# ----------------------------------------------------------------------------
+# Text Processing
+# ----------------------------------------------------------------------------
+# NLTK for NLP
+nltk>=3.8.0,<3.9.0
+
+# SentencePiece for tokenization
+sentencepiece>=0.1.99,<0.3.0
+
+# ----------------------------------------------------------------------------
+# API Framework (for Hugging Face Spaces, Streamlit Cloud)
+# ----------------------------------------------------------------------------
+# FastAPI for REST API
+fastapi>=0.109.0,<0.112.0
+uvicorn[standard]>=0.27.0,<0.30.0
+
+# ----------------------------------------------------------------------------
+# UI Frameworks (lightweight)
+# ----------------------------------------------------------------------------
+# Gradio for quick demos (works on HF Spaces)
+gradio>=4.12.0,<4.38.0
+
+# Streamlit for dashboards (works on Streamlit Cloud)
+streamlit>=1.30.0,<1.37.0
+
+# ----------------------------------------------------------------------------
+# Visualization (minimal)
+# ----------------------------------------------------------------------------
+# Plotly for interactive plots
+plotly>=5.18.0,<5.23.0
+
+# Matplotlib (may be pre-installed)
+matplotlib>=3.8.0,<3.10.0
+
+# ----------------------------------------------------------------------------
+# Evaluation
+# ----------------------------------------------------------------------------
+# HuggingFace evaluate
+evaluate>=0.4.0,<0.5.0
+
+# ----------------------------------------------------------------------------
+# Logging
+# ----------------------------------------------------------------------------
+# Loguru for structured logging
+loguru>=0.7.0,<0.8.0
+
+# ----------------------------------------------------------------------------
+# Utilities
+# ----------------------------------------------------------------------------
+# Type hints and utilities
+typing-extensions>=4.9.0,<4.12.0
+tqdm>=4.66.0,<4.67.0
+requests>=2.31.0,<2.33.0
+rich>=13.7.0,<13.8.0
+
+# File operations
+filelock>=3.13.0,<3.15.0
+
+# Retry logic
+tenacity>=8.2.3,<8.4.0
+
+# ----------------------------------------------------------------------------
+# Data Serialization
+# ----------------------------------------------------------------------------
+# Efficient data formats
+pyarrow>=14.0.0,<16.2.0
+msgpack>=1.0.7,<1.1.0
+
+# ----------------------------------------------------------------------------
+# Hash Functions
+# ----------------------------------------------------------------------------
+# Fast hashing
+xxhash>=3.4.1,<3.5.0
+
+# ----------------------------------------------------------------------------
+# Testing (minimal)
+# ----------------------------------------------------------------------------
+# Pytest for basic testing
+pytest>=7.4.0,<8.3.0
+
+# ============================================================================
+# Platform-Specific Notes
+# ============================================================================
+# Google Colab:
+# - Pre-installed: torch, numpy, pandas, matplotlib, scikit-learn
+# - GPU: T4 (15GB VRAM)
+# - RAM: 12GB
+# - Session: 12 hours
+# - Install only ADDITIONAL packages from this file
+#
+# Kaggle Kernels:
+# - Pre-installed: torch, transformers, datasets, numpy, pandas, scikit-learn
+# - GPU: P100 (16GB) or T4 (16GB)
+# - RAM: 16GB
+# - Session: 9 hours GPU, 12 hours CPU
+# - Install only UPDATED packages from this file
+#
+# Hugging Face Spaces:
+# - Pre-installed: None (start from scratch)
+# - CPU only (free tier)
+# - RAM: 16GB
+# - Persistent deployment
+# - Use for Gradio/Streamlit apps
+#
+# Streamlit Cloud:
+# - Pre-installed: streamlit
+# - CPU only
+# - RAM: 1GB (very limited)
+# - Use lightweight models only
+# - Deploy Streamlit apps
+#
+# GitHub Codespaces:
+# - Pre-installed: None
+# - CPU: 2 cores (free tier)
+# - RAM: 4GB
+# - Storage: 32GB
+# - 60 hours/month free
+# - Good for development, not training
+#
+# Gitpod:
+# - Pre-installed: None
+# - CPU: 4 cores (free tier)
+# - RAM: 8GB
+# - Storage: 30GB
+# - 50 hours/month free
+# - Better than Codespaces for light training
+
+# ============================================================================
+# Installation Instructions
+# ============================================================================
+# Google Colab:
+# !pip install -q -r requirements/free_tier.txt
+#
+# Kaggle:
+# !pip install -q -r requirements/free_tier.txt
+#
+# Hugging Face Spaces:
+# Add this file as requirements.txt in space root
+#
+# Streamlit Cloud:
+# Add minimal subset to requirements.txt:
+# streamlit>=1.30.0
+# transformers>=4.36.0
+# torch>=2.1.0 --index-url https://download.pytorch.org/whl/cpu
+# (CPU-only PyTorch to reduce size)
+#
+# GitHub Codespaces / Gitpod:
+# pip install -r requirements/free_tier.txt
+
+# ============================================================================
+# Memory Optimization for Free Tiers
+# ============================================================================
+# All platforms have memory constraints:
+#
+# Model selection by platform:
+# - Streamlit Cloud (1GB RAM): Use pre-quantized models, ONNX
+# - Colab/Kaggle/HF Spaces: Up to DeBERTa-xlarge with LoRA
+# - Codespaces/Gitpod: Inference only, no training
+#
+# Techniques:
+# - Use LoRA/QLoRA for all models >1B params
+# - Enable gradient checkpointing
+# - Use smaller batch sizes
+# - Reduce sequence length
+# - Clear cache frequently: torch.cuda.empty_cache()
+# - Use CPU offloading if needed
+# - Quantize models for inference
+
+# ============================================================================
+# Deployment Recommendations by Platform
+# ============================================================================
+# Google Colab:
+# - Best for: Training experiments, research
+# - Model size: Up to 7B with QLoRA
+# - Persistence: None, save to Drive
+# - Use for: Development, experimentation
+#
+# Kaggle:
+# - Best for: Competitions, reproducible research
+# - Model size: Up to 13B with QLoRA
+# - Persistence: 6 months (outputs)
+# - Use for: Benchmarking, competitions
+#
+# Hugging Face Spaces:
+# - Best for: Model demos, inference API
+# - Model size: Up to base models on CPU
+# - Persistence: Permanent (free tier)
+# - Use for: Public demos, sharing results
+#
+# Streamlit Cloud:
+# - Best for: Lightweight dashboards
+# - Model size: Tiny models only (DistilBERT, small)
+# - Persistence: Permanent
+# - Use for: Simple demos, visualization
+#
+# GitHub Codespaces:
+# - Best for: Code development
+# - Model size: Inference only
+# - Persistence: Repository
+# - Use for: Development environment
+#
+# Gitpod:
+# - Best for: Development with light training
+# - Model size: Small models training, any for inference
+# - Persistence: Repository
+# - Use for: Development, light experiments
+
+# ============================================================================
+# Cost Optimization
+# ============================================================================
+# All platforms in this file are FREE, but have limits:
+#
+# Google Colab free tier:
+# - Unlimited CPU
+# - GPU: Subject to availability
+# - TPU: Subject to availability
+# - May disconnect after 12 hours or inactivity
+#
+# Kaggle free tier:
+# - CPU: Unlimited
+# - GPU: 30 hours/week
+# - TPU: 20 hours/week
+# - No disconnects within session
+#
+# Hugging Face Spaces free tier:
+# - CPU: Unlimited
+# - RAM: 16GB
+# - Storage: Limited
+# - Always-on deployment
+#
+# Streamlit Cloud free tier:
+# - 1 private app
+# - Unlimited public apps
+# - 1GB RAM per app
+# - Always-on
+#
+# GitHub Codespaces free tier:
+# - 60 hours/month (2-core)
+# - 15GB storage
+# - Pre-builds count against quota
+#
+# Gitpod free tier:
+# - 50 hours/month (4-core)
+# - 30GB storage
+# - Better specs than Codespaces
+
+# ============================================================================
+# Free Deployment Strategy
+# ============================================================================
+# Recommended workflow:
+#
+# 1. Development:
+#    - Use GitHub Codespaces or Gitpod
+#    - Write and test code
+#    - No GPU needed
+#
+# 2. Training:
+#    - Use Kaggle for serious training (P100, 16GB RAM)
+#    - Use Colab for quick experiments
+#    - Save best models
+#
+# 3. Demo deployment:
+#    - Use Hugging Face Spaces for Gradio demos
+#    - Use Streamlit Cloud for dashboards (if lightweight)
+#
+# 4. API deployment:
+#    - Use Hugging Face Spaces (Gradio or FastAPI)
+#    - Free, persistent, public URL
+#
+# 5. Monitoring:
+#    - Use W&B free tier
+#    - Use TensorBoard (store logs in repo)
+#
+# Total monthly cost: $0
+
+# ============================================================================
+# Example Deployments
+# ============================================================================
+# Hugging Face Space (Gradio):
+# 1. Create space on huggingface.co
+# 2. Add app.py with Gradio interface
+# 3. Add this file as requirements.txt
+# 4. Push to space repository
+# 5. Space auto-builds and deploys
+#
+# Streamlit Cloud:
+# 1. Create app on streamlit.io
+# 2. Connect to GitHub repo
+# 3. Select streamlit_app.py
+# 4. Add requirements (minimal subset)
+# 5. Deploy (auto-updates on git push)
+#
+# See deployment/huggingface/ and deployment/streamlit_cloud/
+
+# ============================================================================
+# Quick Start Examples
+# ============================================================================
+# Colab quick start:
+# !git clone https://github.com/VoHaiDung/ag-news-text-classification.git
+# %cd ag-news-text-classification
+# !pip install -q -r requirements/free_tier.txt
+# !python quickstart/minimal_example.py
+#
+# Kaggle quick start:
+# Same as Colab
+#
+# Hugging Face Space quick start:
+# See deployment/huggingface/app.py
+#
+# Streamlit Cloud quick start:
+# See app/streamlit_app.py (lightweight version)
+
+# ============================================================================
+# Troubleshooting
+# ============================================================================
+# Out of memory:
+# - Use smaller models
+# - Reduce batch size
+# - Enable gradient checkpointing
+# - Use quantization
+#
+# Slow installation:
+# - Use -q flag for quiet mode
+# - Install only what you need
+# - Use pre-built Docker images
+#
+# Package conflicts:
+# - Use virtual environment
+# - Check platform pre-installed packages
+# - Use specific versions from this file
+#
+# Deployment fails:
+# - Check RAM requirements
+# - Use CPU-only PyTorch for inference
+# - Optimize model size
+
+# ============================================================================
+# For More Information
+# ============================================================================
+# - Free deployment guide: FREE_DEPLOYMENT_GUIDE.md
+# - Colab setup: notebooks/00_setup/01_colab_setup.ipynb
+# - Kaggle setup: notebooks/00_setup/02_kaggle_setup.ipynb
+# - HF Spaces: deployment/huggingface/
+# - Streamlit Cloud: deployment/streamlit_cloud/
+# - Quick start: QUICK_START.md
+# ============================================================================
