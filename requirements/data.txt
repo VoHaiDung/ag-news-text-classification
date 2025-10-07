@@ -1,22 +1,563 @@
-# Data Processing Requirements
-# ============================
-# Data handling libraries
+# ============================================================================
+# Data Processing Requirements for AG News Text Classification
+# ============================================================================
+# Project: AG News Text Classification (ag-news-text-classification)
+# Description: Data handling, preprocessing, augmentation, and validation
 # Author: Võ Hải Dũng
+# License: MIT
+# Python: >=3.8,<3.12
+# ============================================================================
+# This file contains packages required for:
+# - Data loading and preprocessing (AG News and external news corpora)
+# - Text cleaning and normalization
+# - Data augmentation (back-translation, paraphrasing, synthetic generation)
+# - Data validation and quality checks
+# - Data versioning and tracking
+# - Cross-validation and stratified splitting
+# - Active learning and data selection
+# - Data profiling and statistics
+# ============================================================================
 
-# Include base
+# Include base requirements
 -r base.txt
 
-# Data formats
-pyarrow>=14.0.0
-openpyxl>=3.1.0
-h5py>=3.10.0
+# ----------------------------------------------------------------------------
+# Data Formats and Storage
+# ----------------------------------------------------------------------------
+# Apache Arrow and Parquet
+pyarrow>=14.0.0,<16.2.0
 
-# Text processing
-beautifulsoup4>=4.12.0
-lxml>=4.9.0
+# HDF5 for large datasets
+h5py>=3.10.0,<3.12.0
+tables>=3.9.0,<3.10.0
 
-# Data augmentation
-nlpaug>=1.1.0
+# Excel files
+openpyxl>=3.1.0,<3.2.0
+xlrd>=2.0.0,<2.1.0
 
-# Data generation
-faker>=20.0.0
+# CSV handling (already in pandas, but for advanced features)
+csvkit>=1.3.0,<2.1.0
+
+# JSON Lines format
+jsonlines>=4.0.0,<4.1.0
+
+# Feather format
+pyarrow>=14.0.0,<16.2.0
+
+# Pickle alternatives
+cloudpickle>=3.0.0,<3.1.0
+
+# Protocol Buffers
+protobuf>=4.25.0,<5.28.0
+
+# ----------------------------------------------------------------------------
+# Database Connectors
+# ----------------------------------------------------------------------------
+# SQLAlchemy ORM
+sqlalchemy>=2.0.0,<2.1.0
+
+# PostgreSQL
+psycopg2-binary>=2.9.0,<2.10.0
+
+# MySQL
+pymysql>=1.1.0,<1.2.0
+
+# SQLite (built-in, but utilities)
+sqlite-utils>=3.36.0,<3.37.0
+
+# MongoDB
+pymongo>=4.6.0,<4.8.0
+
+# Redis for caching
+redis>=5.0.0,<5.1.0
+hiredis>=2.3.0,<2.4.0
+
+# ----------------------------------------------------------------------------
+# Data Versioning and Lineage
+# ----------------------------------------------------------------------------
+# Data Version Control
+dvc>=3.37.0,<3.54.0
+dvc-s3>=3.0.0,<3.3.0
+dvc-gdrive>=3.0.0,<3.1.0
+
+# Data lineage tracking
+great-expectations>=0.18.0,<0.19.0
+
+# Dataset versioning
+datasets>=2.16.0,<2.20.0
+
+# ----------------------------------------------------------------------------
+# Web Scraping and Data Collection
+# ----------------------------------------------------------------------------
+# Beautiful Soup for HTML parsing
+beautifulsoup4>=4.12.0,<4.13.0
+
+# lxml parser
+lxml>=4.9.0,<5.3.0
+
+# HTML5 parsing
+html5lib>=1.1,<1.2
+
+# Scrapy framework
+scrapy>=2.11.0,<2.12.0
+
+# Newspaper3k for article extraction
+newspaper3k>=0.2.8,<0.3.0
+
+# News API client
+newsapi-python>=0.2.7,<0.3.0
+
+# RSS feed parsing
+feedparser>=6.0.0,<6.1.0
+
+# HTTP requests (already in base.txt)
+requests>=2.31.0,<2.33.0
+
+# Selenium for dynamic content
+selenium>=4.16.0,<4.23.0
+
+# Playwright alternative
+playwright>=1.40.0,<1.46.0
+
+# ----------------------------------------------------------------------------
+# Text Processing Libraries
+# ----------------------------------------------------------------------------
+# Natural Language Toolkit (already in ml.txt)
+nltk>=3.8.0,<3.9.0
+
+# spaCy for advanced NLP (already in ml.txt)
+spacy>=3.7.0,<3.8.0
+
+# spaCy language models
+# en_core_web_sm via: python -m spacy download en_core_web_sm
+# en_core_web_lg via: python -m spacy download en_core_web_lg
+
+# TextBlob for simple NLP
+textblob>=0.17.0,<0.18.0
+
+# Pattern for text analysis
+pattern>=3.6.0,<3.7.0; python_version < "3.10"
+
+# NLTK data downloader
+nltk-data>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# Language detection (already in ml.txt)
+langdetect>=1.0.9,<1.1.0
+
+# Character encoding detection
+chardet>=5.2.0,<5.3.0
+charset-normalizer>=3.3.0,<3.4.0
+
+# Unidecode for text normalization
+unidecode>=1.3.0,<1.4.0
+
+# Text preprocessing
+clean-text>=0.6.0,<0.7.0
+
+# Emoji handling
+emoji>=2.9.0,<2.13.0
+
+# ----------------------------------------------------------------------------
+# Data Augmentation
+# ----------------------------------------------------------------------------
+# NLP augmentation (already in ml.txt)
+nlpaug>=1.1.11,<1.2.0
+
+# Text augmentation
+textaugment>=1.4.0,<1.5.0
+
+# EDA (Easy Data Augmentation)
+eda-nlp>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# Back-translation
+googletrans>=4.0.0rc1,<4.1.0
+deep-translator>=1.11.0,<1.12.0
+
+# Translation API
+translate>=3.6.0,<3.7.0
+
+# Paraphrasing
+parrot-paraphraser>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# Pegasus paraphrasing (via transformers, already in ml.txt)
+
+# Contextual word embeddings for augmentation
+# Uses transformers library (already in ml.txt)
+
+# ----------------------------------------------------------------------------
+# Synthetic Data Generation
+# ----------------------------------------------------------------------------
+# Faker for fake data (already in dev.txt)
+faker>=20.1.0,<26.1.0
+
+# SDV (Synthetic Data Vault)
+sdv>=1.9.0,<1.14.0
+
+# CTGAN for synthetic tabular data
+ctgan>=0.10.0,<0.11.0
+
+# ----------------------------------------------------------------------------
+# Data Validation and Quality
+# ----------------------------------------------------------------------------
+# Great Expectations (already mentioned above)
+great-expectations>=0.18.0,<0.19.0
+
+# Pandera for DataFrame validation
+pandera>=0.18.0,<0.20.0
+
+# Pydantic for data validation (already in base.txt)
+pydantic>=2.5.0,<2.8.0
+
+# Cerberus for validation
+cerberus>=1.3.0,<1.4.0
+
+# Marshmallow for serialization
+marshmallow>=3.20.0,<3.22.0
+
+# ----------------------------------------------------------------------------
+# Data Profiling and Statistics
+# ----------------------------------------------------------------------------
+# Pandas Profiling
+pandas-profiling>=3.6.0,<3.7.0
+ydata-profiling>=4.6.0,<4.10.0
+
+# Sweetviz for EDA
+sweetviz>=2.3.0,<2.4.0
+
+# DataPrep for data profiling
+dataprep>=0.4.5,<0.5.0
+
+# Lux for interactive visualization
+lux-api>=0.5.0,<0.6.0
+
+# ----------------------------------------------------------------------------
+# Text Statistics
+# ----------------------------------------------------------------------------
+# Text statistics (already in ml.txt)
+textstat>=0.7.3,<0.8.0
+
+# Readability metrics
+readability>=0.3.0,<0.4.0
+
+# ----------------------------------------------------------------------------
+# Data Splitting and Sampling
+# ----------------------------------------------------------------------------
+# Scikit-learn (already in base.txt for train_test_split)
+scikit-learn>=1.3.0,<1.5.0
+
+# Stratified sampling
+stratified-split>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# Imbalanced learning (already in ml.txt)
+imbalanced-learn>=0.11.0,<0.13.0
+
+# ----------------------------------------------------------------------------
+# Active Learning
+# ----------------------------------------------------------------------------
+# modAL for active learning (already in ml.txt)
+modAL>=0.4.1,<0.5.0
+
+# ALiPy for active learning
+alipy>=1.3.0,<1.4.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Data Selection and Coreset
+# ----------------------------------------------------------------------------
+# Coreset selection (already in ml.txt)
+# Custom implementation in src/data/selection/
+
+# Influence functions (already in ml.txt)
+pytorch-influence-functions>=0.1.1,<0.2.0
+
+# ----------------------------------------------------------------------------
+# Text Normalization
+# ----------------------------------------------------------------------------
+# NFKD normalization (built-in unicodedata)
+
+# Text cleaning
+ftfy>=6.1.0,<6.3.0
+
+# Contractions expansion
+contractions>=0.1.0,<0.2.0
+
+# ----------------------------------------------------------------------------
+# Stopwords and Vocabulary
+# ----------------------------------------------------------------------------
+# Stopwords removal (via NLTK)
+# nltk.corpus.stopwords (already in nltk)
+
+# Custom stopwords
+stop-words>=2018.7.0,<2024.1.0
+
+# ----------------------------------------------------------------------------
+# Tokenization
+# ----------------------------------------------------------------------------
+# HuggingFace tokenizers (already in base.txt)
+tokenizers>=0.15.0,<0.16.0
+
+# SentencePiece (already in ml.txt)
+sentencepiece>=0.1.99,<0.3.0
+
+# Moses tokenizer (already in ml.txt)
+sacremoses>=0.1.0,<0.2.0
+
+# NLTK tokenizers (already in nltk)
+
+# spaCy tokenizers (already in spacy)
+
+# ----------------------------------------------------------------------------
+# Regex and Pattern Matching
+# ----------------------------------------------------------------------------
+# Regex (already in base.txt)
+regex>=2023.12.0,<2024.6.0
+
+# Flashtext for keyword extraction
+flashtext>=2.7.0,<2.8.0
+
+# ----------------------------------------------------------------------------
+# Data Streaming
+# ----------------------------------------------------------------------------
+# Kafka for data streaming
+kafka-python>=2.0.0,<2.1.0
+
+# Stream processing
+streamz>=0.6.0,<0.7.0
+
+# ----------------------------------------------------------------------------
+# Data Annotation
+# ----------------------------------------------------------------------------
+# Label Studio SDK
+label-studio-sdk>=0.0.32,<0.0.35
+
+# Prodigy (commercial, install separately)
+
+# Doccano client
+doccano-client>=0.2.0,<0.3.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Data Deduplication
+# ----------------------------------------------------------------------------
+# Fuzzy matching
+fuzzywuzzy>=0.18.0,<0.19.0
+python-Levenshtein>=0.23.0,<0.26.0
+
+# RapidFuzz (faster alternative)
+rapidfuzz>=3.6.0,<3.10.0
+
+# Dedupe library
+dedupe>=2.0.0,<2.1.0
+
+# ----------------------------------------------------------------------------
+# Data Compression
+# ----------------------------------------------------------------------------
+# Zstandard (already in base.txt)
+zstandard>=0.22.0,<0.23.0
+
+# LZ4 compression
+lz4>=4.3.0,<4.4.0
+
+# Snappy compression
+python-snappy>=0.6.0,<0.8.0
+
+# ----------------------------------------------------------------------------
+# Data Hashing
+# ----------------------------------------------------------------------------
+# xxhash (already in base.txt)
+xxhash>=3.4.1,<3.5.0
+
+# MurmurHash
+mmh3>=4.1.0,<5.1.0
+
+# ----------------------------------------------------------------------------
+# Metadata Extraction
+# ----------------------------------------------------------------------------
+# PDF text extraction
+pdfplumber>=0.10.0,<0.12.0
+pypdf>=3.17.0,<4.3.0
+pdfminer-six>=20221105,<20231229
+
+# DOCX extraction
+python-docx>=1.1.0,<1.2.0
+
+# ----------------------------------------------------------------------------
+# Time Series for News Data
+# ----------------------------------------------------------------------------
+# Arrow for dates (already in base.txt via python-dateutil)
+python-dateutil>=2.8.2,<2.10.0
+
+# Timezone handling
+pytz>=2023.3,<2024.2
+
+# ----------------------------------------------------------------------------
+# Data Caching
+# ----------------------------------------------------------------------------
+# Joblib (already in base.txt)
+joblib>=1.3.2,<1.5.0
+
+# Diskcache (already in base.txt)
+diskcache>=5.6.3,<5.7.0
+
+# ----------------------------------------------------------------------------
+# Data Pipeline
+# ----------------------------------------------------------------------------
+# Kedro for data pipelines
+kedro>=0.19.0,<0.20.0
+
+# Prefect for workflow orchestration
+prefect>=2.14.0,<2.20.0
+
+# Apache Airflow (heavy, install separately if needed)
+# apache-airflow>=2.8.0,<2.10.0
+
+# ----------------------------------------------------------------------------
+# Data Loading Performance
+# ----------------------------------------------------------------------------
+# Parallel processing (already in base.txt)
+multiprocess>=0.70.15,<0.71.0
+
+# Dask for parallel computing
+dask[complete]>=2023.12.0,<2024.7.0
+
+# Modin for faster pandas
+modin[all]>=0.25.0,<0.31.0
+
+# Polars (fast DataFrame library)
+polars>=0.20.0,<1.4.0
+
+# ----------------------------------------------------------------------------
+# Text Encoding
+# ----------------------------------------------------------------------------
+# Base64 encoding (built-in)
+
+# URL encoding (built-in urllib)
+
+# ----------------------------------------------------------------------------
+# Data Export
+# ----------------------------------------------------------------------------
+# Tabulate for pretty tables
+tabulate>=0.9.0,<0.10.0
+
+# ----------------------------------------------------------------------------
+# Special Text Formats
+# ----------------------------------------------------------------------------
+# Markdown processing (already in base.txt and llm.txt)
+markdown>=3.5.1,<3.7.0
+
+# reStructuredText
+docutils>=0.20.0,<0.22.0
+
+# ----------------------------------------------------------------------------
+# News-Specific Libraries
+# ----------------------------------------------------------------------------
+# News category classification
+# Custom implementation in src/models/
+
+# News article summarization (via transformers)
+
+# Named Entity Recognition for news (via spacy)
+
+# ----------------------------------------------------------------------------
+# Data Quality Metrics
+# ----------------------------------------------------------------------------
+# Data quality framework
+dquality>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Schema Validation
+# ----------------------------------------------------------------------------
+# JSON Schema (already in base.txt)
+jsonschema>=4.20.0,<4.23.0
+
+# YAML validation (via pyyaml, already in base.txt)
+
+# ----------------------------------------------------------------------------
+# Data Anonymization
+# ----------------------------------------------------------------------------
+# Anonymization toolkit
+anonymization>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# PII detection
+presidio-analyzer>=2.2.0,<2.3.0
+presidio-anonymizer>=2.2.0,<2.3.0
+
+# ----------------------------------------------------------------------------
+# Data Sampling
+# ----------------------------------------------------------------------------
+# Reservoir sampling
+reservoir-sampling>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Special Requirements for AG News Dataset
+# ----------------------------------------------------------------------------
+# HuggingFace datasets (already in base.txt)
+datasets>=2.16.0,<2.20.0
+
+# Custom loaders in src/data/datasets/ag_news.py
+
+# ============================================================================
+# Installation Notes for Data Processing Requirements
+# ============================================================================
+# 1. Install data processing dependencies:
+#    pip install -r requirements/data.txt
+#
+# 2. Download NLTK data:
+#    python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords')"
+#
+# 3. Download spaCy models:
+#    python -m spacy download en_core_web_sm
+#    python -m spacy download en_core_web_lg
+#
+# 4. Setup DVC (if using data versioning):
+#    dvc init
+#    dvc remote add -d myremote /path/to/remote/storage
+#
+# 5. Load AG News dataset:
+#    python scripts/data_preparation/prepare_ag_news.py
+#
+# 6. Data augmentation:
+#    python scripts/data_preparation/create_augmented_data.py
+#
+# 7. Back-translation setup:
+#    - Requires translation API keys (Google Translate, DeepL)
+#    - See configs/data/augmentation/back_translation.yaml
+#
+# 8. Data profiling:
+#    python -c "from ydata_profiling import ProfileReport; import pandas as pd; df = pd.read_csv('data/raw/ag_news/train.csv'); ProfileReport(df).to_file('profile.html')"
+#
+# 9. Data validation:
+#    python scripts/data_preparation/verify_data_splits.py
+#
+# 10. Create stratified splits:
+#     python scripts/data_preparation/create_data_splits.py
+#
+# Platform-specific notes:
+# - Windows: Some web scraping packages may need additional setup
+# - Linux: All packages fully supported
+# - macOS: Full support
+#
+# Memory requirements:
+# - AG News dataset: ~500MB RAM
+# - With augmentation: ~2GB RAM
+# - Data profiling: ~1GB RAM
+# - Large external corpora: 4GB+ RAM
+#
+# Storage requirements:
+# - Raw AG News: ~30MB
+# - Processed data: ~100MB
+# - Augmented data: ~500MB
+# - External news corpus: 1-10GB (optional)
+#
+# Project-specific data scripts:
+# - Download data: scripts/setup/download_all_data.py
+# - Prepare AG News: scripts/data_preparation/prepare_ag_news.py
+# - Create augmentation: scripts/data_preparation/create_augmented_data.py
+# - External corpus: scripts/data_preparation/prepare_external_data.py
+# - LLM generation: scripts/data_preparation/generate_with_llama.py
+# - Validation: scripts/data_preparation/verify_data_splits.py
+# - Register test set: scripts/data_preparation/register_test_set.py
+#
+# For detailed data preparation guide:
+# - See docs/user_guide/data_preparation.md
+# - See configs/data/ for all data configurations
+# - See src/data/ for data processing implementations
+# ============================================================================
