@@ -1,0 +1,580 @@
+# ============================================================================
+# Local Monitoring Requirements for AG News Text Classification
+# ============================================================================
+# Project: AG News Text Classification (ag-news-text-classification)
+# Description: Dependencies for local experiment tracking and monitoring
+# Author: Võ Hải Dũng
+# License: MIT
+# Python: >=3.8,<3.12
+# ============================================================================
+# This file contains packages required for:
+# - Local experiment tracking (no cloud dependencies)
+# - TensorBoard for visualization
+# - MLflow for experiment management
+# - Local metrics collection and dashboards
+# - Log aggregation and analysis
+# - Performance profiling
+# - System monitoring
+# - Free, offline, privacy-preserving monitoring
+#
+# Benefits:
+# - No cloud costs
+# - Data privacy (everything local)
+# - Works offline
+# - No API keys needed
+# - Full control over data
+# ============================================================================
+
+# Include base requirements
+-r base.txt
+
+# ----------------------------------------------------------------------------
+# TensorBoard for Training Visualization
+# ----------------------------------------------------------------------------
+# TensorBoard core
+tensorboard>=2.15.0,<2.17.0
+tensorboardX>=2.6.2,<2.7.0
+
+# TensorBoard plugins
+tensorboard-plugin-profile>=2.15.0,<2.16.0
+
+# ----------------------------------------------------------------------------
+# MLflow for Experiment Tracking
+# ----------------------------------------------------------------------------
+# MLflow for local experiment management
+mlflow>=2.9.0,<2.15.0
+
+# SQLAlchemy for MLflow backend
+sqlalchemy>=2.0.0,<2.1.0
+
+# Alembic for MLflow migrations
+alembic>=1.13.0,<1.14.0
+
+# ----------------------------------------------------------------------------
+# Prometheus for Metrics Collection
+# ----------------------------------------------------------------------------
+# Prometheus client for metrics
+prometheus-client>=0.19.0,<0.21.0
+
+# Prometheus Flask exporter
+prometheus-flask-exporter>=0.23.0,<0.24.0
+
+# ----------------------------------------------------------------------------
+# Grafana Integration (Optional)
+# ----------------------------------------------------------------------------
+# Grafana dashboards can read from Prometheus
+# Grafana itself is external software (Docker recommended)
+
+# ----------------------------------------------------------------------------
+# Logging Infrastructure
+# ----------------------------------------------------------------------------
+# Loguru for structured logging
+loguru>=0.7.0,<0.8.0
+
+# Python JSON logger
+python-json-logger>=2.0.7,<2.1.0
+
+# ----------------------------------------------------------------------------
+# Log Analysis
+# ----------------------------------------------------------------------------
+# Pandas for log analysis
+pandas>=2.0.0,<2.3.0
+
+# ----------------------------------------------------------------------------
+# System Monitoring
+# ----------------------------------------------------------------------------
+# psutil for system metrics
+psutil>=5.9.6,<6.1.0
+
+# GPUtil for GPU monitoring
+gputil>=1.4.0,<1.5.0
+
+# PyNVML for NVIDIA GPU metrics
+pynvml>=11.5.0,<11.6.0
+
+# ----------------------------------------------------------------------------
+# Performance Profiling
+# ----------------------------------------------------------------------------
+# Memory profiler
+memory-profiler>=0.61.0,<0.62.0
+
+# Line profiler
+line-profiler>=4.1.0,<4.2.0
+
+# Py-spy for sampling profiler
+py-spy>=0.3.0,<0.4.0
+
+# ----------------------------------------------------------------------------
+# Metrics Visualization
+# ----------------------------------------------------------------------------
+# Matplotlib for plots
+matplotlib>=3.8.0,<3.10.0
+
+# Seaborn for statistical visualizations
+seaborn>=0.13.0,<0.14.0
+
+# Plotly for interactive dashboards
+plotly>=5.18.0,<5.23.0
+
+# ----------------------------------------------------------------------------
+# Dashboard Framework
+# ----------------------------------------------------------------------------
+# Dash for custom dashboards
+dash>=2.14.0,<2.18.0
+dash-bootstrap-components>=1.5.0,<1.7.0
+
+# Panel for monitoring dashboards
+panel>=1.3.0,<1.5.0
+
+# Streamlit for simple dashboards
+streamlit>=1.30.0,<1.37.0
+
+# ----------------------------------------------------------------------------
+# Data Storage for Metrics
+# ----------------------------------------------------------------------------
+# SQLite for local metrics storage (built-in)
+
+# InfluxDB client (for time-series metrics, optional)
+influxdb-client>=1.39.0,<1.45.0
+
+# ----------------------------------------------------------------------------
+# File Watching for Live Updates
+# ----------------------------------------------------------------------------
+# Watchdog for file system monitoring
+watchdog>=3.0.0,<4.1.0
+
+# ----------------------------------------------------------------------------
+# Scheduler for Periodic Tasks
+# ----------------------------------------------------------------------------
+# APScheduler for scheduled monitoring tasks
+apscheduler>=3.10.0,<3.11.0
+
+# ----------------------------------------------------------------------------
+# Alerting (Local)
+# ----------------------------------------------------------------------------
+# Plyer for desktop notifications
+plyer>=2.1.0,<2.2.0
+
+# ----------------------------------------------------------------------------
+# Configuration
+# ----------------------------------------------------------------------------
+# YAML for config files
+pyyaml>=6.0.1,<7.0.0
+
+# Environment variables
+python-dotenv>=1.0.0,<1.1.0
+
+# ----------------------------------------------------------------------------
+# Data Export
+# ----------------------------------------------------------------------------
+# Tabulate for report generation
+tabulate>=0.9.0,<0.10.0
+
+# Pandas for data manipulation
+# (already included above)
+
+# ----------------------------------------------------------------------------
+# Web Server for Dashboards
+# ----------------------------------------------------------------------------
+# Flask for serving dashboards
+flask>=3.0.0,<3.1.0
+
+# Werkzeug (Flask dependency)
+werkzeug>=3.0.0,<3.1.0
+
+# ----------------------------------------------------------------------------
+# HTTP Client for Health Checks
+# ----------------------------------------------------------------------------
+# Requests for HTTP calls
+requests>=2.31.0,<2.33.0
+
+# ----------------------------------------------------------------------------
+# JSON Processing
+# ----------------------------------------------------------------------------
+# orjson for fast JSON processing
+orjson>=3.9.0,<3.11.0
+
+# ----------------------------------------------------------------------------
+# Time Series Analysis
+# ----------------------------------------------------------------------------
+# SciPy for statistics
+scipy>=1.10.0,<1.13.0
+
+# Statsmodels for time series
+statsmodels>=0.14.0,<0.15.0
+
+# ----------------------------------------------------------------------------
+# Compression for Logs
+# ----------------------------------------------------------------------------
+# Zstandard for log compression
+zstandard>=0.22.0,<0.23.0
+
+# ----------------------------------------------------------------------------
+# Utilities
+# ----------------------------------------------------------------------------
+# Rich for terminal output
+rich>=13.7.0,<13.8.0
+
+# Click for CLI
+click>=8.1.7,<8.2.0
+
+# TQDM for progress bars
+tqdm>=4.66.0,<4.67.0
+
+# ----------------------------------------------------------------------------
+# Date/Time Handling
+# ----------------------------------------------------------------------------
+# Python-dateutil
+python-dateutil>=2.8.2,<2.10.0
+
+# Arrow for timestamps
+arrow>=1.3.0,<1.4.0
+
+# ----------------------------------------------------------------------------
+# Caching
+# ----------------------------------------------------------------------------
+# Diskcache for caching
+diskcache>=5.6.3,<5.7.0
+
+# ----------------------------------------------------------------------------
+# Process Management
+# ----------------------------------------------------------------------------
+# Supervisor config generation
+# (Supervisor itself is external)
+
+# ----------------------------------------------------------------------------
+# Docker Support
+# ----------------------------------------------------------------------------
+# Docker SDK for monitoring containers
+docker>=6.1.0,<7.2.0
+
+# Docker Compose for orchestration
+docker-compose>=1.29.0,<1.30.0
+
+# ============================================================================
+# Installation Notes for Local Monitoring
+# ============================================================================
+# 1. Install local monitoring dependencies:
+#    pip install -r requirements/local_monitoring.txt
+#
+# 2. Setup local monitoring:
+#    bash monitoring/local/setup_local_monitoring.sh
+#
+# 3. Start TensorBoard:
+#    tensorboard --logdir outputs/logs/tensorboard --port 6006
+#    Open: http://localhost:6006
+#
+# 4. Start MLflow UI:
+#    mlflow ui --backend-store-uri sqlite:///mlruns.db --port 5000
+#    Open: http://localhost:5000
+#
+# 5. Start Prometheus (requires separate installation):
+#    # Install Prometheus: https://prometheus.io/download/
+#    prometheus --config.file=monitoring/local/prometheus.yml
+#    Open: http://localhost:9090
+#
+# 6. Start custom dashboard:
+#    streamlit run monitoring/dashboards/local_dashboard.py
+#    Open: http://localhost:8501
+#
+# 7. View logs:
+#    tail -f outputs/logs/training/training.log
+#
+# 8. Monitor GPU:
+#    watch -n 1 nvidia-smi
+#    # Or use custom script:
+#    python tools/profiling/local_profiler.py
+#
+# 9. Generate reports:
+#    python monitoring/scripts/generate_report.py
+#
+# 10. Export metrics:
+#     python monitoring/scripts/export_metrics.py
+
+# ============================================================================
+# Directory Structure for Local Monitoring
+# ============================================================================
+# monitoring/
+# ├── local/
+# │   ├── docker-compose.local.yml    # TensorBoard + MLflow + Prometheus
+# │   ├── tensorboard_config.yaml
+# │   ├── mlflow_config.yaml
+# │   └── setup_local_monitoring.sh
+# ├── dashboards/
+# │   ├── tensorboard/
+# │   ├── mlflow/
+# │   └── local_dashboard.py          # Streamlit dashboard
+# ├── metrics/
+# │   ├── custom_metrics.py
+# │   └── local_metrics.py
+# └── scripts/
+#     ├── start_tensorboard.sh
+#     ├── start_mlflow.sh
+#     └── generate_report.py
+#
+# outputs/logs/
+# ├── training/                       # Training logs
+# ├── tensorboard/                    # TensorBoard events
+# ├── mlflow/                         # MLflow artifacts
+# └── local/                          # Custom metrics
+
+# ============================================================================
+# TensorBoard Setup
+# ============================================================================
+# Log training metrics:
+# from torch.utils.tensorboard import SummaryWriter
+# writer = SummaryWriter('outputs/logs/tensorboard')
+# writer.add_scalar('Loss/train', loss, step)
+# writer.add_scalar('Accuracy/val', accuracy, step)
+# writer.close()
+#
+# Or use HuggingFace Trainer with TensorBoard:
+# training_args = TrainingArguments(
+#     logging_dir='outputs/logs/tensorboard',
+#     logging_strategy='steps',
+#     logging_steps=10
+# )
+#
+# Visualize in TensorBoard:
+# - Scalars: Loss, accuracy, learning rate
+# - Graphs: Model architecture
+# - Distributions: Weights, gradients
+# - Histograms: Activations
+# - Images: Attention maps
+# - Text: Sample predictions
+
+# ============================================================================
+# MLflow Setup
+# ============================================================================
+# Track experiments:
+# import mlflow
+# mlflow.set_tracking_uri("sqlite:///mlruns.db")
+# mlflow.set_experiment("ag-news-deberta-lora")
+# 
+# with mlflow.start_run():
+#     mlflow.log_params({
+#         "model": "deberta-v3-large",
+#         "lora_rank": 16,
+#         "learning_rate": 1e-4
+#     })
+#     mlflow.log_metrics({
+#         "train_loss": train_loss,
+#         "val_accuracy": val_acc
+#     })
+#     mlflow.log_artifact("outputs/models/best_model")
+#
+# Features:
+# - Experiment comparison
+# - Parameter tracking
+# - Metric visualization
+# - Artifact storage
+# - Model registry
+# - Run comparison
+
+# ============================================================================
+# Prometheus Setup
+# ============================================================================
+# Expose metrics:
+# from prometheus_client import start_http_server, Counter, Gauge
+# 
+# predictions_total = Counter('predictions_total', 'Total predictions')
+# inference_latency = Gauge('inference_latency_seconds', 'Inference latency')
+# 
+# start_http_server(8000)  # Metrics at http://localhost:8000/metrics
+#
+# Prometheus scrapes metrics and stores time series
+# Grafana can visualize Prometheus data
+#
+# Metrics to track:
+# - API request count
+# - Inference latency
+# - Model accuracy
+# - GPU utilization
+# - Memory usage
+# - Cache hit rate
+
+# ============================================================================
+# Custom Dashboard with Streamlit
+# ============================================================================
+# Create real-time dashboard:
+# See monitoring/dashboards/local_dashboard.py
+#
+# Features:
+# - Live training metrics
+# - Model comparison
+# - Overfitting detection
+# - System resource monitoring
+# - Log viewer
+# - Experiment tracker
+#
+# Run dashboard:
+# streamlit run monitoring/dashboards/local_dashboard.py
+
+# ============================================================================
+# Docker Compose for All-in-One Monitoring
+# ============================================================================
+# Start all monitoring services:
+# docker-compose -f monitoring/local/docker-compose.local.yml up -d
+#
+# Services:
+# - TensorBoard: http://localhost:6006
+# - MLflow: http://localhost:5000
+# - Prometheus: http://localhost:9090
+# - Grafana: http://localhost:3000 (optional)
+#
+# Stop all services:
+# docker-compose -f monitoring/local/docker-compose.local.yml down
+
+# ============================================================================
+# Performance Profiling
+# ============================================================================
+# Memory profiling:
+# python -m memory_profiler scripts/training/train_single_model.py
+#
+# Line profiling:
+# kernprof -l -v scripts/training/train_single_model.py
+#
+# Sampling profiling with py-spy:
+# py-spy record -o profile.svg -- python scripts/training/train_single_model.py
+# Open profile.svg in browser
+#
+# GPU profiling:
+# python tools/profiling/local_profiler.py
+
+# ============================================================================
+# Log Aggregation
+# ============================================================================
+# Centralized logging:
+# import loguru
+# logger.add("outputs/logs/training/{time}.log", rotation="500 MB")
+# logger.info("Training started")
+#
+# Log rotation:
+# - Automatic with loguru
+# - Max file size: 500MB
+# - Keep last 10 files
+# - Compress old logs
+#
+# Log analysis:
+# python monitoring/logs_analysis/log_parser.py
+# python monitoring/logs_analysis/anomaly_detector.py
+
+# ============================================================================
+# Alerting
+# ============================================================================
+# Desktop notifications:
+# from plyer import notification
+# notification.notify(
+#     title='Training Complete',
+#     message=f'Final accuracy: {accuracy:.2f}%',
+#     timeout=10
+# )
+#
+# Email alerts (requires SMTP setup):
+# import smtplib
+# # Send email on training completion or errors
+#
+# Custom alerts:
+# - Overfitting detected
+# - Training divergence
+# - Out of memory warnings
+# - Accuracy milestones
+
+# ============================================================================
+# Advantages of Local Monitoring
+# ============================================================================
+# Privacy:
+# - All data stays local
+# - No cloud uploads
+# - GDPR compliant
+# - No vendor lock-in
+#
+# Cost:
+# - Zero cloud costs
+# - No API fees
+# - No subscription needed
+# - One-time setup
+#
+# Performance:
+# - Low latency (local network)
+# - No internet dependency
+# - Works offline
+# - Fast queries
+#
+# Control:
+# - Full customization
+# - Direct database access
+# - Custom dashboards
+# - Unlimited storage (local disk)
+#
+# Flexibility:
+# - Any metrics you want
+# - Custom visualizations
+# - Integration with existing tools
+# - No platform limitations
+
+# ============================================================================
+# Disadvantages of Local Monitoring
+# ============================================================================
+# Setup complexity:
+# - Manual installation
+# - Configuration required
+# - Maintenance needed
+#
+# Scalability:
+# - Limited to single machine
+# - No distributed tracing
+# - Manual backups
+#
+# Collaboration:
+# - Harder to share dashboards
+# - No cloud collaboration features
+# - Manual export for sharing
+
+# ============================================================================
+# Integration with Project
+# ============================================================================
+# Automatic logging in trainers:
+# - All trainers log to TensorBoard
+# - MLflow integration in experiment runner
+# - Prometheus metrics in API
+#
+# Callback integration:
+# - TensorBoard callback: src/training/callbacks/tensorboard_logger.py
+# - MLflow callback: src/training/callbacks/mlflow_logger.py
+# - Overfitting monitor: src/training/callbacks/overfitting_monitor.py
+#
+# Service integration:
+# - TensorBoard service: src/services/monitoring/tensorboard_service.py
+# - MLflow service: src/services/monitoring/mlflow_service.py
+# - Local metrics: src/services/monitoring/local_metrics_service.py
+
+# ============================================================================
+# Comparison: Local vs Cloud Monitoring
+# ============================================================================
+# Feature           | Local Monitoring | W&B/Neptune | Winner
+# Cost              | Free             | Free tier   | Local
+# Setup             | Manual           | Sign up     | Cloud
+# Privacy           | Full control     | Cloud-based | Local
+# Collaboration     | Manual share     | Built-in    | Cloud
+# Storage           | Local disk       | Cloud       | Depends
+# Offline work      | Yes              | Limited     | Local
+# Scalability       | Single machine   | Unlimited   | Cloud
+# Customization     | Full             | Limited     | Local
+# Ease of use       | Medium           | Easy        | Cloud
+#
+# Recommendation:
+# - Use local monitoring for privacy and cost
+# - Use cloud (W&B) for collaboration
+# - Use both: Local for development, cloud for sharing
+
+# ============================================================================
+# For More Information
+# ============================================================================
+# - Local monitoring guide: LOCAL_MONITORING_GUIDE.md
+# - Setup script: monitoring/local/setup_local_monitoring.sh
+# - Dashboard code: monitoring/dashboards/local_dashboard.py
+# - TensorBoard guide: monitoring/dashboards/tensorboard/README.md
+# - MLflow guide: monitoring/dashboards/mlflow/README.md
+# - Prometheus config: monitoring/local/prometheus.yml
+# ============================================================================
