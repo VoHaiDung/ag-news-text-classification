@@ -1,24 +1,597 @@
-# Development Requirements
-# ========================
-# Development and testing tools
+# ============================================================================
+# Development Requirements for AG News Text Classification
+# ============================================================================
+# Project: AG News Text Classification (ag-news-text-classification)
+# Description: Development, testing, and code quality tools
 # Author: Võ Hải Dũng
+# License: MIT
+# Python: >=3.8,<3.12
+# ============================================================================
+# This file contains packages required for:
+# - Unit, integration, E2E, performance, regression testing
+# - Code formatting and linting
+# - Type checking and static analysis
+# - Pre-commit hooks and git automation
+# - Documentation generation
+# - Debugging and profiling
+# - Security scanning
+# - CI/CD pipeline support
+# ============================================================================
 
-# Include base
+# Include base requirements
 -r base.txt
 
-# Testing
-pytest>=7.4.0
-pytest-cov>=4.1.0
-pytest-mock>=3.12.0
+# ----------------------------------------------------------------------------
+# Testing Frameworks
+# ----------------------------------------------------------------------------
+# Core testing framework (already in base.txt but with more plugins here)
+pytest>=7.4.0,<8.3.0
+pytest-cov>=4.1.0,<5.1.0
 
-# Code quality
-black>=23.11.0
-isort>=5.12.0
-flake8>=6.1.0
-mypy>=1.7.0
+# Parallel test execution
+pytest-xdist>=3.5.0,<3.7.0
 
-# Pre-commit
-pre-commit>=3.5.0
+# Mock objects and fixtures
+pytest-mock>=3.12.0,<3.15.0
 
-# Debugging
-ipdb>=0.13.0
+# Property-based testing
+hypothesis>=6.92.0,<6.109.0
+
+# Test fixtures and helpers
+pytest-fixtures>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# Timeout for tests
+pytest-timeout>=2.2.0,<2.4.0
+
+# Parametrized testing
+pytest-cases>=3.8.0,<3.9.0
+
+# BDD testing
+pytest-bdd>=6.1.0,<7.3.0
+
+# Async testing
+pytest-asyncio>=0.21.0,<0.24.0
+
+# Regression testing
+pytest-regressions>=2.5.0,<2.6.0
+
+# Snapshot testing
+syrupy>=4.6.0,<4.7.0
+
+# Benchmark testing
+pytest-benchmark>=4.0.0,<4.1.0
+
+# Memory profiling in tests
+pytest-memray>=1.5.0,<1.8.0; python_version >= "3.9"
+
+# HTML test reports
+pytest-html>=4.1.0,<4.2.0
+
+# JSON test reports
+pytest-json-report>=1.5.0,<1.6.0
+
+# Test ordering
+pytest-order>=1.2.0,<1.3.0
+
+# Repeat tests
+pytest-repeat>=0.9.0,<0.10.0
+
+# Random order
+pytest-randomly>=3.15.0,<3.16.0
+
+# ----------------------------------------------------------------------------
+# Coverage Tools
+# ----------------------------------------------------------------------------
+# Code coverage (already included above)
+pytest-cov>=4.1.0,<5.1.0
+coverage[toml]>=7.3.0,<7.6.0
+
+# Coverage diff
+diff-cover>=8.0.0,<9.1.0
+
+# Coverage reports
+coverage-badge>=1.1.0,<1.2.0
+
+# ----------------------------------------------------------------------------
+# Mocking and Fixtures
+# ----------------------------------------------------------------------------
+# Advanced mocking
+pytest-mock>=3.12.0,<3.15.0
+mock>=5.1.0,<5.2.0
+
+# HTTP mocking
+responses>=0.24.0,<0.26.0
+requests-mock>=1.11.0,<1.13.0
+
+# Time mocking
+freezegun>=1.4.0,<1.6.0
+time-machine>=2.13.0,<2.15.0
+
+# Fake data generation
+faker>=20.1.0,<26.1.0
+
+# Factory pattern for test data
+factory-boy>=3.3.0,<3.4.0
+
+# ----------------------------------------------------------------------------
+# Code Formatting
+# ----------------------------------------------------------------------------
+# Black code formatter (already in base.txt)
+black>=23.12.0,<24.5.0
+
+# Import sorting (already in base.txt)
+isort>=5.13.0,<5.14.0
+
+# Auto-formatting
+autopep8>=2.0.0,<2.4.0
+
+# YAPF formatter (alternative)
+yapf>=0.40.0,<0.41.0
+
+# Format checking
+blacken-docs>=1.16.0,<1.17.0
+
+# Notebook formatting
+nbqa>=1.7.0,<1.9.0
+
+# ----------------------------------------------------------------------------
+# Linting
+# ----------------------------------------------------------------------------
+# Flake8 (already in base.txt)
+flake8>=7.0.0,<7.1.0
+
+# Flake8 plugins
+flake8-docstrings>=1.7.0,<1.8.0
+flake8-bugbear>=23.12.0,<24.5.0
+flake8-comprehensions>=3.14.0,<3.15.0
+flake8-simplify>=0.21.0,<0.22.0
+flake8-annotations>=3.0.0,<3.2.0
+flake8-bandit>=4.1.0,<4.2.0
+flake8-print>=5.0.0,<5.1.0
+flake8-pytest-style>=1.7.0,<2.1.0
+flake8-return>=1.2.0,<1.3.0
+flake8-type-checking>=2.6.0,<2.8.0
+flake8-use-fstring>=1.4.0,<1.5.0
+
+# Pylint (already in base.txt)
+pylint>=3.0.3,<3.3.0
+
+# Pylint plugins
+pylint-pytest>=1.1.0,<1.2.0
+pylint-django>=2.5.0,<2.6.0
+
+# Ruff - Fast Python linter
+ruff>=0.1.0,<0.5.0
+
+# Pycodestyle
+pycodestyle>=2.11.0,<2.13.0
+
+# Pydocstyle for docstring linting
+pydocstyle>=6.3.0,<6.4.0
+
+# Pyflakes
+pyflakes>=3.1.0,<3.3.0
+
+# ----------------------------------------------------------------------------
+# Type Checking
+# ----------------------------------------------------------------------------
+# MyPy static type checker (already in base.txt)
+mypy>=1.8.0,<1.11.0
+
+# Type stubs for libraries
+types-requests>=2.31.0,<2.32.0
+types-pyyaml>=6.0.0,<6.1.0
+types-setuptools>=69.0.0,<70.2.0
+types-toml>=0.10.0,<0.11.0
+types-six>=1.16.0,<1.17.0
+
+# Pyright type checker
+pyright>=1.1.0,<1.2.0
+
+# Pyre type checker
+pyre-check>=0.9.0,<0.10.0; platform_system == "Linux"
+
+# MonkeyType for generating type stubs
+monkeytype>=23.3.0,<23.4.0
+
+# ----------------------------------------------------------------------------
+# Pre-commit Hooks
+# ----------------------------------------------------------------------------
+# Pre-commit framework
+pre-commit>=3.6.0,<3.8.0
+
+# Commit message linting
+commitizen>=3.13.0,<3.28.0
+
+# Git hooks
+gitlint>=0.19.0,<0.20.0
+
+# ----------------------------------------------------------------------------
+# Debugging Tools
+# ----------------------------------------------------------------------------
+# IPython debugger
+ipdb>=0.13.0,<0.14.0
+
+# PDB++
+pdbpp>=0.10.0,<0.11.0
+
+# IPython for interactive debugging (already in base.txt)
+ipython>=8.12.0,<8.27.0
+
+# Remote debugging
+debugpy>=1.8.0,<1.9.0
+
+# Visual debugging
+snoop>=0.4.0,<0.5.0
+
+# Icecream for debugging
+icecream>=2.1.0,<2.2.0
+
+# ----------------------------------------------------------------------------
+# Profiling and Performance Analysis
+# ----------------------------------------------------------------------------
+# Line profiler
+line-profiler>=4.1.0,<4.2.0
+
+# Memory profiler (already in ml.txt)
+memory-profiler>=0.61.0,<0.62.0
+
+# Py-spy sampling profiler
+py-spy>=0.3.0,<0.4.0
+
+# Scalene CPU/GPU/memory profiler
+scalene>=1.5.0,<1.6.0; python_version >= "3.9"
+
+# cProfile visualization
+snakeviz>=2.2.0,<2.3.0
+
+# Profiling decorator
+profilehooks>=1.12.0,<1.13.0
+
+# Austin profiler
+austin-python>=1.7.0,<1.8.0; platform_system == "Linux"
+
+# Performance regression detection
+pytest-benchmark>=4.0.0,<4.1.0
+
+# ----------------------------------------------------------------------------
+# Documentation Generation
+# ----------------------------------------------------------------------------
+# Sphinx documentation
+sphinx>=7.2.0,<7.4.0
+sphinx-rtd-theme>=2.0.0,<2.1.0
+sphinx-autodoc-typehints>=1.25.0,<2.3.0
+sphinx-copybutton>=0.5.0,<0.6.0
+sphinxcontrib-mermaid>=0.9.0,<0.10.0
+
+# MkDocs alternative
+mkdocs>=1.5.0,<1.7.0
+mkdocs-material>=9.5.0,<9.6.0
+mkdocstrings[python]>=0.24.0,<0.26.0
+mkdocs-jupyter>=0.24.0,<0.25.0
+
+# API documentation
+pdoc>=14.3.0,<14.6.0
+
+# Docstring coverage
+interrogate>=1.5.0,<1.6.0
+
+# Changelog generation
+towncrier>=23.11.0,<24.8.0
+
+# ----------------------------------------------------------------------------
+# Security Scanning
+# ----------------------------------------------------------------------------
+# Security vulnerability scanner
+bandit>=1.7.0,<1.8.0
+bandit[toml]>=1.7.0,<1.8.0
+
+# Dependency vulnerability checking
+safety>=2.3.0,<3.3.0
+
+# License checking
+licensecheck>=2023.3.0,<2024.4.0
+
+# Secret detection
+detect-secrets>=1.4.0,<1.6.0
+
+# SAST scanning
+semgrep>=1.52.0,<1.81.0
+
+# ----------------------------------------------------------------------------
+# Code Quality Metrics
+# ----------------------------------------------------------------------------
+# Code complexity
+radon>=6.0.0,<6.1.0
+
+# Maintainability index
+mccabe>=0.7.0,<0.8.0
+
+# Code smells detection
+vulture>=2.10.0,<2.12.0
+
+# Dead code detection
+dead>=1.5.0,<1.6.0
+
+# Duplicate code detection
+pylint>=3.0.0,<3.3.0
+
+# Code metrics
+prospector>=1.10.0,<1.11.0
+
+# ----------------------------------------------------------------------------
+# Dependency Management
+# ----------------------------------------------------------------------------
+# Pip tools (already in base.txt)
+pip-tools>=7.3.0,<7.5.0
+
+# Poetry for dependency management
+poetry>=1.7.0,<1.9.0
+
+# Pipenv alternative
+pipenv>=2023.11.0,<2024.1.0
+
+# Dependency graph visualization
+pipdeptree>=2.13.0,<2.24.0
+
+# License compliance
+pip-licenses>=4.3.0,<4.5.0
+
+# ----------------------------------------------------------------------------
+# API Testing
+# ----------------------------------------------------------------------------
+# HTTP testing (already in base.txt)
+httpx>=0.25.0,<0.28.0
+
+# API mocking
+responses>=0.24.0,<0.26.0
+
+# HTTP recording and replay
+vcrpy>=5.1.0,<6.1.0
+
+# WebSocket testing
+pytest-websocket>=0.0.1,<0.1.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Notebook Testing and Development
+# ----------------------------------------------------------------------------
+# Jupyter notebook (already in base.txt as ipykernel)
+notebook>=7.0.0,<7.3.0
+jupyterlab>=4.0.0,<4.3.0
+
+# Notebook testing
+nbval>=0.10.0,<0.11.0
+
+# Notebook execution
+papermill>=2.5.0,<2.7.0
+
+# Notebook linting
+nbqa>=1.7.0,<1.9.0
+
+# Notebook diffing
+nbdime>=4.0.0,<4.1.0
+
+# ----------------------------------------------------------------------------
+# Database Testing
+# ----------------------------------------------------------------------------
+# SQLite testing
+pytest-sqlite>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# Database fixtures
+pytest-postgresql>=5.0.0,<6.1.0
+
+# ----------------------------------------------------------------------------
+# Docker and Container Testing
+# ----------------------------------------------------------------------------
+# Docker SDK for testing
+docker>=6.1.0,<7.2.0
+
+# Testcontainers for integration tests
+testcontainers>=3.7.0,<4.8.0
+
+# ----------------------------------------------------------------------------
+# Environment and Config Testing
+# ----------------------------------------------------------------------------
+# Environment variable testing
+pytest-env>=1.1.0,<1.2.0
+
+# Config file testing
+pytest-config>=0.0.11,<0.1.0
+
+# ----------------------------------------------------------------------------
+# File System Testing
+# ----------------------------------------------------------------------------
+# Temporary file fixtures
+pytest-tmp-files>=0.0.2,<0.1.0
+
+# File comparison
+filecmp3>=0.0.6,<0.1.0
+
+# ----------------------------------------------------------------------------
+# CI/CD Tools
+# ----------------------------------------------------------------------------
+# GitHub Actions local testing
+act>=0.2.0,<0.3.0; python_version >= "3.9"
+
+# GitLab CI linting
+gitlab-ci-linter>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Build Tools
+# ----------------------------------------------------------------------------
+# Build backend
+build>=1.0.0,<1.3.0
+
+# Setup tools
+setuptools>=69.0.0,<70.3.0
+wheel>=0.42.0,<0.44.0
+
+# Twine for package uploads
+twine>=4.0.0,<5.2.0
+
+# ----------------------------------------------------------------------------
+# Mutation Testing
+# ----------------------------------------------------------------------------
+# Mutmut for mutation testing
+mutmut>=2.4.0,<2.5.0
+
+# Cosmic Ray
+cosmic-ray>=8.3.0,<8.4.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Load and Stress Testing
+# ----------------------------------------------------------------------------
+# Locust for load testing
+locust>=2.20.0,<2.30.0
+
+# ----------------------------------------------------------------------------
+# Utilities
+# ----------------------------------------------------------------------------
+# Colorful output
+colorama>=0.4.6,<0.5.0
+termcolor>=2.4.0,<2.5.0
+
+# Pretty printing
+pprint>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# JSON formatting
+jq>=1.6.0,<1.8.0
+
+# YAML linting
+yamllint>=1.33.0,<1.36.0
+
+# TOML handling
+toml>=0.10.0,<0.11.0
+tomlkit>=0.12.0,<0.13.0
+
+# ----------------------------------------------------------------------------
+# IDE Support
+# ----------------------------------------------------------------------------
+# Rope for refactoring
+rope>=1.11.0,<1.14.0
+
+# Jedi for autocompletion
+jedi>=0.19.0,<0.20.0
+
+# Python Language Server
+python-lsp-server>=1.10.0,<1.12.0
+
+# Pylance (install via IDE)
+
+# ----------------------------------------------------------------------------
+# Compatibility Testing
+# ----------------------------------------------------------------------------
+# Tox for multi-environment testing
+tox>=4.11.0,<4.16.0
+
+# Nox for testing automation
+nox>=2023.4.0,<2024.5.0
+
+# ----------------------------------------------------------------------------
+# Performance Regression
+# ----------------------------------------------------------------------------
+# Airspeed Velocity for benchmarks
+asv>=0.6.0,<0.7.0
+
+# ----------------------------------------------------------------------------
+# Git and Version Control
+# ----------------------------------------------------------------------------
+# GitPython (already in base.txt)
+gitpython>=3.1.40,<3.2.0
+
+# Git changelog
+git-changelog>=2.4.0,<2.6.0
+
+# ----------------------------------------------------------------------------
+# CLI Testing
+# ----------------------------------------------------------------------------
+# Click testing (already in base.txt for click)
+click>=8.1.7,<8.2.0
+
+# Typer testing (already in base.txt)
+typer[all]>=0.9.0,<0.13.0
+
+# ----------------------------------------------------------------------------
+# Logging in Tests
+# ----------------------------------------------------------------------------
+# Structured logging (already in base.txt)
+loguru>=0.7.0,<0.8.0
+
+# Log capture in tests
+pytest-loguru>=0.3.0,<0.4.0
+
+# ============================================================================
+# Installation Notes for Development Requirements
+# ============================================================================
+# 1. Install development dependencies:
+#    pip install -r requirements/dev.txt
+#
+# 2. Setup pre-commit hooks:
+#    pre-commit install
+#    pre-commit install --hook-type commit-msg
+#
+# 3. Run tests:
+#    pytest tests/
+#    pytest tests/unit/
+#    pytest tests/integration/
+#    pytest tests/e2e/
+#    pytest --cov=src --cov-report=html
+#
+# 4. Run linting:
+#    black src/ tests/
+#    isort src/ tests/
+#    flake8 src/ tests/
+#    pylint src/
+#    mypy src/
+#    ruff check src/ tests/
+#
+# 5. Run security scans:
+#    bandit -r src/
+#    safety check
+#    semgrep --config=auto src/
+#
+# 6. Generate documentation:
+#    cd docs/ && make html  # Sphinx
+#    mkdocs serve  # MkDocs
+#
+# 7. Profile code:
+#    python -m cProfile -o output.prof script.py
+#    snakeviz output.prof
+#    py-spy record -o profile.svg -- python script.py
+#
+# 8. Test coverage:
+#    pytest --cov=src --cov-report=term --cov-report=html
+#    coverage html
+#    open htmlcov/index.html
+#
+# 9. Mutation testing:
+#    mutmut run
+#    mutmut results
+#
+# 10. Load testing:
+#     locust -f tests/performance/locustfile.py
+#
+# 11. Multi-environment testing:
+#     tox
+#     nox
+#
+# 12. Build package:
+#     python -m build
+#     twine check dist/*
+#
+# Project-specific testing:
+# - Health checks: python src/core/health/health_checker.py
+# - Overfitting validation: pytest tests/unit/overfitting_prevention/
+# - Config validation: python tools/config_tools/validate_all_configs.py
+# - IDE sync check: python tools/ide_tools/sync_ide_configs.py
+# - Dependency check: python scripts/setup/verify_dependencies.py
+#
+# CI/CD integration:
+# - See .github/workflows/tests.yml for GitHub Actions
+# - See .github/workflows/ci.yml for full CI pipeline
+#
+# For detailed development workflow:
+# - See docs/developer_guide/contributing.md
+# - See .pre-commit-config.yaml for pre-commit hooks
+# - See setup.cfg for tool configurations
+# ============================================================================
