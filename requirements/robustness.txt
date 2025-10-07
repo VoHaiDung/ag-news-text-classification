@@ -1,19 +1,458 @@
-# Robustness Testing Requirements
-# ================================
-# Model testing and validation
+# ============================================================================
+# Robustness Testing Requirements for AG News Text Classification
+# ============================================================================
+# Project: AG News Text Classification (ag-news-text-classification)
+# Description: Model robustness, adversarial testing, and fairness evaluation
 # Author: Võ Hải Dũng
+# License: MIT
+# Python: >=3.8,<3.12
+# ============================================================================
+# This file contains packages required for:
+# - Adversarial robustness testing (FGSM, PGD, TextAttack)
+# - Out-of-distribution (OOD) detection
+# - Contrast sets and counterfactual evaluation
+# - Model fairness and bias detection
+# - Uncertainty quantification
+# - Model calibration
+# - Stress testing and edge cases
+# - Data quality validation
+# ============================================================================
 
-# Include ML
+# Include ML requirements
 -r ml.txt
 
-# Adversarial testing
-textattack>=0.3.0
+# ----------------------------------------------------------------------------
+# Adversarial Attack Libraries
+# ----------------------------------------------------------------------------
+# TextAttack for adversarial NLP attacks
+textattack>=0.3.8,<0.4.0
 
-# Fairness
-fairlearn>=0.9.0
+# OpenAttack for adversarial attacks
+openattack>=2.1.0,<2.2.0
 
-# Model validation
-great-expectations>=0.18.0
+# Adversarial Robustness Toolbox
+adversarial-robustness-toolbox>=1.15.0,<1.18.0
 
-# Testing
-hypothesis>=6.90.0
+# CleverHans for adversarial examples
+cleverhans>=4.0.0,<4.1.0
+
+# Foolbox for adversarial attacks
+foolbox>=3.3.0,<3.4.0
+
+# ----------------------------------------------------------------------------
+# Adversarial Training
+# ----------------------------------------------------------------------------
+# FreeLB for adversarial training
+# Custom implementation in src/training/strategies/adversarial/freelb.py
+
+# SMART for adversarial regularization
+# Custom implementation in src/training/strategies/adversarial/smart.py
+
+# PGD adversarial training
+# Custom implementation in src/training/strategies/adversarial/pgd.py
+
+# ----------------------------------------------------------------------------
+# Out-of-Distribution Detection
+# ----------------------------------------------------------------------------
+# PyTorch OOD for OOD detection
+pytorch-ood>=0.2.0,<0.3.0
+
+# ODIN for OOD detection
+# Custom implementation based on temperature scaling
+
+# Mahalanobis distance for OOD
+# Custom implementation
+
+# ----------------------------------------------------------------------------
+# Uncertainty Quantification
+# ----------------------------------------------------------------------------
+# Uncertainty Toolbox
+uncertainty-toolbox>=0.1.1,<0.2.0
+
+# Evidential Deep Learning
+# Custom implementation for uncertainty estimation
+
+# Monte Carlo Dropout
+# Custom implementation in src/training/regularization/dropout_strategies/
+
+# Deep Ensembles for uncertainty
+# Via ensemble models in src/models/ensemble/
+
+# ----------------------------------------------------------------------------
+# Model Calibration
+# ----------------------------------------------------------------------------
+# Netcal for calibration metrics
+netcal>=1.3.5,<1.4.0
+
+# Temperature scaling
+# Custom implementation
+
+# Platt scaling
+# Custom implementation
+
+# ----------------------------------------------------------------------------
+# Fairness and Bias Detection
+# ----------------------------------------------------------------------------
+# Fairlearn for fairness metrics
+fairlearn>=0.9.0,<0.11.0
+
+# AI Fairness 360
+aif360>=0.5.0,<0.6.0
+
+# Fairness Indicators
+fairness-indicators>=0.44.0,<0.45.0
+
+# What-If Tool
+witwidget>=1.8.0,<1.9.0
+
+# ----------------------------------------------------------------------------
+# Bias Detection in Text
+# ----------------------------------------------------------------------------
+# Language Interpretability Tool
+lit-nlp>=0.5.0,<1.3.0
+
+# Regard for bias detection
+# Via transformers model
+
+# ----------------------------------------------------------------------------
+# Counterfactual Explanations
+# ----------------------------------------------------------------------------
+# DiCE for counterfactual generation
+dice-ml>=0.11,<0.12
+
+# Alibi for counterfactuals
+alibi>=0.9.0,<0.10.0
+
+# ----------------------------------------------------------------------------
+# Contrast Sets
+# ----------------------------------------------------------------------------
+# Contrast set generation
+# Custom implementation in src/data/augmentation/contrast_set_generator.py
+
+# Perturbation testing
+checklist>=0.0.11,<0.1.0
+
+# ----------------------------------------------------------------------------
+# Data Quality and Validation
+# ----------------------------------------------------------------------------
+# Great Expectations for data validation
+great-expectations>=0.18.0,<0.19.0
+
+# Pandera for DataFrame validation
+pandera>=0.18.0,<0.20.0
+
+# Data profiling
+pandas-profiling>=3.6.0,<3.7.0
+ydata-profiling>=4.6.0,<4.10.0
+
+# ----------------------------------------------------------------------------
+# Data Leakage Detection
+# ----------------------------------------------------------------------------
+# Custom implementation in src/core/overfitting_prevention/validators/data_leakage_detector.py
+
+# ----------------------------------------------------------------------------
+# Statistical Tests for Robustness
+# ----------------------------------------------------------------------------
+# SciPy for statistical tests
+scipy>=1.10.0,<1.13.0
+
+# Statsmodels
+statsmodels>=0.14.0,<0.15.0
+
+# Permutation tests
+permute>=0.2.0,<0.3.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Hypothesis Testing
+# ----------------------------------------------------------------------------
+# Hypothesis for property-based testing
+hypothesis>=6.92.0,<6.109.0
+
+# Schemathesis for API testing
+schemathesis>=3.27.0,<3.32.0
+
+# ----------------------------------------------------------------------------
+# Stress Testing
+# ----------------------------------------------------------------------------
+# Locust for load testing
+locust>=2.20.0,<2.30.0
+
+# ----------------------------------------------------------------------------
+# Model Interpretability for Robustness
+# ----------------------------------------------------------------------------
+# SHAP for model explanations
+shap>=0.44.0,<0.46.0
+
+# LIME for local interpretability
+lime>=0.2.0,<0.3.0
+
+# Captum for PyTorch interpretability
+captum>=0.7.0,<0.8.0
+
+# InterpretML
+interpret>=0.5.0,<0.7.0
+
+# ----------------------------------------------------------------------------
+# Error Analysis
+# ----------------------------------------------------------------------------
+# Error Analysis toolkit
+error-analysis>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# Custom implementation in src/evaluation/analysis/error_analysis.py
+
+# ----------------------------------------------------------------------------
+# Gradient-based Saliency
+# ----------------------------------------------------------------------------
+# Captum (already included above)
+
+# Integrated Gradients
+# Via Captum
+
+# ----------------------------------------------------------------------------
+# Input Perturbation Testing
+# ----------------------------------------------------------------------------
+# NLP Augmentation for perturbations
+nlpaug>=1.1.11,<1.2.0
+
+# ----------------------------------------------------------------------------
+# Semantic Similarity for Robustness
+# ----------------------------------------------------------------------------
+# Sentence Transformers
+sentence-transformers>=2.2.0,<3.1.0
+
+# Universal Sentence Encoder
+# Via TensorFlow Hub (optional)
+
+# ----------------------------------------------------------------------------
+# Text Normalization for Robustness
+# ----------------------------------------------------------------------------
+# NLTK (already in ml.txt)
+nltk>=3.8.0,<3.9.0
+
+# Unidecode
+unidecode>=1.3.0,<1.4.0
+
+# FTFY for text fixing
+ftfy>=6.1.0,<6.3.0
+
+# ----------------------------------------------------------------------------
+# Adversarial Example Detection
+# ----------------------------------------------------------------------------
+# Feature squeezing
+# Custom implementation
+
+# Local intrinsic dimensionality
+# Custom implementation
+
+# ----------------------------------------------------------------------------
+# Model Monitoring
+# ----------------------------------------------------------------------------
+# Evidently for ML monitoring
+evidently>=0.4.0,<0.5.0
+
+# WhyLabs for data quality monitoring
+whylogs>=1.3.0,<1.5.0
+
+# ----------------------------------------------------------------------------
+# Drift Detection
+# ----------------------------------------------------------------------------
+# Alibi Detect for drift detection
+alibi-detect>=0.12.0,<0.13.0
+
+# ----------------------------------------------------------------------------
+# Robustness Metrics
+# ----------------------------------------------------------------------------
+# Custom metrics in src/evaluation/metrics/
+
+# ----------------------------------------------------------------------------
+# Test Case Generation
+# ----------------------------------------------------------------------------
+# Checklist for behavioral testing
+checklist>=0.0.11,<0.1.0
+
+# ----------------------------------------------------------------------------
+# Compositional Generalization
+# ----------------------------------------------------------------------------
+# COGS dataset utilities
+# Custom implementation
+
+# ----------------------------------------------------------------------------
+# Spurious Correlation Detection
+# ----------------------------------------------------------------------------
+# Custom implementation in robustness analysis
+
+# ----------------------------------------------------------------------------
+# Model Comparison for Robustness
+# ----------------------------------------------------------------------------
+# MLflow for model comparison
+mlflow>=2.9.0,<2.15.0
+
+# ----------------------------------------------------------------------------
+# Confidence Calibration Metrics
+# ----------------------------------------------------------------------------
+# Expected Calibration Error (ECE)
+# Via netcal or custom implementation
+
+# ----------------------------------------------------------------------------
+# Selective Prediction
+# ----------------------------------------------------------------------------
+# Rejection learning
+# Custom implementation
+
+# ----------------------------------------------------------------------------
+# Multi-Domain Robustness
+# ----------------------------------------------------------------------------
+# Domain adaptation testing
+# Custom implementation
+
+# ----------------------------------------------------------------------------
+# Temporal Robustness
+# ----------------------------------------------------------------------------
+# Time-based validation
+# Custom implementation in src/data/validation/
+
+# ----------------------------------------------------------------------------
+# Cross-Lingual Robustness (optional)
+# ----------------------------------------------------------------------------
+# Multilingual embeddings
+# Via transformers (xlm-roberta)
+
+# ----------------------------------------------------------------------------
+# Adversarial Example Visualization
+# ----------------------------------------------------------------------------
+# Matplotlib (already in research.txt)
+matplotlib>=3.8.0,<3.10.0
+
+# ----------------------------------------------------------------------------
+# Robustness Benchmarks
+# ----------------------------------------------------------------------------
+# Custom benchmarks in experiments/benchmarks/robustness_benchmark.py
+
+# ============================================================================
+# Installation Notes for Robustness Testing Requirements
+# ============================================================================
+# 1. Install robustness dependencies:
+#    pip install -r requirements/robustness.txt
+#
+# 2. Run adversarial attacks:
+#    python -c "from textattack import attack; print('TextAttack ready')"
+#
+# 3. Test model robustness:
+#    python experiments/benchmarks/robustness_benchmark.py
+#
+# 4. Evaluate fairness:
+#    python -c "from fairlearn.metrics import demographic_parity_difference; print('Fairlearn ready')"
+#
+# 5. Run contrast set evaluation:
+#    python scripts/evaluation/evaluate_contrast_sets.py
+#
+# 6. Check OOD detection:
+#    python -c "from pytorch_ood import Detector; print('OOD detection ready')"
+#
+# 7. Calibration analysis:
+#    python -c "from netcal.metrics import ECE; print('Calibration ready')"
+#
+# 8. Data quality validation:
+#    python -c "from great_expectations.data_context import DataContext; print('Great Expectations ready')"
+#
+# 9. Generate adversarial examples:
+#    textattack attack --model bert-base-uncased --dataset ag_news --num-examples 100
+#
+# 10. Run checklist tests:
+#     python -c "from checklist.test_suite import TestSuite; print('Checklist ready')"
+#
+# Project-specific robustness testing:
+# - Adversarial training: src/training/strategies/adversarial/
+# - Contrast sets: data/augmented/contrast_sets/
+# - OOD detection: src/evaluation/analysis/
+# - Fairness metrics: src/evaluation/metrics/
+# - Data validation: src/core/overfitting_prevention/validators/
+#
+# Adversarial attack types:
+# - Character-level: Insert, delete, swap characters
+# - Word-level: Synonym replacement, word insertion/deletion
+# - Sentence-level: Paraphrase, back-translation
+# - Semantic: Preserve meaning while changing words
+#
+# TextAttack attack recipes:
+# - TextFooler: Greedy word substitution
+# - PWWS: Probability Weighted Word Saliency
+# - BAE: BERT-based Adversarial Examples
+# - DeepWordBug: Character-level perturbations
+# - HotFlip: Gradient-based word substitution
+#
+# Robustness evaluation metrics:
+# - Attack Success Rate (ASR): Percentage of successful attacks
+# - Perturbed Accuracy: Accuracy on perturbed inputs
+# - Semantic Similarity: Cosine similarity with original
+# - Perturbation Rate: Percentage of words changed
+#
+# Fairness metrics:
+# - Demographic Parity: Equal positive rates across groups
+# - Equalized Odds: Equal TPR and FPR across groups
+# - Equal Opportunity: Equal TPR across groups
+# - Calibration: Equal calibration across groups
+#
+# Out-of-distribution detection methods:
+# - Maximum Softmax Probability (MSP)
+# - ODIN: Out-of-Distribution detector for Neural networks
+# - Mahalanobis distance-based
+# - Energy-based OOD detection
+#
+# Calibration methods:
+# - Temperature scaling: Scale logits before softmax
+# - Platt scaling: Logistic regression on scores
+# - Isotonic regression: Non-parametric calibration
+# - Beta calibration: Beta distribution fitting
+#
+# Contrast set types:
+# - Minimal edits: Change single words/phrases
+# - Counterfactuals: Flip critical features
+# - Paraphrases: Same meaning, different words
+# - Domain shifts: Different writing styles
+#
+# Data quality checks:
+# - Missing values detection
+# - Duplicate detection
+# - Outlier detection
+# - Schema validation
+# - Distribution drift
+# - Label noise detection
+#
+# Stress testing scenarios:
+# - Very long texts (max sequence length)
+# - Very short texts (single word)
+# - Special characters and Unicode
+# - Mixed languages
+# - Typos and misspellings
+# - Informal language and slang
+#
+# Behavioral testing with Checklist:
+# - Minimum Functionality Tests (MFT)
+# - Invariance Tests (INV)
+# - Directional Expectation Tests (DIR)
+#
+# Uncertainty quantification methods:
+# - Bayesian Neural Networks
+# - Monte Carlo Dropout
+# - Deep Ensembles
+# - Evidential Deep Learning
+#
+# Expected outputs:
+# - Robustness report: experiments/benchmarks/robustness/
+# - Adversarial examples: data/augmented/adversarial/
+# - Fairness report: outputs/analysis/fairness/
+# - Calibration plots: outputs/artifacts/figures/
+# - OOD detection results: outputs/results/ood_detection/
+#
+# Integration with overfitting prevention:
+# - Test set protection prevents data leakage
+# - Validation guards ensure proper splits
+# - Data leakage detector finds spurious correlations
+# - Statistical tests verify robustness claims
+#
+# For detailed robustness testing guide:
+# - See docs/user_guide/advanced_techniques.md
+# - See experiments/benchmarks/robustness_benchmark.py
+# - See src/evaluation/analysis/error_analysis.py
+# ============================================================================
