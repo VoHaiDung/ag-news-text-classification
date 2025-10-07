@@ -1,21 +1,434 @@
-# LLM Requirements
-# ================
-# Large Language Model dependencies
+# ============================================================================
+# Large Language Model Requirements for AG News Text Classification
+# ============================================================================
+# Project: AG News Text Classification (ag-news-text-classification)
+# Description: Dependencies for LLM training, inference, and integration
 # Author: Võ Hải Dũng
+# License: MIT
+# Python: >=3.8,<3.12
+# ============================================================================
+# This file contains packages required for:
+# - Large Language Model fine-tuning (LLaMA, Mistral, Falcon, MPT, Phi)
+# - QLoRA 4-bit/8-bit quantization
+# - Instruction tuning (Alpaca, Dolly, Vicuna styles)
+# - Prompt engineering and in-context learning
+# - LLM-based data augmentation
+# - Knowledge distillation from LLMs to smaller models
+# - Efficient LLM inference
+# ============================================================================
 
-# Include ML
+# Include ML requirements
 -r ml.txt
 
-# LLM libraries
-openai>=1.3.0
-tiktoken>=0.5.0
+# ----------------------------------------------------------------------------
+# Core LLM Libraries
+# ----------------------------------------------------------------------------
+# Transformers for LLM support (already in ml.txt but ensure latest)
+transformers>=4.36.0,<4.41.0
 
-# LLM frameworks
-langchain>=0.0.340
+# Parameter-Efficient Fine-Tuning (already in ml.txt)
+peft>=0.7.0,<0.12.0
 
-# Vector databases
-chromadb>=0.4.0
-faiss-cpu>=1.7.0
+# Quantization libraries (already in ml.txt)
+bitsandbytes>=0.41.0,<0.44.0
 
-# Fine-tuning
-trl>=0.7.0
+# ----------------------------------------------------------------------------
+# LLM-Specific Training Frameworks
+# ----------------------------------------------------------------------------
+# Transformers Reinforcement Learning (for instruction tuning)
+trl>=0.7.0,<0.9.0
+
+# Supervised Fine-tuning Trainer
+sft-trainer>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# Alignment Handbook utilities
+alignment>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Flash Attention (for efficient long-context training)
+# ----------------------------------------------------------------------------
+# Flash Attention 2 for faster attention computation
+flash-attn>=2.4.0,<2.6.0; platform_system == "Linux" and python_version >= "3.9"
+
+# xFormers for memory-efficient attention
+xformers>=0.0.23,<0.0.27; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Efficient Inference
+# ----------------------------------------------------------------------------
+# vLLM for high-throughput LLM inference
+vllm>=0.2.0,<0.5.0; python_version >= "3.9" and platform_system == "Linux"
+
+# Text Generation Inference
+text-generation>=0.6.0,<0.7.0
+
+# Optimum for accelerated inference
+optimum>=1.16.0,<1.21.0
+
+# AutoGPTQ for quantized model inference
+auto-gptq>=0.6.0,<0.8.0; python_version >= "3.9"
+
+# GPTQ for LLaMA
+gptq-for-llama>=0.1.0,<0.2.0; python_version >= "3.9" and platform_system == "Linux"
+
+# ExLlama for fast inference
+exllama>=0.0.18,<0.1.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# LLM Tokenizers
+# ----------------------------------------------------------------------------
+# SentencePiece for LLaMA, Mistral tokenizers (already in ml.txt)
+sentencepiece>=0.1.99,<0.3.0
+
+# Tiktoken for GPT tokenizers
+tiktoken>=0.5.0,<0.8.0
+
+# Tokenizers library (already in base.txt)
+tokenizers>=0.15.0,<0.16.0
+
+# ----------------------------------------------------------------------------
+# Instruction Tuning Datasets and Templates
+# ----------------------------------------------------------------------------
+# Stanford Alpaca dataset utilities
+alpaca-lora>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# Dolly dataset
+dolly>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# Vicuna conversation templates
+vicuna>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# ShareGPT format utilities
+sharegpt>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# OpenAssistant dataset
+open-assistant>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Prompt Engineering and In-Context Learning
+# ----------------------------------------------------------------------------
+# Guidance for constrained generation
+guidance>=0.1.0,<0.2.0
+
+# LangChain for LLM orchestration
+langchain>=0.1.0,<0.3.0
+langchain-community>=0.0.10,<0.3.0
+langchain-core>=0.1.0,<0.3.0
+
+# LlamaIndex for RAG and document understanding
+llama-index>=0.9.0,<0.11.0
+
+# Promptify for prompt templates
+promptify>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# OpenPrompt (already in ml.txt)
+openprompt>=1.0.1,<1.1.0
+
+# ----------------------------------------------------------------------------
+# LLM Evaluation
+# ----------------------------------------------------------------------------
+# LM Evaluation Harness
+lm-eval>=0.4.0,<0.5.0
+
+# HELM benchmarking
+helm>=0.3.0,<0.4.0; python_version >= "3.9"
+
+# EleutherAI evaluation
+eleutherai-eval>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# BigBench for model evaluation
+bigbench>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# MMLU evaluation
+mmlu>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Vector Databases (for RAG and semantic search)
+# ----------------------------------------------------------------------------
+# ChromaDB for vector storage
+chromadb>=0.4.0,<0.5.0
+
+# FAISS for similarity search
+faiss-cpu>=1.7.4,<1.9.0
+
+# FAISS GPU version (optional)
+# faiss-gpu>=1.7.4,<1.9.0
+
+# Pinecone client
+pinecone-client>=2.2.0,<4.2.0
+
+# Weaviate client
+weaviate-client>=3.26.0,<4.7.0
+
+# Qdrant client
+qdrant-client>=1.7.0,<1.10.0
+
+# Milvus client
+pymilvus>=2.3.0,<2.5.0
+
+# ----------------------------------------------------------------------------
+# Embedding Models
+# ----------------------------------------------------------------------------
+# Sentence Transformers for embeddings
+sentence-transformers>=2.2.0,<3.1.0
+
+# OpenAI embeddings
+openai>=1.3.0,<1.36.0
+
+# Cohere embeddings
+cohere>=4.37.0,<5.6.0
+
+# ----------------------------------------------------------------------------
+# LLM APIs and Clients
+# ----------------------------------------------------------------------------
+# OpenAI API client (GPT models)
+openai>=1.3.0,<1.36.0
+
+# Anthropic API client (Claude models)
+anthropic>=0.8.0,<0.31.0
+
+# Cohere API client
+cohere>=4.37.0,<5.6.0
+
+# Together AI client
+together>=0.2.0,<1.3.0
+
+# Replicate API
+replicate>=0.21.0,<0.28.0
+
+# Hugging Face Inference API
+huggingface-hub>=0.20.0,<0.24.0
+
+# ----------------------------------------------------------------------------
+# Model Merging and Composition
+# ----------------------------------------------------------------------------
+# MergeKit for model merging
+mergekit>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# Model composition utilities
+model-composer>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# LLM Fine-tuning Recipes
+# ----------------------------------------------------------------------------
+# Axolotl for unified fine-tuning
+axolotl>=0.3.0,<0.5.0; python_version >= "3.9"
+
+# LLM foundry
+llm-foundry>=0.4.0,<0.9.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Safety and Alignment
+# ----------------------------------------------------------------------------
+# Detoxify for content moderation
+detoxify>=0.5.0,<0.6.0
+
+# Perspective API client
+perspective>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# Constitutional AI utilities
+constitutional-ai>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# LLM-Specific Data Processing
+# ----------------------------------------------------------------------------
+# Conversation formatting
+conversations>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# Chat templates
+chat-templates>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Model Downloading and Caching
+# ----------------------------------------------------------------------------
+# Hugging Face Hub for model downloads (already in base requirements)
+huggingface-hub>=0.20.0,<0.24.0
+
+# Model download utilities
+modelscope>=1.10.0,<1.16.0
+
+# ----------------------------------------------------------------------------
+# Triton for Custom Kernels
+# ----------------------------------------------------------------------------
+# Triton compiler for GPU kernels
+triton>=2.1.0,<3.1.0; python_version >= "3.9" and platform_system == "Linux"
+
+# ----------------------------------------------------------------------------
+# LLM Compression
+# ----------------------------------------------------------------------------
+# SparseGPT for model pruning
+sparsegpt>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# Wanda pruning
+wanda>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# LLM.int8 quantization (via bitsandbytes, already included)
+
+# GGML for quantized models
+ggml-python>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# llama.cpp Python bindings
+llama-cpp-python>=0.2.0,<0.3.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Mixture of Experts (MoE) Support
+# ----------------------------------------------------------------------------
+# Switch Transformers utilities
+switch-transformers>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# Mixtral-specific utilities
+mixtral>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Long Context Support
+# ----------------------------------------------------------------------------
+# Rope scaling utilities
+rope-scaling>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# ALiBi attention
+alibi>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# Streaming LLM
+streaming-llm>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Debugging and Profiling for LLMs
+# ----------------------------------------------------------------------------
+# Transformer Lens for interpretability
+transformer-lens>=1.10.0,<1.19.0
+
+# SAELens for sparse autoencoders
+saelens>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# LLM Serving
+# ----------------------------------------------------------------------------
+# FastChat for serving LLMs
+fastchat>=0.2.0,<0.3.0; python_version >= "3.9"
+
+# Text Generation WebUI backend
+text-generation-webui>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Reinforcement Learning from Human Feedback (RLHF)
+# ----------------------------------------------------------------------------
+# PPO implementation
+ppo>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# Reward modeling
+reward-modeling>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# TRL (already included above)
+
+# ----------------------------------------------------------------------------
+# Code Generation LLMs
+# ----------------------------------------------------------------------------
+# CodeT5 utilities
+codet5>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# StarCoder utilities
+starcoder>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Multimodal LLMs (optional)
+# ----------------------------------------------------------------------------
+# LLaVA for vision-language models
+llava>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# CLIP for vision-text embeddings
+clip>=0.2.0,<0.3.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# LLM Monitoring
+# ----------------------------------------------------------------------------
+# LangSmith for LLM observability
+langsmith>=0.0.70,<0.2.0
+
+# Phoenix for LLM tracing
+arize-phoenix>=3.0.0,<4.26.0
+
+# LangFuse for LLM analytics
+langfuse>=2.6.0,<2.39.0
+
+# ----------------------------------------------------------------------------
+# Additional Utilities
+# ----------------------------------------------------------------------------
+# Unstructured for document parsing
+unstructured>=0.11.0,<0.15.0
+
+# PDF parsing for RAG
+pypdf>=3.17.0,<4.3.0
+pdfplumber>=0.10.0,<0.12.0
+
+# Markdown processing
+markdown>=3.5.0,<3.7.0
+pymdown-extensions>=10.5.0,<10.9.0
+
+# ============================================================================
+# Installation Notes for LLM Requirements
+# ============================================================================
+# 1. Basic LLM setup:
+#    pip install -r requirements/llm.txt
+#
+# 2. Platform-specific notes:
+#    - Windows: Some packages (vLLM, flash-attn) are Linux-only
+#    - macOS: Limited GPU support, use MPS backend
+#    - Linux: Full GPU acceleration available
+#
+# 3. GPU requirements by model size:
+#    - 7B models (LLaMA-2-7B, Mistral-7B):
+#      * Full precision (FP32): 28GB VRAM
+#      * Half precision (FP16): 14GB VRAM
+#      * 8-bit (int8): 7GB VRAM
+#      * 4-bit (QLoRA): 4-5GB VRAM ✓ Colab/Kaggle compatible
+#
+#    - 13B models (LLaMA-2-13B):
+#      * Full precision: 52GB VRAM
+#      * Half precision: 26GB VRAM
+#      * 8-bit: 13GB VRAM
+#      * 4-bit: 7-8GB VRAM
+#
+#    - 70B models (LLaMA-2-70B):
+#      * Full precision: 280GB VRAM (multi-GPU required)
+#      * Half precision: 140GB VRAM (multi-GPU required)
+#      * 8-bit: 70GB VRAM (A100 80GB or multi-GPU)
+#      * 4-bit: 35-40GB VRAM (A100 40GB or 2x RTX 3090)
+#
+# 4. Recommended configurations:
+#    - Research/Experimentation: Use 4-bit QLoRA
+#    - Production inference: Use vLLM or TGI
+#    - Fine-tuning small datasets: Use LoRA rank 8-16
+#    - Instruction tuning: Use rank 32-64
+#
+# 5. Flash Attention installation (Linux only):
+#    pip install flash-attn --no-build-isolation
+#
+# 6. vLLM installation (Linux only):
+#    pip install vllm
+#
+# 7. For LLaMA models:
+#    - Request access on Hugging Face: meta-llama/Llama-2-7b-hf
+#    - Use authentication: huggingface-cli login
+#
+# 8. For Mistral models:
+#    - Available without gating: mistralai/Mistral-7B-v0.1
+#
+# 9. Troubleshooting:
+#    - Flash Attention errors: Install from source or use xformers
+#    - CUDA out of memory: Reduce batch size, enable gradient checkpointing
+#    - Slow inference: Use vLLM, quantization, or smaller models
+#
+# 10. Integration with project structure:
+#     - Model configs: configs/models/single/llm/
+#     - Training configs: configs/training/efficient/qlora/
+#     - Instruction tuning: configs/training/advanced/instruction_tuning/
+#     - Distillation: configs/training/advanced/knowledge_distillation/
+#     - Prompts: prompts/classification/, prompts/instruction/
+#     - Scripts: scripts/training/single_model/train_llm_qlora.py
+#
+# For detailed LLM training guide:
+# - See SOTA_MODELS_GUIDE.md section on Tier 2 LLM Models
+# - See docs/user_guide/lora_guide.md for LoRA configuration
+# - See docs/user_guide/qlora_guide.md for QLoRA setup
+# - See docs/user_guide/prompt_engineering.md for prompt optimization
+# ============================================================================
