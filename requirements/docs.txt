@@ -1,15 +1,558 @@
-# Documentation Requirements
-# ==========================
-# Documentation generation tools
+# ============================================================================
+# Documentation Requirements for AG News Text Classification
+# ============================================================================
+# Project: AG News Text Classification (ag-news-text-classification)
+# Description: Documentation generation, publishing, and maintenance tools
 # Author: Võ Hải Dũng
+# License: MIT
+# Python: >=3.8,<3.12
+# ============================================================================
+# This file contains packages required for:
+# - Sphinx documentation (API reference, user guides)
+# - MkDocs documentation (tutorials, getting started)
+# - PlantUML diagrams (architecture, data flow)
+# - Markdown processing and extensions
+# - PDF generation from documentation
+# - Docstring parsing and validation
+# - Multi-level progressive disclosure docs
+# - Cheatsheets and quick reference guides
+# ============================================================================
 
-# Sphinx
-sphinx>=7.2.0
-sphinx-rtd-theme>=1.3.0
-myst-parser>=2.0.0
+# Include base requirements
+-r base.txt
 
-# Markdown
-markdown>=3.5.0
+# ----------------------------------------------------------------------------
+# Sphinx Documentation System
+# ----------------------------------------------------------------------------
+# Sphinx core
+sphinx>=7.2.0,<7.4.0
 
-# Diagrams
-graphviz>=0.20.0
+# Read the Docs theme
+sphinx-rtd-theme>=2.0.0,<2.1.0
+
+# Book theme
+sphinx-book-theme>=1.1.0,<1.2.0
+
+# Material theme
+sphinx-material>=0.0.36,<0.1.0
+
+# PyData theme
+pydata-sphinx-theme>=0.15.0,<0.16.0
+
+# Furo theme
+furo>=2023.9.0,<2024.8.0
+
+# ----------------------------------------------------------------------------
+# Sphinx Extensions
+# ----------------------------------------------------------------------------
+# Auto-generate API documentation
+sphinx-autodoc-typehints>=1.25.0,<2.3.0
+sphinx-autoapi>=3.0.0,<3.3.0
+
+# Napoleon for Google/NumPy style docstrings
+# Built-in to Sphinx
+
+# Copy button for code blocks
+sphinx-copybutton>=0.5.0,<0.6.0
+
+# Tabs for multi-language examples
+sphinx-tabs>=3.4.0,<3.5.0
+
+# Inline tabs
+sphinx-inline-tabs>=2023.4.0,<2024.8.0
+
+# Panels and cards
+sphinx-panels>=0.6.0,<0.7.0
+sphinx-design>=0.5.0,<0.7.0
+
+# Mermaid diagrams
+sphinxcontrib-mermaid>=0.9.0,<0.10.0
+
+# PlantUML diagrams
+sphinxcontrib-plantuml>=0.28,<0.30
+
+# SVG support
+sphinxcontrib-svg2pdfconverter>=1.2.0,<1.3.0
+
+# Markdown support in Sphinx
+myst-parser>=2.0.0,<3.1.0
+myst-nb>=1.0.0,<1.2.0
+
+# Jupyter notebook integration
+nbsphinx>=0.9.0,<0.10.0
+
+# Include Markdown files
+m2r2>=0.3.0,<0.4.0
+
+# OpenAPI/Swagger spec
+sphinxcontrib-openapi>=0.8.0,<0.9.0
+
+# HTTP domain
+sphinxcontrib-httpdomain>=1.8.0,<1.9.0
+
+# Bibtex citations
+sphinxcontrib-bibtex>=2.6.0,<2.7.0
+
+# Proof and theorem
+sphinxcontrib-proof>=1.6.0,<1.7.0
+
+# YouTube videos
+sphinxcontrib-youtube>=1.4.0,<1.5.0
+
+# Spelling checker
+sphinxcontrib-spelling>=8.0.0,<8.1.0
+
+# Versioning
+sphinx-versioning>=2.2.0,<2.3.0
+sphinx-multiversion>=0.2.4,<0.3.0
+
+# Search improvements
+sphinx-search>=0.2.0,<0.3.0
+
+# Redirects
+sphinx-reredirects>=0.1.0,<0.2.0
+
+# Sitemap generation
+sphinx-sitemap>=2.5.0,<2.7.0
+
+# Last updated
+sphinx-last-updated-by-git>=0.3.0,<0.4.0
+
+# Contributors
+sphinx-contributors>=0.2.0,<0.3.0
+
+# ----------------------------------------------------------------------------
+# MkDocs Documentation System
+# ----------------------------------------------------------------------------
+# MkDocs core
+mkdocs>=1.5.0,<1.7.0
+
+# Material theme (the best theme)
+mkdocs-material>=9.5.0,<9.6.0
+mkdocs-material-extensions>=1.3.0,<1.4.0
+
+# ----------------------------------------------------------------------------
+# MkDocs Plugins
+# ----------------------------------------------------------------------------
+# API documentation
+mkdocstrings[python]>=0.24.0,<0.26.0
+mkdocstrings-python>=1.7.0,<1.11.0
+
+# Jupyter notebooks
+mkdocs-jupyter>=0.24.0,<0.25.0
+
+# Mermaid diagrams
+mkdocs-mermaid2-plugin>=1.1.0,<1.2.0
+
+# PlantUML
+mkdocs-build-plantuml-plugin>=1.7.0,<1.8.0
+
+# Search
+mkdocs-minify-plugin>=0.7.0,<0.9.0
+
+# Git revision date
+mkdocs-git-revision-date-localized-plugin>=1.2.0,<1.3.0
+mkdocs-git-authors-plugin>=0.7.0,<0.9.0
+
+# Multiple languages
+mkdocs-static-i18n>=1.2.0,<1.3.0
+
+# PDF export
+mkdocs-pdf-export-plugin>=0.5.0,<0.6.0
+mkdocs-with-pdf>=0.9.0,<0.10.0
+
+# Video
+mkdocs-video>=1.5.0,<1.6.0
+
+# Awesome pages
+mkdocs-awesome-pages-plugin>=2.9.0,<2.10.0
+
+# Macros for templating
+mkdocs-macros-plugin>=1.0.0,<1.1.0
+
+# Include markdown
+mkdocs-include-markdown-plugin>=6.0.0,<6.3.0
+
+# Redirects
+mkdocs-redirects>=1.2.0,<1.3.0
+
+# Tags
+mkdocs-tags>=0.3.0,<0.4.0
+
+# Blog support
+mkdocs-blog-plugin>=0.30.0,<0.31.0
+
+# RSS feed
+mkdocs-rss-plugin>=1.12.0,<1.16.0
+
+# Social cards
+# Built-in to mkdocs-material
+
+# Optimization
+mkdocs-optimize-plugin>=0.8.0,<0.9.0
+
+# ----------------------------------------------------------------------------
+# Markdown Processing
+# ----------------------------------------------------------------------------
+# Markdown (already in base.txt)
+markdown>=3.5.1,<3.7.0
+
+# PyMdown extensions
+pymdown-extensions>=10.5.0,<10.9.0
+
+# Markdown include
+markdown-include>=0.8.0,<0.9.0
+
+# GitHub flavored markdown
+py-gfm>=2.0.0,<2.1.0
+
+# Markdown tables
+markdown-table>=2020.12.3,<2024.8.1
+
+# Markdown math
+python-markdown-math>=0.8,<0.9
+
+# ----------------------------------------------------------------------------
+# API Documentation Generators
+# ----------------------------------------------------------------------------
+# Pdoc for simple API docs
+pdoc>=14.3.0,<14.6.0
+
+# Pydoc-markdown
+pydoc-markdown>=4.8.0,<4.9.0
+
+# ----------------------------------------------------------------------------
+# Docstring Tools
+# ----------------------------------------------------------------------------
+# Docstring parsing
+docstring-parser>=0.15,<0.17
+
+# Docstring coverage
+interrogate>=1.5.0,<1.6.0
+
+# Docstring linting
+pydocstyle>=6.3.0,<6.4.0
+
+# Darglint for docstring/signature matching
+darglint>=1.8.0,<1.9.0
+
+# ----------------------------------------------------------------------------
+# Diagram Generation
+# ----------------------------------------------------------------------------
+# Graphviz (already in ui.txt)
+graphviz>=0.20.0,<0.21.0
+
+# Diagrams as code
+diagrams>=0.23.0,<0.24.0
+
+# Matplotlib for diagrams (already in ml.txt)
+matplotlib>=3.8.0,<3.10.0
+
+# ----------------------------------------------------------------------------
+# PlantUML
+# ----------------------------------------------------------------------------
+# PlantUML wrapper
+plantuml>=0.3.0,<0.4.0
+
+# PlantUML markdown
+plantuml-markdown>=3.9.0,<3.10.0
+
+# ----------------------------------------------------------------------------
+# Mermaid
+# ----------------------------------------------------------------------------
+# Mermaid CLI (install via npm: npm install -g @mermaid-js/mermaid-cli)
+# Python wrapper
+mermaid-py>=0.3.0,<0.4.0
+
+# ----------------------------------------------------------------------------
+# UML Diagrams
+# ----------------------------------------------------------------------------
+# PyUML for UML generation
+# Custom implementation or use PlantUML
+
+# ----------------------------------------------------------------------------
+# PDF Generation
+# ----------------------------------------------------------------------------
+# ReportLab (already in ui.txt)
+reportlab>=4.0.0,<4.3.0
+
+# WeasyPrint (already in ui.txt)
+weasyprint>=60.1,<62.4
+
+# PyPDF for PDF manipulation
+pypdf>=3.17.0,<4.3.0
+
+# PDFKit
+pdfkit>=1.0.0,<1.1.0
+
+# ----------------------------------------------------------------------------
+# HTML Processing
+# ----------------------------------------------------------------------------
+# BeautifulSoup (already in data.txt)
+beautifulsoup4>=4.12.0,<4.13.0
+
+# lxml (already in data.txt)
+lxml>=4.9.0,<5.3.0
+
+# ----------------------------------------------------------------------------
+# Code Highlighting
+# ----------------------------------------------------------------------------
+# Pygments (already in ui.txt)
+pygments>=2.17.0,<2.19.0
+
+# ----------------------------------------------------------------------------
+# Spell Checking
+# ----------------------------------------------------------------------------
+# PySpellChecker
+pyspellchecker>=0.8.0,<0.9.0
+
+# Hunspell
+hunspell>=0.5.0,<0.6.0
+
+# ----------------------------------------------------------------------------
+# Link Checking
+# ----------------------------------------------------------------------------
+# Linkchecker
+linkchecker>=10.4.0,<10.5.0
+
+# ----------------------------------------------------------------------------
+# Changelog Generation
+# ----------------------------------------------------------------------------
+# Towncrier (already in dev.txt)
+towncrier>=23.11.0,<24.8.0
+
+# Gitchangelog
+gitchangelog>=3.0.0,<3.1.0
+
+# Auto-changelog
+auto-changelog>=0.6.0,<0.7.0
+
+# ----------------------------------------------------------------------------
+# Version Bumping
+# ----------------------------------------------------------------------------
+# Bump2version
+bump2version>=1.0.0,<1.1.0
+
+# Semantic versioning
+semantic-version>=2.10.0,<2.11.0
+
+# ----------------------------------------------------------------------------
+# YAML Documentation
+# ----------------------------------------------------------------------------
+# YAML (already in base.txt)
+pyyaml>=6.0.1,<7.0.0
+ruamel.yaml>=0.18.5,<0.19.0
+
+# ----------------------------------------------------------------------------
+# JSON Schema Documentation
+# ----------------------------------------------------------------------------
+# JSON Schema (already in base.txt)
+jsonschema>=4.20.0,<4.23.0
+
+# JSON Schema to Markdown
+jsonschema2md>=0.5.0,<0.6.0
+
+# ----------------------------------------------------------------------------
+# OpenAPI/Swagger Documentation
+# ----------------------------------------------------------------------------
+# OpenAPI spec generation
+openapi-spec-validator>=0.7.0,<0.8.0
+
+# Swagger codegen
+# Use FastAPI's built-in OpenAPI
+
+# ----------------------------------------------------------------------------
+# Docusaurus Alternative
+# ----------------------------------------------------------------------------
+# Python bindings (use Node.js Docusaurus directly)
+
+# ----------------------------------------------------------------------------
+# Static Site Generators
+# ----------------------------------------------------------------------------
+# Pelican
+pelican>=4.9.0,<4.10.0
+
+# Nikola
+nikola>=8.3.0,<8.4.0
+
+# ----------------------------------------------------------------------------
+# Documentation Testing
+# ----------------------------------------------------------------------------
+# Doctest (built-in)
+
+# Sphinx doctest
+# Built-in to Sphinx
+
+# ----------------------------------------------------------------------------
+# Code Examples Extraction
+# ----------------------------------------------------------------------------
+# Extract code from markdown
+markdown-code-blocks>=3.1.0,<3.2.0
+
+# ----------------------------------------------------------------------------
+# Badges Generation
+# ----------------------------------------------------------------------------
+# Shields.io badges (via URL)
+
+# Coverage badge (already in dev.txt)
+coverage-badge>=1.1.0,<1.2.0
+
+# ----------------------------------------------------------------------------
+# Documentation Hosting
+# ----------------------------------------------------------------------------
+# GitHub Pages (via git)
+
+# Read the Docs
+# Configuration via .readthedocs.yml
+
+# ----------------------------------------------------------------------------
+# Tutorials and Examples
+# ----------------------------------------------------------------------------
+# Jupyter Book
+jupyter-book>=0.15.0,<1.1.0
+
+# ----------------------------------------------------------------------------
+# Localization
+# ----------------------------------------------------------------------------
+# Babel (already in ui.txt)
+babel>=2.14.0,<2.16.0
+
+# Sphinx i18n
+sphinx-intl>=2.1.0,<2.3.0
+
+# ----------------------------------------------------------------------------
+# Academic Paper Formatting
+# ----------------------------------------------------------------------------
+# Pandoc (install system package)
+# pypandoc wrapper
+pypandoc>=1.12,<1.14
+
+# LaTeX
+# System installation required
+
+# ----------------------------------------------------------------------------
+# Citation Management
+# ----------------------------------------------------------------------------
+# Bibtex parser
+bibtexparser>=1.4.0,<2.1.0
+
+# ----------------------------------------------------------------------------
+# Documentation Analytics
+# ----------------------------------------------------------------------------
+# Google Analytics (via theme config)
+
+# ----------------------------------------------------------------------------
+# Documentation Search
+# ----------------------------------------------------------------------------
+# Algolia DocSearch (via theme integration)
+
+# Elasticsearch (separate service)
+
+# ============================================================================
+# Installation Notes for Documentation Requirements
+# ============================================================================
+# 1. Install documentation dependencies:
+#    pip install -r requirements/docs.txt
+#
+# 2. Generate Sphinx documentation:
+#    cd docs/
+#    make html
+#    open _build/html/index.html
+#
+# 3. Generate MkDocs documentation:
+#    mkdocs build
+#    mkdocs serve
+#    open http://127.0.0.1:8000
+#
+# 4. Documentation structure:
+#    docs/
+#    ├── index.md                    # Landing page
+#    ├── 00_START_HERE.md            # Onboarding
+#    ├── getting_started/            # Installation, quickstart
+#    ├── level_1_beginner/           # 5-minute guides
+#    ├── level_2_intermediate/       # Advanced tutorials
+#    ├── level_3_advanced/           # Research workflows
+#    ├── user_guide/                 # Comprehensive guides
+#    ├── developer_guide/            # Contributing, architecture
+#    ├── api_reference/              # API documentation
+#    ├── tutorials/                  # Step-by-step tutorials
+#    ├── best_practices/             # Best practices
+#    ├── examples/                   # Code examples
+#    ├── cheatsheets/                # Quick references
+#    └── architecture/               # ADRs, diagrams
+#
+# 5. Specialized guides (15 top-level MD files):
+#    - README.md
+#    - ARCHITECTURE.md
+#    - PERFORMANCE.md
+#    - SECURITY.md
+#    - TROUBLESHOOTING.md
+#    - SOTA_MODELS_GUIDE.md
+#    - OVERFITTING_PREVENTION.md
+#    - ROADMAP.md
+#    - FREE_DEPLOYMENT_GUIDE.md
+#    - IDE_SETUP_GUIDE.md
+#    - LOCAL_MONITORING_GUIDE.md
+#    - QUICK_START.md
+#    - HEALTH_CHECK.md
+#    - CHANGELOG.md
+#    - CITATION.cff
+#
+# 6. Generate diagrams:
+#    - PlantUML: java -jar plantuml.jar docs/architecture/diagrams/*.puml
+#    - Mermaid: mmdc -i input.mmd -o output.svg
+#
+# 7. Build PDF documentation:
+#    cd docs/
+#    make latexpdf
+#    # or with MkDocs:
+#    mkdocs build --config-file mkdocs.yml --strict
+#
+# 8. Check documentation:
+#    - Spell check: sphinx-build -b spelling docs/ _build/spelling
+#    - Link check: sphinx-build -b linkcheck docs/ _build/linkcheck
+#    - Coverage: interrogate src/ -vv
+#
+# 9. Multi-version documentation:
+#    sphinx-multiversion docs/ _build/html
+#
+# 10. Generate API reference:
+#     sphinx-apidoc -o docs/api_reference src/
+#     # or with MkDocs:
+#     mkdocs serve
+#
+# System requirements:
+# - Java (for PlantUML): sudo apt install default-jre
+# - Graphviz: sudo apt install graphviz
+# - LaTeX (for PDF): sudo apt install texlive-full
+# - Pandoc: sudo apt install pandoc
+# - Node.js (for Mermaid CLI): npm install -g @mermaid-js/mermaid-cli
+#
+# Documentation best practices:
+# - Use progressive disclosure (beginner → advanced)
+# - Include runnable code examples
+# - Add diagrams for complex workflows
+# - Maintain CHANGELOG.md
+# - Keep README.md up-to-date
+# - Generate API docs automatically
+# - Test documentation builds in CI
+# - Version documentation with releases
+#
+# Project-specific documentation:
+# - 15 specialized guides at root level
+# - 3-level progressive structure (level_1/2/3)
+# - IDE-specific guides (docs/ide_guides/)
+# - Architecture Decision Records (docs/architecture/decisions/)
+# - Runbooks (docs/operations/runbooks/)
+# - Cheatsheets (docs/cheatsheets/) - PDF format
+#
+# Documentation deployment:
+# - GitHub Pages: mkdocs gh-deploy
+# - Read the Docs: Auto-deploy on push
+# - Self-hosted: Deploy _build/html or site/ directory
+#
+# For detailed documentation guide:
+# - See docs/developer_guide/contributing.md
+# - See .readthedocs.yml for RTD configuration
+# - See mkdocs.yml for MkDocs configuration
+# ============================================================================
