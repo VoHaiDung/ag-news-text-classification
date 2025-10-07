@@ -1,23 +1,604 @@
-# Research Requirements
-# =====================
-# Experiment tracking and visualization
+# ============================================================================
+# Research Requirements for AG News Text Classification
+# ============================================================================
+# Project: AG News Text Classification (ag-news-text-classification)
+# Description: Experiment tracking, hyperparameter optimization, and research
 # Author: Võ Hải Dũng
+# License: MIT
+# Python: >=3.8,<3.12
+# ============================================================================
+# This file contains packages required for:
+# - Experiment tracking and visualization (W&B, MLflow, TensorBoard)
+# - Hyperparameter optimization (Optuna, Ray Tune, Bayesian optimization)
+# - Ablation studies and model analysis
+# - SOTA experiments and benchmarking
+# - Reproducibility and result aggregation
+# - Statistical analysis and significance testing
+# - Research paper generation and academic workflows
+# ============================================================================
 
-# Include ML
+# Include ML requirements
 -r ml.txt
 
-# Experiment tracking
-wandb>=0.15.0
-tensorboard>=2.14.0
+# ----------------------------------------------------------------------------
+# Experiment Tracking Platforms
+# ----------------------------------------------------------------------------
+# Weights & Biases for experiment tracking
+wandb>=0.16.0,<0.17.0
 
-# Hyperparameter optimization
-optuna>=3.3.0
+# MLflow for experiment management
+mlflow>=2.9.0,<2.15.0
 
-# Visualization
-matplotlib>=3.7.0
-seaborn>=0.12.0
-plotly>=5.17.0
+# TensorBoard for visualization
+tensorboard>=2.15.0,<2.17.0
+tensorboardX>=2.6.2,<2.7.0
 
-# Notebooks
-jupyter>=1.0.0
-ipython>=8.14.0
+# Neptune.ai for experiment tracking
+neptune>=1.8.0,<1.11.0
+
+# Comet ML for experiment tracking
+comet-ml>=3.35.0,<3.44.0
+
+# ClearML for experiment management
+clearml>=1.14.0,<1.17.0
+
+# Sacred for experiment configuration
+sacred>=0.8.4,<0.9.0
+pymongo>=4.6.0,<4.8.0
+
+# DVC for data and model versioning
+dvc>=3.37.0,<3.54.0
+dvc-s3>=3.0.0,<3.3.0
+
+# ----------------------------------------------------------------------------
+# Hyperparameter Optimization
+# ----------------------------------------------------------------------------
+# Optuna for hyperparameter tuning
+optuna>=3.5.0,<3.7.0
+optuna-integration>=3.5.0,<3.7.0
+optuna-dashboard>=0.15.0,<0.16.0
+
+# Ray Tune for distributed hyperparameter search
+ray[tune]>=2.9.0,<2.10.0
+ray[default]>=2.9.0,<2.10.0
+
+# Hyperopt for Bayesian optimization
+hyperopt>=0.2.7,<0.3.0
+
+# Scikit-optimize for Bayesian optimization
+scikit-optimize>=0.9.0,<0.10.0
+
+# BayesOpt
+bayesian-optimization>=1.4.3,<1.5.0
+
+# Ax for adaptive experimentation
+ax-platform>=0.3.0,<0.4.0
+
+# GPyOpt for Gaussian Process optimization
+gpyopt>=1.2.0,<1.3.0
+
+# SMAC for sequential model-based optimization
+smac>=2.0.0,<2.3.0
+
+# ----------------------------------------------------------------------------
+# Visualization for Research
+# ----------------------------------------------------------------------------
+# Matplotlib for publication-quality plots
+matplotlib>=3.8.0,<3.10.0
+
+# Seaborn for statistical visualizations
+seaborn>=0.13.0,<0.14.0
+
+# Plotly for interactive plots
+plotly>=5.18.0,<5.23.0
+
+# Altair for declarative visualizations
+altair>=5.2.0,<5.4.0
+
+# Bokeh for interactive visualizations
+bokeh>=3.3.0,<3.5.0
+
+# HoloViews for complex data visualization
+holoviews>=1.18.0,<1.20.0
+
+# Yellowbrick for ML visualizations
+yellowbrick>=1.5.0,<1.6.0
+
+# ----------------------------------------------------------------------------
+# Jupyter and Notebook Tools
+# ----------------------------------------------------------------------------
+# Jupyter for interactive research
+jupyter>=1.0.0,<1.1.0
+jupyterlab>=4.0.0,<4.3.0
+notebook>=7.0.0,<7.3.0
+
+# IPython for interactive computing
+ipython>=8.12.0,<8.27.0
+ipykernel>=6.27.0,<6.30.0
+
+# Jupyter widgets
+ipywidgets>=8.1.0,<8.2.0
+
+# Jupyter extensions
+jupyter-contrib-nbextensions>=0.7.0,<0.8.0
+jupyter-nbextensions-configurator>=0.6.0,<0.7.0
+
+# JupyterLab extensions
+jupyterlab-git>=0.50.0,<0.51.0
+jupyterlab-lsp>=5.0.0,<5.2.0
+
+# Papermill for parameterized notebooks
+papermill>=2.5.0,<2.7.0
+
+# NBConvert for notebook conversion
+nbconvert>=7.14.0,<7.17.0
+
+# NBFormat
+nbformat>=5.9.0,<5.11.0
+
+# ----------------------------------------------------------------------------
+# Statistical Analysis
+# ----------------------------------------------------------------------------
+# SciPy for scientific computing
+scipy>=1.10.0,<1.13.0
+
+# Statsmodels for statistical modeling
+statsmodels>=0.14.0,<0.15.0
+
+# Pingouin for statistical tests
+pingouin>=0.5.0,<0.6.0
+
+# Scikit-posthocs for post-hoc tests
+scikit-posthocs>=0.8.0,<0.10.0
+
+# ----------------------------------------------------------------------------
+# Significance Testing
+# ----------------------------------------------------------------------------
+# Permutation tests
+permute>=0.2.0,<0.3.0; python_version >= "3.9"
+
+# Bootstrap confidence intervals
+arch>=6.2.0,<7.1.0
+
+# Multiple comparison correction
+multipletests>=0.0.1,<0.1.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Ablation Studies
+# ----------------------------------------------------------------------------
+# Integrated Gradients for feature importance
+captum>=0.7.0,<0.8.0
+
+# SHAP for model explanations
+shap>=0.44.0,<0.46.0
+
+# LIME for local interpretability
+lime>=0.2.0,<0.3.0
+
+# Alibi for ML model inspection
+alibi>=0.9.0,<0.10.0
+
+# InterpretML
+interpret>=0.5.0,<0.7.0
+
+# ----------------------------------------------------------------------------
+# Model Comparison and Selection
+# ----------------------------------------------------------------------------
+# PyTorch Lightning for structured training
+pytorch-lightning>=2.1.0,<2.4.0
+
+# Lightning Fabric
+lightning-fabric>=2.1.0,<2.4.0
+
+# ----------------------------------------------------------------------------
+# Reproducibility Tools
+# ----------------------------------------------------------------------------
+# Reproducibility utilities
+reproducible>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# Seed management
+numpy-random>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Benchmarking
+# ----------------------------------------------------------------------------
+# Memory profiler
+memory-profiler>=0.61.0,<0.62.0
+
+# Line profiler
+line-profiler>=4.1.0,<4.2.0
+
+# Py-spy for profiling
+py-spy>=0.3.0,<0.4.0
+
+# Scalene profiler
+scalene>=1.5.0,<1.6.0; python_version >= "3.9"
+
+# Pytest-benchmark
+pytest-benchmark>=4.0.0,<4.1.0
+
+# ASV for performance tracking
+asv>=0.6.0,<0.7.0
+
+# ----------------------------------------------------------------------------
+# Result Aggregation and Reporting
+# ----------------------------------------------------------------------------
+# Pandas for data manipulation
+pandas>=2.0.0,<2.3.0
+
+# Tabulate for tables
+tabulate>=0.9.0,<0.10.0
+
+# PrettyTable
+prettytable>=3.9.0,<3.11.0
+
+# ----------------------------------------------------------------------------
+# Academic Paper Tools
+# ----------------------------------------------------------------------------
+# Pandoc wrapper
+pypandoc>=1.12,<1.14
+
+# Bibtex parser
+bibtexparser>=1.4.0,<2.1.0
+
+# Citation management
+pybtex>=0.24.0,<0.25.0
+
+# ----------------------------------------------------------------------------
+# LaTeX Integration
+# ----------------------------------------------------------------------------
+# Python-LaTeX
+pylatex>=1.4.0,<1.5.0
+
+# LaTeX table generation
+latex>=0.7.0,<0.8.0
+
+# ----------------------------------------------------------------------------
+# Data Analysis
+# ----------------------------------------------------------------------------
+# Pandas profiling
+pandas-profiling>=3.6.0,<3.7.0
+ydata-profiling>=4.6.0,<4.10.0
+
+# Sweetviz for EDA
+sweetviz>=2.3.0,<2.4.0
+
+# ----------------------------------------------------------------------------
+# Model Checkpointing
+# ----------------------------------------------------------------------------
+# HuggingFace Hub
+huggingface-hub>=0.20.0,<0.24.0
+
+# PyTorch checkpoint utilities
+torch-checkpoint>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Configuration Management for Experiments
+# ----------------------------------------------------------------------------
+# Hydra for configuration
+hydra-core>=1.3.0,<1.4.0
+hydra-colorlog>=1.2.0,<1.3.0
+hydra-optuna-sweeper>=1.2.0,<1.3.0
+
+# OmegaConf
+omegaconf>=2.3.0,<2.4.0
+
+# ----------------------------------------------------------------------------
+# Distributed Training for Research
+# ----------------------------------------------------------------------------
+# Horovod
+horovod>=0.28.0,<0.29.0; platform_system != "Windows"
+
+# DeepSpeed
+deepspeed>=0.12.0,<0.15.0; platform_system != "Windows"
+
+# FairScale
+fairscale>=0.4.13,<0.5.0
+
+# ----------------------------------------------------------------------------
+# Multi-Seed Experiments
+# ----------------------------------------------------------------------------
+# NumPy for seeding
+numpy>=1.24.0,<1.27.0
+
+# Random state management
+# Custom implementation in src/utils/reproducibility.py
+
+# ----------------------------------------------------------------------------
+# Cross-Validation
+# ----------------------------------------------------------------------------
+# Scikit-learn
+scikit-learn>=1.3.0,<1.5.0
+
+# Nested cross-validation
+# Custom implementation in src/data/validation/nested_cross_validator.py
+
+# ----------------------------------------------------------------------------
+# Error Analysis
+# ----------------------------------------------------------------------------
+# Error analysis toolkit
+error-analysis>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# Confusion matrix utilities
+# Custom implementation in src/evaluation/visualizations/confusion_matrix.py
+
+# ----------------------------------------------------------------------------
+# Model Serving for Research
+# ----------------------------------------------------------------------------
+# TorchServe
+torchserve>=0.9.0,<0.10.0
+torch-model-archiver>=0.9.0,<0.10.0
+
+# ----------------------------------------------------------------------------
+# AutoML for Baseline Comparison
+# ----------------------------------------------------------------------------
+# AutoGluon
+autogluon.tabular>=1.0.0,<1.2.0
+autogluon.text>=1.0.0,<1.2.0
+
+# AutoKeras
+autokeras>=1.1.0,<1.2.0; python_version >= "3.9"
+
+# FLAML
+flaml>=2.1.0,<2.3.0
+
+# ----------------------------------------------------------------------------
+# Neural Architecture Search
+# ----------------------------------------------------------------------------
+# NNI (Neural Network Intelligence)
+nni>=3.0,<3.1
+
+# ----------------------------------------------------------------------------
+# Meta-Learning
+# ----------------------------------------------------------------------------
+# Learn2Learn
+learn2learn>=0.2.0,<0.3.0
+
+# Higher for higher-order gradients
+higher>=0.2.1,<0.3.0
+
+# ----------------------------------------------------------------------------
+# Continual Learning
+# ----------------------------------------------------------------------------
+# Avalanche
+avalanche-lib>=0.4.0,<0.5.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Active Learning
+# ----------------------------------------------------------------------------
+# modAL
+modAL>=0.4.1,<0.5.0
+
+# ALiPy
+alipy>=1.3.0,<1.4.0; python_version >= "3.9"
+
+# ----------------------------------------------------------------------------
+# Model Calibration
+# ----------------------------------------------------------------------------
+# Netcal for calibration
+netcal>=1.3.5,<1.4.0
+
+# Uncertainty quantification
+uncertainty-toolbox>=0.1.1,<0.2.0
+
+# ----------------------------------------------------------------------------
+# Confidence Intervals
+# ----------------------------------------------------------------------------
+# Bootstrap confidence intervals
+# Via statsmodels or custom implementation
+
+# ----------------------------------------------------------------------------
+# P-value Correction
+# ----------------------------------------------------------------------------
+# Statsmodels for multiple testing
+statsmodels>=0.14.0,<0.15.0
+
+# ----------------------------------------------------------------------------
+# Effect Size Calculation
+# ----------------------------------------------------------------------------
+# Pingouin for effect sizes
+pingouin>=0.5.0,<0.6.0
+
+# ----------------------------------------------------------------------------
+# Plotting for Papers
+# ----------------------------------------------------------------------------
+# SciencePlots for publication-ready plots
+scienceplots>=2.1.0,<2.2.0
+
+# Tueplots for Tufte-style plots
+tueplots>=0.0.13,<0.1.0
+
+# ----------------------------------------------------------------------------
+# Color Palettes for Research
+# ----------------------------------------------------------------------------
+# Palettable
+palettable>=3.3.0,<3.4.0
+
+# Colorcet
+colorcet>=3.0.0,<3.2.0
+
+# ----------------------------------------------------------------------------
+# Graph Visualization for Analysis
+# ----------------------------------------------------------------------------
+# NetworkX
+networkx>=3.2.0,<3.4.0
+
+# PyVis
+pyvis>=0.3.0,<0.4.0
+
+# ----------------------------------------------------------------------------
+# Time Series Analysis (for training dynamics)
+# ----------------------------------------------------------------------------
+# Statsmodels time series
+statsmodels>=0.14.0,<0.15.0
+
+# ----------------------------------------------------------------------------
+# Clustering for Analysis
+# ----------------------------------------------------------------------------
+# Scikit-learn clustering
+scikit-learn>=1.3.0,<1.5.0
+
+# HDBSCAN
+hdbscan>=0.8.0,<0.9.0
+
+# ----------------------------------------------------------------------------
+# Dimensionality Reduction for Visualization
+# ----------------------------------------------------------------------------
+# UMAP
+umap-learn>=0.5.0,<0.6.0
+
+# PaCMAP
+pacmap>=0.7.0,<0.8.0
+
+# TriMap
+trimap>=1.1.0,<1.2.0
+
+# ----------------------------------------------------------------------------
+# Model Distillation Metrics
+# ----------------------------------------------------------------------------
+# Custom implementation in src/training/strategies/distillation/
+
+# ----------------------------------------------------------------------------
+# Ensemble Analysis
+# ----------------------------------------------------------------------------
+# Custom implementation in src/models/ensemble/diversity/
+
+# ----------------------------------------------------------------------------
+# LoRA/QLoRA Analysis
+# ----------------------------------------------------------------------------
+# Custom implementation in src/evaluation/analysis/lora_rank_analysis.py
+
+# ============================================================================
+# Installation Notes for Research Requirements
+# ============================================================================
+# 1. Install research dependencies:
+#    pip install -r requirements/research.txt
+#
+# 2. Setup experiment tracking:
+#    - Weights & Biases: wandb login
+#    - MLflow: mlflow ui (starts at http://localhost:5000)
+#    - TensorBoard: tensorboard --logdir outputs/logs/tensorboard
+#    - Neptune: export NEPTUNE_API_TOKEN=your_token
+#
+# 3. Launch Jupyter Lab for research:
+#    jupyter lab
+#
+# 4. Run hyperparameter optimization:
+#    python experiments/hyperparameter_search/optuna_search.py
+#    python experiments/hyperparameter_search/ray_tune_search.py
+#
+# 5. Run ablation studies:
+#    python experiments/ablation_studies/model_size_ablation.py
+#    python experiments/ablation_studies/lora_rank_ablation.py
+#
+# 6. Run SOTA experiments:
+#    python experiments/sota_experiments/phase1_xlarge_lora.py
+#    python experiments/sota_experiments/phase2_llm_qlora.py
+#    python experiments/sota_experiments/phase5_ultimate_sota.py
+#
+# 7. Generate experiment reports:
+#    python scripts/evaluation/generate_reports.py
+#    python scripts/evaluation/create_leaderboard.py
+#
+# 8. Statistical significance testing:
+#    python scripts/evaluation/statistical_analysis.py
+#
+# 9. Visualize training curves:
+#    python -c "from src.evaluation.visualizations import training_curves; training_curves.plot()"
+#
+# 10. Distributed hyperparameter search:
+#     ray start --head
+#     python experiments/hyperparameter_search/ray_tune_search.py
+#
+# Project-specific research workflows:
+# - Experiment runner: experiments/experiment_runner.py
+# - Experiment tagger: experiments/experiment_tagger.py
+# - Hyperparameter search:
+#   * experiments/hyperparameter_search/optuna_search.py
+#   * experiments/hyperparameter_search/lora_rank_search.py
+#   * experiments/hyperparameter_search/ensemble_weight_search.py
+#
+# - Ablation studies:
+#   * experiments/ablation_studies/lora_rank_ablation.py
+#   * experiments/ablation_studies/qlora_bits_ablation.py
+#   * experiments/ablation_studies/regularization_ablation.py
+#   * experiments/ablation_studies/prompt_ablation.py
+#   * experiments/ablation_studies/distillation_temperature_ablation.py
+#
+# - SOTA experiments:
+#   * experiments/sota_experiments/phase1_xlarge_lora.py
+#   * experiments/sota_experiments/phase2_llm_qlora.py
+#   * experiments/sota_experiments/phase3_llm_distillation.py
+#   * experiments/sota_experiments/phase4_ensemble_xlarge.py
+#   * experiments/sota_experiments/phase5_ultimate_sota.py
+#   * experiments/sota_experiments/compare_all_approaches.py
+#
+# - Benchmarks:
+#   * experiments/benchmarks/sota_comparison.py
+#   * experiments/benchmarks/overfitting_benchmark.py
+#   * experiments/benchmarks/parameter_efficiency_benchmark.py
+#
+# - Results tracking:
+#   * experiments/results/experiment_tracker.py
+#   * experiments/results/result_aggregator.py
+#   * experiments/results/leaderboard_generator.py
+#
+# Experiment tracking features:
+# - Auto-logging of hyperparameters
+# - Metric tracking (accuracy, F1, train/val gap)
+# - Model checkpointing
+# - Artifact storage (configs, predictions)
+# - Overfitting detection
+# - Parameter efficiency metrics
+# - Training time tracking
+# - GPU memory usage
+#
+# Hyperparameter search spaces:
+# - LoRA rank: [4, 8, 16, 32, 64, 128]
+# - LoRA alpha: [8, 16, 32, 64]
+# - QLoRA bits: [4, 8]
+# - Learning rate: [1e-5, 5e-5, 1e-4, 5e-4]
+# - Batch size: [4, 8, 16, 32]
+# - Warmup steps: [100, 500, 1000]
+# - Weight decay: [0.0, 0.01, 0.1]
+# - Dropout: [0.0, 0.1, 0.2, 0.3]
+#
+# Ablation study types:
+# - Component ablation: Remove/add components
+# - Data ablation: Vary dataset size
+# - Model size ablation: Base/Large/XLarge
+# - Feature ablation: Remove input features
+# - Regularization ablation: Vary regularization strength
+# - Ensemble size ablation: Number of models
+#
+# SOTA experiment phases:
+# - Phase 1: XLarge models with LoRA
+# - Phase 2: LLM models with QLoRA
+# - Phase 3: LLM to XLarge distillation
+# - Phase 4: Ensemble of XLarge models
+# - Phase 5: Ultimate SOTA (all techniques)
+# - Phase 6: Production-ready SOTA
+#
+# Reproducibility best practices:
+# - Set all random seeds
+# - Log exact package versions
+# - Save full configuration
+# - Track dataset versions
+# - Record hardware specifications
+# - Use deterministic algorithms
+# - Document preprocessing steps
+#
+# Statistical testing:
+# - t-test for mean comparison
+# - McNemar test for paired models
+# - Permutation test for significance
+# - Bootstrap for confidence intervals
+# - Bonferroni correction for multiple comparisons
+# - Effect size calculation (Cohen's d)
+#
+# For detailed research workflow:
+# - See docs/level_3_advanced/01_sota_pipeline.md
+# - See docs/level_3_advanced/03_research_workflow.md
+# - See SOTA_MODELS_GUIDE.md
+# - See experiments/README.md
+# ============================================================================
