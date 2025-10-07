@@ -1,0 +1,347 @@
+# ============================================================================
+# Locked ML Requirements for AG News Text Classification
+# ============================================================================
+# Project: AG News Text Classification (ag-news-text-classification)
+# Description: Locked versions of ml.txt for reproducible ML training
+# Author: Võ Hải Dũng
+# License: MIT
+# Generated: 2025-09-19
+# Python: 3.10.12
+# Platform: linux-x86_64
+# CUDA: 11.8
+# ============================================================================
+# This file contains exact versions for ml.txt including all dependencies
+# Use for reproducible training experiments and SOTA model development
+# ============================================================================
+
+# Base requirements (inherited from base.lock)
+-r base.lock
+
+# Parameter-Efficient Fine-Tuning
+peft==0.7.1
+bitsandbytes==0.41.3.post2
+adapters==0.2.1
+
+# Advanced Training
+apex==0.1
+fairscale==0.4.13
+deepspeed==0.12.6
+
+# NLP Libraries
+nltk==3.8.1
+sentencepiece==0.1.99
+sacremoses==0.1.1
+spacy==3.7.2
+langdetect==1.0.9
+fasttext==0.9.2
+
+# Text Augmentation
+nlpaug==1.1.11
+textattack==0.3.8
+textaugment==1.4.0
+
+# Classical ML
+xgboost==2.0.3
+lightgbm==4.1.0
+catboost==1.2.2
+thundersvm==0.3.4
+scikit-learn-extra==0.3.0
+imbalanced-learn==0.11.0
+
+# Ensemble Methods
+mlxtend==0.23.0
+scikit-optimize==0.9.0
+
+# Evaluation
+evaluate==0.4.1
+seqeval==1.2.2
+nlp-metrics==0.1.0
+interpret==0.5.1
+uncertainty-toolbox==0.1.1
+
+# Hyperparameter Optimization
+optuna==3.5.0
+optuna-integration==3.5.0
+ray[tune]==2.9.1
+wandb==0.16.2
+hyperopt==0.2.7
+bayes-opt==1.4.3
+
+# Regularization
+# Custom implementations
+
+# Adversarial Training
+adversarial-robustness-toolbox==1.16.0
+
+# Contrastive Learning
+pytorch-metric-learning==2.4.1
+
+# Meta Learning
+learn2learn==0.2.0
+higher==0.2.1
+
+# Model Compression
+torch-pruning==1.3.2
+neural-compressor==2.4.1
+onnx==1.15.0
+onnxruntime==1.16.3
+openvino==2023.2.0
+
+# Attention Visualization
+bertviz==1.4.0
+captum==0.7.0
+
+# Feature Extraction
+textstat==0.7.3
+gensim==4.3.2
+
+# Data Selection
+modAL==0.4.1
+pytorch-influence-functions==0.1.1
+
+# Prompt Engineering
+openprompt==1.0.1
+
+# Multi-Task Learning
+pytorch-adapt==0.2.1
+
+# Domain Adaptation
+adapt==0.4.2
+
+# Loss Functions
+focal-loss==0.0.7
+
+# Optimizers
+torch-optimizer==0.3.0
+
+# Learning Rate Schedulers
+# Built-in to PyTorch/transformers
+
+# Gradient Utilities
+gradient-accumulator==0.4.6
+
+# Memory Optimization
+memory-profiler==0.61.0
+gputil==1.4.0
+
+# Distributed Training
+horovod==0.28.1
+
+# Experiment Tracking
+mlflow==2.9.2
+tensorboard==2.15.1
+tensorboardX==2.6.2.2
+neptune==1.8.6
+comet-ml==3.37.0
+
+# Statistical Analysis
+scipy==1.11.4
+statsmodels==0.14.1
+arch==6.3.0
+
+# Visualization
+matplotlib==3.8.2
+seaborn==0.13.1
+plotly==5.18.0
+scikit-plot==0.3.7
+
+# Data Quality
+great-expectations==0.18.8
+pandas-profiling==3.6.6
+
+# Special Model Support
+# Via transformers
+
+# Robustness Testing
+netcal==1.3.5
+
+# Efficient Inference
+onnxruntime==1.16.3
+
+# Platform-Specific
+# Linux-specific packages included where applicable
+
+# Additional Auto-Installed Dependencies
+absl-py==2.0.0
+aiofiles==23.2.1
+aiohttp==3.9.1
+aiosignal==1.3.1
+altair==5.2.0
+antlr4-python3-runtime==4.9.3
+asttokens==2.4.1
+async-timeout==4.0.3
+bayesian-optimization==1.4.3
+blinker==1.7.0
+blosc2==2.5.1
+botocore==1.34.22
+cachecontrol==0.13.1
+catalogue==2.0.10
+cffi==1.16.0
+chardet==5.2.0
+cleantext==1.1.4
+cloudpickle==3.0.0
+colorlog==6.8.0
+confection==0.1.4
+contextlib2==21.6.0
+cymem==2.0.8
+docker-pycreds==0.4.0
+emoji==2.9.0
+frozenlist==1.4.1
+ftfy==6.1.3
+fsspec==2023.12.2
+gitdb==4.0.11
+googledrivedownloader==0.4.0
+greenlet==3.0.3
+huggingface-hub==0.20.3
+hydra-core==1.3.2
+immutables==0.20
+importlib-resources==6.1.1
+inflect==7.0.0
+Jinja2==3.1.3
+jsonpatch==1.33
+jsonpointer==2.4
+kiwisolver==1.4.5
+langcodes==3.3.0
+lemminflect==0.2.3
+Levenshtein==0.24.0
+lockfile==0.12.2
+Mako==1.3.0
+Markdown==3.5.2
+MarkupSafe==2.1.4
+more-itertools==10.2.0
+mpmath==1.3.0
+msgpack==1.0.7
+multidict==6.0.4
+murmurhash==1.0.10
+nptyping==2.5.0
+numexpr==2.8.8
+omegaconf==2.3.0
+opt-einsum==3.3.0
+ordered-set==4.1.0
+parameterized==0.9.0
+pathos==0.3.2
+pathy==0.11.0
+Pillow==10.2.0
+pkgutil-resolve-name==1.3.10
+plotly==5.18.0
+pox==0.3.4
+ppft==1.7.6.8
+preshed==3.0.9
+protobuf==4.25.2
+py-cpuinfo==9.0.0
+pyarrow==14.0.2
+pyarrow-hotfix==0.6
+pycparser==2.21
+pydantic==2.5.3
+pydantic-core==2.14.6
+Pygments==2.17.2
+pyparsing==3.1.1
+python-Levenshtein==0.24.0
+pytz==2023.4
+PyYAML==6.0.1
+rapidfuzz==3.6.1
+regex==2023.12.25
+retrying==1.3.4
+ruamel.yaml==0.18.5
+ruamel.yaml.clib==0.2.8
+safetensors==0.4.2
+scikit-learn==1.3.2
+setuptools==69.0.3
+sentry-sdk==1.39.2
+setproctitle==1.3.3
+shellingham==1.5.4
+smart-open==6.4.0
+smmap==5.0.1
+spacy-legacy==3.0.12
+spacy-loggers==1.0.5
+sqlparse==0.4.4
+srsly==2.4.8
+sympy==1.12
+tabulate==0.9.0
+tenacity==8.2.3
+tensorboard-data-server==0.7.2
+termcolor==2.4.0
+thinc==8.2.2
+threadpoolctl==3.2.0
+tokenizers==0.15.1
+toolz==0.12.0
+torch==2.1.2
+torchaudio==2.1.2
+torchvision==0.16.2
+tqdm==4.66.1
+transformers==4.37.2
+typer==0.9.0
+typing-extensions==4.9.0
+typing-inspect==0.9.0
+tzdata==2023.4
+unidecode==1.3.8
+urllib3==2.1.0
+wasabi==1.1.2
+wcwidth==0.2.13
+weasel==0.3.4
+Werkzeug==3.0.1
+wheel==0.42.0
+wrapt==1.16.0
+xxhash==3.4.1
+yarl==1.9.4
+zipp==3.17.0
+
+# ============================================================================
+# Installation Instructions
+# ============================================================================
+# Install exact ML versions:
+# pip install -r requirements/lock/ml.lock
+#
+# For GPU support (CUDA 11.8):
+# pip install torch==2.1.2 torchvision==0.16.2 --index-url https://download.pytorch.org/whl/cu118
+# pip install -r requirements/lock/ml.lock
+#
+# Verify installation:
+# python scripts/setup/verify_dependencies.py
+
+# ============================================================================
+# Hardware Requirements
+# ============================================================================
+# Minimum:
+# - CPU: 4 cores
+# - RAM: 16GB
+# - GPU: 8GB VRAM (optional)
+# - Disk: 30GB
+#
+# Recommended:
+# - CPU: 8+ cores
+# - RAM: 32GB
+# - GPU: 24GB VRAM (RTX 3090, A100)
+# - Disk: 100GB SSD
+
+# ============================================================================
+# Model Training Compatibility
+# ============================================================================
+# This lock file supports:
+# - DeBERTa models (base to xxlarge)
+# - RoBERTa models (base to large)
+# - ELECTRA models
+# - XLNet models
+# - T5 models
+# - LoRA fine-tuning (all models)
+# - Ensemble methods (voting, stacking, blending)
+# - Classical ML baselines
+# - Hyperparameter optimization
+# - Adversarial training
+# - Knowledge distillation
+
+# ============================================================================
+# Known Issues
+# ============================================================================
+# - apex: May require building from source on some systems
+# - deepspeed: Linux only, requires CUDA
+# - horovod: Requires MPI installation
+# - Some packages incompatible with Windows
+
+# ============================================================================
+# Last Updated
+# ============================================================================
+# Date: 2025-09-19
+# By: Võ Hải Dũng
+# Reason: Initial locked version for v1.0.0
+# ============================================================================
