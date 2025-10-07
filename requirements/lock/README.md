@@ -605,6 +605,6 @@ For lock file issues:
 
 This documentation and lock files are part of the AG News Text Classification project.
 
-Copyright (c) 2024 Võ Hải Dũng
+Copyright (c) 2025 Võ Hải Dũng
 
 Licensed under the MIT License. See LICENSE file for details.
