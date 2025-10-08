@@ -1,31 +1,523 @@
-# Project Configuration
-# =====================
-# Python project metadata
+# ============================================================================
+# Python Project Configuration for AG News Text Classification
+# ============================================================================
+# Project: AG News Text Classification (ag-news-text-classification)
+# Description: Modern Python packaging configuration using pyproject.toml
 # Author: Võ Hải Dũng
+# License: MIT
+# Python: >=3.8,<3.12
+# ============================================================================
+# This file provides:
+# - Build system configuration (PEP 517/518)
+# - Project metadata (PEP 621)
+# - Tool configurations (black, isort, pytest, mypy, etc.)
+# - Dependency specification
+# - Entry points definition
+#
+# Standards compliance:
+# - PEP 517: Build system specification
+# - PEP 518: Build system requirements
+# - PEP 621: Project metadata
+# - PEP 631: Dependency specification
+# - PEP 660: Editable installs
+#
+# For more information:
+# - https://packaging.python.org/en/latest/specifications/
+# - https://peps.python.org/pep-0621/
+# ============================================================================
 
+# ============================================================================
+# Build System Configuration (PEP 517/518)
+# ============================================================================
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = [
+    "setuptools>=61.0",
+    "setuptools-scm>=6.2",
+    "wheel>=0.37.0",
+]
 build-backend = "setuptools.build_meta"
 
+# ============================================================================
+# Project Metadata (PEP 621)
+# ============================================================================
 [project]
-name = "ag-news-classification"
+name = "ag-news-text-classification"
 version = "1.0.0"
-description = "AG News Text Classification Framework"
+description = "State-of-the-art text classification framework for AG News dataset with comprehensive overfitting prevention"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.8,<3.12"
 license = {text = "MIT"}
-authors = [{name = "Võ Hải Dũng"}]
-keywords = ["nlp", "text-classification", "ag-news"]
+authors = [
+    {name = "Võ Hải Dũng", email = "vohaidung.work@gmail.com"},
+]
+maintainers = [
+    {name = "Võ Hải Dũng", email = "vohaidung.work@gmail.com"},
+]
+keywords = [
+    "text-classification",
+    "natural-language-processing",
+    "nlp",
+    "transformers",
+    "deep-learning",
+    "machine-learning",
+    "pytorch",
+    "huggingface",
+    "ag-news",
+    "news-classification",
+    "lora",
+    "qlora",
+    "parameter-efficient-fine-tuning",
+    "peft",
+    "ensemble-learning",
+    "overfitting-prevention",
+    "llm",
+    "large-language-models",
+    "deberta",
+    "roberta",
+    "llama",
+    "mistral",
+    "academic-research",
+    "sota",
+    "state-of-the-art",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Environment :: GPU :: NVIDIA CUDA",
+    "Framework :: Jupyter",
+    "Typing :: Typed",
+]
+dependencies = [
+    "torch>=2.1.0,<2.3.0",
+    "transformers>=4.36.0,<4.41.0",
+    "tokenizers>=0.15.0,<0.16.0",
+    "datasets>=2.16.0,<2.20.0",
+    "accelerate>=0.25.0,<0.31.0",
+    "safetensors>=0.4.0,<0.5.0",
+    "numpy>=1.24.0,<1.27.0",
+    "pandas>=2.0.0,<2.3.0",
+    "scikit-learn>=1.3.0,<1.5.0",
+    "pyyaml>=6.0.1,<7.0.0",
+    "python-dotenv>=1.0.0,<1.1.0",
+    "pydantic>=2.5.0,<2.8.0",
+    "tqdm>=4.66.0,<4.67.0",
+    "requests>=2.31.0,<2.33.0",
+    "loguru>=0.7.0,<0.8.0",
+    "rich>=13.7.0,<13.8.0",
+    "click>=8.1.7,<8.2.0",
+    "omegaconf>=2.3.0,<2.4.0",
+    "typer[all]>=0.9.0,<0.13.0",
+]
 
+[project.optional-dependencies]
+ml = [
+    "peft>=0.7.0,<0.12.0",
+    "bitsandbytes>=0.41.0,<0.44.0",
+    "nltk>=3.8.0,<3.9.0",
+    "sentencepiece>=0.1.99,<0.3.0",
+    "xgboost>=2.0.0,<2.1.0",
+    "lightgbm>=4.1.0,<4.4.0",
+    "catboost>=1.2.0,<1.3.0",
+    "optuna>=3.5.0,<3.7.0",
+    "wandb>=0.16.0,<0.17.0",
+    "tensorboard>=2.15.0,<2.17.0",
+    "mlflow>=2.9.0,<2.15.0",
+]
+llm = [
+    "tiktoken>=0.5.0,<0.8.0",
+    "langchain>=0.1.0,<0.3.0",
+    "sentence-transformers>=2.2.0,<3.1.0",
+    "chromadb>=0.4.0,<0.5.0",
+    "faiss-cpu>=1.7.4,<1.9.0",
+]
+efficient = [
+    "peft>=0.7.0,<0.12.0",
+    "bitsandbytes>=0.41.0,<0.44.0",
+    "optimum>=1.16.0,<1.21.0",
+]
+data = [
+    "beautifulsoup4>=4.12.0,<4.13.0",
+    "lxml>=4.9.0,<5.3.0",
+    "pyarrow>=14.0.0,<16.2.0",
+    "h5py>=3.10.0,<3.12.0",
+    "openpyxl>=3.1.0,<3.2.0",
+]
+ui = [
+    "streamlit>=1.30.0,<1.37.0",
+    "gradio>=4.12.0,<4.38.0",
+    "plotly>=5.18.0,<5.23.0",
+    "matplotlib>=3.8.0,<3.10.0",
+    "seaborn>=0.13.0,<0.14.0",
+]
+dev = [
+    "pytest>=7.4.0,<8.3.0",
+    "pytest-cov>=4.1.0,<5.1.0",
+    "pytest-xdist>=3.5.0,<3.7.0",
+    "pytest-mock>=3.12.0,<3.15.0",
+    "black>=23.12.0,<24.5.0",
+    "isort>=5.13.0,<5.14.0",
+    "flake8>=7.0.0,<7.1.0",
+    "mypy>=1.8.0,<1.11.0",
+    "pylint>=3.0.3,<3.3.0",
+    "pre-commit>=3.6.0,<3.8.0",
+]
+docs = [
+    "sphinx>=7.2.0,<7.4.0",
+    "sphinx-rtd-theme>=2.0.0,<2.1.0",
+    "myst-parser>=2.0.0,<3.1.0",
+    "mkdocs>=1.5.0,<1.7.0",
+    "mkdocs-material>=9.5.0,<9.6.0",
+]
+research = [
+    "optuna>=3.5.0,<3.7.0",
+    "ray[tune]>=2.9.0,<2.10.0",
+    "jupyter>=1.0.0,<1.1.0",
+    "jupyterlab>=4.0.0,<4.3.0",
+    "ipython>=8.12.0,<8.27.0",
+]
+all = [
+    "peft>=0.7.0,<0.12.0",
+    "bitsandbytes>=0.41.0,<0.44.0",
+    "nltk>=3.8.0,<3.9.0",
+    "sentencepiece>=0.1.99,<0.3.0",
+    "xgboost>=2.0.0,<2.1.0",
+    "lightgbm>=4.1.0,<4.4.0",
+    "catboost>=1.2.0,<1.3.0",
+    "optuna>=3.5.0,<3.7.0",
+    "wandb>=0.16.0,<0.17.0",
+    "tensorboard>=2.15.0,<2.17.0",
+    "mlflow>=2.9.0,<2.15.0",
+    "tiktoken>=0.5.0,<0.8.0",
+    "langchain>=0.1.0,<0.3.0",
+    "streamlit>=1.30.0,<1.37.0",
+    "gradio>=4.12.0,<4.38.0",
+    "plotly>=5.18.0,<5.23.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/VoHaiDung/ag-news-text-classification"
+Documentation = "https://ag-news-text-classification.readthedocs.io/"
+Repository = "https://github.com/VoHaiDung/ag-news-text-classification"
+"Bug Reports" = "https://github.com/VoHaiDung/ag-news-text-classification/issues"
+Changelog = "https://github.com/VoHaiDung/ag-news-text-classification/blob/main/CHANGELOG.md"
+
+[project.scripts]
+ag-news = "src.cli:main"
+ag-news-health = "src.core.health.health_checker:main"
+ag-news-train = "src.cli:train_command"
+ag-news-evaluate = "src.cli:evaluate_command"
+ag-news-setup = "quickstart.setup_wizard:main"
+
+# ============================================================================
+# Setuptools Configuration
+# ============================================================================
+[tool.setuptools]
+zip-safe = false
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["tests*", "experiments*", "notebooks*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.yaml", "*.yml", "*.json", "*.txt", "*.md"]
+
+# ============================================================================
+# Black Configuration (Code Formatting)
+# ============================================================================
 [tool.black]
 line-length = 100
-target-version = ['py38', 'py39', 'py310']
+target-version = ['py38', 'py39', 'py310', 'py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.git
+  | \.venv
+  | venv
+  | build
+  | dist
+  | \.eggs
+  | \.mypy_cache
+  | \.pytest_cache
+  | \.tox
+  | __pycache__
+)/
+'''
 
+# ============================================================================
+# isort Configuration (Import Sorting)
+# ============================================================================
 [tool.isort]
 profile = "black"
 line_length = 100
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+skip_gitignore = true
+skip = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    ".eggs",
+    "*.egg-info",
+    ".venv",
+    "venv",
+]
+known_first_party = ["src"]
+known_third_party = [
+    "torch",
+    "transformers",
+    "datasets",
+    "numpy",
+    "pandas",
+    "sklearn",
+]
+sections = [
+    "FUTURE",
+    "STDLIB",
+    "THIRDPARTY",
+    "FIRSTPARTY",
+    "LOCALFOLDER",
+]
 
+# ============================================================================
+# Pytest Configuration (Testing)
+# ============================================================================
 [tool.pytest.ini_options]
+minversion = "7.0"
 testpaths = ["tests"]
-python_files = ["test_*.py"]
-addopts = "-v"
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--strict-config",
+    "--tb=short",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--cov-branch",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "e2e: End-to-end tests",
+    "slow: Slow tests",
+    "gpu: Tests requiring GPU",
+    "smoke: Smoke tests",
+    "regression: Regression tests",
+    "performance: Performance tests",
+]
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+# ============================================================================
+# Coverage Configuration
+# ============================================================================
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/site-packages/*",
+    "*/.venv/*",
+    "*/venv/*",
+]
+branch = true
+parallel = true
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "def __str__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "if typing.TYPE_CHECKING:",
+    "@abstractmethod",
+    "@abc.abstractmethod",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+# ============================================================================
+# Mypy Configuration (Type Checking)
+# ============================================================================
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_optional = true
+strict_equality = true
+disallow_untyped_defs = false
+disallow_any_generics = false
+disallow_subclassing_any = false
+ignore_missing_imports = true
+no_implicit_optional = true
+show_error_codes = true
+show_column_numbers = true
+pretty = true
+files = ["src", "tests"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "experiments.*"
+ignore_errors = true
+
+# ============================================================================
+# Pylint Configuration (Linting)
+# ============================================================================
+[tool.pylint.main]
+max-line-length = 100
+disable = [
+    "C0111",  # missing-docstring
+    "C0103",  # invalid-name
+    "R0913",  # too-many-arguments
+    "R0914",  # too-many-locals
+    "W0212",  # protected-access
+]
+good-names = ["i", "j", "k", "ex", "Run", "_", "id", "lr"]
+
+[tool.pylint.format]
+max-line-length = 100
+
+[tool.pylint.messages_control]
+disable = [
+    "missing-docstring",
+    "invalid-name",
+    "too-many-arguments",
+    "too-many-locals",
+]
+
+# ============================================================================
+# Ruff Configuration (Fast Linting)
+# ============================================================================
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long (handled by black)
+    "B008",  # do not perform function calls in argument defaults
+    "C901",  # too complex
+]
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    ".eggs",
+    "*.egg-info",
+    ".venv",
+    "venv",
+]
+
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["F401"]
+
+# ============================================================================
+# Bandit Configuration (Security)
+# ============================================================================
+[tool.bandit]
+exclude_dirs = ["tests", "experiments", "notebooks"]
+skips = ["B101", "B601"]
+
+# ============================================================================
+# Commitizen Configuration (Conventional Commits)
+# ============================================================================
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "1.0.0"
+tag_format = "v$version"
+version_files = [
+    "src/__version__.py",
+    "pyproject.toml:version",
+]
+update_changelog_on_bump = true
+annotated_tag = true
+
+# ============================================================================
+# Setuptools SCM Configuration (Version from Git)
+# ============================================================================
+[tool.setuptools_scm]
+write_to = "src/__version__.py"
+write_to_template = """
+# This file is auto-generated by setuptools-scm
+# Do not edit manually
+
+__version__ = "{version}"
+__version_tuple__ = {version_tuple}
+"""
+
+# ============================================================================
+# Additional Tool Configurations
+# ============================================================================
+
+[tool.interrogate]
+ignore-init-method = true
+ignore-init-module = false
+ignore-magic = false
+ignore-semiprivate = false
+ignore-private = false
+ignore-property-decorators = false
+ignore-module = false
+ignore-nested-functions = false
+ignore-nested-classes = true
+ignore-setters = false
+fail-under = 80
+exclude = ["setup.py", "docs", "build"]
+ignore-regex = ["^get$", "^mock_.*", ".*BaseClass.*"]
+verbose = 0
+quiet = false
+whitelist-regex = []
+color = true
+
+[tool.bandit.assert_used]
+skips = ["*/test_*.py", "*/tests/*"]
