@@ -191,6 +191,58 @@ def parse_requirements_file(filename: str, processed: Set[str] = None) -> List[s
     return requirements
 
 
+def find_all_packages() -> List[str]:
+    """
+    Find all valid Python packages in the project.
+    
+    This function explicitly discovers packages from multiple directories
+    to avoid issues with automatic package discovery.
+    
+    Returns:
+        List[str]: List of package names
+        
+    Notes:
+        The project structure includes packages in multiple locations:
+        - src/: Main application code
+        - configs/: Configuration management
+        - app/: Web application interfaces
+        - quickstart/: Setup and getting started utilities
+        - tools/: Development and automation tools
+    """
+    all_packages = []
+    
+    package_roots = [
+        ("src", "src"),
+        ("configs", "configs"),
+        ("app", "app"),
+        ("quickstart", "quickstart"),
+        ("tools", "tools"),
+        ("prompts", "prompts"),
+        ("monitoring", "monitoring"),
+        ("security", "security"),
+        ("plugins", "plugins"),
+        ("cache", "cache"),
+        ("templates", "templates"),
+    ]
+    
+    for pkg_name, pkg_dir in package_roots:
+        pkg_path = ROOT_DIR / pkg_dir
+        if pkg_path.exists() and pkg_path.is_dir():
+            found_packages = find_packages(
+                where=str(pkg_path),
+                exclude=["tests", "tests.*", "*.tests", "*.tests.*"]
+            )
+            
+            if found_packages:
+                all_packages.extend([f"{pkg_name}.{p}" for p in found_packages])
+            
+            init_file = pkg_path / "__init__.py"
+            if init_file.exists() and pkg_name not in all_packages:
+                all_packages.append(pkg_name)
+    
+    return all_packages
+
+
 def get_long_description() -> str:
     """
     Construct long description for PyPI from README.
@@ -239,7 +291,30 @@ def get_install_requires() -> List[str]:
     Returns:
         List[str]: Base package requirements
     """
-    return parse_requirements_file("base.txt")
+    base_reqs = parse_requirements_file("base.txt")
+    if not base_reqs:
+        return [
+            "torch>=2.1.0,<2.3.0",
+            "transformers>=4.36.0,<4.41.0",
+            "tokenizers>=0.15.0,<0.16.0",
+            "datasets>=2.16.0,<2.20.0",
+            "accelerate>=0.25.0,<0.31.0",
+            "safetensors>=0.4.0,<0.5.0",
+            "numpy>=1.24.0,<1.27.0",
+            "pandas>=2.0.0,<2.3.0",
+            "scikit-learn>=1.3.0,<1.5.0",
+            "pyyaml>=6.0.1,<7.0.0",
+            "python-dotenv>=1.0.0,<1.1.0",
+            "pydantic>=2.5.0,<2.8.0",
+            "tqdm>=4.66.0,<4.67.0",
+            "requests>=2.31.0,<2.33.0",
+            "loguru>=0.7.0,<0.8.0",
+            "rich>=13.7.0,<13.8.0",
+            "click>=8.1.7,<8.2.0",
+            "omegaconf>=2.3.0,<2.4.0",
+            "typer[all]>=0.9.0,<0.13.0",
+        ]
+    return base_reqs
 
 
 def get_extras_require() -> Dict[str, List[str]]:
@@ -271,40 +346,51 @@ def get_extras_require() -> Dict[str, List[str]]:
     Returns:
         Dict[str, List[str]]: Mapping of extra names to requirement lists
     """
-    extras = {
-        "ml": parse_requirements_file("ml.txt"),
-        "llm": parse_requirements_file("llm.txt"),
-        "efficient": parse_requirements_file("efficient.txt"),
-        "data": parse_requirements_file("data.txt"),
-        "ui": parse_requirements_file("ui.txt"),
-        "dev": parse_requirements_file("dev.txt"),
-        "docs": parse_requirements_file("docs.txt"),
-        "research": parse_requirements_file("research.txt"),
-        "robustness": parse_requirements_file("robustness.txt"),
-        "local_prod": parse_requirements_file("local_prod.txt"),
-        "local_monitoring": parse_requirements_file("local_monitoring.txt"),
-        "colab": parse_requirements_file("colab.txt"),
-        "kaggle": parse_requirements_file("kaggle.txt"),
-        "free_tier": parse_requirements_file("free_tier.txt"),
-        "minimal": parse_requirements_file("minimal.txt"),
-        "platform_minimal": parse_requirements_file("platform_minimal.txt"),
+    extras = {}
+    
+    extra_files = {
+        "ml": "ml.txt",
+        "llm": "llm.txt",
+        "efficient": "efficient.txt",
+        "data": "data.txt",
+        "ui": "ui.txt",
+        "dev": "dev.txt",
+        "docs": "docs.txt",
+        "research": "research.txt",
+        "robustness": "robustness.txt",
+        "local_prod": "local_prod.txt",
+        "local_monitoring": "local_monitoring.txt",
+        "colab": "colab.txt",
+        "kaggle": "kaggle.txt",
+        "free_tier": "free_tier.txt",
+        "minimal": "minimal.txt",
+        "platform_minimal": "platform_minimal.txt",
     }
     
-    extras["complete"] = list(set(
-        extras.get("ml", []) +
-        extras.get("llm", []) +
-        extras.get("efficient", []) +
-        extras.get("data", []) +
-        extras.get("ui", [])
-    ))
+    for extra_name, filename in extra_files.items():
+        reqs = parse_requirements_file(filename)
+        if reqs:
+            extras[extra_name] = reqs
     
-    extras["research_full"] = list(set(
-        extras.get("research", []) +
-        extras.get("robustness", []) +
-        extras.get("dev", [])
-    ))
+    if "all_local.txt" in os.listdir(ROOT_DIR / "requirements"):
+        all_reqs = parse_requirements_file("all_local.txt")
+        if all_reqs:
+            extras["all"] = all_reqs
     
-    extras["all"] = parse_requirements_file("all_local.txt")
+    if not extras.get("all"):
+        extras["complete"] = list(set(
+            extras.get("ml", []) +
+            extras.get("llm", []) +
+            extras.get("efficient", []) +
+            extras.get("data", []) +
+            extras.get("ui", [])
+        ))
+        
+        extras["research_full"] = list(set(
+            extras.get("research", []) +
+            extras.get("robustness", []) +
+            extras.get("dev", [])
+        ))
     
     return extras
 
@@ -597,6 +683,8 @@ class PostInstallCommand(install):
         print("="*70 + "\n")
 
 
+packages_list = find_all_packages()
+
 setup(
     name="ag-news-text-classification",
     version=get_version(),
@@ -622,8 +710,7 @@ setup(
     keywords=get_keywords(),
     classifiers=get_classifiers(),
     
-    packages=find_packages(where=".", exclude=["tests", "tests.*", "experiments", "experiments.*"]),
-    package_dir={"": "."},
+    packages=packages_list if packages_list else ["src"],
     package_data=get_package_data(),
     include_package_data=True,
     
