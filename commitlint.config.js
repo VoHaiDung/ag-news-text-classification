@@ -4,6 +4,7 @@
  * ============================================================================
  * Project: AG News Text Classification (ag-news-text-classification)
  * Description: Enforce conventional commit message format
+ * Email: vohaidung.work@gmail.com
  * Author: Võ Hải Dũng
  * License: MIT
  * ============================================================================
