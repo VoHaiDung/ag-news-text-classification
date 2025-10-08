@@ -1762,7 +1762,7 @@ If you use this project in your research or applications, please cite:
 @software{vo2025agnews,
   author = {Võ Hải Dũng},
   title = {AG News Text Classification: A Comprehensive Framework with Overfitting Prevention},
-  year = {2024},
+  year = {2025},
   url = {https://github.com/VoHaiDung/ag-news-text-classification},
   version = {1.0.0},
   license = {MIT}
