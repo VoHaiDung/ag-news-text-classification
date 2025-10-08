@@ -1773,7 +1773,7 @@ For specific components or techniques, please also cite the original research pa
 
 ## License
 
-This project is licensed under the MIT License. See the LICENSE file for complete details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for complete details.
 
 The MIT License grants permission to use, copy, modify, merge, publish, distribute, sublicense, and sell copies of the software, subject to including the copyright notice and permission notice in all copies or substantial portions.
 
