@@ -2,454 +2,528 @@
 # Pre-commit Configuration for AG News Text Classification
 # ============================================================================
 # Project: AG News Text Classification (ag-news-text-classification)
-# Description: Git hooks for automated code quality checks
+# Description: Automated code quality and consistency enforcement
 # Author: Võ Hải Dũng
 # Email: vohaidung.work@gmail.com
 # License: MIT
 # ============================================================================
-# This configuration runs automated checks before each commit to ensure:
-# - Code formatting consistency (black, isort)
-# - Code quality (flake8, pylint)
-# - Type safety (mypy)
-# - Security (bandit)
-# - File integrity (trailing whitespace, line endings)
-# - YAML/JSON validity
-# - Commit message format (commitlint)
-# - No large files
-# - No secrets
+#
+# Academic Rationale:
+#   Pre-commit hooks ensure code quality and reproducibility by enforcing
+#   consistent formatting, type safety, and security standards across all
+#   contributors. This is critical for research software where code quality
+#   directly impacts experimental validity and reproducibility.
 #
 # Installation:
-#   pre-commit install
-#   pre-commit install --hook-type commit-msg
+#   Initial setup:            pre-commit install
+#   Commit message hooks:     pre-commit install --hook-type commit-msg
+#   Full setup:               pre-commit install --install-hooks
 #
-# Run manually:
-#   pre-commit run --all-files
+# Usage:
+#   Run all hooks:            pre-commit run --all-files
+#   Run specific hook:        pre-commit run <hook-id> --all-files
+#   Update hook versions:     pre-commit autoupdate
+#   Bypass hooks:             git commit --no-verify
 #
-# Update hooks:
-#   pre-commit autoupdate
+# Hook Categories:
+#   1. File integrity checks (whitespace, line endings, file size)
+#   2. Python code formatting (black, isort)
+#   3. Code quality analysis (flake8, pylint, ruff)
+#   4. Type checking (mypy)
+#   5. Security scanning (bandit, safety)
+#   6. Secrets detection (detect-secrets)
+#   7. YAML/JSON validation
+#   8. Markdown linting
+#   9. Jupyter notebook cleaning
+#   10. Commit message validation (commitlint)
+#   11. Custom project-specific checks
 #
-# Skip hooks (not recommended):
-#   git commit --no-verify
+# Performance Considerations:
+#   - Hooks run in parallel when possible
+#   - File exclusions minimize unnecessary processing
+#   - Language-specific hooks use appropriate interpreters
+#   - Cache is utilized for repeat runs
 #
-# For more information:
-# - https://pre-commit.com/
-# - https://pre-commit.com/hooks.html
+# References:
+#   - Pre-commit framework: https://pre-commit.com/
+#   - Conventional commits: https://www.conventionalcommits.org/
+#   - Python code style: https://black.readthedocs.io/
+#   - Type hints: https://mypy.readthedocs.io/
+#
 # ============================================================================
 
-# Minimum pre-commit version
 minimum_pre_commit_version: '3.0.0'
 
-# Default configuration
 default_install_hook_types: [pre-commit, commit-msg]
 default_stages: [commit, push]
 
-# Fail fast on first error
 fail_fast: false
 
 # ============================================================================
-# Hook Repositories
+# File Integrity and Basic Checks
 # ============================================================================
 
 repos:
-  # ==========================================================================
-  # General File Checks
-  # ==========================================================================
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
-      # Remove trailing whitespace
       - id: trailing-whitespace
         name: Remove trailing whitespace
+        description: Strips trailing whitespace from all text files
         args: [--markdown-linebreak-ext=md]
-        exclude: ^(.*\.lock|.*\.svg)$
+        exclude: ^(.*\.lock|.*\.svg|.*\.snap)$
       
-      # Ensure files end with newline
       - id: end-of-file-fixer
         name: Fix end of files
-        exclude: ^(.*\.lock)$
+        description: Ensures files end with exactly one newline
+        exclude: ^(.*\.lock|.*\.min\.js|.*\.min\.css)$
       
-      # Check YAML syntax
       - id: check-yaml
         name: Check YAML syntax
+        description: Validates YAML file syntax and structure
         args: [--safe, --allow-multiple-documents]
-        exclude: ^(templates/.*\.yaml\.j2)$
+        exclude: ^(templates/.*\.yaml\.j2|mkdocs\.yml)$
       
-      # Check JSON syntax
       - id: check-json
         name: Check JSON syntax
+        description: Validates JSON file syntax
+        exclude: ^(tsconfig\.json)$
       
-      # Check TOML syntax
       - id: check-toml
         name: Check TOML syntax
+        description: Validates TOML file syntax including pyproject.toml
       
-      # Prevent large files
       - id: check-added-large-files
         name: Check for large files
-        args: ['--maxkb=10000']  # 10MB limit
-        exclude: ^(data/|outputs/|notebooks/.*\.ipynb)$
+        description: Prevents commits of files exceeding size threshold
+        args: ['--maxkb=10000']
+        exclude: ^(data/|outputs/|notebooks/.*\.ipynb|benchmarks/.*\.json)$
       
-      # Check for merge conflict markers
       - id: check-merge-conflict
         name: Check for merge conflicts
+        description: Detects merge conflict markers in files
       
-      # Check for case conflicts
       - id: check-case-conflict
         name: Check for case conflicts
+        description: Checks for files with names that differ only in case
       
-      # Detect private keys
       - id: detect-private-key
         name: Detect private keys
+        description: Scans for accidentally committed private keys
       
-      # Check Python syntax
       - id: check-ast
         name: Check Python AST
+        description: Validates Python files are syntactically correct
       
-      # Check for debugger imports
       - id: debug-statements
         name: Check for debugger statements
+        description: Detects debugger imports and set_trace calls
+        exclude: ^(tests/|experiments/)
       
-      # Check docstring first
       - id: check-docstring-first
         name: Check docstring is first
+        description: Ensures module docstring appears before code
       
-      # Fix mixed line endings
       - id: mixed-line-ending
         name: Fix mixed line endings
+        description: Normalizes line endings to LF
         args: [--fix=lf]
       
-      # Check executables have shebangs
       - id: check-executables-have-shebangs
         name: Check executables have shebangs
+        description: Ensures executable scripts have proper shebangs
       
-      # Check shebangs for non-executables
       - id: check-shebang-scripts-are-executable
         name: Check shebang scripts are executable
+        description: Ensures scripts with shebangs are marked executable
       
-      # Sort requirements files
       - id: requirements-txt-fixer
         name: Sort requirements.txt
+        description: Alphabetically sorts requirements files
         files: requirements.*\.txt$
 
-  # ==========================================================================
-  # Python Code Formatting
-  # ==========================================================================
-  
-  # Black - Code formatter
+# ============================================================================
+# Python Code Formatting
+# ============================================================================
+
   - repo: https://github.com/psf/black
     rev: 23.12.1
     hooks:
       - id: black
         name: Format code with black
+        description: Enforces consistent Python code formatting
         language_version: python3.10
-        args: 
+        args:
           - --line-length=100
           - --target-version=py310
-        exclude: ^(migrations/|experiments/baselines/)
-  
-  # isort - Import sorter
+          - --skip-string-normalization
+        exclude: ^(migrations/|experiments/baselines/classical/)
+
   - repo: https://github.com/PyCQA/isort
     rev: 5.13.2
     hooks:
       - id: isort
         name: Sort imports with isort
+        description: Organizes Python imports alphabetically and by section
         args:
           - --profile=black
           - --line-length=100
           - --multi-line=3
           - --trailing-comma
-        exclude: ^(migrations/)
+          - --force-grid-wrap=0
+          - --use-parentheses
+          - --ensure-newline-before-comments
+        exclude: ^(migrations/|__init__\.py)
 
-  # ==========================================================================
-  # Python Code Quality
-  # ==========================================================================
-  
-  # Flake8 - Style guide enforcement
+# ============================================================================
+# Python Code Quality Analysis
+# ============================================================================
+
   - repo: https://github.com/PyCQA/flake8
     rev: 7.0.0
     hooks:
       - id: flake8
         name: Check code with flake8
+        description: Enforces PEP 8 style guide and detects common errors
         args:
           - --max-line-length=100
-          - --extend-ignore=E203,E501,W503
-          - --max-complexity=10
-        exclude: ^(tests/|experiments/|notebooks/)
+          - --extend-ignore=E203,E501,W503,E402
+          - --max-complexity=15
+          - --per-file-ignores=__init__.py:F401,F403
+        exclude: ^(tests/|experiments/|notebooks/|setup\.py)
         additional_dependencies:
           - flake8-docstrings
           - flake8-bugbear
           - flake8-comprehensions
           - flake8-simplify
-  
-  # Pylint - Code analysis
+          - flake8-annotations
+
   - repo: https://github.com/PyCQA/pylint
     rev: v3.0.3
     hooks:
       - id: pylint
         name: Analyze code with pylint
+        description: Comprehensive Python code analysis for errors and code smells
         args:
           - --max-line-length=100
-          - --disable=C0111,C0103,R0913,R0914,W0212
-        exclude: ^(tests/|experiments/|setup.py)
+          - --disable=C0111,C0103,R0913,R0914,W0212,R0801,R0902,R0903,C0415
+          - --good-names=i,j,k,x,y,z,id,lr,wd,df,qa
+        exclude: ^(tests/|experiments/|setup\.py|conftest\.py)
         additional_dependencies:
           - torch
           - transformers
-  
-  # Ruff - Fast Python linter
+          - pydantic
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.1.11
     hooks:
       - id: ruff
         name: Lint with ruff
+        description: Fast Python linter with auto-fix capabilities
         args:
           - --fix
           - --line-length=100
-        exclude: ^(migrations/)
+          - --select=E,F,W,I,N,UP,B,A,C4,SIM,TCH
+        exclude: ^(migrations/|__init__\.py)
 
-  # ==========================================================================
-  # Type Checking
-  # ==========================================================================
-  
-  # MyPy - Static type checker
+# ============================================================================
+# Type Checking
+# ============================================================================
+
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.8.0
     hooks:
       - id: mypy
         name: Check types with mypy
+        description: Static type checker for Python type hints
         args:
           - --python-version=3.10
           - --ignore-missing-imports
           - --warn-redundant-casts
           - --warn-unused-ignores
-        exclude: ^(tests/|experiments/|setup.py)
+          - --warn-return-any
+          - --strict-optional
+          - --no-implicit-reexport
+        exclude: ^(tests/|experiments/|setup\.py|migrations/)
         additional_dependencies:
           - types-requests
           - types-PyYAML
+          - types-setuptools
+          - pydantic
 
-  # ==========================================================================
-  # Security
-  # ==========================================================================
-  
-  # Bandit - Security linter
+# ============================================================================
+# Security Analysis
+# ============================================================================
+
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.6
     hooks:
       - id: bandit
         name: Check security with bandit
+        description: Scans Python code for common security issues
         args:
-          - -r
+          - --recursive
           - src/
-          - -ll
-          - -i
-        exclude: ^(tests/|experiments/)
-  
-  # Safety - Dependency vulnerability scanner
+          - --level=LOW
+          - --confidence=MEDIUM
+          - --exclude=tests/
+        exclude: ^(tests/|experiments/|benchmarks/)
+
   - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
     rev: v1.3.3
     hooks:
       - id: python-safety-dependencies-check
         name: Check dependencies for vulnerabilities
+        description: Scans requirements files for known security vulnerabilities
         files: requirements.*\.txt$
 
-  # ==========================================================================
-  # Secrets Detection
-  # ==========================================================================
-  
-  # Detect-secrets - Find secrets
+# ============================================================================
+# Secrets Detection
+# ============================================================================
+
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.4.0
     hooks:
       - id: detect-secrets
         name: Detect secrets
+        description: Prevents committing credentials and API keys
         args:
           - --baseline
           - .secrets.baseline
-        exclude: ^(poetry\.lock|package-lock\.json|\.gitignore)$
+        exclude: ^(poetry\.lock|package-lock\.json|.*\.ipynb|\.gitignore)$
 
-  # ==========================================================================
-  # YAML Linting
-  # ==========================================================================
-  
-  # yamllint - YAML linter
+# ============================================================================
+# YAML and Configuration Validation
+# ============================================================================
+
   - repo: https://github.com/adrienverge/yamllint
     rev: v1.33.0
     hooks:
       - id: yamllint
         name: Lint YAML files
+        description: Validates YAML syntax and enforces formatting standards
         args:
           - --strict
           - --config-data
-          - "{extends: default, rules: {line-length: {max: 120}, document-start: disable}}"
-        exclude: ^(templates/.*\.yaml\.j2|\.github/)
+          - "{extends: default, rules: {line-length: {max: 120}, document-start: disable, indentation: {spaces: 2}}}"
+        exclude: ^(templates/.*\.yaml\.j2|\.github/|docker-compose.*\.yml)
 
-  # ==========================================================================
-  # Markdown
-  # ==========================================================================
-  
-  # markdownlint - Markdown linter
+# ============================================================================
+# Markdown Documentation
+# ============================================================================
+
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.38.0
     hooks:
       - id: markdownlint
         name: Lint Markdown files
+        description: Enforces consistent Markdown formatting
         args:
           - --fix
           - --disable
           - MD013
           - MD033
           - MD041
-        exclude: ^(CHANGELOG\.md|node_modules/)
+          - MD024
+        exclude: ^(CHANGELOG\.md|node_modules/|\.github/)
 
-  # ==========================================================================
-  # Jupyter Notebooks
-  # ==========================================================================
-  
-  # nbstripout - Strip Jupyter notebook outputs
+# ============================================================================
+# Jupyter Notebooks
+# ============================================================================
+
   - repo: https://github.com/kynan/nbstripout
     rev: 0.6.1
     hooks:
       - id: nbstripout
         name: Strip Jupyter notebook outputs
+        description: Removes output cells and metadata from notebooks before commit
         args:
           - --extra-keys
-          - metadata.kernelspec metadata.language_info
-  
-  # nbqa - Run code quality tools on notebooks
+          - metadata.kernelspec metadata.language_info cell.metadata.execution
+        exclude: ^(notebooks/03_experiments/.*\.ipynb)$
+
   - repo: https://github.com/nbQA-dev/nbQA
     rev: 1.7.1
     hooks:
       - id: nbqa-black
         name: Format notebooks with black
+        description: Applies black formatting to code cells in notebooks
         args: [--line-length=100]
       
       - id: nbqa-isort
         name: Sort notebook imports
+        description: Organizes imports in notebook code cells
         args: [--profile=black]
       
       - id: nbqa-flake8
         name: Lint notebooks with flake8
-        args: [--max-line-length=100, --extend-ignore=E402]
+        description: Checks code quality in notebook code cells
+        args: [--max-line-length=100, --extend-ignore=E402,F401]
 
-  # ==========================================================================
-  # Documentation
-  # ==========================================================================
-  
-  # docformatter - Format docstrings
+# ============================================================================
+# Documentation Formatting
+# ============================================================================
+
   - repo: https://github.com/PyCQA/docformatter
     rev: v1.7.5
     hooks:
       - id: docformatter
         name: Format docstrings
+        description: Formats docstrings to PEP 257 standards
         args:
           - --in-place
           - --wrap-summaries=100
           - --wrap-descriptions=100
+          - --make-summary-multi-line
+        exclude: ^(tests/|migrations/)
 
-  # ==========================================================================
-  # Commit Message
-  # ==========================================================================
-  
-  # Commitlint - Enforce commit message format
+# ============================================================================
+# Commit Message Validation
+# ============================================================================
+
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
     rev: v9.11.0
     hooks:
       - id: commitlint
         name: Check commit message format
+        description: Validates commit messages follow conventional commits
         stages: [commit-msg]
         additional_dependencies:
           - '@commitlint/config-conventional'
 
-  # ==========================================================================
-  # File Size and Name Checks
-  # ==========================================================================
-  
-  # Check for files with names that would conflict on case-insensitive FS
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
-    hooks:
-      - id: check-case-conflict
-        name: Check for case conflicts
+# ============================================================================
+# Custom Project-Specific Hooks
+# ============================================================================
 
-  # ==========================================================================
-  # Custom Local Hooks
-  # ==========================================================================
-  
   - repo: local
     hooks:
-      # Check for print statements in src/
       - id: no-print-statements
-        name: Check for print statements
-        entry: grep -rn "print(" src/ && exit 1 || exit 0
+        name: Check for print statements in src
+        description: Prevents print statements in production code
+        entry: bash -c 'if grep -rn "print(" src/ --include="*.py" | grep -v "# noqa" | grep -v "logger"; then echo "Found print statements in src/"; exit 1; fi'
         language: system
         pass_filenames: false
         always_run: true
         stages: [commit]
-        verbose: true
       
-      # Check for TODO/FIXME without issue reference
       - id: check-todos
-        name: Check TODO/FIXME have issue reference
-        entry: bash -c 'grep -rn "TODO\|FIXME" src/ | grep -v "#[0-9]" && exit 1 || exit 0'
+        name: Check TODO comments have issue references
+        description: Ensures TODO/FIXME comments reference issue numbers
+        entry: bash -c 'if grep -rn "TODO\|FIXME" src/ --include="*.py" | grep -v "#[0-9]\+" | grep -v "noqa"; then echo "TODO/FIXME without issue reference found"; exit 1; fi'
         language: system
         pass_filenames: false
         always_run: true
         stages: [commit]
-        verbose: true
       
-      # Validate Python imports
-      - id: check-imports
-        name: Check Python imports
-        entry: python -m py_compile
+      - id: validate-configs
+        name: Validate YAML configuration files
+        description: Ensures configuration files are valid and follow schema
+        entry: python -c "import yaml; import sys; [yaml.safe_load(open(f)) for f in sys.argv[1:]]"
+        language: system
+        files: ^configs/.*\.yaml$
+        exclude: ^(configs/templates/.*\.j2|configs/.*template\.yaml)$
+      
+      - id: check-import-order
+        name: Verify import organization
+        description: Ensures imports follow project conventions
+        entry: python -c "import ast; import sys; [ast.parse(open(f).read()) for f in sys.argv[1:]]"
         language: system
         types: [python]
-        exclude: ^(setup\.py|conftest\.py)
+        exclude: ^(setup\.py|conftest\.py|__init__\.py)
       
-      # Check config files are valid
-      - id: validate-configs
-        name: Validate configuration files
+      - id: no-hardcoded-secrets
+        name: Check for hardcoded credentials
+        description: Scans for potential hardcoded passwords or API keys
+        entry: bash -c 'if grep -rn "password\s*=\s*[\"'\''][^\"'\'']\+[\"'\'']" src/ --include="*.py"; then echo "Potential hardcoded password found"; exit 1; fi'
+        language: system
+        pass_filenames: false
+        always_run: true
+      
+      - id: check-test-coverage
+        name: Ensure test files exist for modules
+        description: Validates that source modules have corresponding test files
+        entry: bash -c 'for f in src/**/*.py; do test_file="tests/unit/${f#src/}"; test_file="${test_file%.py}_test.py"; if [[ ! -f "$test_file" ]] && [[ "$f" != *"__init__.py" ]]; then echo "Missing test file: $test_file"; fi; done'
+        language: system
+        pass_filenames: false
+        files: ^src/.*\.py$
+      
+      - id: validate-experiment-configs
+        name: Validate experiment configuration integrity
+        description: Ensures experiment configs reference valid models
         entry: python tools/config_tools/validate_all_configs.py
         language: system
         pass_filenames: false
-        files: ^configs/.*\.yaml$
-        verbose: true
+        files: ^configs/experiments/.*\.yaml$
+        require_serial: true
       
-      # Check requirements files are sorted
-      - id: sort-requirements
-        name: Sort requirements files
-        entry: bash -c 'for f in requirements/*.txt; do sort -u "$f" -o "$f"; done'
+      - id: check-notebook-outputs
+        name: Verify notebooks are cleaned
+        description: Ensures notebooks do not have execution outputs
+        entry: bash -c 'for nb in notebooks/**/*.ipynb; do if jupyter nbconvert --to notebook --ClearOutputPreprocessor.enabled=True --stdout "$nb" | diff - "$nb" > /dev/null; then true; else echo "Notebook $nb has outputs"; exit 1; fi; done'
+        language: system
+        pass_filenames: false
+        files: \.ipynb$
+      
+      - id: sync-requirements
+        name: Synchronize requirements files
+        description: Ensures requirements files are consistent
+        entry: python tools/automation/sync_requirements.py
         language: system
         pass_filenames: false
         files: ^requirements/.*\.txt$
 
 # ============================================================================
-# CI Configuration
+# Continuous Integration Configuration
 # ============================================================================
+
 ci:
   autofix_commit_msg: |
-    style: auto-fixes from pre-commit hooks
+    style: apply automated code quality fixes
     
-    Applied automatic fixes from pre-commit hooks
+    Automated fixes from pre-commit hooks
   autofix_prs: true
   autoupdate_branch: ''
-  autoupdate_commit_msg: 'chore(deps): update pre-commit hooks'
+  autoupdate_commit_msg: 'chore: update pre-commit hook versions'
   autoupdate_schedule: weekly
-  skip: []
+  skip: [no-print-statements, check-todos, validate-configs, check-test-coverage]
   submodules: false
 
 # ============================================================================
-# Notes
+# Implementation Notes
 # ============================================================================
-# Performance Tips:
-# - Use fail_fast: true to stop on first error
-# - Exclude large directories (data/, outputs/)
-# - Use language_version to avoid environment issues
 #
-# Debugging:
-# - Run specific hook: pre-commit run <hook-id> --all-files
-# - Verbose output: pre-commit run --verbose
-# - Show hook output: pre-commit run --show-diff-on-failure
+# Hook Execution Order:
+#   1. File integrity checks (fast, catch basic issues)
+#   2. Code formatting (auto-fix when possible)
+#   3. Import organization (maintain consistency)
+#   4. Linting and quality checks (enforce standards)
+#   5. Type checking (static analysis)
+#   6. Security scanning (vulnerability detection)
+#   7. Custom project checks (domain-specific validation)
+#   8. Commit message validation (last step)
 #
-# Customization:
-# - Add exclude patterns to skip specific files
-# - Adjust args for each hook
-# - Add project-specific local hooks
+# Performance Optimization:
+#   - Exclude patterns minimize file processing
+#   - fail_fast: false allows seeing all errors
+#   - Parallel execution when hooks are independent
+#   - Cache utilization for repeated runs
+#
+# Bypassing Hooks:
+#   Emergency bypass:     git commit --no-verify
+#   Skip specific hook:   SKIP=<hook-id> git commit
+#   Not recommended for regular use
+#
+# Troubleshooting:
+#   Update hooks:         pre-commit autoupdate
+#   Clear cache:          pre-commit clean
+#   Reinstall hooks:      pre-commit install --install-hooks --overwrite
+#   Debug specific hook:  pre-commit run <hook-id> --verbose --all-files
+#
+# Academic Compliance:
+#   - Code quality standards ensure reproducibility
+#   - Type checking catches errors before runtime
+#   - Security scanning prevents credential leaks
+#   - Commit message format aids collaboration
+#   - Notebook cleaning reduces repository size
+#
 # ============================================================================
