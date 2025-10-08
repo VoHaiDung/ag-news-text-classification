@@ -1,4 +1,4 @@
-# Lock Files for AG News Text Classification
+# AG News Text Classification - Lock Files
 
 ## Overview
 
