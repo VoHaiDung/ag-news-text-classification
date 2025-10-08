@@ -4,6 +4,7 @@
 # Project: AG News Text Classification (ag-news-text-classification)
 # Description: Git hooks for automated code quality checks
 # Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
 # License: MIT
 # ============================================================================
 # This configuration runs automated checks before each commit to ensure:
