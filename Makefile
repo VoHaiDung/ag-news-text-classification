@@ -1,531 +1,604 @@
 # ============================================================================
-# Makefile for AG News Text Classification
+# Package Manifest for AG News Text Classification
 # ============================================================================
 # Project: AG News Text Classification (ag-news-text-classification)
-# Description: Build automation and development workflow management
+# Description: Specification of files to include in source distribution
 # Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
 # License: MIT
 # ============================================================================
-# This Makefile provides comprehensive automation for:
-# - Development environment setup
-# - Dependency installation
-# - Data preparation and augmentation
-# - Model training and evaluation
-# - Experiment tracking and benchmarking
-# - Testing and quality assurance
-# - Documentation generation
-# - Deployment and serving
-# - Monitoring and profiling
+# This file specifies which files should be included in the source distribution
+# when the package is built with setuptools.
 #
-# Quick Start:
-#   make help           Show all available targets
-#   make setup          Complete development setup
-#   make train          Train default model
-#   make test           Run all tests
-#   make docs           Generate documentation
+# Syntax:
+#   include <pattern>           - Include files matching pattern
+#   recursive-include <dir> <pattern> - Include recursively
+#   exclude <pattern>           - Exclude files matching pattern
+#   global-exclude <pattern>    - Exclude globally
+#   graft <dir>                 - Include everything in directory
+#   prune <dir>                 - Exclude everything in directory
 #
-# Common Workflows:
-#   Development:  make dev
-#   Research:     make research
-#   Production:   make prod
-#   Quick Demo:   make quickstart
+# For more information:
+# - https://packaging.python.org/en/latest/guides/using-manifest-in/
+# - https://setuptools.pypa.io/en/latest/userguide/miscellaneous.html
 # ============================================================================
 
-.PHONY: help
-.DEFAULT_GOAL := help
-
 # ============================================================================
-# Configuration Variables
+# Project Documentation
 # ============================================================================
 
-# Project metadata
-PROJECT_NAME := ag-news-text-classification
-PROJECT_SLUG := ag_news_text_classification
-VERSION := $(shell python -c "exec(open('src/__version__.py').read()); print(__version__)" 2>/dev/null || echo "1.0.0")
-AUTHOR := Võ Hải Dũng
-EMAIL := vohaidung.work@gmail.com
+# Root documentation files
+include README.md
+include LICENSE
+include CHANGELOG.md
+include CITATION.cff
+include AUTHORS.md
+include CONTRIBUTING.md
 
-# Python configuration
-PYTHON_VERSION := 3.10
-PYTHON := python$(PYTHON_VERSION)
-PIP := $(PYTHON) -m pip
-PYTEST := $(PYTHON) -m pytest
-VENV := venv
-VENV_BIN := $(VENV)/bin
-VENV_PYTHON := $(VENV_BIN)/python
-VENV_PIP := $(VENV_BIN)/pip
-
-# Directory structure
-ROOT_DIR := $(shell pwd)
-SRC_DIR := $(ROOT_DIR)/src
-TEST_DIR := $(ROOT_DIR)/tests
-DATA_DIR := $(ROOT_DIR)/data
-CONFIGS_DIR := $(ROOT_DIR)/configs
-OUTPUTS_DIR := $(ROOT_DIR)/outputs
-DOCS_DIR := $(ROOT_DIR)/docs
-SCRIPTS_DIR := $(ROOT_DIR)/scripts
-NOTEBOOKS_DIR := $(ROOT_DIR)/notebooks
-CACHE_DIR := $(ROOT_DIR)/.cache
-BUILD_DIR := $(ROOT_DIR)/build
-DIST_DIR := $(ROOT_DIR)/dist
-
-# Output directories
-MODELS_DIR := $(OUTPUTS_DIR)/models
-RESULTS_DIR := $(OUTPUTS_DIR)/results
-LOGS_DIR := $(OUTPUTS_DIR)/logs
-REPORTS_DIR := $(OUTPUTS_DIR)/reports
-
-# Data directories
-RAW_DATA_DIR := $(DATA_DIR)/raw
-PROCESSED_DATA_DIR := $(DATA_DIR)/processed
-AUGMENTED_DATA_DIR := $(DATA_DIR)/augmented
-
-# Tool configurations
-BLACK := $(VENV_BIN)/black
-ISORT := $(VENV_BIN)/isort
-FLAKE8 := $(VENV_BIN)/flake8
-MYPY := $(VENV_BIN)/mypy
-PYLINT := $(VENV_BIN)/pylint
-BANDIT := $(VENV_BIN)/bandit
-
-# Docker configuration
-DOCKER := docker
-DOCKER_COMPOSE := docker-compose
-DOCKER_IMAGE := $(PROJECT_NAME):$(VERSION)
-DOCKER_REGISTRY := docker.io/$(AUTHOR)
-
-# CUDA configuration
-CUDA_VERSION := 11.8
-GPU_COUNT := $(shell nvidia-smi -L 2>/dev/null | wc -l)
-
-# Timestamp
-TIMESTAMP := $(shell date +%Y%m%d_%H%M%S)
+# Specialized guides
+include ARCHITECTURE.md
+include PERFORMANCE.md
+include SECURITY.md
+include TROUBLESHOOTING.md
+include SOTA_MODELS_GUIDE.md
+include OVERFITTING_PREVENTION.md
+include ROADMAP.md
+include FREE_DEPLOYMENT_GUIDE.md
+include IDE_SETUP_GUIDE.md
+include LOCAL_MONITORING_GUIDE.md
+include QUICK_START.md
+include HEALTH_CHECK.md
 
 # ============================================================================
-# Color Output
+# Build and Package Configuration
 # ============================================================================
 
-# ANSI color codes
-RED := \033[0;31m
-GREEN := \033[0;32m
-YELLOW := \033[0;33m
-BLUE := \033[0;34m
-MAGENTA := \033[0;35m
-CYAN := \033[0;36m
-RESET := \033[0m
+# Setup files
+include setup.py
+include setup.cfg
+include MANIFEST.in
+include pyproject.toml
+include poetry.lock
+
+# Makefile for automation
+include Makefile
+
+# Installation scripts
+include install.sh
 
 # ============================================================================
-# Helper Functions
+# Environment Configuration
 # ============================================================================
 
-# Print colored messages
-define log
-	@echo "$(CYAN)[$(shell date +%H:%M:%S)]$(RESET) $(1)"
-endef
+# Environment templates
+include .env.example
+include .env.test
+include .env.local
 
-define success
-	@echo "$(GREEN)SUCCESS:$(RESET) $(1)"
-endef
+# Git configuration
+include .gitignore
+include .gitattributes
+include .dockerignore
 
-define warning
-	@echo "$(YELLOW)WARNING:$(RESET) $(1)"
-endef
-
-define error
-	@echo "$(RED)ERROR:$(RESET) $(1)"
-endef
+# Editor configuration
+include .editorconfig
 
 # ============================================================================
-# Help Target
+# Code Quality Configuration
 # ============================================================================
 
-help:
-	@echo ""
-	@echo "$(MAGENTA)AG News Text Classification Framework$(RESET)"
-	@echo "$(CYAN)Version:$(RESET) $(VERSION)"
-	@echo "$(CYAN)Author:$(RESET) $(AUTHOR)"
-	@echo "$(CYAN)Email:$(RESET) $(EMAIL)"
-	@echo ""
-	@echo "$(YELLOW)Usage:$(RESET)"
-	@echo "  make [target]"
-	@echo ""
-	@echo "$(YELLOW)Available targets:$(RESET)"
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "  $(CYAN)%-25s$(RESET) %s\n", $$1, $$2}' | \
-		sort
-	@echo ""
+# Pre-commit hooks
+include .pre-commit-config.yaml
+
+# Linting configuration
+include .flake8
+include .pylintrc
+
+# Commit message linting
+include commitlint.config.js
 
 # ============================================================================
-# Setup and Installation
+# Requirements Files
 # ============================================================================
 
-.PHONY: setup
-setup: setup-dirs setup-venv install-dev setup-git download-data ## Complete development setup
-	$(call success,"Development environment ready!")
-
-.PHONY: setup-dirs
-setup-dirs: ## Create project directory structure
-	$(call log,"Creating directory structure...")
-	@mkdir -p $(DATA_DIR)/{raw,processed,augmented,external,cache}
-	@mkdir -p $(OUTPUTS_DIR)/{models,results,logs,reports}
-	@mkdir -p $(CACHE_DIR)
-	@mkdir -p $(BUILD_DIR)
-	@mkdir -p $(DIST_DIR)
-	$(call success,"Directories created")
-
-.PHONY: setup-venv
-setup-venv: ## Create Python virtual environment
-	$(call log,"Creating virtual environment...")
-	@$(PYTHON) -m venv $(VENV)
-	@$(VENV_PIP) install --upgrade pip setuptools wheel
-	$(call success,"Virtual environment created at $(VENV)")
-
-.PHONY: setup-git
-setup-git: ## Setup Git hooks
-	$(call log,"Installing Git hooks...")
-	@$(VENV_BIN)/pre-commit install 2>/dev/null || $(call warning,"pre-commit not installed")
-	@$(VENV_BIN)/pre-commit install --hook-type commit-msg 2>/dev/null || true
-	$(call success,"Git hooks installed")
-
-.PHONY: install
-install: ## Install package in editable mode
-	$(call log,"Installing package...")
-	@$(VENV_PIP) install -e .
-	$(call success,"Package installed")
-
-.PHONY: install-dev
-install-dev: ## Install development dependencies
-	$(call log,"Installing development dependencies...")
-	@$(VENV_PIP) install -e ".[dev]"
-	$(call success,"Development dependencies installed")
-
-.PHONY: install-ml
-install-ml: ## Install ML dependencies
-	$(call log,"Installing ML dependencies...")
-	@$(VENV_PIP) install -e ".[ml]"
-	$(call success,"ML dependencies installed")
-
-.PHONY: install-all
-install-all: ## Install all dependencies
-	$(call log,"Installing all dependencies...")
-	@$(VENV_PIP) install -e ".[all]"
-	$(call success,"All dependencies installed")
+# Include all requirements files
+include requirements/*.txt
+include requirements/lock/*.lock
+include requirements/lock/README.md
 
 # ============================================================================
-# Data Management
+# Configuration Files
 # ============================================================================
 
-.PHONY: download-data
-download-data: ## Download AG News dataset
-	$(call log,"Downloading AG News dataset...")
-	@$(VENV_PYTHON) scripts/setup/download_all_data.py
-	$(call success,"Data downloaded")
+# All configuration files
+recursive-include configs *.yaml
+recursive-include configs *.yml
+recursive-include configs *.json
+recursive-include configs *.py
+recursive-include configs *.toml
+recursive-include configs *.j2
 
-.PHONY: prepare-data
-prepare-data: download-data ## Prepare and preprocess data
-	$(call log,"Preparing data...")
-	@$(VENV_PYTHON) scripts/data_preparation/prepare_ag_news.py
-	$(call success,"Data prepared")
-
-.PHONY: augment-data
-augment-data: prepare-data ## Generate augmented data
-	$(call log,"Generating augmented data...")
-	@$(VENV_PYTHON) scripts/data_preparation/create_augmented_data.py
-	$(call success,"Data augmented")
-
-.PHONY: validate-data
-validate-data: ## Validate data integrity
-	$(call log,"Validating data...")
-	@$(VENV_PYTHON) scripts/data_preparation/verify_data_splits.py
-	$(call success,"Data validated")
+# Include README files in configs
+recursive-include configs README.md
+recursive-include configs SELECTION_GUIDE.md
+recursive-include configs ENSEMBLE_SELECTION_GUIDE.yaml
 
 # ============================================================================
-# Training
+# Source Code
 # ============================================================================
 
-.PHONY: train
-train: prepare-data ## Train default model (DeBERTa-v3-large)
-	$(call log,"Training DeBERTa-v3-large model...")
-	@$(VENV_PYTHON) scripts/training/train_single_model.py \
-		--config configs/models/recommended/tier_1_sota/deberta_v3_large_lora.yaml
-	$(call success,"Training completed")
+# Python source files
+recursive-include src *.py
+recursive-include src README.md
 
-.PHONY: train-all
-train-all: prepare-data ## Train all models
-	$(call log,"Training all models...")
-	@bash scripts/training/train_all_models.sh
-	$(call success,"All models trained")
+# Include package data
+recursive-include src *.yaml
+recursive-include src *.json
+recursive-include src *.txt
 
-.PHONY: train-ensemble
-train-ensemble: train-all ## Train ensemble models
-	$(call log,"Training ensemble...")
-	@$(VENV_PYTHON) scripts/training/ensemble/train_xlarge_ensemble.py
-	$(call success,"Ensemble trained")
-
-.PHONY: train-lora
-train-lora: prepare-data ## Train with LoRA
-	$(call log,"Training with LoRA...")
-	@$(VENV_PYTHON) scripts/training/single_model/train_xlarge_lora.py
-	$(call success,"LoRA training completed")
-
-.PHONY: train-qlora
-train-qlora: prepare-data ## Train with QLoRA
-	$(call log,"Training with QLoRA...")
-	@$(VENV_PYTHON) scripts/training/single_model/train_llm_qlora.py
-	$(call success,"QLoRA training completed")
+# Version file
+include src/__version__.py
 
 # ============================================================================
-# Evaluation
+# Scripts
 # ============================================================================
 
-.PHONY: evaluate
-evaluate: ## Evaluate trained models
-	$(call log,"Evaluating models...")
-	@$(VENV_PYTHON) scripts/evaluation/evaluate_all_models.py
-	$(call success,"Evaluation completed")
+# All scripts
+recursive-include scripts *.py
+recursive-include scripts *.sh
+recursive-include scripts *.bash
+recursive-include scripts README.md
 
-.PHONY: evaluate-final
-evaluate-final: ## Final evaluation with guards
-	$(call log,"Running final evaluation...")
-	@$(VENV_PYTHON) scripts/evaluation/evaluate_with_guard.py
-	$(call success,"Final evaluation completed")
-
-.PHONY: benchmark
-benchmark: ## Run benchmarks
-	$(call log,"Running benchmarks...")
-	@$(VENV_PYTHON) experiments/benchmarks/accuracy_benchmark.py
-	@$(VENV_PYTHON) experiments/benchmarks/speed_benchmark.py
-	$(call success,"Benchmarks completed")
-
-.PHONY: report
-report: evaluate ## Generate evaluation reports
-	$(call log,"Generating reports...")
-	@$(VENV_PYTHON) scripts/evaluation/generate_reports.py
-	$(call success,"Reports generated in $(REPORTS_DIR)")
+# Make scripts executable
+graft scripts/setup
+graft scripts/data_preparation
+graft scripts/training
+graft scripts/evaluation
+graft scripts/optimization
+graft scripts/deployment
+graft scripts/overfitting_prevention
+graft scripts/ide
+graft scripts/local
+graft scripts/ci
 
 # ============================================================================
-# Experiments
+# Prompts
 # ============================================================================
 
-.PHONY: experiment
-experiment: ## Run SOTA experiments
-	$(call log,"Running SOTA experiments...")
-	@$(VENV_PYTHON) experiments/sota_experiments/phase5_ultimate_sota.py
-	$(call success,"Experiments completed")
-
-.PHONY: ablation
-ablation: ## Run ablation studies
-	$(call log,"Running ablation studies...")
-	@$(VENV_PYTHON) experiments/ablation_studies/component_ablation.py
-	$(call success,"Ablation studies completed")
-
-.PHONY: hyperopt
-hyperopt: ## Hyperparameter optimization
-	$(call log,"Running hyperparameter optimization...")
-	@$(VENV_PYTHON) scripts/optimization/hyperparameter_search.py
-	$(call success,"Optimization completed")
+# Prompt templates for LLM
+recursive-include prompts *.txt
+recursive-include prompts *.md
+recursive-include prompts README.md
 
 # ============================================================================
-# Testing
+# Tools
 # ============================================================================
 
-.PHONY: test
-test: ## Run all tests
-	$(call log,"Running tests...")
-	@$(PYTEST) tests/ -v --cov=src --cov-report=html --cov-report=term
-	$(call success,"Tests passed")
+# Development tools
+recursive-include tools *.py
+recursive-include tools README.md
 
-.PHONY: test-unit
-test-unit: ## Run unit tests
-	$(call log,"Running unit tests...")
-	@$(PYTEST) tests/unit/ -v
-	$(call success,"Unit tests passed")
-
-.PHONY: test-integration
-test-integration: ## Run integration tests
-	$(call log,"Running integration tests...")
-	@$(PYTEST) tests/integration/ -v
-	$(call success,"Integration tests passed")
-
-.PHONY: test-e2e
-test-e2e: ## Run end-to-end tests
-	$(call log,"Running E2E tests...")
-	@$(PYTEST) tests/e2e/ -v
-	$(call success,"E2E tests passed")
-
-.PHONY: coverage
-coverage: test ## Generate coverage report
-	@echo "Opening coverage report..."
-	@python -m webbrowser htmlcov/index.html 2>/dev/null || true
+graft tools/profiling
+graft tools/debugging
+graft tools/visualization
+graft tools/config_tools
+graft tools/ide_tools
+graft tools/compatibility
+graft tools/automation
+graft tools/cli_helpers
 
 # ============================================================================
-# Code Quality
+# Images and Static Assets
 # ============================================================================
 
-.PHONY: format
-format: ## Format code with black and isort
-	$(call log,"Formatting code...")
-	@$(BLACK) $(SRC_DIR) $(TEST_DIR)
-	@$(ISORT) $(SRC_DIR) $(TEST_DIR)
-	$(call success,"Code formatted")
-
-.PHONY: lint
-lint: ## Run all linters
-	$(call log,"Running linters...")
-	@$(BLACK) --check $(SRC_DIR) $(TEST_DIR)
-	@$(ISORT) --check-only $(SRC_DIR) $(TEST_DIR)
-	@$(FLAKE8) $(SRC_DIR) $(TEST_DIR)
-	@$(MYPY) $(SRC_DIR)
-	$(call success,"Linting passed")
-
-.PHONY: type-check
-type-check: ## Run type checking
-	$(call log,"Running type check...")
-	@$(MYPY) $(SRC_DIR)
-	$(call success,"Type check passed")
-
-.PHONY: security
-security: ## Run security checks
-	$(call log,"Running security checks...")
-	@$(BANDIT) -r $(SRC_DIR)
-	$(call success,"Security check passed")
+# Documentation images
+recursive-include images *.png
+recursive-include images *.jpg
+recursive-include images *.jpeg
+recursive-include images *.svg
+recursive-include images *.pdf
 
 # ============================================================================
-# Documentation
+# IDE Configuration
 # ============================================================================
 
-.PHONY: docs
-docs: ## Generate documentation
-	$(call log,"Generating documentation...")
-	@cd $(DOCS_DIR) && make html
-	$(call success,"Documentation generated")
+# IDE setup files
+graft .ide
 
-.PHONY: docs-serve
-docs-serve: docs ## Serve documentation locally
-	$(call log,"Serving documentation...")
-	@cd $(DOCS_DIR)/_build/html && python -m http.server 8000
+# VSCode
+recursive-include .ide/vscode *.json
 
-.PHONY: notebook
-notebook: ## Start Jupyter notebook
-	$(call log,"Starting Jupyter notebook...")
-	@$(VENV_BIN)/jupyter notebook --notebook-dir=$(NOTEBOOKS_DIR)
+# PyCharm
+recursive-include .ide/pycharm *.xml
+include .ide/pycharm/README_PYCHARM.md
+include .ide/pycharm/settings.zip
+
+# Jupyter
+recursive-include .ide/jupyter *.py
+recursive-include .ide/jupyter *.json
+recursive-include .ide/jupyter *.css
+recursive-include .ide/jupyter *.js
+
+# Vim
+include .ide/vim/.vimrc
+include .ide/vim/coc-settings.json
+include .ide/vim/README_VIM.md
+recursive-include .ide/vim/ultisnips *.snippets
+
+# Neovim
+include .ide/neovim/init.lua
+include .ide/neovim/coc-settings.json
+include .ide/neovim/README_NEOVIM.md
+recursive-include .ide/neovim/lua *.lua
+
+# Sublime Text
+recursive-include .ide/sublime *.sublime-project
+recursive-include .ide/sublime *.sublime-workspace
+recursive-include .ide/sublime *.sublime-settings
+recursive-include .ide/sublime *.sublime-snippet
+recursive-include .ide/sublime *.sublime-build
+include .ide/sublime/README_SUBLIME.md
+
+# Cloud IDEs
+recursive-include .ide/cloud_ides *.yml
+recursive-include .ide/cloud_ides *.yaml
+recursive-include .ide/cloud_ides *.json
+recursive-include .ide/cloud_ides *.py
+recursive-include .ide/cloud_ides Dockerfile
+
+# Source of truth
+include .ide/SOURCE_OF_TRUTH.yaml
+
+# ============================================================================
+# Dev Container
+# ============================================================================
+
+recursive-include .devcontainer *.json
+recursive-include .devcontainer Dockerfile
+
+# ============================================================================
+# Husky Git Hooks
+# ============================================================================
+
+recursive-include .husky *
+
+# ============================================================================
+# Templates
+# ============================================================================
+
+# Project templates
+recursive-include templates *.py
+recursive-include templates *.yaml
+recursive-include templates *.json
+recursive-include templates *.xml
+recursive-include templates *.ipynb
+recursive-include templates README*.md
+
+# ============================================================================
+# Quickstart
+# ============================================================================
+
+# Quick start files
+recursive-include quickstart *.py
+recursive-include quickstart *.ipynb
+recursive-include quickstart *.sh
+recursive-include quickstart *.md
+recursive-include quickstart *.yaml
+recursive-include quickstart Dockerfile
+recursive-include quickstart docker-compose*.yml
+
+# ============================================================================
+# Monitoring
+# ============================================================================
+
+# Monitoring configuration
+recursive-include monitoring *.yaml
+recursive-include monitoring *.yml
+recursive-include monitoring *.json
+recursive-include monitoring *.py
+recursive-include monitoring *.sh
+recursive-include monitoring README.md
+recursive-include monitoring docker-compose*.yml
+
+# ============================================================================
+# Security
+# ============================================================================
+
+# Security templates and scripts
+recursive-include security *.py
+recursive-include security *.yaml
+recursive-include security *.md
+
+# ============================================================================
+# Migrations
+# ============================================================================
+
+# Migration scripts
+recursive-include migrations *.py
+recursive-include migrations README.md
+
+# ============================================================================
+# Cache Configuration
+# ============================================================================
+
+# Cache schema
+recursive-include cache *.sql
+recursive-include cache *.py
+
+# ============================================================================
+# Backup Configuration
+# ============================================================================
+
+# Backup strategies and scripts
+recursive-include backup *.yaml
+recursive-include backup *.sh
+recursive-include backup *.md
 
 # ============================================================================
 # Deployment
 # ============================================================================
 
-.PHONY: build
-build: ## Build distribution packages
-	$(call log,"Building package...")
-	@$(VENV_PYTHON) -m build
-	$(call success,"Package built in $(DIST_DIR)")
-
-.PHONY: docker-build
-docker-build: ## Build Docker image
-	$(call log,"Building Docker image...")
-	@$(DOCKER) build -t $(DOCKER_IMAGE) .
-	$(call success,"Docker image built: $(DOCKER_IMAGE)")
-
-.PHONY: docker-run
-docker-run: ## Run Docker container
-	$(call log,"Running Docker container...")
-	@$(DOCKER) run -it --rm -p 8000:8000 $(DOCKER_IMAGE)
-
-.PHONY: serve
-serve: ## Start API server
-	$(call log,"Starting API server...")
-	@$(VENV_BIN)/uvicorn src.api.rest.app:app --reload --host 0.0.0.0 --port 8000
-
-.PHONY: streamlit
-streamlit: ## Start Streamlit app
-	$(call log,"Starting Streamlit app...")
-	@$(VENV_BIN)/streamlit run app/streamlit_app.py
+# Deployment configurations
+recursive-include deployment *.yaml
+recursive-include deployment *.yml
+recursive-include deployment *.conf
+recursive-include deployment *.service
+recursive-include deployment *.sh
+recursive-include deployment Dockerfile*
+recursive-include deployment docker-compose*.yml
+recursive-include deployment .dockerignore
+recursive-include deployment README.md
+recursive-include deployment requirements.txt
 
 # ============================================================================
-# Cleaning
+# App
 # ============================================================================
 
-.PHONY: clean
-clean: ## Remove build artifacts
-	$(call log,"Cleaning build artifacts...")
-	@rm -rf $(BUILD_DIR) $(DIST_DIR) *.egg-info
-	@rm -rf .pytest_cache .mypy_cache .coverage htmlcov
-	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-	@find . -type f -name "*.pyc" -delete 2>/dev/null || true
-	$(call success,"Cleaned")
-
-.PHONY: clean-data
-clean-data: ## Remove processed data
-	$(call log,"Cleaning data...")
-	@rm -rf $(PROCESSED_DATA_DIR)/* $(AUGMENTED_DATA_DIR)/*
-	$(call success,"Data cleaned")
-
-.PHONY: clean-models
-clean-models: ## Remove trained models
-	$(call log,"Cleaning models...")
-	@rm -rf $(MODELS_DIR)/*
-	$(call success,"Models cleaned")
-
-.PHONY: clean-all
-clean-all: clean clean-data clean-models ## Remove all generated files
-	$(call log,"Cleaning everything...")
-	@rm -rf $(VENV)
-	$(call success,"Everything cleaned")
+# Application files
+recursive-include app *.py
+recursive-include app *.yaml
+recursive-include app *.css
+recursive-include app *.js
+recursive-include app *.png
+recursive-include app *.jpg
+recursive-include app *.svg
 
 # ============================================================================
-# Utility Targets
+# Tests
 # ============================================================================
 
-.PHONY: version
-version: ## Show project version
-	@echo "$(PROJECT_NAME) v$(VERSION)"
+# Test files
+recursive-include tests *.py
+recursive-include tests *.yaml
+recursive-include tests *.json
+recursive-include tests conftest.py
+recursive-include tests README.md
 
-.PHONY: info
-info: ## Show project information
-	@echo ""
-	@echo "$(MAGENTA)Project Information$(RESET)"
-	@echo "$(CYAN)Name:$(RESET)         $(PROJECT_NAME)"
-	@echo "$(CYAN)Version:$(RESET)      $(VERSION)"
-	@echo "$(CYAN)Author:$(RESET)       $(AUTHOR)"
-	@echo "$(CYAN)Email:$(RESET)        $(EMAIL)"
-	@echo "$(CYAN)Python:$(RESET)       $(PYTHON_VERSION)"
-	@echo "$(CYAN)GPU Count:$(RESET)    $(GPU_COUNT)"
-	@echo "$(CYAN)CUDA Version:$(RESET) $(CUDA_VERSION)"
-	@echo ""
-
-.PHONY: health
-health: ## Run health checks
-	$(call log,"Running health checks...")
-	@$(VENV_PYTHON) src/core/health/health_checker.py
-	$(call success,"Health check passed")
+# Test fixtures
+recursive-include tests/fixtures *.json
+recursive-include tests/fixtures *.yaml
+recursive-include tests/fixtures *.txt
 
 # ============================================================================
-# Workflow Targets
+# Benchmarks
 # ============================================================================
 
-.PHONY: dev
-dev: setup install-dev setup-git ## Setup development environment
-	$(call success,"Development environment ready!")
-	@echo "Activate with: source $(VENV)/bin/activate"
-
-.PHONY: research
-research: setup install-all prepare-data augment-data ## Setup research environment
-	$(call success,"Research environment ready!")
-
-.PHONY: prod
-prod: install test build ## Prepare for production
-	$(call success,"Production build ready!")
-
-.PHONY: quickstart
-quickstart: ## Quick start demo
-	$(call log,"Running quick start...")
-	@$(VENV_PYTHON) quickstart/minimal_example.py
-	$(call success,"Quick start completed!")
-
-.PHONY: ci
-ci: lint test security ## Run CI checks
-	$(call success,"CI checks passed!")
+# Benchmark results
+recursive-include benchmarks *.json
+recursive-include benchmarks *.yaml
+recursive-include benchmarks README.md
 
 # ============================================================================
-# End of Makefile
+# Documentation
+# ============================================================================
+
+# Documentation source
+recursive-include docs *.md
+recursive-include docs *.rst
+recursive-include docs *.py
+recursive-include docs *.txt
+recursive-include docs conf.py
+recursive-include docs Makefile
+recursive-include docs make.bat
+recursive-include docs requirements.txt
+
+# MkDocs
+include mkdocs.yml
+include docs.yml
+
+# Sphinx
+recursive-include docs/_static *
+recursive-include docs/_templates *
+
+# Cheatsheets
+recursive-include docs/cheatsheets *.pdf
+
+# ============================================================================
+# Notebooks
+# ============================================================================
+
+# Jupyter notebooks
+recursive-include notebooks *.ipynb
+recursive-include notebooks *.py
+recursive-include notebooks *.md
+recursive-include notebooks README.md
+
+# ============================================================================
+# Plugins
+# ============================================================================
+
+# Plugin system
+recursive-include plugins *.py
+recursive-include plugins README.md
+
+# ============================================================================
+# Data (Sample/Test Data Only)
+# ============================================================================
+
+# Include sample and test data
+recursive-include data/test_samples *.json
+recursive-include data/test_samples *.csv
+recursive-include data/test_samples *.txt
+
+# Include metadata
+recursive-include data/metadata *.json
+recursive-include data/metadata README.md
+
+# Keep directory structure
+include data/raw/.gitkeep
+include data/processed/.gitkeep
+include data/augmented/.gitkeep
+include data/external/.gitkeep
+include data/cache/.gitkeep
+
+# ============================================================================
+# Outputs (Structure Only)
+# ============================================================================
+
+# Keep directory structure
+include outputs/.gitkeep
+include outputs/models/.gitkeep
+include outputs/results/.gitkeep
+include outputs/logs/.gitkeep
+include outputs/analysis/.gitkeep
+
+# ============================================================================
+# GitHub Workflows
+# ============================================================================
+
+# CI/CD workflows
+recursive-include .github *.yml
+recursive-include .github *.yaml
+recursive-include .github *.md
+
+# ============================================================================
+# Exclusions
+# ============================================================================
+
+# Exclude Python cache
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude *$py.class
+global-exclude *.so
+
+# Exclude tests artifacts
+global-exclude .pytest_cache
+global-exclude .coverage
+global-exclude htmlcov
+global-exclude .hypothesis
+
+# Exclude Jupyter checkpoints
+global-exclude .ipynb_checkpoints
+
+# Exclude IDE specific
+global-exclude .idea
+global-exclude .vscode
+global-exclude *.swp
+global-exclude *.swo
+global-exclude *~
+
+# Exclude OS files
+global-exclude .DS_Store
+global-exclude Thumbs.db
+
+# Exclude model weights and large files
+global-exclude *.pt
+global-exclude *.pth
+global-exclude *.ckpt
+global-exclude *.safetensors
+global-exclude *.bin
+global-exclude *.h5
+global-exclude *.onnx
+global-exclude *.pkl
+global-exclude *.pickle
+
+# Exclude logs
+global-exclude *.log
+
+# Exclude environment files
+global-exclude .env
+exclude .env.local
+exclude .env.prod
+
+# Exclude actual data
+prune data/raw/ag_news
+prune data/processed/train
+prune data/processed/validation
+prune data/processed/test
+prune data/augmented/back_translated
+prune data/augmented/paraphrased
+prune data/augmented/synthetic
+prune data/external/news_corpus
+
+# Exclude outputs
+prune outputs/models/checkpoints
+prune outputs/models/pretrained
+prune outputs/models/fine_tuned
+prune outputs/results/experiments
+prune outputs/logs/training
+
+# Exclude cache
+prune cache/local
+prune .cache
+
+# Exclude build artifacts
+prune build
+prune dist
+prune *.egg-info
+
+# Exclude node modules
+prune node_modules
+
+# Exclude experiment results
+prune experiments/results
+
+# Exclude wandb
+prune wandb
+
+# Exclude mlruns
+prune mlruns
+
+# ============================================================================
+# Notes
+# ============================================================================
+# This MANIFEST.in is comprehensive for the AG News Text Classification project.
+#
+# Included:
+# - All documentation and guides
+# - All configuration files
+# - All source code
+# - All scripts and tools
+# - IDE configurations for 10 IDEs
+# - Sample and test data
+# - Templates and examples
+# - Deployment configurations
+# - Security templates
+#
+# Excluded:
+# - Large model weights (download separately)
+# - Actual training data (download via scripts)
+# - Build artifacts
+# - Cache files
+# - IDE-specific files
+# - OS-specific files
+# - Environment secrets
+#
+# Size estimate:
+# - Source distribution: 50-100 MB
+# - Without model weights and data: manageable size
+# - All configs and code included
+#
+# Users can:
+# - Install package: pip install ag-news-text-classification
+# - Download data: python scripts/setup/download_all_data.py
+# - Download models: python scripts/setup/download_pretrained_models.py
+#
+# Build source distribution:
+#   python setup.py sdist
+#
+# Build wheel:
+#   python setup.py bdist_wheel
+#
+# Check MANIFEST:
+#   python setup.py sdist --dry-run --verbose
 # ============================================================================
