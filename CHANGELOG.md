@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Project Name:** AG News Text Classification (ag-news-text-classification)
 - **Author:** Võ Hải Dũng
+- **Email:** vohaidung.work@gmail.com
 - **License:** MIT
 - **Repository:** https://github.com/VoHaiDung/ag-news-text-classification
 
