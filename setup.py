@@ -11,6 +11,7 @@ Description: State-of-the-art text classification framework with comprehensive
              ensemble learning capabilities.
 
 Author: Võ Hải Dũng
+Email: vohaidung.work@gmail.com
 License: MIT
 Python: >=3.8,<3.12
 
