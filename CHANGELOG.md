@@ -1779,6 +1779,6 @@ The MIT License grants permission to use, copy, modify, merge, publish, distribu
 
 ---
 
-Maintained by: Võ Hải Dũng
-Email: vohaidung.work@gmail.com
-Last Updated: 2025-09-19
+Maintained by: Võ Hải Dũng  
+Email: vohaidung.work@gmail.com  
+Last Updated: 2025-09-19  
