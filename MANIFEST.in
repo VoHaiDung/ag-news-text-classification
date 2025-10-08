@@ -2,43 +2,53 @@
 # Package Manifest for AG News Text Classification
 # ============================================================================
 # Project: AG News Text Classification (ag-news-text-classification)
-# Description: Specification of files included in source distribution
+# Description: Specification of files to include in source distribution
 # Author: Võ Hải Dũng
 # Email: vohaidung.work@gmail.com
 # License: MIT
 # ============================================================================
 #
-# Purpose:
-#   This manifest specifies which files should be included in or excluded
-#   from the source distribution when building the package with setuptools.
-#   Ensures proper package distribution with all necessary files while
-#   excluding development artifacts and large binary files.
+# Academic Purpose:
+#   This manifest ensures reproducibility of research experiments by
+#   explicitly specifying which files are included in the distribution.
+#   Following PEP 517 and setuptools best practices for scientific
+#   software packaging.
+#
+# Distribution Strategy:
+#   - Include: Source code, configs, scripts, documentation, tests
+#   - Exclude: Large binaries, training data, model weights, cache files
+#   - Rationale: Keep package size manageable while maintaining full
+#                functionality through separate data/model download scripts
 #
 # Syntax Reference:
-#   include <pattern>                   - Include matching files
+#   include <pattern>                   - Include files matching pattern
 #   recursive-include <dir> <pattern>   - Include recursively from directory
-#   exclude <pattern>                   - Exclude matching files
+#   exclude <pattern>                   - Exclude files matching pattern
 #   recursive-exclude <dir> <pattern>   - Exclude recursively from directory
-#   global-exclude <pattern>            - Exclude pattern globally
-#   graft <dir>                         - Include entire directory
-#   prune <dir>                         - Exclude entire directory
+#   global-exclude <pattern>            - Exclude pattern from all directories
+#   graft <dir>                         - Include entire directory tree
+#   prune <dir>                         - Exclude entire directory tree
 #
-# Build Commands:
-#   Source distribution:  python setup.py sdist
-#   Wheel distribution:   python setup.py bdist_wheel
-#   Both:                 python -m build
-#   Verify:               python setup.py sdist --dry-run --verbose
+# Build and Verification:
+#   Build source distribution:    python -m build --sdist
+#   Build wheel distribution:     python -m build --wheel
+#   Verify contents:              tar -tzf dist/*.tar.gz | less
+#   Check size:                   ls -lh dist/
+#   Dry run:                      python setup.py sdist --dry-run --verbose
 #
 # References:
-#   - https://packaging.python.org/en/latest/guides/using-manifest-in/
-#   - https://setuptools.pypa.io/en/latest/userguide/miscellaneous.html
-#   - https://peps.python.org/pep-0517/
+#   - PEP 517: https://peps.python.org/pep-0517/
+#   - PEP 621: https://peps.python.org/pep-0621/
+#   - Setuptools packaging: https://setuptools.pypa.io/en/latest/userguide/
+#   - PyPA packaging guide: https://packaging.python.org/
 #
 # ============================================================================
 
 # ============================================================================
-# Root Documentation
+# Root-Level Documentation Files
 # ============================================================================
+# Essential documentation that provides project overview, legal information,
+# and quick navigation for users and contributors.
 
 include README.md
 include LICENSE
@@ -48,8 +58,10 @@ include CONTRIBUTING.md
 include AUTHORS.md
 
 # ============================================================================
-# Specialized Documentation Guides
+# Specialized Academic and Technical Documentation
 # ============================================================================
+# Comprehensive guides for research methodology, system architecture,
+# performance benchmarks, and operational procedures.
 
 include ARCHITECTURE.md
 include PERFORMANCE.md
@@ -66,8 +78,10 @@ include QUICK_START.md
 include HEALTH_CHECK.md
 
 # ============================================================================
-# Build and Package Configuration
+# Build System and Package Configuration
 # ============================================================================
+# Configuration files for setuptools, poetry, and build tools following
+# modern Python packaging standards (PEP 517, PEP 621).
 
 include setup.py
 include setup.cfg
@@ -78,28 +92,42 @@ include Makefile
 include install.sh
 
 # ============================================================================
-# Environment Configuration
+# Environment and Runtime Configuration
 # ============================================================================
+# Template files for environment variables and runtime configuration.
+# Actual secrets are excluded via .gitignore.
 
 include .env.example
 include .env.test
 include .env.local
+
+# ============================================================================
+# Version Control Configuration
+# ============================================================================
+# Git configuration files for repository management, file handling,
+# and Docker containerization.
+
 include .gitignore
 include .gitattributes
 include .dockerignore
 include .editorconfig
 
 # ============================================================================
-# Development Tool Configuration
+# Code Quality and Development Tools Configuration
 # ============================================================================
+# Configuration for automated code quality checks, pre-commit hooks,
+# and commit message linting following conventional commits standard.
 
 include .pre-commit-config.yaml
 include .flake8
 include commitlint.config.js
 
 # ============================================================================
-# Requirements Management
+# Python Dependencies Management
 # ============================================================================
+# Hierarchical requirements files supporting multiple deployment scenarios
+# (local, cloud, CPU, GPU, TPU) and use cases (development, production,
+# research, minimal deployment).
 
 recursive-include requirements *.txt
 recursive-include requirements/lock *.lock
@@ -108,6 +136,14 @@ include requirements/lock/README.md
 # ============================================================================
 # Configuration System
 # ============================================================================
+# YAML-based configuration system with 300+ config files supporting:
+# - Model architectures (transformers, LLMs, ensembles)
+# - Training strategies (LoRA, QLoRA, distillation, adversarial)
+# - Overfitting prevention (constraints, monitoring, validation)
+# - Platform-specific optimization (Colab, Kaggle, local)
+# - Deployment scenarios (local, cloud, free-tier)
+#
+# Includes Jinja2 templates for programmatic config generation.
 
 recursive-include configs *.yaml
 recursive-include configs *.yml
@@ -120,8 +156,15 @@ recursive-include configs SELECTION_GUIDE.md
 recursive-include configs ENSEMBLE_SELECTION_GUIDE.yaml
 
 # ============================================================================
-# Source Code
+# Source Code Package
 # ============================================================================
+# Core implementation including:
+# - Model architectures (DeBERTa, RoBERTa, ELECTRA, LLaMA, Mistral, etc.)
+# - Training framework (standard, distributed, efficient fine-tuning)
+# - Overfitting prevention system (validators, monitors, guards)
+# - Data pipeline (preprocessing, augmentation, validation)
+# - API layer (REST, local, batch, streaming)
+# - Deployment utilities (platform detection, quota management)
 
 recursive-include src *.py
 recursive-include src *.yaml
@@ -131,8 +174,15 @@ recursive-include src README.md
 include src/__version__.py
 
 # ============================================================================
-# Scripts and Automation
+# Automation Scripts and Tools
 # ============================================================================
+# Comprehensive script collection for:
+# - Setup and installation (environment, dependencies, verification)
+# - Data preparation (download, preprocessing, augmentation, splitting)
+# - Training workflows (single models, ensembles, distillation)
+# - Evaluation and benchmarking (accuracy, efficiency, robustness)
+# - Deployment (local, cloud, platform-specific)
+# - CI/CD automation (testing, building, verification)
 
 recursive-include scripts *.py
 recursive-include scripts *.sh
@@ -154,18 +204,30 @@ graft scripts/ci
 graft scripts/domain_adaptation
 
 # ============================================================================
-# Prompts for LLM
+# LLM Prompt Templates
 # ============================================================================
+# Structured prompts for large language model inference supporting:
+# - Zero-shot and few-shot classification
+# - Chain-of-thought reasoning
+# - Instruction-based task specification
+# - Knowledge distillation
 
 recursive-include prompts *.txt
 recursive-include prompts *.md
 recursive-include prompts README.md
 
 # ============================================================================
-# Development Tools
+# Developer Tools and Utilities
 # ============================================================================
+# Advanced tooling for:
+# - Profiling (memory, speed, parameter counting)
+# - Debugging (model-specific, overfitting, platform-specific)
+# - Visualization (training curves, attention, LoRA weights)
+# - Configuration management (generation, validation, synchronization)
+# - Compatibility testing (version matrix, platform testing)
 
 recursive-include tools *.py
+recursive-include tools *.sh
 recursive-include tools README.md
 
 graft tools/profiling
@@ -180,8 +242,10 @@ graft tools/automation
 graft tools/cli_helpers
 
 # ============================================================================
-# Static Assets and Images
+# Visual Documentation Assets
 # ============================================================================
+# Architecture diagrams, workflow visualizations, and decision trees
+# supporting technical documentation and academic presentations.
 
 recursive-include images *.png
 recursive-include images *.jpg
@@ -190,8 +254,17 @@ recursive-include images *.svg
 recursive-include images *.pdf
 
 # ============================================================================
-# IDE Configurations
+# Integrated Development Environment Configurations
 # ============================================================================
+# Support for 10+ development environments with single source of truth
+# configuration system ensuring consistency across:
+# - Desktop IDEs (VSCode, PyCharm, Sublime Text)
+# - Terminal editors (Vim, Neovim)
+# - Notebook environments (Jupyter Lab, Jupyter Notebook)
+# - Cloud IDEs (Colab, Kaggle, Gitpod, GitHub Codespaces)
+#
+# Auto-generation and synchronization scripts maintain IDE configuration
+# alignment with project standards.
 
 graft .ide
 
@@ -231,21 +304,31 @@ recursive-include .ide/cloud_ides *.py
 recursive-include .ide/cloud_ides Dockerfile
 
 # ============================================================================
-# Development Container
+# Development Container Configuration
 # ============================================================================
+# VSCode development container and GitHub Codespaces configuration
+# for consistent development environments.
 
 recursive-include .devcontainer *.json
 recursive-include .devcontainer Dockerfile
 
 # ============================================================================
-# Git Hooks
+# Git Hooks Management
 # ============================================================================
+# Husky-based git hooks for commit message validation and
+# pre-commit quality checks.
 
 recursive-include .husky *
 
 # ============================================================================
-# Templates
+# Code and Configuration Templates
 # ============================================================================
+# Boilerplate templates for rapid development of:
+# - Custom experiments and ablation studies
+# - New model architectures
+# - Dataset loaders and preprocessors
+# - Evaluation metrics
+# - IDE-specific configurations (run configs, tasks, snippets)
 
 recursive-include templates *.py
 recursive-include templates *.yaml
@@ -257,6 +340,14 @@ recursive-include templates README*.md
 # ============================================================================
 # Quick Start Resources
 # ============================================================================
+# Rapid onboarding materials supporting 2-minute to 1-hour workflows:
+# - Auto-training demo (fully automated)
+# - Quick demo (5 minutes)
+# - Research experiment setup (30 minutes)
+# - Production deployment (1 hour)
+#
+# Includes setup wizard, interactive CLI, and decision tree for
+# model/platform selection.
 
 recursive-include quickstart *.py
 recursive-include quickstart *.ipynb
@@ -267,8 +358,15 @@ recursive-include quickstart Dockerfile
 recursive-include quickstart docker-compose*.yml
 
 # ============================================================================
-# Monitoring Configuration
+# Monitoring and Observability Configuration
 # ============================================================================
+# Local-first monitoring setup supporting:
+# - TensorBoard for training visualization
+# - MLflow for experiment tracking
+# - Weights & Biases for collaborative monitoring
+# - Custom dashboards for overfitting detection and quota management
+#
+# Docker Compose configurations enable one-command monitoring stack deployment.
 
 recursive-include monitoring *.yaml
 recursive-include monitoring *.yml
@@ -279,30 +377,44 @@ recursive-include monitoring README.md
 recursive-include monitoring docker-compose*.yml
 
 # ============================================================================
-# Security Templates
+# Security Components
 # ============================================================================
+# Security modules for:
+# - Local authentication and authorization
+# - PII detection and data privacy
+# - Model security and adversarial defense
+# - Checksum verification
 
 recursive-include security *.py
 recursive-include security *.yaml
 recursive-include security *.md
 
 # ============================================================================
-# Migrations
+# Data and Configuration Migration Tools
 # ============================================================================
+# Version migration utilities for backward compatibility when
+# updating data schemas, model formats, or configuration structures.
 
 recursive-include migrations *.py
 recursive-include migrations README.md
 
 # ============================================================================
-# Cache System
+# Local Caching System
 # ============================================================================
+# High-performance caching layer with SQLite backend and
+# in-memory LRU cache for model predictions and preprocessed data.
 
 recursive-include cache *.sql
 recursive-include cache *.py
 
 # ============================================================================
-# Backup Strategies
+# Backup and Recovery Strategies
 # ============================================================================
+# Automated backup scripts and recovery procedures for:
+# - Local model checkpoints
+# - Experimental results
+# - Configuration snapshots
+# - Training logs
 
 recursive-include backup *.yaml
 recursive-include backup *.sh
@@ -311,6 +423,14 @@ recursive-include backup *.md
 # ============================================================================
 # Deployment Configurations
 # ============================================================================
+# Multi-platform deployment support:
+# - Docker containerization (local and GPU variants)
+# - Systemd service definitions for production Linux deployments
+# - Nginx reverse proxy configuration
+# - Free-tier deployments (HuggingFace Spaces, Streamlit Cloud)
+# - Auto-deployment scripts with platform detection
+#
+# Supports zero-cost monthly operation through optimized resource usage.
 
 recursive-include deployment *.yaml
 recursive-include deployment *.yml
@@ -331,8 +451,16 @@ graft deployment/streamlit_cloud
 graft deployment/local
 
 # ============================================================================
-# Application Files
+# Web Application and User Interfaces
 # ============================================================================
+# Streamlit and Gradio applications providing:
+# - Single and batch prediction interfaces
+# - Model comparison dashboards
+# - Overfitting monitoring visualizations
+# - Parameter efficiency analysis
+# - Real-time inference demonstrations
+# - Platform selection and quota management UIs
+# - Auto-training configuration interface
 
 recursive-include app *.py
 recursive-include app *.yaml
@@ -350,6 +478,17 @@ graft app/assets
 # ============================================================================
 # Test Suite
 # ============================================================================
+# Comprehensive testing framework covering:
+# - Unit tests for individual components
+# - Integration tests for multi-component workflows
+# - Platform-specific tests (Colab, Kaggle, local)
+# - Performance and benchmark tests
+# - End-to-end workflow validation
+# - Regression tests for model accuracy
+# - Chaos testing for fault tolerance
+# - Cross-version compatibility tests
+#
+# Supports test-driven development and continuous integration.
 
 recursive-include tests *.py
 recursive-include tests *.yaml
@@ -368,8 +507,13 @@ graft tests/compatibility
 graft tests/fixtures
 
 # ============================================================================
-# Benchmarks
+# Benchmark Results and Baselines
 # ============================================================================
+# Empirical results for reproducibility verification:
+# - Accuracy benchmarks across model architectures
+# - Efficiency metrics (memory, speed, parameter count)
+# - Robustness evaluations (adversarial, OOD, contrast sets)
+# - Overfitting analysis (train-val-test gaps, LoRA rank studies)
 
 recursive-include benchmarks *.json
 recursive-include benchmarks *.yaml
@@ -383,6 +527,16 @@ graft benchmarks/overfitting
 # ============================================================================
 # Documentation Source
 # ============================================================================
+# Sphinx/MkDocs documentation source including:
+# - Getting started guides for all experience levels
+# - Platform-specific deployment guides
+# - API reference documentation
+# - IDE setup tutorials
+# - Best practices and design patterns
+# - Troubleshooting and FAQ
+# - Architecture decision records
+#
+# Organized in progressive disclosure pattern from beginner to advanced.
 
 recursive-include docs *.md
 recursive-include docs *.rst
@@ -416,8 +570,18 @@ graft docs/troubleshooting
 graft docs/architecture
 
 # ============================================================================
-# Notebooks
+# Jupyter Notebooks
 # ============================================================================
+# 40+ educational and experimental notebooks organized by:
+# - Setup and configuration (7 notebooks for different platforms)
+# - Tutorials (17 notebooks covering basic to advanced topics)
+# - Exploratory data analysis (8 notebooks)
+# - Experimental workflows (10 notebooks for SOTA experiments)
+# - Analysis and interpretation (9 notebooks)
+# - Deployment demonstrations (7 notebooks)
+# - Platform-specific optimizations (15+ notebooks)
+#
+# Supports interactive learning and reproducible research.
 
 recursive-include notebooks *.ipynb
 recursive-include notebooks *.py
@@ -433,8 +597,13 @@ graft notebooks/05_deployment
 graft notebooks/06_platform_specific
 
 # ============================================================================
-# Plugins System
+# Plugin System
 # ============================================================================
+# Extensibility framework allowing users to add:
+# - Custom model architectures
+# - Novel data sources and loaders
+# - Specialized evaluation metrics
+# - Domain-specific preprocessors
 
 recursive-include plugins *.py
 recursive-include plugins README.md
@@ -445,8 +614,14 @@ graft plugins/evaluators
 graft plugins/processors
 
 # ============================================================================
-# Data Structure (Metadata and Samples Only)
+# Data Directory Structure
 # ============================================================================
+# Include metadata and test samples while excluding large datasets.
+# Actual training data downloaded separately via scripts to keep
+# package size manageable.
+#
+# Test samples support automated testing and quick demonstrations.
+# Metadata files enable data provenance tracking and reproducibility.
 
 recursive-include data/test_samples *.json
 recursive-include data/test_samples *.csv
@@ -455,7 +630,9 @@ recursive-include data/metadata *.json
 recursive-include data/metadata README.md
 
 include data/raw/.gitkeep
+include data/raw/ag_news/README.md
 include data/processed/.gitkeep
+include data/processed/.test_set_hash
 include data/augmented/.gitkeep
 include data/external/.gitkeep
 include data/cache/.gitkeep
@@ -463,22 +640,64 @@ include data/pseudo_labeled/.gitkeep
 include data/selected_subsets/.gitkeep
 include data/platform_cache/.gitkeep
 include data/quota_tracking/.gitkeep
+include data/test_access_log.json
 
 # ============================================================================
-# Outputs Structure (Keep Directory Structure)
+# Output Directory Structure
 # ============================================================================
+# Preserve directory structure while excluding large output files.
+# Users generate outputs locally through training and evaluation scripts.
 
 include outputs/.gitkeep
 include outputs/models/.gitkeep
+include outputs/models/checkpoints/.gitkeep
+include outputs/models/pretrained/.gitkeep
+include outputs/models/fine_tuned/.gitkeep
+include outputs/models/lora_adapters/.gitkeep
+include outputs/models/qlora_adapters/.gitkeep
+include outputs/models/ensembles/.gitkeep
+include outputs/models/distilled/.gitkeep
+include outputs/models/optimized/.gitkeep
+include outputs/models/exported/.gitkeep
+include outputs/models/prompted/.gitkeep
 include outputs/results/.gitkeep
-include outputs/logs/.gitkeep
+include outputs/results/experiments/.gitkeep
+include outputs/results/benchmarks/.gitkeep
+include outputs/results/overfitting_reports/.gitkeep
+include outputs/results/parameter_efficiency_reports/.gitkeep
+include outputs/results/ablations/.gitkeep
+include outputs/results/reports/.gitkeep
 include outputs/analysis/.gitkeep
+include outputs/analysis/error_analysis/.gitkeep
+include outputs/analysis/interpretability/.gitkeep
+include outputs/analysis/statistical/.gitkeep
+include outputs/logs/.gitkeep
+include outputs/logs/training/.gitkeep
+include outputs/logs/tensorboard/.gitkeep
+include outputs/logs/mlflow/.gitkeep
+include outputs/logs/wandb/.gitkeep
+include outputs/logs/local/.gitkeep
 include outputs/profiling/.gitkeep
+include outputs/profiling/memory/.gitkeep
+include outputs/profiling/speed/.gitkeep
+include outputs/profiling/traces/.gitkeep
 include outputs/artifacts/.gitkeep
+include outputs/artifacts/figures/.gitkeep
+include outputs/artifacts/tables/.gitkeep
+include outputs/artifacts/lora_visualizations/.gitkeep
+include outputs/artifacts/presentations/.gitkeep
 
 # ============================================================================
 # GitHub Workflows and CI/CD
 # ============================================================================
+# Continuous integration workflows for:
+# - Automated testing across Python versions
+# - Code quality enforcement
+# - Documentation building and deployment
+# - Benchmark regression detection
+# - Overfitting prevention validation
+# - Platform compatibility verification
+# - Dependency security scanning
 
 recursive-include .github *.yml
 recursive-include .github *.yaml
@@ -491,20 +710,51 @@ include .github/PULL_REQUEST_TEMPLATE.md
 include .github/dependabot.yml
 
 # ============================================================================
-# Global Exclusions
+# Experiment Management
 # ============================================================================
+# Experimental framework supporting:
+# - Hyperparameter search (Optuna, Ray Tune)
+# - Ablation studies (10+ dimensions)
+# - SOTA experiments (6-phase progressive pipeline)
+# - Baseline comparisons (classical ML and neural baselines)
+# - Result aggregation and leaderboard generation
+
+recursive-include experiments *.py
+recursive-include experiments *.yaml
+recursive-include experiments *.json
+recursive-include experiments README.md
+
+graft experiments/hyperparameter_search
+graft experiments/benchmarks
+graft experiments/baselines
+graft experiments/ablation_studies
+graft experiments/sota_experiments
+
+include experiments/results/.gitkeep
+
+# ============================================================================
+# Global Exclusion Patterns
+# ============================================================================
+# Exclude runtime artifacts, build outputs, and platform-specific files
+# that should not be included in source distribution.
+#
+# These exclusions prevent distribution bloat and avoid including
+# user-specific or machine-specific files.
 
 global-exclude __pycache__
 global-exclude *.py[cod]
 global-exclude *$py.class
 global-exclude *.so
 global-exclude *.dylib
+global-exclude *.dll
 
 global-exclude .pytest_cache
 global-exclude .coverage
 global-exclude htmlcov
 global-exclude .hypothesis
 global-exclude coverage.xml
+global-exclude *.cover
+global-exclude .tox
 
 global-exclude .ipynb_checkpoints
 
@@ -527,15 +777,23 @@ global-exclude *.h5
 global-exclude *.onnx
 global-exclude *.pkl
 global-exclude *.pickle
+global-exclude *.msgpack
 
 global-exclude *.log
 
 exclude .env
 exclude .env.prod
+exclude .secrets.baseline
 
 # ============================================================================
-# Prune Large Directories
+# Prune Large Data and Output Directories
 # ============================================================================
+# Exclude directories containing large datasets, model weights, and
+# experimental outputs. These are either downloaded separately or
+# generated during training.
+#
+# This strategy keeps the package size under 100MB while maintaining
+# full functionality through separate data/model management.
 
 prune data/raw/ag_news
 prune data/processed/train
@@ -552,6 +810,9 @@ prune data/augmented/contrast_sets
 prune data/external/news_corpus
 prune data/external/pretrain_data
 prune data/external/distillation_data
+prune data/cache/local_cache
+prune data/cache/model_cache
+prune data/cache/huggingface_cache
 
 prune outputs/models/checkpoints
 prune outputs/models/pretrained
@@ -569,8 +830,6 @@ prune outputs/logs/mlflow
 prune outputs/logs/wandb
 
 prune cache/local
-prune cache/model_cache
-prune cache/huggingface_cache
 prune .cache
 
 prune build
@@ -585,42 +844,33 @@ prune wandb
 prune mlruns
 
 # ============================================================================
-# Notes
+# Package Metadata Summary
 # ============================================================================
 #
-# Included in Distribution:
-#   - All source code and configurations
-#   - All documentation and guides
-#   - All scripts and tools
-#   - IDE configurations for 10 IDEs
-#   - Test suite and fixtures
-#   - Sample data and metadata
-#   - Deployment configurations
-#   - Templates and examples
+# Expected Package Composition:
+#   Source code:              5,000+ lines across 200+ modules
+#   Configuration files:      300+ YAML configs
+#   Documentation:            50+ markdown files
+#   Scripts:                  100+ automation scripts
+#   Tests:                    150+ test modules
+#   Notebooks:                40+ Jupyter notebooks
+#   IDE configurations:       10+ development environments
 #
-# Excluded from Distribution:
-#   - Large model weights (download separately)
-#   - Training data (download via scripts)
-#   - Build artifacts
-#   - Cache files
-#   - IDE-specific runtime files
-#   - OS-specific files
-#   - Environment secrets
-#   - Training logs and checkpoints
+# Expected Package Size:
+#   Source distribution:      50-100 MB
+#   Wheel distribution:       30-60 MB
 #
-# Estimated Package Size:
-#   - Source distribution: 50-100 MB
-#   - Wheel distribution: 30-60 MB
-#   - Without data and models: manageable for PyPI
+# Post-Installation Steps:
+#   1. Download datasets:     python scripts/setup/download_all_data.py
+#   2. Download models:       python scripts/setup/download_pretrained_models.py
+#   3. Verify installation:   python scripts/setup/verify_installation.py
+#   4. Run health check:      ag-news health-check
 #
-# Installation Workflow:
-#   1. Install package: pip install ag-news-text-classification
-#   2. Download data: python scripts/setup/download_all_data.py
-#   3. Download models: python scripts/setup/download_pretrained_models.py
-#   4. Run setup: ag-news-setup
-#
-# Verification:
-#   python setup.py sdist --dry-run --verbose | grep -E "adding|copying"
-#   tar -tzf dist/ag-news-text-classification-1.0.0.tar.gz | head -50
+# Verification Commands:
+#   List contents:            tar -tzf dist/ag-news-text-classification-*.tar.gz
+#   Check size:               ls -lh dist/
+#   Verify structure:         tar -tzf dist/*.tar.gz | grep -E "^[^/]+/$" | sort
+#   Test installation:        pip install dist/ag-news-text-classification-*.whl
+#   Validate imports:         python -c "import src; print(src.__version__)"
 #
 # ============================================================================
