@@ -1,24 +1,366 @@
-# Flake8 Configuration
-# ====================
-# Simple linting configuration
+# ============================================================================
+# Flake8 Configuration for AG News Text Classification
+# ============================================================================
+# Project: AG News Text Classification (ag-news-text-classification)
+# Description: Python code linting and style enforcement configuration
 # Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
+# License: MIT
+# ============================================================================
+#
+# Academic Rationale:
+#   Code quality tools are essential for research software engineering,
+#   as documented in "Best Practices for Scientific Computing" (Wilson et al., 2014).
+#   Flake8 enforces PEP 8 style guidelines, detects common programming errors,
+#   and maintains code consistency across contributors. This configuration
+#   balances strict quality standards with practical flexibility for research code.
+#
+# Flake8 Architecture:
+#   Flake8 is a wrapper around three tools:
+#   1. PyFlakes - Logical error detection (undefined names, unused imports)
+#   2. pycodestyle (formerly pep8) - PEP 8 style guide enforcement
+#   3. Ned Batchelder's McCabe script - Complexity checker
+#
+# Configuration Sections:
+#   [flake8]                      - Main configuration
+#   [flake8:local-plugins]        - Custom plugin configuration
+#   [flake8:per-file-ignores]     - File-specific ignore patterns
+#
+# Integration:
+#   - Pre-commit hooks: Runs automatically before commits
+#   - CI/CD: GitHub Actions workflow for pull requests
+#   - IDE: VSCode, PyCharm integration via settings
+#   - Command line: flake8 src/ tests/
+#
+# References:
+#   - PEP 8: https://peps.python.org/pep-0008/
+#   - Flake8 docs: https://flake8.pycqa.org/
+#   - Error codes: https://pycodestyle.pycqa.org/en/latest/intro.html#error-codes
+#
+# ============================================================================
 
 [flake8]
+
+# ============================================================================
+# Line Length Configuration
+# ============================================================================
+# Maximum line length following Black formatter convention.
+# Academic papers often use 79-100 characters for code listings.
+# We use 100 to balance readability with modern screen widths.
+
 max-line-length = 100
-exclude = 
+max-doc-length = 100
+
+# ============================================================================
+# Complexity Limits
+# ============================================================================
+# McCabe cyclomatic complexity threshold. Functions exceeding this should
+# be refactored for maintainability and testability.
+# Based on software engineering research recommending max complexity of 10-15.
+
+max-complexity = 15
+
+# ============================================================================
+# Exclusion Patterns
+# ============================================================================
+# Directories and files to exclude from linting.
+# Following the project structure and common Python conventions.
+
+exclude =
     .git,
     __pycache__,
-    venv,
+    .pytest_cache,
+    .mypy_cache,
+    .tox,
+    .nox,
+    .eggs,
+    *.egg-info,
     build,
     dist,
-    *.egg-info,
+    venv,
+    env,
+    .venv,
+    .env,
+    .conda,
+    node_modules,
     data,
-    outputs
+    outputs,
+    cache,
+    .cache,
+    monitoring/local,
+    migrations/data,
+    experiments/results,
+    wandb,
+    mlruns,
+    docs/_build,
+    site,
+    notebooks/.ipynb_checkpoints,
+    deployment/local/data,
+    backup/strategies/local_backup_data
 
-ignore = 
+# ============================================================================
+# Error Code Selection
+# ============================================================================
+# Select specific error codes to check.
+# Comprehensive selection covering style, errors, and warnings.
+
+select =
+    E,
+    F,
+    W,
+    C,
+    N
+
+# ============================================================================
+# Error Code Ignores
+# ============================================================================
+# Codes to ignore globally. Each ignore has a documented rationale.
+#
+# E203: Whitespace before ':' - Conflicts with Black formatter
+#       Black formats slices differently than PEP 8
+#
+# E501: Line too long - Handled by max-line-length instead
+#       Some strings and URLs cannot be easily broken
+#
+# W503: Line break before binary operator - Deprecated PEP 8 guidance
+#       Modern style (PEP 8 update) prefers breaks before operators
+#
+# E402: Module level import not at top of file - Necessary for some scripts
+#       Required for conditional imports and path manipulation
+#
+# E731: Do not assign lambda expression - Sometimes more readable
+#       Useful for simple functional transformations
+#
+# E741: Ambiguous variable name - Too strict for mathematical code
+#       Variables like 'l' or 'I' are acceptable in limited scope
+#
+# W504: Line break after binary operator - Conflicts with W503
+#       Cannot satisfy both, following modern PEP 8 convention
+
+ignore =
     E203,
+    E501,
     W503,
-    E501
+    E402,
+    E731,
+    W504
+
+# ============================================================================
+# Per-File Ignores
+# ============================================================================
+# File-specific ignore patterns for cases where global ignores are too broad.
+#
+# __init__.py files:
+#   F401: Module imported but unused - Common pattern for exposing API
+#   F403: Unable to detect undefined names from star import - Acceptable for __init__
+#   E402: Module level import not at top - May have conditional imports
+#
+# setup.py:
+#   E501: Line too long - Package metadata often has long strings
+#
+# conftest.py:
+#   E402: Import not at top - Pytest fixtures may need path manipulation
+#   F401: Imported but unused - Fixtures are used implicitly
+#
+# Test files:
+#   F811: Redefinition of unused name - Pytest fixtures override
+#   E712: Comparison to True should be 'if cond is True:' - Testing booleans explicitly
+#
+# Experimental code:
+#   F401, F841: Unused imports/variables - Exploration code
+#
+# Migration scripts:
+#   E501: Line too long - Auto-generated SQL may be long
+#
+# Type stub files:
+#   F401: Imported but unused - Stubs define interface
+#   F811: Redefinition - Overload definitions
 
 per-file-ignores =
-    __init__.py:F401
+    __init__.py:F401,F403,E402
+    setup.py:E501
+    conftest.py:E402,F401
+    tests/*:F811,E712
+    experiments/*:F401,F841
+    migrations/*:E501
+    *.pyi:F401,F811
+    scripts/setup/*:E402
+    scripts/platform/*:E402
+    quickstart/*:E402,F401
+    notebooks/*:E402,F401
+
+# ============================================================================
+# Import Order (via flake8-isort plugin)
+# ============================================================================
+# Ensure imports are organized following isort configuration.
+# Consistent with .pre-commit-config.yaml isort settings.
+
+import-order-style = google
+application-import-names = src,tests,scripts,tools,experiments,app
+application-package-names = ag_news_text_classification
+
+# ============================================================================
+# Docstring Conventions (via flake8-docstrings plugin)
+# ============================================================================
+# Enforce PEP 257 docstring conventions with Google style.
+# Following Google's Python Style Guide for research code readability.
+
+docstring-convention = google
+docstring-min-length = 10
+
+# Ignore docstring errors in specific locations
+ignore-decorators = property,staticmethod,classmethod,abc.abstractmethod
+
+# ============================================================================
+# Additional Plugins Configuration
+# ============================================================================
+
+# flake8-bugbear: Additional checks for common bugs
+# Enabled by default with select = B
+
+# flake8-comprehensions: Improve comprehension usage
+# C400-C406: Unnecessary generator usage
+# Enabled by default with select = C
+
+# flake8-simplify: Simplification suggestions
+# SIM: Various simplification rules
+# More conservative than default to avoid false positives
+extend-ignore = SIM102,SIM103,SIM106,SIM112,SIM117
+
+# flake8-annotations: Type annotation enforcement
+# ANN: Require type annotations
+# Relaxed for research code where types may be exploratory
+enable-extensions = ANN
+suppress-none-returning = True
+suppress-dummy-args = True
+
+# ============================================================================
+# Output Formatting
+# ============================================================================
+# Format for error messages. Useful for IDE integration.
+
+format = %(path)s:%(row)d:%(col)d: %(code)s %(text)s
+
+# Show source code for errors
+show-source = True
+
+# Include statistics in output
+statistics = True
+
+# Count the number of occurrences of each error/warning code
+count = True
+
+# ============================================================================
+# Parallel Execution
+# ============================================================================
+# Number of parallel jobs. 'auto' detects CPU count.
+# Significantly speeds up linting of large codebases.
+
+jobs = auto
+
+# ============================================================================
+# Diff Only Mode (for CI/CD)
+# ============================================================================
+# When used with --diff flag, only check changed lines.
+# Useful for incremental checks in pull requests.
+# Enable in CI with: flake8 --diff
+
+diff = False
+
+# ============================================================================
+# Benchmark Mode
+# ============================================================================
+# Measure performance of flake8 execution.
+# Useful for optimizing configuration.
+
+benchmark = False
+
+# ============================================================================
+# Error Thresholds
+# ============================================================================
+# Maximum allowed errors per file before stopping.
+# Prevents overwhelming output for severely non-compliant files.
+
+max-annotations-complexity = 4
+max-expression-complexity = 10
+max-returns = 6
+max-arguments = 8
+max-local-variables = 15
+max-branches = 12
+max-statements = 50
+max-attributes = 10
+max-module-members = 30
+max-module-expressions = 10
+max-function-expressions = 10
+max-base-classes = 5
+max-bool-expr = 5
+max-string-usages = 8
+max-awaits = 5
+max-try-body-length = 10
+max-asserts = 10
+
+# ============================================================================
+# Inline Comments Configuration
+# ============================================================================
+# Allow inline comments to disable specific checks.
+# Format: # noqa: E501
+
+inline-quotes = double
+enable-extensions = Q000
+noqa-require-code = True
+
+# ============================================================================
+# Custom Error Messages
+# ============================================================================
+# Define custom messages for clarity in academic context.
+
+custom-messages =
+    E501: Line exceeds maximum length. Consider refactoring for readability.
+    F401: Imported module not used. Remove or use for side effects.
+    C901: Function is too complex. Consider decomposition for testability.
+
+# ============================================================================
+# Integration Notes
+# ============================================================================
+#
+# Running Flake8:
+#   Check all source:          flake8 src/
+#   Check specific file:       flake8 src/models/base.py
+#   Check with statistics:     flake8 --statistics src/
+#   Count errors:              flake8 --count src/
+#   Show source:               flake8 --show-source src/
+#   Diff mode (CI):            flake8 --diff
+#
+# IDE Integration:
+#   VSCode:     Install Python extension, enable linting in settings
+#   PyCharm:    Enable flake8 in Preferences > Tools > External Tools
+#   Sublime:    Use SublimeLinter-flake8 package
+#   Vim:        Use ALE or Syntastic plugin
+#
+# Pre-commit Integration:
+#   Configuration in .pre-commit-config.yaml
+#   Runs automatically: pre-commit run flake8
+#
+# CI/CD Integration:
+#   GitHub Actions workflow: .github/workflows/ci.yml
+#   Runs on: pull requests, pushes to main
+#
+# Troubleshooting:
+#   Ignore specific line:       # noqa: E501
+#   Ignore multiple codes:      # noqa: E501,F401
+#   Ignore entire file:         # flake8: noqa
+#   Debug configuration:        flake8 --version --verbose
+#   List ignored patterns:      flake8 --exclude=""
+#
+# Performance Optimization:
+#   Use --jobs=auto for parallel execution
+#   Exclude large directories (data, outputs)
+#   Use --diff in CI for incremental checks
+#   Cache results with --cache-dir
+#
+# Custom Plugins:
+#   Install additional plugins:
+#     pip install flake8-docstrings flake8-bugbear flake8-comprehensions
+#   Configure in additional_dependencies of pre-commit config
+#
+# ============================================================================
