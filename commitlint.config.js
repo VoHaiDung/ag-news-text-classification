@@ -4,8 +4,8 @@
  * ============================================================================
  * Project: AG News Text Classification (ag-news-text-classification)
  * Description: Enforce conventional commit message format
- * Email: vohaidung.work@gmail.com
  * Author: Võ Hải Dũng
+ * Email: vohaidung.work@gmail.com
  * License: MIT
  * ============================================================================
  * 
@@ -402,17 +402,16 @@ module.exports = {
     'references-empty': [1, 'never'],
     
     // ========================================================================
-    // Custom Rules for Personal Project
+    // Custom Rules
     // ========================================================================
     
     /**
-     * Signed-off-by is not required for personal project
+     * Signed-off-by is optional
      */
     'signed-off-by': [0, 'always'],
     
     /**
-     * Trailer (Co-authored-by, etc.) is optional
-     * Not enforced for personal project
+     * Trailer is optional
      */
     'trailer-exists': [0, 'always'],
   },
@@ -516,7 +515,7 @@ module.exports = {
             emoji: '',
           },
           ci: {
-            description: 'Changes to our CI configuration files and scripts',
+            description: 'Changes to CI configuration files and scripts',
             title: 'Continuous Integrations',
             emoji: '',
           },
@@ -595,7 +594,7 @@ module.exports = {
 
 /**
  * ============================================================================
- * Example Valid Commit Messages for Personal Project
+ * Example Valid Commit Messages
  * ============================================================================
  * 
  * Feature with scope:
@@ -659,8 +658,6 @@ module.exports = {
  *   
  *   After benchmarking, rank 16 provides better memory efficiency
  *   with minimal accuracy loss for AG News dataset.
- *   
- *   Fixes #789
  * 
  * Security update:
  *   security(api): add rate limiting to prediction endpoint
@@ -686,27 +683,5 @@ module.exports = {
  *   Updated transformers library to latest version for bug fixes
  *   and performance improvements.
  * 
- * ============================================================================
- * Personal Project Best Practices
- * ============================================================================
- * 
- * For a personal project, keep commits:
- * - Clear and descriptive
- * - Focused on single logical change
- * - Following conventional commits format
- * - Including context in body when needed
- * - Referencing issues when applicable
- * 
- * You can be more flexible with:
- * - Not requiring co-author signatures
- * - Less formal tone in body
- * - More detailed experimental notes
- * - Personal reminders in commit messages
- * 
- * But still maintain:
- * - Type and scope conventions
- * - Subject line clarity
- * - Breaking change notifications
- * - Issue references
  * ============================================================================
  */
