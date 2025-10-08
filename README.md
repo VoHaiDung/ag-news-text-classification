@@ -1869,6 +1869,7 @@ ag-news-text-classification/
 ├── OVERFITTING_PREVENTION.md
 ├── ROADMAP.md
 ├── FREE_DEPLOYMENT_GUIDE.md
+├── PLATFORM_OPTIMIZATION_GUIDE.md
 ├── IDE_SETUP_GUIDE.md
 ├── LOCAL_MONITORING_GUIDE.md
 ├── QUICK_START.md
@@ -1884,6 +1885,7 @@ ag-news-text-classification/
 ├── .env.test
 ├── .env.local
 ├── .gitignore
+├── .gitattributes
 ├── .dockerignore
 ├── .editorconfig
 ├── .pre-commit-config.yaml
@@ -1907,6 +1909,7 @@ ag-news-text-classification/
 │   ├── colab.txt
 │   ├── kaggle.txt
 │   ├── free_tier.txt
+│   ├── platform_minimal.txt
 │   ├── local_monitoring.txt
 │   └── lock/
 │       ├── base.lock
@@ -2015,6 +2018,9 @@ ag-news-text-classification/
 │   ├── overfitting_prevention_flow.png
 │   ├── sota_model_architecture.png
 │   ├── decision_tree.png
+│   ├── platform_detection_flow.png
+│   ├── auto_training_workflow.png
+│   ├── quota_management_diagram.png
 │   └── progressive_disclosure.png
 │
 ├── configs/
@@ -2041,7 +2047,8 @@ ag-news-text-classification/
 │   ├── environments/
 │   │   ├── dev.yaml
 │   │   ├── local_prod.yaml
-│   │   └── colab.yaml
+│   │   ├── colab.yaml
+│   │   └── kaggle.yaml
 │   │
 │   ├── features/
 │   │   └── feature_flags.yaml
@@ -2104,10 +2111,25 @@ ag-news-text-classification/
 │   │   │   │   └── ensemble_distilled.yaml
 │   │   │   │
 │   │   │   └── tier_5_free_optimized/
+│   │   │       ├── auto_selected/
+│   │   │       │   ├── README.md
+│   │   │       │   ├── colab_free_auto.yaml
+│   │   │       │   ├── colab_pro_auto.yaml
+│   │   │       │   ├── kaggle_auto.yaml
+│   │   │       │   ├── local_auto.yaml
+│   │   │       │   └── platform_matrix.yaml
+│   │   │       │
+│   │   │       ├── platform_specific/
+│   │   │       │   ├── colab_optimized.yaml
+│   │   │       │   ├── kaggle_tpu_optimized.yaml
+│   │   │       │   ├── local_cpu_optimized.yaml
+│   │   │       │   └── local_gpu_optimized.yaml
+│   │   │       │
 │   │   │       ├── colab_friendly/
 │   │   │       │   ├── deberta_large_lora_colab.yaml
 │   │   │       │   ├── distilroberta_efficient.yaml
 │   │   │       │   └── ensemble_lightweight.yaml
+│   │   │       │
 │   │   │       └── cpu_friendly/
 │   │   │           ├── distilled_cpu_optimized.yaml
 │   │   │           └── quantized_int8.yaml
@@ -2206,6 +2228,15 @@ ag-news-text-classification/
 │   │   │   ├── mixed_precision.yaml
 │   │   │   └── distributed.yaml
 │   │   │
+│   │   ├── platform_adaptive/
+│   │   │   ├── README.md
+│   │   │   ├── colab_free_training.yaml
+│   │   │   ├── colab_pro_training.yaml
+│   │   │   ├── kaggle_gpu_training.yaml
+│   │   │   ├── kaggle_tpu_training.yaml
+│   │   │   ├── local_gpu_training.yaml
+│   │   │   └── local_cpu_training.yaml
+│   │   │
 │   │   ├── efficient/
 │   │   │   ├── lora/
 │   │   │   │   ├── lora_config.yaml
@@ -2244,6 +2275,10 @@ ag-news-text-classification/
 │   │   │       ├── lora_plus_adapters.yaml
 │   │   │       ├── qlora_plus_prompt.yaml
 │   │   │       └── multi_method_fusion.yaml
+│   │   │
+│   │   ├── tpu/
+│   │   │   ├── kaggle_tpu_v3.yaml
+│   │   │   └── tpu_optimization.yaml
 │   │   │
 │   │   ├── advanced/
 │   │   │   ├── curriculum_learning.yaml
@@ -2402,10 +2437,22 @@ ag-news-text-classification/
 │   │   │   ├── api_local.yaml
 │   │   │   └── inference_local.yaml
 │   │   │
-│   │   └── free_tier/
-│   │       ├── colab_deployment.yaml
-│   │       ├── kaggle_deployment.yaml
-│   │       └── huggingface_spaces.yaml
+│   │   ├── free_tier/
+│   │   │   ├── colab_deployment.yaml
+│   │   │   ├── kaggle_deployment.yaml
+│   │   │   └── huggingface_spaces.yaml
+│   │   │
+│   │   └── platform_profiles/
+│   │       ├── colab_profile.yaml
+│   │       ├── kaggle_profile.yaml
+│   │       ├── gitpod_profile.yaml
+│   │       ├── codespaces_profile.yaml
+│   │       └── hf_spaces_profile.yaml
+│   │
+│   ├── quotas/
+│   │   ├── quota_limits.yaml
+│   │   ├── quota_tracking.yaml
+│   │   └── platform_quotas.yaml
 │   │
 │   └── experiments/
 │       ├── baselines/
@@ -2495,6 +2542,16 @@ ag-news-text-classification/
 │   │
 │   ├── test_access_log.json
 │   │
+│   ├── platform_cache/
+│   │   ├── colab_cache/
+│   │   ├── kaggle_cache/
+│   │   └── local_cache/
+│   │
+│   ├── quota_tracking/
+│   │   ├── quota_history.json
+│   │   ├── session_logs.json
+│   │   └── platform_usage.db
+│   │
 │   └── cache/
 │       ├── local_cache/
 │       ├── model_cache/
@@ -2504,6 +2561,13 @@ ag-news-text-classification/
 │   ├── __init__.py
 │   ├── __version__.py
 │   ├── cli.py
+│   │
+│   ├── cli_commands/
+│   │   ├── __init__.py
+│   │   ├── auto_train.py
+│   │   ├── choose_platform.py
+│   │   ├── check_quota.py
+│   │   └── platform_info.py
 │   │
 │   ├── core/
 │   │   ├── __init__.py
@@ -2593,6 +2657,17 @@ ag-news-text-classification/
 │   │           ├── statistical_tests.py
 │   │           └── visualization_utils.py
 │   │
+│   ├── deployment/
+│   │   ├── __init__.py
+│   │   ├── platform_detector.py
+│   │   ├── smart_selector.py
+│   │   ├── cache_manager.py
+│   │   ├── checkpoint_manager.py
+│   │   ├── quota_tracker.py
+│   │   ├── storage_sync.py
+│   │   ├── session_manager.py
+│   │   └── resource_monitor.py
+│   │
 │   ├── api/
 │   │   ├── __init__.py
 │   │   │
@@ -2618,6 +2693,7 @@ ag-news-text-classification/
 │   │   │   │   ├── metrics.py
 │   │   │   │   ├── overfitting.py
 │   │   │   │   ├── llm.py
+│   │   │   │   ├── platform.py
 │   │   │   │   └── admin.py
 │   │   │   │
 │   │   │   ├── schemas/
@@ -2953,6 +3029,7 @@ ag-news-text-classification/
 │   │   │   ├── distributed_trainer.py
 │   │   │   ├── apex_trainer.py
 │   │   │   ├── safe_trainer.py
+│   │   │   ├── auto_trainer.py
 │   │   │   ├── lora_trainer.py
 │   │   │   ├── qlora_trainer.py
 │   │   │   ├── adapter_trainer.py
@@ -3007,6 +3084,9 @@ ag-news-text-classification/
 │   │   │   │   ├── prefix_tuning.py
 │   │   │   │   ├── p_tuning.py
 │   │   │   │   └── soft_prompt_tuning.py
+│   │   │   │
+│   │   │   ├── tpu_training.py
+│   │   │   ├── adaptive_training.py
 │   │   │   │
 │   │   │   └── multi_stage/
 │   │   │       ├── __init__.py
@@ -3071,7 +3151,12 @@ ag-news-text-classification/
 │   │       ├── complexity_regularizer_callback.py
 │   │       ├── test_protection_callback.py
 │   │       ├── lora_rank_callback.py
-│   │       └── memory_monitor_callback.py
+│   │       ├── memory_monitor_callback.py
+│   │       ├── colab_callback.py
+│   │       ├── kaggle_callback.py
+│   │       ├── platform_callback.py
+│   │       ├── quota_callback.py
+│   │       └── session_callback.py
 │   │
 │   ├── evaluation/
 │   │   ├── __init__.py
@@ -3132,7 +3217,10 @@ ag-news-text-classification/
 │       ├── experiment_tracking.py
 │       ├── prompt_utils.py
 │       ├── api_utils.py
-│       └── local_utils.py
+│       ├── local_utils.py
+│       ├── platform_utils.py
+│       ├── resource_utils.py
+│       └── quota_utils.py
 │
 ├── experiments/
 │   ├── __init__.py
@@ -3222,10 +3310,13 @@ ag-news-text-classification/
 │   │   │   ├── experiment_dashboard.py
 │   │   │   └── model_registry.py
 │   │   │
-│   │   └── wandb/
-│   │       ├── training_dashboard.json
-│   │       ├── overfitting_dashboard.json
-│   │       └── parameter_efficiency_dashboard.json
+│   │   ├── wandb/
+│   │   │   ├── training_dashboard.json
+│   │   │   ├── overfitting_dashboard.json
+│   │   │   └── parameter_efficiency_dashboard.json
+│   │   │
+│   │   ├── platform_dashboard.json
+│   │   └── quota_dashboard.json
 │   │
 │   ├── metrics/
 │   │   ├── __init__.py
@@ -3234,7 +3325,9 @@ ag-news-text-classification/
 │   │   ├── local_metrics.py
 │   │   ├── model_metrics.py
 │   │   ├── training_metrics.py
-│   │   └── overfitting_metrics.py
+│   │   ├── overfitting_metrics.py
+│   │   ├── platform_metrics.py
+│   │   └── quota_metrics.py
 │   │
 │   ├── logs_analysis/
 │   │   ├── __init__.py
@@ -3246,7 +3339,9 @@ ag-news-text-classification/
 │       ├── start_tensorboard.sh
 │       ├── start_mlflow.sh
 │       ├── start_wandb.sh
+│       ├── monitor_platform.sh
 │       ├── export_metrics.py
+│       ├── export_quota_metrics.py
 │       └── generate_report.py
 │
 ├── security/
@@ -3314,14 +3409,18 @@ ag-news-text-classification/
 │   ├── evaluate_simple.py
 │   ├── demo_app.py
 │   ├── local_api_quickstart.py
+│   ├── auto_start.py
+│   ├── auto_train_demo.py
 │   ├── colab_notebook.ipynb
 │   ├── kaggle_notebook.ipynb
 │   │
 │   ├── use_cases/
 │   │   ├── quick_demo_5min.py
+│   │   ├── auto_demo_2min.py
 │   │   ├── research_experiment_30min.py
 │   │   ├── production_deployment_1hr.py
-│   │   └── learning_exploration.py
+│   │   ├── learning_exploration.py
+│   │   └── platform_comparison_demo.py
 │   │
 │   └── docker_quickstart/
 │       ├── Dockerfile.local
@@ -3347,10 +3446,13 @@ ag-news-text-classification/
 │   ├── setup/
 │   │   ├── download_all_data.py
 │   │   ├── setup_local_environment.sh
+│   │   ├── setup_platform.py
 │   │   ├── setup_colab.sh
 │   │   ├── setup_kaggle.sh
 │   │   ├── verify_installation.py
 │   │   ├── verify_dependencies.py
+│   │   ├── verify_platform.py
+│   │   ├── optimize_for_platform.sh
 │   │   └── download_pretrained_models.py
 │   │
 │   ├── data_preparation/
@@ -3395,6 +3497,7 @@ ag-news-text-classification/
 │   │   │   ├── base_to_xlarge.py
 │   │   │   └── pretrain_finetune_distill.py
 │   │   │
+│   │   ├── auto_train.sh
 │   │   ├── train_all_models.sh
 │   │   ├── train_single_model.py
 │   │   ├── train_ensemble.py
@@ -3431,6 +3534,7 @@ ag-news-text-classification/
 │   │   ├── optimize_for_inference.py
 │   │   ├── create_docker_local.sh
 │   │   ├── deploy_to_local.py
+│   │   ├── deploy_auto.py
 │   │   └── deploy_to_hf_spaces.py
 │   │
 │   ├── overfitting_prevention/
@@ -3439,6 +3543,25 @@ ag-news-text-classification/
 │   │   ├── check_data_leakage.py
 │   │   ├── monitor_training_live.py
 │   │   └── generate_overfitting_report.py
+│   │
+│   ├── platform/
+│   │   ├── colab/
+│   │   │   ├── mount_drive.py
+│   │   │   ├── setup_colab.py
+│   │   │   └── keep_alive.py
+│   │   │
+│   │   ├── kaggle/
+│   │   │   ├── setup_kaggle.py
+│   │   │   ├── setup_tpu.py
+│   │   │   └── create_dataset.py
+│   │   │
+│   │   └── local/
+│   │       ├── detect_gpu.py
+│   │       └── optimize_local.py
+│   │
+│   ├── monitoring/
+│   │   ├── monitor_quota.py
+│   │   └── monitor_session.py
 │   │
 │   ├── ide/
 │   │   ├── setup_pycharm.py
@@ -3478,6 +3601,7 @@ ag-news-text-classification/
 │   ├── README.md
 │   │
 │   ├── 00_setup/
+│   │   ├── 00_auto_setup.ipynb
 │   │   ├── 00_local_setup.ipynb
 │   │   ├── 01_colab_setup.ipynb
 │   │   ├── 02_kaggle_setup.ipynb
@@ -3486,6 +3610,7 @@ ag-news-text-classification/
 │   │   └── 05_jupyterlab_setup.ipynb
 │   │
 │   ├── 01_tutorials/
+│   │   ├── 00_auto_training_tutorial.ipynb
 │   │   ├── 00_environment_setup.ipynb
 │   │   ├── 01_data_loading_basics.ipynb
 │   │   ├── 02_preprocessing_tutorial.ipynb
@@ -3500,7 +3625,9 @@ ag-news-text-classification/
 │   │   ├── 11_prompt_engineering.ipynb
 │   │   ├── 12_instruction_tuning.ipynb
 │   │   ├── 13_local_api_usage.ipynb
-│   │   └── 14_monitoring_setup.ipynb
+│   │   ├── 14_monitoring_setup.ipynb
+│   │   ├── 15_platform_optimization.ipynb
+│   │   └── 16_quota_management.ipynb
 │   │
 │   ├── 02_exploratory/
 │   │   ├── 01_data_exploration.ipynb
@@ -3546,16 +3673,27 @@ ag-news-text-classification/
 │   │
 │   └── 06_platform_specific/
 │       ├── local/
+│       │   ├── auto_training_local.ipynb
 │       │   ├── cpu_training.ipynb
 │       │   ├── gpu_training.ipynb
+│       │   ├── multi_gpu_local.ipynb
 │       │   └── inference_demo.ipynb
+│       │
 │       ├── colab/
+│       │   ├── auto_training_colab.ipynb
 │       │   ├── quick_start_colab.ipynb
 │       │   ├── full_training_colab.ipynb
+│       │   ├── drive_optimization.ipynb
+│       │   ├── keep_alive_demo.ipynb
 │       │   └── inference_demo_colab.ipynb
+│       │
 │       ├── kaggle/
+│       │   ├── auto_training_kaggle.ipynb
 │       │   ├── kaggle_submission.ipynb
-│       │   └── kaggle_training.ipynb
+│       │   ├── kaggle_training.ipynb
+│       │   ├── tpu_training.ipynb
+│       │   └── dataset_caching.ipynb
+│       │
 │       └── huggingface/
 │           └── spaces_demo.ipynb
 │
@@ -3580,7 +3718,11 @@ ag-news-text-classification/
 │   │   ├── 13_Prompt_Testing.py
 │   │   ├── 14_Local_Monitoring.py
 │   │   ├── 15_IDE_Setup_Guide.py
-│   │   └── 16_Experiment_Tracker.py
+│   │   ├── 16_Experiment_Tracker.py
+│   │   ├── 17_Platform_Info.py
+│   │   ├── 18_Quota_Dashboard.py
+│   │   ├── 19_Platform_Selector.py
+│   │   └── 20_Auto_Train_UI.py
 │   │
 │   ├── components/
 │   │   ├── __init__.py
@@ -3594,7 +3736,10 @@ ag-news-text-classification/
 │   │   ├── result_display.py
 │   │   ├── performance_monitor.py
 │   │   ├── prompt_builder.py
-│   │   └── ide_configurator.py
+│   │   ├── ide_configurator.py
+│   │   ├── platform_info_component.py
+│   │   ├── quota_monitor_component.py
+│   │   └── resource_gauge.py
 │   │
 │   ├── utils/
 │   │   ├── session_manager.py
@@ -3666,8 +3811,11 @@ ag-news-text-classification/
 │   │   ├── local_setup.md
 │   │   ├── ide_setup.md
 │   │   ├── quickstart.md
+│   │   ├── auto_mode.md
+│   │   ├── platform_detection.md
 │   │   ├── overfitting_prevention_quickstart.md
 │   │   ├── choosing_model.md
+│   │   ├── choosing_platform.md
 │   │   ├── free_deployment.md
 │   │   └── troubleshooting.md
 │   │
@@ -3692,9 +3840,20 @@ ag-news-text-classification/
 │   │   ├── 02_custom_models.md
 │   │   └── 03_research_workflow.md
 │   │
+│   ├── platform_guides/
+│   │   ├── README.md
+│   │   ├── colab_guide.md
+│   │   ├── colab_advanced.md
+│   │   ├── kaggle_guide.md
+│   │   ├── kaggle_tpu.md
+│   │   ├── local_guide.md
+│   │   ├── gitpod_guide.md
+│   │   └── platform_comparison.md
+│   │
 │   ├── user_guide/
 │   │   ├── data_preparation.md
 │   │   ├── model_training.md
+│   │   ├── auto_training.md
 │   │   ├── lora_guide.md
 │   │   ├── qlora_guide.md
 │   │   ├── distillation_guide.md
@@ -3703,6 +3862,8 @@ ag-news-text-classification/
 │   │   ├── safe_training_practices.md
 │   │   ├── evaluation.md
 │   │   ├── local_deployment.md
+│   │   ├── quota_management.md
+│   │   ├── platform_optimization.md
 │   │   ├── prompt_engineering.md
 │   │   └── advanced_techniques.md
 │   │
@@ -3721,6 +3882,8 @@ ag-news-text-classification/
 │   │   ├── lora_api.md
 │   │   ├── ensemble_api.md
 │   │   ├── overfitting_prevention_api.md
+│   │   ├── platform_api.md
+│   │   ├── quota_api.md
 │   │   └── evaluation_api.md
 │   │
 │   ├── ide_guides/
@@ -3758,8 +3921,14 @@ ag-news-text-classification/
 │   │   ├── model_selection_cheatsheet.pdf
 │   │   ├── overfitting_prevention_checklist.pdf
 │   │   ├── free_deployment_comparison.pdf
-│   │   ├── cli_commands.pdf
-│   │   └── config_reference.pdf
+│   │   ├── platform_comparison_chart.pdf
+│   │   ├── auto_train_cheatsheet.pdf
+│   │   ├── quota_limits_reference.pdf
+│   │   └── cli_commands.pdf
+│   │
+│   ├── troubleshooting/
+│   │   ├── platform_issues.md
+│   │   └── quota_issues.md
 │   │
 │   ├── architecture/
 │   │   ├── decisions/
@@ -3795,6 +3964,16 @@ ag-news-text-classification/
 │   │   ├── docker-compose.local.yml
 │   │   └── .dockerignore
 │   │
+│   ├── auto_deploy/
+│   │   ├── auto_deploy.py
+│   │   ├── platform_deploy.sh
+│   │   └── README.md
+│   │
+│   ├── platform_specific/
+│   │   ├── colab_deploy.md
+│   │   ├── kaggle_deploy.md
+│   │   └── local_deploy.md
+│   │
 │   ├── huggingface/
 │   │   ├── spaces_config.yaml
 │   │   ├── requirements.txt
@@ -3828,7 +4007,8 @@ ag-news-text-classification/
 │   │   ├── parameter_efficiency.json
 │   │   ├── memory_usage.json
 │   │   ├── training_time.json
-│   │   └── inference_speed.json
+│   │   ├── inference_speed.json
+│   │   └── platform_comparison.json
 │   │
 │   ├── robustness/
 │   │   ├── adversarial_results.json
@@ -3850,38 +4030,59 @@ ag-news-text-classification/
 │   │   │   ├── test_augmentation.py
 │   │   │   ├── test_dataloader.py
 │   │   │   └── test_contrast_sets.py
+│   │   │
 │   │   ├── models/
 │   │   │   ├── test_transformers.py
 │   │   │   ├── test_ensemble.py
 │   │   │   ├── test_efficient.py
 │   │   │   └── test_prompt_models.py
+│   │   │
 │   │   ├── training/
 │   │   │   ├── test_trainers.py
+│   │   │   ├── test_auto_trainer.py
 │   │   │   ├── test_strategies.py
 │   │   │   ├── test_callbacks.py
 │   │   │   └── test_multi_stage.py
+│   │   │
+│   │   ├── deployment/
+│   │   │   ├── test_platform_detector.py
+│   │   │   ├── test_smart_selector.py
+│   │   │   ├── test_cache_manager.py
+│   │   │   ├── test_checkpoint_manager.py
+│   │   │   └── test_quota_tracker.py
+│   │   │
 │   │   ├── api/
 │   │   │   ├── test_rest_api.py
 │   │   │   ├── test_local_api.py
 │   │   │   └── test_auth.py
+│   │   │
 │   │   ├── overfitting_prevention/
 │   │   │   ├── test_validators.py
 │   │   │   ├── test_monitors.py
 │   │   │   ├── test_constraints.py
 │   │   │   ├── test_guards.py
 │   │   │   └── test_recommenders.py
+│   │   │
 │   │   └── utils/
 │   │       ├── test_memory_utils.py
 │   │       └── test_utilities.py
 │   │
 │   ├── integration/
 │   │   ├── test_full_pipeline.py
+│   │   ├── test_auto_train_flow.py
 │   │   ├── test_ensemble_pipeline.py
 │   │   ├── test_inference_pipeline.py
 │   │   ├── test_local_api_flow.py
 │   │   ├── test_prompt_pipeline.py
 │   │   ├── test_llm_integration.py
+│   │   ├── test_platform_workflows.py
+│   │   ├── test_quota_tracking_flow.py
 │   │   └── test_overfitting_prevention_flow.py
+│   │
+│   ├── platform_specific/
+│   │   ├── test_colab_integration.py
+│   │   ├── test_kaggle_integration.py
+│   │   └── test_local_integration.py
 │   │
 │   ├── performance/
 │   │   ├── test_model_speed.py
@@ -3897,7 +4098,10 @@ ag-news-text-classification/
 │   │   ├── test_local_deployment.py
 │   │   ├── test_free_deployment.py
 │   │   ├── test_quickstart_pipeline.py
-│   │   └── test_sota_pipeline.py
+│   │   ├── test_sota_pipeline.py
+│   │   ├── test_auto_train_colab.py
+│   │   ├── test_auto_train_kaggle.py
+│   │   └── test_quota_enforcement.py
 │   │
 │   ├── regression/
 │   │   ├── __init__.py
@@ -3936,7 +4140,10 @@ ag-news-text-classification/
 │   │   ├── local_deployment_test.yml
 │   │   ├── dependency_updates.yml
 │   │   ├── compatibility_matrix.yml
-│   │   └── regression_tests.yml
+│   │   ├── regression_tests.yml
+│   │   ├── test_platform_detection.yml
+│   │   ├── test_auto_train.yml
+│   │   └── platform_compatibility.yml
 │   │
 │   ├── ISSUE_TEMPLATE/
 │   │   ├── bug_report.md
@@ -3960,6 +4167,8 @@ ag-news-text-classification/
     │   ├── overfitting_debugger.py
     │   ├── lora_debugger.py
     │   ├── data_validator.py
+    │   ├── platform_debugger.py
+    │   ├── quota_debugger.py
     │   └── local_debugger.py
     │
     ├── visualization/
@@ -3977,6 +4186,16 @@ ag-news-text-classification/
     │   ├── sync_manager.py
     │   ├── auto_sync.sh
     │   └── validate_all_configs.py
+    │
+    ├── platform_tools/
+    │   ├── __init__.py
+    │   ├── detector_tester.py
+    │   ├── quota_simulator.py
+    │   └── platform_benchmark.py
+    │
+    ├── cost_tools/
+    │   ├── cost_estimator.py
+    │   └── cost_comparator.py
     │
     ├── ide_tools/
     │   ├── pycharm_config_generator.py
@@ -3997,6 +4216,7 @@ ag-news-text-classification/
     │   ├── health_check_runner.py
     │   ├── auto_fix_runner.py
     │   ├── batch_config_generator.py
+    │   ├── platform_health.py
     │   └── nightly_tasks.sh
     │
     └── cli_helpers/
