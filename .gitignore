@@ -1,12 +1,40 @@
+# ============================================================================
+# Git Ignore Configuration for AG News Text Classification
+# ============================================================================
+# Project: AG News Text Classification (ag-news-text-classification)
+# Description: Ignore patterns for version control
+# Author: Võ Hải Dũng
+# License: MIT
+# ============================================================================
+# This file specifies intentionally untracked files that Git should ignore.
+# Files already tracked by Git are not affected.
+#
+# Pattern format:
+# - Blank lines or lines starting with # are ignored
+# - Standard glob patterns work
+# - ! negates a pattern (whitelist)
+# - / at the end matches directories
+# - / at the beginning matches root directory
+#
+# For more information:
+# - https://git-scm.com/docs/gitignore
+# - https://github.com/github/gitignore
+# ============================================================================
+
+# ============================================================================
 # Python
+# ============================================================================
+
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
+# C extensions
 *.so
+
+# Distribution / packaging
 .Python
-env/
-venv/
-ENV/
 build/
 develop-eggs/
 dist/
@@ -19,47 +47,600 @@ parts/
 sdist/
 var/
 wheels/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
+pip-wheel-metadata/
 
-# Testing
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
 .tox/
+.nox/
 .coverage
 .coverage.*
 .cache
-.pytest_cache/
-htmlcov/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
 .hypothesis/
+.pytest_cache/
+cover/
 
-# Jupyter
-.ipynb_checkpoints
-*.ipynb
+# Translations
+*.mo
+*.pot
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Project specific
-data/raw/
-data/processed/
-outputs/
-models/
-logs/
-wandb/
-mlruns/
-.env
+# Django stuff
 *.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff
+instance/
+.webassets-cache
+
+# Scrapy stuff
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+docs/.doctrees/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb_checkpoints/
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+__pypackages__/
+
+# PEP 582
+__pypackages__/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath
+*.sage.py
+
+# Environments
+.env
+.env.*
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.conda/
+
+# Spyder
+.spyderproject
+.spyproject
+
+# Rope
+.ropeproject
+
+# mkdocs
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# pytype
+.pytype/
+
+# Cython
+*.c
+*.cpp
+cython_debug/
+
+# ============================================================================
+# Machine Learning / Deep Learning
+# ============================================================================
+
+# Models
 *.pt
 *.pth
-*.onnx
-*.pkl
+*.ckpt
 *.h5
+*.hdf5
+*.pb
+*.onnx
+*.tflite
+*.keras
 *.safetensors
+*.bin
+*.msgpack
+
+# Weights
+*.weights
+*.pkl
+*.pickle
+*.joblib
+
+# TensorFlow
+*.tfrecord
+*.tfevents.*
+checkpoint
+
+# PyTorch
+*.tar
+lightning_logs/
+
+# Datasets (raw data should not be in git)
+data/raw/
+data/external/
+data/interim/
+
+# Processed data (can be regenerated)
+data/processed/
+data/augmented/
+data/pseudo_labeled/
+data/selected_subsets/
+
+# Cache
+data/cache/
+.cache/
+*.cache
+
+# ============================================================================
+# Outputs
+# ============================================================================
+
+# Model outputs
+outputs/models/checkpoints/
+outputs/models/pretrained/
+outputs/models/fine_tuned/
+outputs/models/ensembles/
+outputs/models/distilled/
+outputs/models/optimized/
+outputs/models/exported/
+
+# Results
+outputs/results/
+outputs/analysis/
+outputs/profiling/
+outputs/artifacts/
+
+# Logs
+outputs/logs/
+*.log
+*.log.*
+
+# Reports
+outputs/reports/
+
+# ============================================================================
+# Experiment Tracking
+# ============================================================================
+
+# Weights & Biases
+wandb/
+artifacts/
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# TensorBoard
+events.out.tfevents.*
+runs/
+
+# Neptune
+.neptune/
+
+# Comet
+.comet/
+
+# ClearML
+.clearml/
+
+# DVC
+.dvc/
+
+# ============================================================================
+# IDEs and Editors
+# ============================================================================
+
+# Visual Studio Code
+.vscode/
+.vscode-server/
+*.code-workspace
+.history/
+
+# PyCharm
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea_modules/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+.sublime/
+
+# Vim
+*.swp
+*.swo
+*.swn
+*~
+.vim/
+*.un~
+Session.vim
+.netrwhist
+
+# Neovim
+*.nvim
+
+# Emacs
+*~
+\#*\#
+.\#*
+.dir-locals.el
+
+# Eclipse
+.project
+.pydevproject
+.settings/
+
+# Atom
+.atom/
+
+# JetBrains
+.fleet/
+
+# ============================================================================
+# Cloud IDEs
+# ============================================================================
+
+# Gitpod
+.gitpod/
+
+# GitHub Codespaces
+.devcontainer/local/
+
+# Google Colab
+.colab/
+
+# Kaggle
+.kaggle/
+
+# ============================================================================
+# Operating Systems
+# ============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ============================================================================
+# Containers
+# ============================================================================
+
+# Docker
+.docker/
+docker-compose.override.yml
+.dockerignore
+
+# Kubernetes
+.kube/
+
+# ============================================================================
+# Backup and Temporary Files
+# ============================================================================
+
+# Backups
+*.bak
+*.backup
+*.old
+*.orig
+*.tmp
+.backups/
+backup/
+backups/
+
+# Temporary files
+tmp/
+temp/
+*.temp
+
+# Archive files
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# ============================================================================
+# Documentation
+# ============================================================================
+
+# Sphinx build
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# MkDocs
+site/
+
+# PDF outputs
+*.pdf
+
+# ============================================================================
+# Monitoring and Profiling
+# ============================================================================
+
+# Profiling
+*.prof
+*.lprof
+*.py.lprof
+profile_*.txt
+*.trace
+
+# Memory dumps
+*.hprof
+*.dump
+
+# ============================================================================
+# Cache Directories
+# ============================================================================
+
+# General cache
+.cache/
+cache/
+
+# Hugging Face cache
+.huggingface/
+transformers_cache/
+
+# Torch cache
+.torch/
+
+# Model cache
+model_cache/
+
+# ============================================================================
+# Lock Files (Optional - include for reproducibility)
+# ============================================================================
+
+# Uncomment to ignore lock files
+# requirements/lock/*.lock
+# package-lock.json
+# yarn.lock
+
+# ============================================================================
+# Testing
+# ============================================================================
+
+# Test outputs
+test_outputs/
+.test_cache/
+
+# Benchmark results
+benchmarks/results/
+
+# ============================================================================
+# CI/CD
+# ============================================================================
+
+# GitHub Actions
+.github/workflows/local/
+
+# GitLab CI
+.gitlab-ci-local/
+
+# ============================================================================
+# Security
+# ============================================================================
+
+# API keys and secrets
+.secrets
+secrets.yaml
+*.key
+*.pem
+*.crt
+*.p12
+credentials.json
+service-account.json
+
+# Secrets baseline
+.secrets.baseline
+
+# ============================================================================
+# Miscellaneous
+# ============================================================================
+
+# Compiled files
+*.pyc
+*.pyo
+*.so
+*.dll
+*.dylib
+
+# Patches
+*.patch
+*.diff
+
+# SQLite databases
+*.sqlite
+*.db
+
+# Configuration overrides
+config.local.yaml
+settings.local.yaml
+
+# Node modules (if using npm for tools)
+node_modules/
+
+# Python virtual environments
+.virtualenv/
+.pyenv/
+
+# ============================================================================
+# Project Specific
+# ============================================================================
+
+# Experiment specific outputs
+experiments/results/
+experiments/outputs/
+
+# Notebook outputs (keep .ipynb files but ignore outputs)
+notebooks/**/*.nbconvert.ipynb
+
+# Local configuration
+.make.cache
+.build_cache
+
+# IDE sync files
+.ide/sync/
+
+# Deployment artifacts
+deployment/local/data/
+deployment/local/logs/
+
+# Monitoring data
+monitoring/local/data/
+monitoring/local/prometheus/
+monitoring/local/grafana/
+
+# Security scan results
+security/scan_results/
+
+# Migration data
+migrations/data/cache/
+
+# Plugin cache
+plugins/cache/
+
+# Tool outputs
+tools/outputs/
+
+# ============================================================================
+# Whitelist Exceptions
+# ============================================================================
+
+# Keep specific files that match ignore patterns
+!.gitkeep
+!.gitattributes
+!.github/
+!.pre-commit-config.yaml
+!.editorconfig
+!.flake8
+
+# Keep example data
+!data/test_samples/
+!data/metadata/
+
+# Keep requirement lock files for reproducibility
+!requirements/lock/*.lock
+!requirements/lock/README.md
+
+# Keep config templates
+!configs/templates/
+!configs/secrets/secrets.template.yaml
+
+# Keep empty directories with .gitkeep
+!**/.gitkeep
+
+# Keep documentation static files
+!docs/_static/custom.css
+
+# ============================================================================
+# Notes
+# ============================================================================
+# This .gitignore is comprehensive for a personal ML/DL research project
+# 
+# Customize based on needs:
+# - Uncomment sections as needed
+# - Add project-specific patterns
+# - Use ! to whitelist specific files
+#
+# Best practices:
+# - Keep model weights out of git (use Git LFS or external storage)
+# - Keep large datasets out of git (use DVC or cloud storage)
+# - Keep API keys and secrets out of git (use environment variables)
+# - Keep generated files out of git (can be regenerated)
+# - Keep IDE-specific files out of shared repo
+#
+# For large files that must be tracked, consider:
+# - Git LFS: https://git-lfs.github.com/
+# - DVC: https://dvc.org/
+#
+# Verify what's ignored:
+#   git status --ignored
+#   git check-ignore -v <file>
+# ============================================================================
