@@ -4,63 +4,65 @@
 # Project: AG News Text Classification (ag-news-text-classification)
 # Description: Optimized dependencies for Kaggle kernels and competitions
 # Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
 # License: MIT
-# Python: 3.10 (Kaggle default)
+# Python: 3.10 (Kaggle default as of 2024)
 # ============================================================================
-# This file contains packages optimized for:
-# - Kaggle GPU kernels (P100, T4 GPUs)
-# - Kaggle TPU kernels (TPU v3-8)
-# - Kaggle CPU kernels (4 cores, 16GB RAM)
+# This file contains packages optimized for Kaggle platform:
+# - Kaggle GPU Kernels (P100, T4 GPUs)
+# - Kaggle TPU Kernels (TPU v3-8)
+# - Kaggle CPU Kernels (4 cores, 16GB RAM)
 # - Fast installation (9-hour GPU session limit)
 # - Memory efficiency (16GB RAM, 16GB GPU VRAM)
-# - Offline datasets (internet optional)
+# - Offline dataset support (internet optional mode)
+# - Competition submission support
 #
-# Pre-installed in Kaggle (skip):
+# Pre-installed packages in Kaggle (verify before installing):
 # - torch, torchvision, torchaudio
 # - tensorflow, keras
 # - numpy, pandas, scipy
 # - matplotlib, seaborn, plotly
 # - scikit-learn
 # - jupyter, ipython
-# - transformers (older version)
+# - transformers (may be older version)
 # - datasets
 # - xgboost, lightgbm, catboost
 #
-# This file installs only ADDITIONAL or UPDATED packages
+# This file installs only ADDITIONAL or UPDATED packages not pre-installed
 # ============================================================================
 
 # ----------------------------------------------------------------------------
-# HuggingFace Ecosystem (Update to latest versions)
+# HuggingFace Ecosystem (Update to Latest Versions)
 # ----------------------------------------------------------------------------
-# Transformers library (update Kaggle's version)
+# Transformers library (update Kaggle's pre-installed version)
 transformers>=4.36.0,<4.41.0
 
-# Datasets library (update)
+# Datasets library (update to latest)
 datasets>=2.16.0,<2.20.0
 
-# Tokenizers (update)
+# Tokenizers (update to latest)
 tokenizers>=0.15.0,<0.16.0
 
-# Accelerate (may not be pre-installed)
+# Accelerate for distributed training (may not be pre-installed)
 accelerate>=0.25.0,<0.31.0
 
-# SafeTensors
+# SafeTensors for model serialization
 safetensors>=0.4.0,<0.5.0
 
-# HuggingFace Hub
+# HuggingFace Hub for model management
 huggingface-hub>=0.20.0,<0.24.0
 
 # ----------------------------------------------------------------------------
 # Parameter-Efficient Fine-Tuning
 # ----------------------------------------------------------------------------
-# PEFT for LoRA/QLoRA
+# PEFT for LoRA, QLoRA, and other efficient methods
 peft>=0.7.0,<0.12.0
 
-# BitsAndBytes for quantization
+# BitsAndBytes for quantization (GPU required)
 bitsandbytes>=0.41.0,<0.44.0
 
 # ----------------------------------------------------------------------------
-# Efficient Training
+# Efficient Training Libraries
 # ----------------------------------------------------------------------------
 # xFormers for memory-efficient attention
 xformers>=0.0.23,<0.0.27
@@ -68,295 +70,347 @@ xformers>=0.0.23,<0.0.27
 # ----------------------------------------------------------------------------
 # Configuration Management
 # ----------------------------------------------------------------------------
-# YAML parsing (may be older version)
+# YAML parsing (update if older version)
 pyyaml>=6.0.1,<7.0.0
 
-# Environment variables
+# Environment variable management
 python-dotenv>=1.0.0,<1.1.0
 
-# OmegaConf for complex configs
+# OmegaConf for hierarchical configurations
 omegaconf>=2.3.0,<2.4.0
 
-# Pydantic for validation (update)
+# Pydantic for data validation (update to v2)
 pydantic>=2.5.0,<2.8.0
 
 # ----------------------------------------------------------------------------
-# Data Processing
+# Natural Language Processing
 # ----------------------------------------------------------------------------
-# NLTK (update if needed)
+# NLTK for text processing (update if needed)
 nltk>=3.8.0,<3.9.0
 
-# SentencePiece
+# SentencePiece for tokenization
 sentencepiece>=0.1.99,<0.3.0
 
 # ----------------------------------------------------------------------------
-# Experiment Tracking
+# Experiment Tracking and Monitoring
 # ----------------------------------------------------------------------------
-# Weights & Biases (works offline)
+# Weights & Biases (works in offline mode)
 wandb>=0.16.0,<0.17.0
 
-# TensorBoard (update)
+# TensorBoard (update if needed)
 tensorboard>=2.15.0,<2.17.0
 
 # ----------------------------------------------------------------------------
 # Evaluation Metrics
 # ----------------------------------------------------------------------------
-# HuggingFace evaluate
+# HuggingFace evaluate library
 evaluate>=0.4.0,<0.5.0
 
 # ----------------------------------------------------------------------------
 # Logging
 # ----------------------------------------------------------------------------
-# Loguru for better logging
+# Loguru for structured logging
 loguru>=0.7.0,<0.8.0
 
 # ----------------------------------------------------------------------------
-# Utilities
+# Utility Libraries
 # ----------------------------------------------------------------------------
-# Type hints (update)
+# Type hints extensions (update)
 typing-extensions>=4.9.0,<4.12.0
 
-# File locking
+# File locking for concurrent operations
 filelock>=3.13.0,<3.15.0
 
-# Retry logic
+# Retry logic for robust operations
 tenacity>=8.2.3,<8.4.0
 
 # ----------------------------------------------------------------------------
-# Visualization
+# Rich Terminal Output
 # ----------------------------------------------------------------------------
-# Rich for beautiful output
+# Rich for beautiful terminal formatting
 rich>=13.7.0,<13.8.0
 
 # ----------------------------------------------------------------------------
 # Hyperparameter Optimization
 # ----------------------------------------------------------------------------
-# Optuna
+# Optuna for hyperparameter search
 optuna>=3.5.0,<3.7.0
 
 # ----------------------------------------------------------------------------
 # Data Augmentation
 # ----------------------------------------------------------------------------
-# NLP Augmentation
+# NLP Augmentation library
 nlpaug>=1.1.11,<1.2.0
 
 # ----------------------------------------------------------------------------
-# UI (For notebook widgets)
+# User Interface (For Notebook Widgets)
 # ----------------------------------------------------------------------------
-# Gradio for demos
+# Gradio for interactive demos
 gradio>=4.12.0,<4.38.0
 
 # ----------------------------------------------------------------------------
 # Efficient Data Loading
 # ----------------------------------------------------------------------------
-# PyArrow (may be older)
+# PyArrow for efficient data serialization (update if older)
 pyarrow>=14.0.0,<16.2.0
 
 # ----------------------------------------------------------------------------
 # Hash Functions
 # ----------------------------------------------------------------------------
-# xxhash
+# xxHash for fast hashing
 xxhash>=3.4.1,<3.5.0
 
 # ----------------------------------------------------------------------------
 # Progress Bars
 # ----------------------------------------------------------------------------
-# Alive-progress
+# Alive-progress for enhanced progress tracking
 alive-progress>=3.1.5,<3.2.0
 
 # ----------------------------------------------------------------------------
 # Serialization
 # ----------------------------------------------------------------------------
-# Dill
+# Dill for advanced pickling
 dill>=0.3.7,<0.4.0
 
-# Joblib (update)
+# Joblib for caching (update if needed)
 joblib>=1.3.2,<1.5.0
 
 # ----------------------------------------------------------------------------
 # Kaggle-Specific Utilities
 # ----------------------------------------------------------------------------
-# Kaggle API (pre-installed but ensure version)
+# Kaggle API (ensure latest version)
 kaggle>=1.6.0,<1.7.0
 
 # ----------------------------------------------------------------------------
-# Git Integration (for downloading from GitHub)
+# Git Integration
 # ----------------------------------------------------------------------------
-# GitPython
+# GitPython for repository operations
 gitpython>=3.1.40,<3.2.0
 
 # ----------------------------------------------------------------------------
-# Testing (Minimal)
+# Testing Framework
 # ----------------------------------------------------------------------------
-# Pytest
+# Pytest for unit testing
 pytest>=7.4.0,<8.3.0
 
 # ============================================================================
-# Installation Notes for Kaggle Kernels
+# Installation Instructions for Kaggle Kernels
 # ============================================================================
-# 1. Install in Kaggle notebook:
+# 1. Install from requirements file in Kaggle notebook:
 #    !pip install -q -r requirements/kaggle.txt
 #
-# 2. Or install from GitHub:
+# 2. Clone repository and install:
 #    !git clone https://github.com/VoHaiDung/ag-news-text-classification.git
 #    %cd ag-news-text-classification
 #    !pip install -q -r requirements/kaggle.txt
 #
-# 3. Download NLTK data:
+# 3. Download NLTK data (required for text processing):
 #    import nltk
 #    nltk.download('punkt')
 #    nltk.download('stopwords')
 #    nltk.download('wordnet')
+#    nltk.download('averaged_perceptron_tagger')
 #
-# 4. Login to HuggingFace (if using gated models):
+# 4. Login to HuggingFace Hub (for gated models):
 #    from huggingface_hub import notebook_login
 #    notebook_login()
 #
-# 5. Initialize W&B (works offline):
+# 5. Initialize Weights & Biases (supports offline mode):
 #    import wandb
-#    wandb.init(mode="offline")
+#    wandb.init(mode="offline")  # Use offline for no internet
 #
-# 6. Setup for training:
+# 6. Run Kaggle-specific setup script:
 #    !bash scripts/setup/setup_kaggle.sh
 #
-# 7. Verify GPU:
+# 7. Verify GPU availability and specifications:
 #    import torch
-#    print(f"CUDA: {torch.cuda.is_available()}")
-#    print(f"GPU: {torch.cuda.get_device_name(0)}")
-#    print(f"VRAM: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB")
+#    print(f"CUDA Available: {torch.cuda.is_available()}")
+#    if torch.cuda.is_available():
+#        print(f"GPU Name: {torch.cuda.get_device_name(0)}")
+#        print(f"GPU VRAM: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB")
+#        print(f"CUDA Version: {torch.version.cuda}")
 #
-# 8. Quick test:
+# 8. Quick test run:
 #    !python quickstart/minimal_example.py
-
+#
+# 9. Auto-training mode:
+#    !python quickstart/auto_start.py
+#
 # ============================================================================
 # Kaggle Kernel Specifications
 # ============================================================================
 # GPU Kernels:
-# - GPU: P100 (16GB) or T4 (16GB)
+# - GPU Options: P100 (16GB VRAM) or T4 (16GB VRAM)
 # - RAM: 16GB (more than Colab free tier)
-# - Disk: 73GB (more than Colab)
-# - Session: 9 hours (GPU quota: 30 hours/week)
-# - Python: 3.10
+# - Disk Space: 73GB temporary
+# - Session Duration: 9 hours maximum
+# - GPU Quota: 30 hours per week
+# - Python Version: 3.10
 # - Internet: Optional (can be disabled for faster execution)
+# - Advantages: More RAM, P100 option, persistent datasets
 #
 # TPU Kernels:
 # - TPU: TPU v3-8 (8 cores)
 # - RAM: 16GB
-# - Disk: 73GB
-# - Session: 9 hours (TPU quota: 20 hours/week)
+# - Disk Space: 73GB temporary
+# - Session Duration: 9 hours maximum
+# - TPU Quota: 20 hours per week
+# - Requires: PyTorch XLA or TensorFlow
 #
 # CPU Kernels:
 # - CPU: 4 cores
 # - RAM: 16GB
-# - Disk: 73GB
-# - Session: 12 hours (no quota limit)
+# - Disk Space: 73GB temporary
+# - Session Duration: 12 hours maximum
+# - No quota limits
+# - Best for: Data preprocessing and inference
 #
-# Advantages over Colab:
-# - More RAM (16GB vs 12GB)
-# - More disk space (73GB vs 100GB temporary)
-# - Better P100 GPU option
-# - Persistent datasets (no re-download needed)
-# - TPU support
-# - No session disconnects
+# Advantages over Google Colab Free:
+# - More RAM: 16GB vs 12.7GB
+# - More disk space: 73GB vs variable
+# - Better GPU options: P100 available
+# - Persistent datasets: No re-download needed
+# - TPU support: v3-8 available
+# - No mid-session disconnects
+# - Version control built-in
 #
-# Disadvantages vs Colab:
-# - Shorter GPU session (9h vs 12h)
-# - Weekly GPU quota (30h/week)
+# Disadvantages vs Google Colab Free:
+# - Shorter GPU session: 9 hours vs 12 hours
+# - Weekly GPU quota: 30 hours limit
 # - No Google Drive integration
-
-# ============================================================================
-# Kaggle-Specific Features
-# ============================================================================
-# Datasets:
-# - Add AG News dataset to kernel inputs
-# - Pre-downloaded, no internet needed
-# - Faster than downloading each time
 #
-# Output persistence:
-# - Up to 20GB output can be saved
-# - Available for 6 months
-# - Can be used as input for other kernels
+# ============================================================================
+# Kaggle-Specific Features and Workflows
+# ============================================================================
+# Dataset Management:
+# - Add AG News dataset to kernel inputs via Kaggle UI
+# - Pre-downloaded datasets require no internet
+# - Access at: /kaggle/input/dataset-name/
+# - Faster than downloading each session
 #
-# Versioning:
+# Output Persistence:
+# - Save up to 20GB output per kernel
+# - Outputs persist for 6 months
+# - Can be used as input datasets for other kernels
+# - Automatically versioned
+#
+# Kernel Versioning:
 # - Automatic versioning of notebooks
-# - Easy to roll back
-# - Compare versions
+# - Easy rollback to previous versions
+# - Compare differences between versions
+# - Track performance improvements
 #
-# Competition submission:
-# - Direct submission to competitions
-# - Leaderboard integration
-
+# Competition Integration:
+# - Direct submission to Kaggle competitions
+# - Automatic leaderboard updates
+# - Public/private leaderboard split
+# - Submission history tracking
+#
 # ============================================================================
-# Recommended Model Sizes for Kaggle
+# Recommended Model Sizes for Kaggle GPU Kernels
 # ============================================================================
-# GPU Kernels (P100/T4, 16GB VRAM):
-# - DeBERTa-v3-base (184M): Full fine-tuning or LoRA
-# - DeBERTa-v3-large (435M): LoRA rank 16-32
-# - DeBERTa-v3-xlarge (900M): LoRA rank 16-32
-# - DeBERTa-v2-xxlarge (1.5B): QLoRA 8-bit
-# - LLaMA-2-7B: QLoRA 4-bit
-# - LLaMA-2-13B: QLoRA 4-bit (tight)
+# For P100/T4 GPU (16GB VRAM) with 16GB RAM:
+#
+# Full Fine-Tuning:
+# - DeBERTa-v3-base (184M): Batch size 16-32
+# - DeBERTa-v3-large (435M): Batch size 8-16
+#
+# LoRA Fine-Tuning:
+# - DeBERTa-v3-large (435M): LoRA rank 16-32, batch size 16
+# - DeBERTa-v3-xlarge (900M): LoRA rank 16-32, batch size 8
+# - DeBERTa-v2-xlarge (900M): LoRA rank 32-64, batch size 8
+#
+# QLoRA 8-bit Fine-Tuning:
+# - DeBERTa-v2-xxlarge (1.5B): LoRA rank 32-64, batch size 4-8
+# - RoBERTa-large (355M): LoRA rank 16-32, batch size 16
+#
+# QLoRA 4-bit Fine-Tuning:
+# - LLaMA-2-7B (7B): LoRA rank 64, batch size 4-8
+# - LLaMA-2-13B (13B): LoRA rank 64, batch size 2-4 (tight fit)
+# - Mistral-7B (7B): LoRA rank 64, batch size 4-8
+# - Mixtral-8x7B (47B): Not recommended (insufficient VRAM)
 #
 # CPU Kernels (16GB RAM):
-# - DeBERTa-base: Full fine-tuning (slow)
-# - Inference: Up to xlarge models
+# - DeBERTa-base: Full fine-tuning possible but slow
+# - Any model: Inference with quantization
 #
 # TPU Kernels:
 # - Requires XLA-compatible models
 # - Use PyTorch XLA or TensorFlow
-# - Good for large batch training
-
-# ============================================================================
-# Memory Optimization for Kaggle
-# ============================================================================
-# Same as Colab, but with more headroom:
-# - Use QLoRA 4-bit for models >1B
-# - Enable gradient checkpointing
-# - Gradient accumulation for larger batch sizes
-# - 16GB RAM allows slightly larger batch sizes than Colab
-# - P100 has 16GB VRAM (vs T4's 15GB in Colab)
+# - Excellent for large batch training
+# - Best for models with standard architectures
 #
-# Recommended settings:
-# - Batch size: 8-16 for large models, 32-64 for base
-# - Gradient accumulation: 2-4 steps
-# - LoRA rank: 16-32 for xlarge, 32-64 for large
-# - Sequence length: 512 (AG News texts are short)
-
+# ============================================================================
+# Memory Optimization Strategies for Kaggle
+# ============================================================================
+# Kaggle provides more RAM than Colab, allowing for:
+# - Slightly larger batch sizes
+# - More data caching in memory
+# - Larger model variants with same techniques
+#
+# Recommended optimization settings:
+# - Batch Size: 8-16 for large models, 32-64 for base models
+# - Gradient Accumulation: 2-4 steps for effective larger batches
+# - LoRA Rank: 16-32 for xlarge models, 32-64 for large models
+# - Sequence Length: 512 tokens (AG News articles are short)
+# - Mixed Precision: FP16 or BF16 for 2x speedup
+# - Gradient Checkpointing: Enable for models above 1B parameters
+# - QLoRA: Use 4-bit for models above 1B parameters
+#
+# Memory optimization checklist:
+# - Enable gradient checkpointing: model.gradient_checkpointing_enable()
+# - Use mixed precision: accelerate launch --mixed_precision fp16
+# - Apply LoRA for models >500M: use configs/training/efficient/lora/
+# - Apply QLoRA for models >1B: use configs/training/efficient/qlora/
+# - Reduce batch size if OOM occurs
+# - Clear CUDA cache between major operations: torch.cuda.empty_cache()
+#
 # ============================================================================
 # Kaggle Dataset Integration
 # ============================================================================
-# Add datasets to kernel:
-# 1. Click "Add Data" in Kaggle notebook
-# 2. Search for "ag news"
-# 3. Add official AG News dataset
-# 4. Access at /kaggle/input/ag-news-classification-dataset/
+# Adding datasets to Kaggle kernel:
+# 1. Click "Add Data" button in Kaggle notebook interface
+# 2. Search for "ag news" dataset
+# 3. Add official AG News classification dataset
+# 4. Access dataset at: /kaggle/input/ag-news-classification-dataset/
 #
-# Or use HuggingFace datasets:
+# Using HuggingFace datasets (requires internet):
 # from datasets import load_dataset
 # dataset = load_dataset("ag_news")
 #
-# Save outputs:
+# Saving outputs for persistence:
 # import shutil
 # shutil.copytree("outputs/models/", "/kaggle/working/models/")
-# # Commit to save outputs (up to 20GB)
-
-# ============================================================================
-# Kaggle Secrets (for API keys)
-# ============================================================================
-# Setup secrets in Kaggle account settings:
-# - HUGGINGFACE_TOKEN
-# - WANDB_API_KEY
+# # Click "Save Version" to commit (up to 20GB)
 #
-# Access in notebook:
+# Loading saved outputs in new kernel:
+# 1. Add previous kernel output as dataset
+# 2. Access at /kaggle/input/previous-kernel-name/
+# 3. Load models from saved path
+#
+# ============================================================================
+# Kaggle Secrets for API Keys
+# ============================================================================
+# Configure secrets in Kaggle account settings:
+# - HUGGINGFACE_TOKEN: For gated models
+# - WANDB_API_KEY: For experiment tracking
+# - Other API keys as needed
+#
+# Access secrets in notebook:
 # from kaggle_secrets import UserSecretsClient
 # user_secrets = UserSecretsClient()
 # hf_token = user_secrets.get_secret("HUGGINGFACE_TOKEN")
 # wandb_key = user_secrets.get_secret("WANDB_API_KEY")
-
+#
+# Use secrets securely:
+# import os
+# os.environ["HUGGINGFACE_TOKEN"] = hf_token
+# os.environ["WANDB_API_KEY"] = wandb_key
+#
 # ============================================================================
-# Training Examples for Kaggle
+# Training Examples for Kaggle Platform
 # ============================================================================
-# Example 1: Train DeBERTa-large with LoRA on P100
+# Example 1: Train DeBERTa-large with LoRA on P100 GPU
 # !python scripts/training/single_model/train_xlarge_lora.py \
 #   --model_config configs/models/recommended/tier_1_sota/deberta_v3_large_lora.yaml \
 #   --output_dir /kaggle/working/outputs/
@@ -368,147 +422,220 @@ pytest>=7.4.0,<8.3.0
 #
 # Example 3: Ensemble training
 # !python scripts/training/ensemble/train_xlarge_ensemble.py \
-#   --config configs/models/ensemble/presets/balanced.yaml
+#   --config configs/models/ensemble/presets/balanced.yaml \
+#   --output_dir /kaggle/working/outputs/
 #
-# Example 4: Hyperparameter search
-# !python experiments/hyperparameter_search/lora_rank_search.py
-
-# ============================================================================
-# Internet-Optional Mode
-# ============================================================================
-# Kaggle allows disabling internet for faster execution
-# Benefits:
-# - Faster startup
-# - No download time
-# - Better for competitions
+# Example 4: Hyperparameter search for LoRA rank
+# !python experiments/hyperparameter_search/lora_rank_search.py \
+#   --output_dir /kaggle/working/optuna/
 #
-# Requirements when internet is off:
-# - Pre-add all datasets
+# Example 5: Auto-training mode (platform-aware)
+# !python quickstart/auto_start.py
+#
+# ============================================================================
+# Internet-Optional Mode for Kaggle
+# ============================================================================
+# Kaggle allows disabling internet for faster kernel execution:
+#
+# Benefits of internet-optional mode:
+# - Faster kernel startup time
+# - No package download overhead
+# - Better for competition reproducibility
+# - Eliminates external dependencies
+#
+# Requirements for offline mode:
+# - Pre-add all required datasets as kernel inputs
 # - Pre-download models to Kaggle datasets
-# - Use offline W&B mode
+# - Update model paths in configuration files
+# - Use offline mode for experiment tracking: wandb.init(mode="offline")
 #
-# Setup for offline:
+# Setup for offline execution:
 # 1. Upload pre-trained models as Kaggle dataset
-# 2. Add to kernel inputs
-# 3. Update model paths in configs
-# 4. Use wandb.init(mode="offline")
-
+# 2. Add dataset to kernel inputs
+# 3. Update model paths in configs to /kaggle/input/model-dataset/
+# 4. Disable internet in kernel settings
+# 5. Run training with offline configurations
+#
 # ============================================================================
-# TPU Training (Advanced)
+# TPU Training on Kaggle (Advanced)
 # ============================================================================
-# For TPU kernels, use PyTorch XLA:
+# For TPU kernels, install PyTorch XLA:
 # !pip install torch-xla
 # !pip install cloud-tpu-client
 #
-# Example TPU training:
+# TPU training example:
 # import torch_xla
 # import torch_xla.core.xla_model as xm
+# 
 # device = xm.xla_device()
 # model.to(device)
-
-# ============================================================================
-# Performance Expectations on Kaggle
-# ============================================================================
-# Training times (P100 GPU):
-# - DeBERTa-base: 15-20 minutes (3 epochs)
-# - DeBERTa-large with LoRA: 30-45 minutes
-# - DeBERTa-xlarge with LoRA: 60-90 minutes
-# - LLaMA-2-7B with QLoRA: 90-150 minutes
+# 
+# # Training loop with XLA
+# for batch in dataloader:
+#     inputs = batch['input_ids'].to(device)
+#     outputs = model(inputs)
+#     loss = outputs.loss
+#     loss.backward()
+#     xm.optimizer_step(optimizer)
 #
-# Expected accuracy:
-# - DeBERTa-base: 94-95%
-# - DeBERTa-large: 95-96%
-# - DeBERTa-xlarge with LoRA: 96-97%
-# - LLaMA-2-7B with QLoRA: 95-96%
-
-# ============================================================================
-# Kaggle Competitions
-# ============================================================================
-# If using for competitions:
-# 1. Read competition rules
-# 2. Use appropriate evaluation metrics
-# 3. Create submission.csv in correct format
-# 4. Submit via notebook output or API
+# Note: TPU training requires model architecture compatibility
 #
-# Submission example:
+# ============================================================================
+# Performance Expectations on Kaggle P100
+# ============================================================================
+# Training time estimates (P100 GPU, AG News dataset):
+# - DeBERTa-base (3 epochs): 15-20 minutes
+# - DeBERTa-large with LoRA (3 epochs): 30-45 minutes
+# - DeBERTa-xlarge with LoRA (3 epochs): 60-90 minutes
+# - LLaMA-2-7B with QLoRA (3 epochs): 90-150 minutes
+# - Ensemble (5 models sequential): 3-5 hours
+#
+# Expected accuracy on AG News test set:
+# - DeBERTa-base: 94.0-95.0%
+# - DeBERTa-large: 95.0-96.0%
+# - DeBERTa-xlarge with LoRA: 96.0-97.0%
+# - LLaMA-2-7B with QLoRA: 95.5-96.5%
+# - Ensemble (5 xlarge models): 97.0-98.0%
+#
+# ============================================================================
+# Kaggle Competition Submission Workflow
+# ============================================================================
+# For using this project in Kaggle competitions:
+#
+# 1. Read competition rules and evaluation metrics
+# 2. Adapt model output to competition format
+# 3. Generate predictions on test set
+# 4. Create submission file in required format
+# 5. Submit via notebook output or Kaggle API
+#
+# Submission file example:
 # import pandas as pd
+# 
 # submission = pd.DataFrame({
 #     'id': test_ids,
 #     'label': predictions
 # })
 # submission.to_csv('submission.csv', index=False)
-
-# ============================================================================
-# Saving and Loading Models
-# ============================================================================
-# Save to Kaggle output:
-# trainer.save_model("/kaggle/working/best_model")
 #
-# Commit notebook to save outputs
+# Submit using Kaggle API:
+# !kaggle competitions submit -c competition-name -f submission.csv -m "Model description"
+#
+# ============================================================================
+# Saving and Loading Models in Kaggle
+# ============================================================================
+# Save model to Kaggle output directory:
+# trainer.save_model("/kaggle/working/best_model")
+# 
+# # Also save tokenizer
+# tokenizer.save_pretrained("/kaggle/working/best_model")
+#
+# Commit kernel to save outputs (up to 20GB)
 #
 # Load in another kernel:
-# Add previous output as dataset
+# 1. Add previous kernel output as dataset input
+# 2. Load model from dataset path:
+#
+# from transformers import AutoModelForSequenceClassification, AutoTokenizer
+# 
 # model = AutoModelForSequenceClassification.from_pretrained(
-#     "/kaggle/input/your-output-dataset/best_model"
+#     "/kaggle/input/previous-kernel-output/best_model"
 # )
-
+# tokenizer = AutoTokenizer.from_pretrained(
+#     "/kaggle/input/previous-kernel-output/best_model"
+# )
+#
 # ============================================================================
-# Troubleshooting Kaggle Issues
+# Troubleshooting Kaggle-Specific Issues
 # ============================================================================
 # Issue: Package installation fails
-# Solution: Use --no-cache-dir flag
+# Solution: Use --no-cache-dir flag: pip install --no-cache-dir package
 #
-# Issue: Out of memory
-# Solution: Reduce batch size, use gradient checkpointing
+# Issue: Out of memory during training
+# Solution: 
+# - Reduce batch size in configuration
+# - Enable gradient checkpointing
+# - Use QLoRA for large models
+# - Clear CUDA cache: torch.cuda.empty_cache()
 #
-# Issue: Session timeout
-# Solution: Save checkpoints frequently, use shorter training
+# Issue: Session timeout before training completes
+# Solution:
+# - Save checkpoints frequently (every epoch)
+# - Use resume_from_checkpoint in Trainer
+# - Split long training into multiple sessions
 #
-# Issue: Slow imports
-# Solution: Import only what you need
+# Issue: Slow package imports
+# Solution:
+# - Import only required modules
+# - Use lazy imports where possible
+# - Disable internet if not needed
 #
 # Issue: GPU not available
-# Solution: Check kernel settings, ensure GPU is enabled
-
-# ============================================================================
-# Kaggle vs Colab Comparison
-# ============================================================================
-# Feature           | Kaggle GPU    | Colab Free    | Winner
-# GPU               | P100/T4       | T4            | Kaggle (P100)
-# RAM               | 16GB          | 12GB          | Kaggle
-# VRAM              | 16GB          | 15GB          | Kaggle
-# Disk              | 73GB          | 100GB temp    | Colab
-# Session length    | 9h            | 12h           | Colab
-# Weekly quota      | 30h GPU       | Unlimited*    | Colab
-# Persistence       | 6 months      | None          | Kaggle
-# Drive integration | No            | Yes           | Colab
-# TPU support       | Yes           | Yes (limited) | Tie
-# Internet optional | Yes           | No            | Kaggle
-# Community         | Competitions  | Research      | Depends
+# Solution:
+# - Check kernel settings for GPU enablement
+# - Verify GPU quota has not been exceeded
+# - Check weekly 30-hour GPU limit
 #
-# * Colab may disconnect after inactivity
-
+# Issue: Cannot access dataset
+# Solution:
+# - Ensure dataset is added to kernel inputs
+# - Verify correct path: /kaggle/input/dataset-name/
+# - Check dataset permissions
+#
 # ============================================================================
-# Best Practices for Kaggle
+# Kaggle vs Google Colab Comparison
 # ============================================================================
-# - Use version control for notebooks
-# - Commit regularly to save progress
-# - Use descriptive version messages
-# - Pre-download datasets as Kaggle datasets
-# - Use secrets for API keys
-# - Monitor GPU quota usage
-# - Save outputs before session ends
-# - Use offline mode when possible
-# - Optimize for 9-hour training window
-
+# Feature                | Kaggle GPU          | Colab Free       | Winner
+# GPU Options            | P100 or T4          | T4 only          | Kaggle
+# GPU VRAM               | 16GB                | 15GB             | Kaggle
+# RAM                    | 16GB                | 12.7GB           | Kaggle
+# Disk Space             | 73GB                | ~100GB temp      | Colab
+# Session Length         | 9 hours             | 12 hours         | Colab
+# GPU Quota              | 30 hours/week       | Unlimited*       | Colab
+# Mid-session Disconnect | Never               | Possible         | Kaggle
+# Persistent Storage     | 6 months (20GB)     | None             | Kaggle
+# Drive Integration      | No                  | Yes (Google)     | Colab
+# TPU Support            | Yes (v3-8)          | Yes (limited)    | Tie
+# Internet Optional      | Yes                 | No               | Kaggle
+# Versioning             | Built-in            | Manual           | Kaggle
+# Competition Support    | Native              | No               | Kaggle
+# Community              | Competition-focused | Research-focused | Depends
+#
+# * Colab may disconnect due to inactivity or resource constraints
+#
 # ============================================================================
-# For More Information
+# Best Practices for Kaggle Platform
 # ============================================================================
-# - Kaggle notebook: notebooks/06_platform_specific/kaggle/kaggle_submission.ipynb
+# - Use kernel versioning to track experiments
+# - Commit frequently to save progress and outputs
+# - Write descriptive version commit messages
+# - Pre-download datasets as Kaggle datasets for reuse
+# - Use Kaggle Secrets for sensitive API keys
+# - Monitor GPU quota usage (30 hours per week)
+# - Save important outputs before 9-hour session ends
+# - Use internet-optional mode when possible for speed
+# - Optimize code for 9-hour training window
+# - Enable GPU only when actually training
+# - Use CPU kernels for data preprocessing
+# - Cache processed data as Kaggle datasets
+# - Document hyperparameters in kernel markdown
+# - Share successful kernels publicly for community
+#
+# ============================================================================
+# Additional Resources and Documentation
+# ============================================================================
+# - Kaggle notebook: notebooks/06_platform_specific/kaggle/kaggle_training.ipynb
+# - Kaggle submission: notebooks/06_platform_specific/kaggle/kaggle_submission.ipynb
+# - TPU training: notebooks/06_platform_specific/kaggle/tpu_training.ipynb
 # - Setup script: scripts/setup/setup_kaggle.sh
+# - Setup TPU: scripts/platform/kaggle/setup_tpu.py
 # - Quick start: QUICK_START.md
-# - Kaggle deployment: FREE_DEPLOYMENT_GUIDE.md
+# - Platform guide: docs/platform_guides/kaggle_guide.md
+# - Advanced Kaggle: docs/platform_guides/kaggle_advanced.md
+# - Free deployment: FREE_DEPLOYMENT_GUIDE.md
+# - Platform optimization: PLATFORM_OPTIMIZATION_GUIDE.md
+# - Auto-training: docs/user_guide/auto_training.md
+# - Quota management: docs/user_guide/quota_management.md
 #
-# Example Kaggle notebooks:
-# https://www.kaggle.com/code/voha/ag-news-text-classification
+# Example public Kaggle notebooks:
+# https://www.kaggle.com/code/vohaidung/ag-news-text-classification
 # ============================================================================
