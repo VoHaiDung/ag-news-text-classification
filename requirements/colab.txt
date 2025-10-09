@@ -2,450 +2,528 @@
 # Google Colab Requirements for AG News Text Classification
 # ============================================================================
 # Project: AG News Text Classification (ag-news-text-classification)
-# Description: Optimized dependencies for Google Colab free tier
+# Description: Optimized dependencies for Google Colab and Kaggle platforms
 # Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
 # License: MIT
-# Python: 3.10 (Colab default)
+# Python: 3.10 (Colab default), 3.10 (Kaggle default)
 # ============================================================================
-# This file contains packages optimized for:
-# - Google Colab free tier (T4 GPU, 12GB RAM, 15GB VRAM)
-# - Kaggle kernels (P100 GPU, 16GB RAM)
-# - Fast installation (minimize download size)
-# - Memory efficiency (QLoRA for large models)
-# - Free cloud execution
 #
-# Pre-installed in Colab (skip):
-# - torch, torchvision, torchaudio
-# - numpy, pandas, scipy
-# - matplotlib, seaborn
-# - scikit-learn
-# - jupyter, ipython
-# - requests, tqdm
+# Academic Rationale:
+#   Free cloud computing platforms (Google Colab, Kaggle) democratize access
+#   to GPU resources for academic research. This configuration optimizes for:
+#   - Memory efficiency (12GB RAM, 15GB VRAM on free tier)
+#   - Fast installation (minimize download size)
+#   - Parameter-efficient fine-tuning (LoRA, QLoRA)
+#   - Session time limits (12 hours Colab, 9 hours Kaggle GPU)
 #
-# This file installs only ADDITIONAL packages needed beyond Colab defaults
+# Pre-installed Packages in Colab/Kaggle:
+#   The following are already available (skip installation):
+#   - torch, torchvision, torchaudio
+#   - numpy, pandas, scipy, scikit-learn
+#   - matplotlib, seaborn, plotly
+#   - jupyter, ipython, ipykernel
+#   - requests, urllib3
+#   - tqdm, Pillow
+#
+# This file installs ONLY additional packages not pre-installed.
+#
+# Platform Specifications:
+#   Google Colab Free:
+#     - GPU: Tesla T4 (15GB VRAM)
+#     - RAM: ~12GB
+#     - Disk: ~100GB (ephemeral)
+#     - Session: 12 hours max
+#     - Python: 3.10
+#
+#   Google Colab Pro:
+#     - GPU: V100 or A100 (16-40GB VRAM)
+#     - RAM: ~25GB
+#     - Disk: ~200GB
+#     - Session: 24 hours max
+#
+#   Kaggle GPU:
+#     - GPU: Tesla P100 or T4 (16GB VRAM)
+#     - RAM: 16GB  
+#     - Disk: ~30GB
+#     - Session: 9 hours max (GPU), 12 hours (CPU)
+#     - Python: 3.10
+#
+# Installation:
+#   !pip install -q -r requirements/colab.txt
+#
+# Or install directly from GitHub:
+#   !pip install -q git+https://github.com/VoHaiDung/ag-news-text-classification.git
+#
+# References:
+#   - Colab documentation: https://colab.research.google.com/
+#   - Kaggle documentation: https://www.kaggle.com/docs/
+#
 # ============================================================================
 
-# ----------------------------------------------------------------------------
-# HuggingFace Ecosystem (Essential, not pre-installed in Colab)
-# ----------------------------------------------------------------------------
-# Transformers library (Colab may have older version)
-transformers>=4.36.0,<4.41.0
+# ============================================================================
+# Hugging Face Ecosystem (Essential)
+# ============================================================================
+# Colab may have older versions; ensure latest for compatibility.
 
-# Datasets library
-datasets>=2.16.0,<2.20.0
+# Transformers library (may be pre-installed but often outdated)
+transformers>=4.36.0,<4.42.0
 
-# Tokenizers (fast)
+# Datasets library for data loading
+datasets>=2.16.0,<2.21.0
+
+# Fast tokenizers
 tokenizers>=0.15.0,<0.16.0
 
-# Accelerate for mixed precision and device management
-accelerate>=0.25.0,<0.31.0
+# Accelerate for device management and mixed precision
+accelerate>=0.25.0,<0.32.0
 
-# SafeTensors for model loading
+# SafeTensors for model serialization
 safetensors>=0.4.0,<0.5.0
 
-# HuggingFace Hub
-huggingface-hub>=0.20.0,<0.24.0
+# Hugging Face Hub
+huggingface-hub>=0.20.0,<0.25.0
 
-# ----------------------------------------------------------------------------
+# ============================================================================
 # Parameter-Efficient Fine-Tuning (Critical for Colab)
-# ----------------------------------------------------------------------------
-# PEFT for LoRA/QLoRA
+# ============================================================================
+# These packages enable training large models on limited VRAM.
+
+# PEFT for LoRA, QLoRA, adapters, prefix tuning, prompt tuning
+# Supports:
+# - LoRA (Low-Rank Adaptation)
+# - QLoRA (Quantized LoRA)
+# - Adapters (Houlsby, Pfeiffer, Parallel)
+# - Prefix Tuning
+# - P-Tuning v2
+# - IA3 (Infused Adapter by Inhibiting and Amplifying Inner Activations)
 peft>=0.7.0,<0.12.0
 
-# BitsAndBytes for 4-bit/8-bit quantization
+# BitsAndBytes for 4-bit and 8-bit quantization
+# Enables QLoRA training with 4-bit/8-bit NF4 quantization
 bitsandbytes>=0.41.0,<0.44.0
 
-# ----------------------------------------------------------------------------
-# Efficient Training (Memory Optimization)
-# ----------------------------------------------------------------------------
-# Gradient checkpointing and memory utilities
-# Built-in to transformers/accelerate
+# ============================================================================
+# Memory-Efficient Attention
+# ============================================================================
+# Flash Attention and xFormers reduce memory usage significantly.
 
-# ----------------------------------------------------------------------------
-# Flash Attention (Optional, Linux only on Colab)
-# ----------------------------------------------------------------------------
-# Flash Attention 2 for faster training
-# Install manually if needed:
+# xFormers for memory-efficient attention mechanisms
+# Note: Flash Attention 2 requires manual installation on Linux:
 # pip install flash-attn --no-build-isolation
-
-# xFormers for memory-efficient attention
 xformers>=0.0.23,<0.0.27
 
-# ----------------------------------------------------------------------------
+# ============================================================================
 # Configuration Management
-# ----------------------------------------------------------------------------
+# ============================================================================
+# May not be pre-installed in Colab.
+
 # YAML parsing
 pyyaml>=6.0.1,<7.0.0
 
 # Environment variables
 python-dotenv>=1.0.0,<1.1.0
 
-# OmegaConf for complex configs
+# OmegaConf for hierarchical configs
 omegaconf>=2.3.0,<2.4.0
 
 # Pydantic for validation
-pydantic>=2.5.0,<2.8.0
+pydantic>=2.5.0,<2.9.0
 
-# ----------------------------------------------------------------------------
-# Data Processing
-# ----------------------------------------------------------------------------
-# NLTK (may be pre-installed but ensure version)
+# ============================================================================
+# Natural Language Processing
+# ============================================================================
+# NLP libraries not pre-installed in Colab.
+
+# NLTK for text preprocessing
 nltk>=3.8.0,<3.9.0
 
-# SentencePiece for tokenization
+# SentencePiece tokenizer
 sentencepiece>=0.1.99,<0.3.0
 
-# ----------------------------------------------------------------------------
-# Experiment Tracking (Essential for research)
-# ----------------------------------------------------------------------------
-# Weights & Biases (lightweight)
-wandb>=0.16.0,<0.17.0
+# ============================================================================
+# Experiment Tracking
+# ============================================================================
+# Essential for research reproducibility and result tracking.
 
-# TensorBoard (pre-installed but ensure version)
-tensorboard>=2.15.0,<2.17.0
+# Weights & Biases for experiment tracking
+wandb>=0.16.0,<0.18.0
 
-# ----------------------------------------------------------------------------
+# TensorBoard (may be pre-installed but ensure version)
+tensorboard>=2.15.0,<2.18.0
+
+# MLflow for experiment management (optional)
+mlflow>=2.9.0,<2.15.0
+
+# ============================================================================
 # Evaluation Metrics
-# ----------------------------------------------------------------------------
-# HuggingFace evaluate
+# ============================================================================
+
+# Hugging Face Evaluate library
 evaluate>=0.4.0,<0.5.0
 
-# Scikit-learn (pre-installed, but include for completeness)
-# scikit-learn>=1.3.0,<1.5.0
+# ============================================================================
+# Logging and Utilities
+# ============================================================================
 
-# ----------------------------------------------------------------------------
-# Logging
-# ----------------------------------------------------------------------------
-# Loguru for better logging
+# Loguru for elegant logging
 loguru>=0.7.0,<0.8.0
 
-# ----------------------------------------------------------------------------
-# Utilities
-# ----------------------------------------------------------------------------
 # Type hints
-typing-extensions>=4.9.0,<4.12.0
+typing-extensions>=4.9.0,<4.13.0
 
 # File locking
-filelock>=3.13.0,<3.15.0
+filelock>=3.13.0,<3.16.0
 
 # Retry logic
-tenacity>=8.2.3,<8.4.0
+tenacity>=8.2.3,<9.1.0
 
-# ----------------------------------------------------------------------------
+# ============================================================================
 # Google Drive Integration
-# ----------------------------------------------------------------------------
-# PyDrive for Drive access (if not using Colab's built-in)
+# ============================================================================
+# PyDrive for programmatic Drive access (Colab has built-in mounting)
+# Uncomment if needed:
 # pydrive>=1.3.1,<1.4.0
 
-# ----------------------------------------------------------------------------
-# Cloud Storage (Optional)
-# ----------------------------------------------------------------------------
-# Google Cloud Storage (for data/model storage)
-# google-cloud-storage>=2.14.0,<2.18.0
+# ============================================================================
+# Visualization
+# ============================================================================
+# Lightweight plotting libraries.
 
-# ----------------------------------------------------------------------------
-# Visualization (Lightweight)
-# ----------------------------------------------------------------------------
-# Plotly for interactive plots (lighter than full install)
-plotly>=5.18.0,<5.23.0
+# Plotly for interactive visualizations
+plotly>=5.18.0,<5.24.0
 
-# ----------------------------------------------------------------------------
-# Model Compression (For deployment from Colab)
-# ----------------------------------------------------------------------------
-# ONNX for model export
-onnx>=1.15.0,<1.17.0
-onnxruntime>=1.16.0,<1.18.0
-
-# ----------------------------------------------------------------------------
-# API Client (For deployment)
-# ----------------------------------------------------------------------------
-# Requests (pre-installed but include for safety)
-# requests>=2.31.0,<2.33.0
-
-# HTTPX for async requests
-httpx>=0.25.0,<0.28.0
-
-# ----------------------------------------------------------------------------
-# Rich Output in Notebooks
-# ----------------------------------------------------------------------------
-# Rich for beautiful output
+# Rich for beautiful console output
 rich>=13.7.0,<13.8.0
 
-# ----------------------------------------------------------------------------
-# Hyperparameter Optimization (Lightweight)
-# ----------------------------------------------------------------------------
-# Optuna for HPO
+# ============================================================================
+# Model Export and Deployment
+# ============================================================================
+# ONNX for model optimization and deployment.
+
+# ONNX format
+onnx>=1.15.0,<1.17.0
+
+# ONNX Runtime for inference
+onnxruntime>=1.16.0,<1.19.0
+
+# ============================================================================
+# API Client
+# ============================================================================
+
+# Async HTTP client
+httpx>=0.25.0,<0.28.0
+
+# ============================================================================
+# Hyperparameter Optimization
+# ============================================================================
+# Lightweight HPO framework.
+
+# Optuna for hyperparameter tuning
 optuna>=3.5.0,<3.7.0
 
-# ----------------------------------------------------------------------------
-# Data Augmentation (Optional)
-# ----------------------------------------------------------------------------
-# NLP Augmentation
+# ============================================================================
+# Data Augmentation
+# ============================================================================
+# NLP-specific data augmentation.
+
+# NLP Augmentation library
 nlpaug>=1.1.11,<1.2.0
 
-# ----------------------------------------------------------------------------
-# Model Interpretability (Optional)
-# ----------------------------------------------------------------------------
-# Captum for interpretability
-# captum>=0.7.0,<0.8.0
+# ============================================================================
+# Interactive Demos
+# ============================================================================
+# Gradio for creating quick ML demos in Colab.
 
-# ----------------------------------------------------------------------------
-# UI in Colab (Optional)
-# ----------------------------------------------------------------------------
-# Gradio for quick demos
-gradio>=4.12.0,<4.38.0
+# Gradio for interactive interfaces
+gradio>=4.12.0,<4.40.0
 
-# ----------------------------------------------------------------------------
+# ============================================================================
 # Efficient Data Loading
-# ----------------------------------------------------------------------------
-# PyArrow for fast data loading
+# ============================================================================
+
+# PyArrow for fast data operations
 pyarrow>=14.0.0,<16.2.0
 
-# ----------------------------------------------------------------------------
-# Version Control Integration
-# ----------------------------------------------------------------------------
-# GitPython (for version tracking)
+# ============================================================================
+# Version Control
+# ============================================================================
+
+# GitPython for repository operations
 gitpython>=3.1.40,<3.2.0
 
-# ----------------------------------------------------------------------------
-# Hash Functions
-# ----------------------------------------------------------------------------
-# xxhash for fast hashing
+# ============================================================================
+# Hashing
+# ============================================================================
+
+# Fast hashing
 xxhash>=3.4.1,<3.5.0
 
-# ----------------------------------------------------------------------------
-# Progress Bars (Enhanced)
-# ----------------------------------------------------------------------------
-# TQDM (pre-installed, but ensure version)
-# tqdm>=4.66.0,<4.67.0
+# ============================================================================
+# Progress Bars
+# ============================================================================
+# Enhanced progress indicators.
 
 # Alive-progress for animated bars
 alive-progress>=3.1.5,<3.2.0
 
-# ----------------------------------------------------------------------------
+# ============================================================================
 # Serialization
-# ----------------------------------------------------------------------------
-# Dill for pickling
+# ============================================================================
+
+# Dill for advanced pickling
 dill>=0.3.7,<0.4.0
 
 # Joblib for caching
 joblib>=1.3.2,<1.5.0
 
-# ----------------------------------------------------------------------------
+# ============================================================================
 # Testing (Minimal)
-# ----------------------------------------------------------------------------
-# Pytest for basic testing
+# ============================================================================
+
+# Pytest for quick tests
 pytest>=7.4.0,<8.3.0
 
 # ============================================================================
-# Installation Notes for Google Colab
+# Installation and Usage Guide for Google Colab
 # ============================================================================
-# 1. Install in Colab notebook:
-#    !pip install -q -r requirements/colab.txt
 #
-# 2. Or install from GitHub directly:
-#    !pip install -q git+https://github.com/VoHaiDung/ag-news-text-classification.git
+# Quick Start in Colab:
 #
-# 3. Clone repository:
+# 1. Clone repository:
 #    !git clone https://github.com/VoHaiDung/ag-news-text-classification.git
 #    %cd ag-news-text-classification
 #
-# 4. Mount Google Drive (for persistent storage):
+# 2. Install dependencies:
+#    !pip install -q -r requirements/colab.txt
+#
+# 3. Mount Google Drive (for persistent storage):
 #    from google.colab import drive
 #    drive.mount('/content/drive')
 #
-# 5. Download NLTK data:
+# 4. Download NLTK data:
 #    import nltk
 #    nltk.download('punkt')
 #    nltk.download('stopwords')
 #    nltk.download('wordnet')
 #
-# 6. Login to HuggingFace (for gated models):
+# 5. Login to Hugging Face (for gated models like LLaMA):
 #    from huggingface_hub import notebook_login
 #    notebook_login()
 #
-# 7. Login to Weights & Biases:
+# 6. Login to Weights & Biases (optional):
 #    import wandb
 #    wandb.login()
 #
-# 8. Setup for training:
-#    !python scripts/setup/setup_colab.sh
+# 7. Setup environment:
+#    !bash scripts/setup/setup_colab.sh
 #
-# 9. Verify GPU:
+# 8. Verify GPU:
 #    import torch
 #    print(f"CUDA available: {torch.cuda.is_available()}")
-#    print(f"GPU: {torch.cuda.get_device_name(0)}")
-#    print(f"Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB")
+#    print(f"GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'None'}")
+#    print(f"VRAM: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB" if torch.cuda.is_available() else "No GPU")
 #
-# 10. Quick test:
-#     !python quickstart/minimal_example.py
-
+# 9. Quick test:
+#    !python quickstart/minimal_example.py
+#
+# 10. Run tutorial notebook:
+#     Open: notebooks/06_platform_specific/colab/quick_start_colab.ipynb
+#
 # ============================================================================
-# Colab-Specific Configuration
+# Training Examples on Colab
 # ============================================================================
-# Colab free tier specs:
-# - GPU: Tesla T4 (15GB VRAM)
-# - RAM: ~12GB
-# - Disk: ~100GB (temporary)
-# - Session: 12 hours max
-# - Python: 3.10
 #
-# Colab Pro specs:
-# - GPU: V100 or A100 (16-40GB VRAM)
-# - RAM: ~25GB
-# - Disk: ~200GB
-# - Session: 24 hours max
-#
-# Recommended model sizes for Colab free tier:
-# - DeBERTa-v3-base (184M): Full fine-tuning or LoRA
-# - DeBERTa-v3-large (435M): LoRA rank 16-32
-# - DeBERTa-v3-xlarge (900M): LoRA rank 8-16 with gradient checkpointing
-# - LLaMA-2-7B: QLoRA 4-bit only
-# - LLaMA-2-13B: QLoRA 4-bit with very small batch size
-#
-# Memory optimization tips:
-# - Use QLoRA 4-bit for models >1B parameters
-# - Enable gradient checkpointing: model.gradient_checkpointing_enable()
-# - Use gradient accumulation for larger effective batch size
-# - Reduce sequence length if possible (256-512 instead of 1024)
-# - Use smaller LoRA rank (8 instead of 32)
-# - Clear cache regularly: torch.cuda.empty_cache()
-# - Use mixed precision: fp16 or bf16
-#
-# Training recommendations:
-# - Batch size: 4-8 for large models, 16-32 for base models
-# - Gradient accumulation: 4-8 steps
-# - LoRA rank: 8-16 for xlarge, 16-32 for large
-# - Learning rate: 1e-4 to 5e-4 for LoRA
-# - Epochs: 3-5 (Colab sessions timeout after 12 hours)
-#
-# Saving checkpoints to Google Drive:
-# checkpoint_dir = "/content/drive/MyDrive/ag-news-checkpoints"
-# trainer.save_model(checkpoint_dir)
-
-# ============================================================================
-# Quick Start Examples for Colab
-# ============================================================================
-# Example 1: Train DeBERTa-base with LoRA
+# Example 1: DeBERTa-base with LoRA (Fast, 20-30 min)
 # !python scripts/training/single_model/train_xlarge_lora.py \
-#   --model_config configs/models/recommended/tier_1_sota/deberta_v3_base_lora.yaml \
-#   --output_dir /content/drive/MyDrive/ag-news-outputs/
+#   --model_config configs/models/recommended/tier_5_free_optimized/colab_friendly/deberta_large_lora_colab.yaml \
+#   --output_dir /content/drive/MyDrive/ag-news-outputs/deberta-base-lora
 #
-# Example 2: Train LLaMA-2-7B with QLoRA
+# Example 2: LLaMA-2-7B with QLoRA (Slow, 2-3 hours)  
 # !python scripts/training/single_model/train_llm_qlora.py \
 #   --model_config configs/models/recommended/tier_2_llm/llama2_7b_qlora.yaml \
-#   --output_dir /content/drive/MyDrive/ag-news-outputs/
+#   --output_dir /content/drive/MyDrive/ag-news-outputs/llama2-7b-qlora
 #
 # Example 3: Quick demo with Gradio
 # !python quickstart/demo_app.py
 #
-# Example 4: Run Jupyter notebook
-# See notebooks/01_tutorials/04_lora_tutorial.ipynb
+# Example 4: Auto-training (fully automated)
+# !python quickstart/auto_start.py --platform colab
 #
-# Example 5: Evaluate model
-# !python scripts/evaluation/evaluate_all_models.py \
-#   --model_path /content/drive/MyDrive/ag-news-outputs/best_model
-
 # ============================================================================
-# Data Loading in Colab
+# Model Size Recommendations for Colab Free Tier
 # ============================================================================
-# Option 1: Download from HuggingFace Hub
-# from datasets import load_dataset
-# dataset = load_dataset("ag_news")
 #
-# Option 2: Load from GitHub repo
-# !python scripts/data_preparation/prepare_ag_news.py
+# Colab Free (T4 GPU, 15GB VRAM, 12GB RAM):
+#   - DeBERTa-v3-base (184M params): Full fine-tuning OR LoRA rank 32
+#   - DeBERTa-v3-large (435M params): LoRA rank 16-32
+#   - DeBERTa-v3-xlarge (900M params): LoRA rank 8-16 with gradient checkpointing
+#   - RoBERTa-large (355M params): LoRA rank 16-32
+#   - LLaMA-2-7B (7B params): QLoRA 4-bit ONLY, batch size 1-4
+#   - LLaMA-2-13B (13B params): QLoRA 4-bit, batch size 1-2, very slow
 #
-# Option 3: Load from Google Drive
-# import pandas as pd
-# train_df = pd.read_csv("/content/drive/MyDrive/ag-news-data/train.csv")
-
+# Training Times (3 epochs on AG News):
+#   - DeBERTa-base + LoRA: 20-30 minutes
+#   - DeBERTa-large + LoRA: 40-60 minutes
+#   - DeBERTa-xlarge + LoRA: 90-120 minutes
+#   - LLaMA-2-7B + QLoRA: 120-180 minutes
+#
+# Expected Accuracy:
+#   - DeBERTa-base: 94-95%
+#   - DeBERTa-large: 95-96%
+#   - DeBERTa-xlarge + LoRA: 96-97%
+#   - LLaMA-2-7B + QLoRA: 95-96%
+#
+# ============================================================================
+# Memory Optimization Tips for Colab
+# ============================================================================
+#
+# 1. Use QLoRA 4-bit for models > 1B parameters:
+#    from transformers import BitsAndBytesConfig
+#    bnb_config = BitsAndBytesConfig(
+#        load_in_4bit=True,
+#        bnb_4bit_quant_type="nf4",
+#        bnb_4bit_compute_dtype=torch.float16
+#    )
+#
+# 2. Enable gradient checkpointing:
+#    model.gradient_checkpointing_enable()
+#
+# 3. Use gradient accumulation for larger effective batch size:
+#    gradient_accumulation_steps = 4
+#
+# 4. Reduce sequence length if possible:
+#    max_length = 256  # instead of 512
+#
+# 5. Use smaller LoRA rank:
+#    lora_r = 8  # instead of 32
+#
+# 6. Clear CUDA cache regularly:
+#    import torch
+#    torch.cuda.empty_cache()
+#
+# 7. Use mixed precision (FP16 or BF16):
+#    fp16 = True  # in TrainingArguments
+#
+# 8. Reduce batch size:
+#    per_device_train_batch_size = 4  # or even 2
+#
+# 9. Use CPU offloading for very large models:
+#    device_map = "auto"
+#    model = AutoModelForCausalLM.from_pretrained(..., device_map=device_map)
+#
+# 10. Monitor GPU memory:
+#     import torch
+#     print(f"Allocated: {torch.cuda.memory_allocated() / 1e9:.2f} GB")
+#     print(f"Cached: {torch.cuda.memory_reserved() / 1e9:.2f} GB")
+#
+# ============================================================================
+# Saving Checkpoints to Google Drive
+# ============================================================================
+#
+# Mount Drive:
+#   from google.colab import drive
+#   drive.mount('/content/drive')
+#
+# Save model:
+#   output_dir = "/content/drive/MyDrive/ag-news-checkpoints"
+#   trainer.save_model(output_dir)
+#
+# Save training results:
+#   import shutil
+#   shutil.copytree("outputs/results/", "/content/drive/MyDrive/ag-news-results/")
+#
+# Load checkpoint for continued training:
+#   trainer = Trainer(
+#       model=model,
+#       args=training_args,
+#       ...
+#   )
+#   trainer.train(resume_from_checkpoint="/content/drive/MyDrive/ag-news-checkpoints/checkpoint-500")
+#
 # ============================================================================
 # Troubleshooting Colab Issues
 # ============================================================================
+#
 # Issue: Session timeout during training
-# Solution: Save checkpoints frequently to Google Drive
+# Solution: Save checkpoints every N steps to Google Drive
+#           Use resume_from_checkpoint for continued training
 #
 # Issue: CUDA out of memory
-# Solution: Reduce batch size, enable gradient checkpointing, use QLoRA
+# Solution: Reduce batch_size, enable gradient_checkpointing, use QLoRA
 #
-# Issue: Slow installation
-# Solution: Use -q flag for quiet installation
+# Issue: Slow package installation
+# Solution: Use -q flag: !pip install -q
+#           Install only necessary packages
 #
 # Issue: Drive mounting fails
-# Solution: Reconnect and remount
+# Solution: Disconnect and reconnect runtime
+#           Restart runtime and remount
 #
 # Issue: Model download fails
-# Solution: Use HF_HUB_CACHE environment variable to cache in Drive
+# Solution: Check internet connection
+#           Use HF_HUB_CACHE=/content/drive/MyDrive/huggingface_cache
 #
 # Issue: Import errors after installation
 # Solution: Restart runtime: Runtime > Restart runtime
-
-# ============================================================================
-# Saving Results to Google Drive
-# ============================================================================
-# Mount Drive:
-# from google.colab import drive
-# drive.mount('/content/drive')
+#           Reinstall packages
 #
-# Save outputs:
-# output_dir = "/content/drive/MyDrive/ag-news-outputs"
-# trainer.save_model(output_dir)
+# Issue: Kernel crash
+# Solution: Reduce model size or batch size
+#           Enable gradient checkpointing
+#           Use smaller LoRA rank
 #
-# Save experiment results:
-# import shutil
-# shutil.copytree("outputs/results/", "/content/drive/MyDrive/ag-news-results/")
-
 # ============================================================================
-# Notebook Examples
+# Available Notebooks
 # ============================================================================
-# Available Colab notebooks:
-# - notebooks/00_setup/01_colab_setup.ipynb
-# - notebooks/01_tutorials/04_lora_tutorial.ipynb
-# - notebooks/01_tutorials/05_qlora_tutorial.ipynb
-# - notebooks/03_experiments/02_xlarge_lora_experiments.ipynb
-# - notebooks/03_experiments/03_llm_qlora_experiments.ipynb
-# - notebooks/06_platform_specific/colab/quick_start_colab.ipynb
-# - notebooks/06_platform_specific/colab/full_training_colab.ipynb
-# - quickstart/colab_notebook.ipynb
-
-# ============================================================================
-# Kaggle Kernels
-# ============================================================================
-# For Kaggle, use the same requirements with these differences:
-# - GPU: P100 or T4
-# - RAM: 16GB (more than Colab free)
-# - Session: 9 hours (GPU) or 12 hours (CPU)
-# - Internet: Optional (can be disabled)
 #
-# Kaggle-specific setup:
-# !pip install -q -r requirements/kaggle.txt
-# # Or use requirements/colab.txt (nearly identical)
-
-# ============================================================================
-# Performance Expectations on Colab Free Tier
-# ============================================================================
-# Training times (approximate):
-# - DeBERTa-base with LoRA: 20-30 minutes (3 epochs)
-# - DeBERTa-large with LoRA: 40-60 minutes (3 epochs)
-# - DeBERTa-xlarge with LoRA: 90-120 minutes (3 epochs)
-# - LLaMA-2-7B with QLoRA: 120-180 minutes (3 epochs)
+# Tutorial notebooks optimized for Colab:
+#   - notebooks/00_setup/01_colab_setup.ipynb
+#   - notebooks/01_tutorials/00_auto_training_tutorial.ipynb
+#   - notebooks/01_tutorials/04_lora_tutorial.ipynb
+#   - notebooks/01_tutorials/05_qlora_tutorial.ipynb
+#   - notebooks/03_experiments/02_xlarge_lora_experiments.ipynb
+#   - notebooks/03_experiments/03_llm_qlora_experiments.ipynb
+#   - notebooks/06_platform_specific/colab/quick_start_colab.ipynb
+#   - notebooks/06_platform_specific/colab/full_training_colab.ipynb
+#   - notebooks/06_platform_specific/colab/auto_training_colab.ipynb
+#   - quickstart/colab_notebook.ipynb
 #
-# Expected accuracy:
-# - DeBERTa-base: 94-95%
-# - DeBERTa-large: 95-96%
-# - DeBERTa-xlarge with LoRA: 96-97%
-# - LLaMA-2-7B with QLoRA: 95-96%
-
+# Open in Colab:
+#   https://colab.research.google.com/github/VoHaiDung/ag-news-text-classification/blob/main/quickstart/colab_notebook.ipynb
+#
+# ============================================================================
+# Kaggle-Specific Notes
+# ============================================================================
+#
+# For Kaggle Kernels, use same requirements with these differences:
+#   - GPU: Tesla P100 or T4 (16GB VRAM)
+#   - RAM: 16GB (more than Colab free)
+#   - Session: 9 hours GPU, 12 hours CPU
+#   - Internet: Can be disabled (offline mode)
+#   - TPU: Available on Kaggle (not on Colab free)
+#
+# Kaggle installation:
+#   !pip install -q -r /kaggle/input/ag-news-config/requirements/kaggle.txt
+#   # Or use requirements/colab.txt (nearly identical)
+#
+# Kaggle TPU training:
+#   See configs/training/tpu/ for TPU-optimized configs
+#   See notebooks/06_platform_specific/kaggle/tpu_training.ipynb
+#
 # ============================================================================
 # For More Information
 # ============================================================================
-# - Colab setup guide: docs/getting_started/installation.md
-# - Colab notebooks: notebooks/06_platform_specific/colab/
-# - Quick start: QUICK_START.md
-# - Troubleshooting: TROUBLESHOOTING.md
-# - Colab deployment guide: FREE_DEPLOYMENT_GUIDE.md
 #
-# Open in Colab:
-# https://colab.research.google.com/github/VoHaiDung/ag-news-text-classification/blob/main/quickstart/colab_notebook.ipynb
+# Documentation:
+#   - Quick Start: QUICK_START.md
+#   - Platform Guide: docs/platform_guides/colab_guide.md
+#   - Free Deployment: FREE_DEPLOYMENT_GUIDE.md
+#   - Troubleshooting: TROUBLESHOOTING.md
+#   - Platform Optimization: PLATFORM_OPTIMIZATION_GUIDE.md
+#
+# Support:
+#   - GitHub Issues: https://github.com/VoHaiDung/ag-news-text-classification/issues
+#   - Discussions: https://github.com/VoHaiDung/ag-news-text-classification/discussions
+#
 # ============================================================================
