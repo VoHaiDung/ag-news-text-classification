@@ -4,6 +4,7 @@
 # Project: AG News Text Classification (ag-news-text-classification)
 # Description: Documentation generation, publishing, and maintenance tools
 # Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
 # License: MIT
 # Python: >=3.8,<3.12
 # ============================================================================
@@ -14,8 +15,9 @@
 # - Markdown processing and extensions
 # - PDF generation from documentation
 # - Docstring parsing and validation
-# - Multi-level progressive disclosure docs
+# - Multi-level progressive disclosure documentation
 # - Cheatsheets and quick reference guides
+# - Academic documentation standards
 # ============================================================================
 
 # Include base requirements
@@ -24,33 +26,30 @@
 # ----------------------------------------------------------------------------
 # Sphinx Documentation System
 # ----------------------------------------------------------------------------
-# Sphinx core
+# Sphinx core for academic documentation
 sphinx>=7.2.0,<7.4.0
 
-# Read the Docs theme
+# Read the Docs theme for documentation hosting
 sphinx-rtd-theme>=2.0.0,<2.1.0
 
-# Book theme
+# Book theme for structured documentation
 sphinx-book-theme>=1.1.0,<1.2.0
 
-# Material theme
+# Material theme for modern documentation
 sphinx-material>=0.0.36,<0.1.0
 
-# PyData theme
+# PyData theme for scientific documentation
 pydata-sphinx-theme>=0.15.0,<0.16.0
 
-# Furo theme
+# Furo theme for clean documentation
 furo>=2023.9.0,<2024.8.0
 
 # ----------------------------------------------------------------------------
 # Sphinx Extensions
 # ----------------------------------------------------------------------------
-# Auto-generate API documentation
+# Auto-generate API documentation from docstrings
 sphinx-autodoc-typehints>=1.25.0,<2.3.0
 sphinx-autoapi>=3.0.0,<3.3.0
-
-# Napoleon for Google/NumPy style docstrings
-# Built-in to Sphinx
 
 # Copy button for code blocks
 sphinx-copybutton>=0.5.0,<0.6.0
@@ -58,20 +57,20 @@ sphinx-copybutton>=0.5.0,<0.6.0
 # Tabs for multi-language examples
 sphinx-tabs>=3.4.0,<3.5.0
 
-# Inline tabs
+# Inline tabs for code examples
 sphinx-inline-tabs>=2023.4.0,<2024.8.0
 
-# Panels and cards
+# Panels and cards for structured content
 sphinx-panels>=0.6.0,<0.7.0
 sphinx-design>=0.5.0,<0.7.0
 
-# Mermaid diagrams
+# Mermaid diagrams for flowcharts
 sphinxcontrib-mermaid>=0.9.0,<0.10.0
 
-# PlantUML diagrams
+# PlantUML diagrams for architecture
 sphinxcontrib-plantuml>=0.28,<0.30
 
-# SVG support
+# SVG support for diagrams
 sphinxcontrib-svg2pdfconverter>=1.2.0,<1.3.0
 
 # Markdown support in Sphinx
@@ -81,126 +80,123 @@ myst-nb>=1.0.0,<1.2.0
 # Jupyter notebook integration
 nbsphinx>=0.9.0,<0.10.0
 
-# Include Markdown files
+# Include Markdown files in Sphinx
 m2r2>=0.3.0,<0.4.0
 
-# OpenAPI/Swagger spec
+# OpenAPI/Swagger specification documentation
 sphinxcontrib-openapi>=0.8.0,<0.9.0
 
-# HTTP domain
+# HTTP domain for REST API documentation
 sphinxcontrib-httpdomain>=1.8.0,<1.9.0
 
-# Bibtex citations
+# BibTeX citations for academic references
 sphinxcontrib-bibtex>=2.6.0,<2.7.0
 
-# Proof and theorem
+# Proof and theorem environments
 sphinxcontrib-proof>=1.6.0,<1.7.0
 
-# YouTube videos
+# YouTube video embedding
 sphinxcontrib-youtube>=1.4.0,<1.5.0
 
-# Spelling checker
+# Spelling checker for documentation quality
 sphinxcontrib-spelling>=8.0.0,<8.1.0
 
-# Versioning
+# Versioning for multiple documentation versions
 sphinx-versioning>=2.2.0,<2.3.0
 sphinx-multiversion>=0.2.4,<0.3.0
 
 # Search improvements
 sphinx-search>=0.2.0,<0.3.0
 
-# Redirects
+# URL redirects for documentation reorganization
 sphinx-reredirects>=0.1.0,<0.2.0
 
-# Sitemap generation
+# Sitemap generation for SEO
 sphinx-sitemap>=2.5.0,<2.7.0
 
-# Last updated
+# Last updated timestamp from git
 sphinx-last-updated-by-git>=0.3.0,<0.4.0
 
-# Contributors
+# Contributors list generation
 sphinx-contributors>=0.2.0,<0.3.0
 
 # ----------------------------------------------------------------------------
 # MkDocs Documentation System
 # ----------------------------------------------------------------------------
-# MkDocs core
+# MkDocs core for modern documentation
 mkdocs>=1.5.0,<1.7.0
 
-# Material theme (the best theme)
+# Material theme for MkDocs
 mkdocs-material>=9.5.0,<9.6.0
 mkdocs-material-extensions>=1.3.0,<1.4.0
 
 # ----------------------------------------------------------------------------
 # MkDocs Plugins
 # ----------------------------------------------------------------------------
-# API documentation
+# API documentation generation
 mkdocstrings[python]>=0.24.0,<0.26.0
 mkdocstrings-python>=1.7.0,<1.11.0
 
-# Jupyter notebooks
+# Jupyter notebook integration
 mkdocs-jupyter>=0.24.0,<0.25.0
 
-# Mermaid diagrams
+# Mermaid diagrams support
 mkdocs-mermaid2-plugin>=1.1.0,<1.2.0
 
-# PlantUML
+# PlantUML support
 mkdocs-build-plantuml-plugin>=1.7.0,<1.8.0
 
-# Search
+# Minification for optimization
 mkdocs-minify-plugin>=0.7.0,<0.9.0
 
-# Git revision date
+# Git revision date for document tracking
 mkdocs-git-revision-date-localized-plugin>=1.2.0,<1.3.0
 mkdocs-git-authors-plugin>=0.7.0,<0.9.0
 
-# Multiple languages
+# Multiple languages support
 mkdocs-static-i18n>=1.2.0,<1.3.0
 
-# PDF export
+# PDF export from documentation
 mkdocs-pdf-export-plugin>=0.5.0,<0.6.0
 mkdocs-with-pdf>=0.9.0,<0.10.0
 
-# Video
+# Video embedding
 mkdocs-video>=1.5.0,<1.6.0
 
-# Awesome pages
+# Awesome pages for navigation
 mkdocs-awesome-pages-plugin>=2.9.0,<2.10.0
 
 # Macros for templating
 mkdocs-macros-plugin>=1.0.0,<1.1.0
 
-# Include markdown
+# Include external markdown files
 mkdocs-include-markdown-plugin>=6.0.0,<6.3.0
 
-# Redirects
+# Redirects for URL management
 mkdocs-redirects>=1.2.0,<1.3.0
 
-# Tags
+# Tags for content organization
 mkdocs-tags>=0.3.0,<0.4.0
 
-# Blog support
+# Blog support for announcements
 mkdocs-blog-plugin>=0.30.0,<0.31.0
 
-# RSS feed
+# RSS feed generation
 mkdocs-rss-plugin>=1.12.0,<1.16.0
 
-# Social cards
-# Built-in to mkdocs-material
-
-# Optimization
+# Documentation optimization
 mkdocs-optimize-plugin>=0.8.0,<0.9.0
 
 # ----------------------------------------------------------------------------
 # Markdown Processing
 # ----------------------------------------------------------------------------
-# Markdown (already in base.txt)
+# Markdown parser
 markdown>=3.5.1,<3.7.0
 
-# PyMdown extensions
+# PyMdown extensions for enhanced markdown
 pymdown-extensions>=10.5.0,<10.9.0
 
-# Markdown include
+# Markdown include for modular documentation
 markdown-include>=0.8.0,<0.9.0
 
 # GitHub flavored markdown
@@ -209,28 +205,28 @@ py-gfm>=2.0.0,<2.1.0
 # Markdown tables
 markdown-table>=2020.12.3,<2024.8.1
 
-# Markdown math
+# Markdown math support
 python-markdown-math>=0.8,<0.9
 
 # ----------------------------------------------------------------------------
 # API Documentation Generators
 # ----------------------------------------------------------------------------
-# Pdoc for simple API docs
+# Pdoc for simple API documentation
 pdoc>=14.3.0,<14.6.0
 
-# Pydoc-markdown
+# Pydoc-markdown for markdown-based API docs
 pydoc-markdown>=4.8.0,<4.9.0
 
 # ----------------------------------------------------------------------------
 # Docstring Tools
 # ----------------------------------------------------------------------------
-# Docstring parsing
+# Docstring parser for validation
 docstring-parser>=0.15,<0.17
 
-# Docstring coverage
+# Docstring coverage measurement
 interrogate>=1.5.0,<1.6.0
 
-# Docstring linting
+# Docstring linting for quality
 pydocstyle>=6.3.0,<6.4.0
 
 # Darglint for docstring/signature matching
@@ -239,214 +235,165 @@ darglint>=1.8.0,<1.9.0
 # ----------------------------------------------------------------------------
 # Diagram Generation
 # ----------------------------------------------------------------------------
-# Graphviz (already in ui.txt)
+# Graphviz for graph diagrams
 graphviz>=0.20.0,<0.21.0
 
-# Diagrams as code
+# Diagrams as code for architecture
 diagrams>=0.23.0,<0.24.0
 
-# Matplotlib for diagrams (already in ml.txt)
+# Matplotlib for scientific diagrams
 matplotlib>=3.8.0,<3.10.0
 
 # ----------------------------------------------------------------------------
-# PlantUML
+# PlantUML Integration
 # ----------------------------------------------------------------------------
 # PlantUML wrapper
 plantuml>=0.3.0,<0.4.0
 
-# PlantUML markdown
+# PlantUML markdown support
 plantuml-markdown>=3.9.0,<3.10.0
 
 # ----------------------------------------------------------------------------
-# Mermaid
+# Mermaid Integration
 # ----------------------------------------------------------------------------
-# Mermaid CLI (install via npm: npm install -g @mermaid-js/mermaid-cli)
-# Python wrapper
+# Mermaid Python wrapper
 mermaid-py>=0.3.0,<0.4.0
-
-# ----------------------------------------------------------------------------
-# UML Diagrams
-# ----------------------------------------------------------------------------
-# PyUML for UML generation
-# Custom implementation or use PlantUML
 
 # ----------------------------------------------------------------------------
 # PDF Generation
 # ----------------------------------------------------------------------------
-# ReportLab (already in ui.txt)
+# ReportLab for PDF creation
 reportlab>=4.0.0,<4.3.0
 
-# WeasyPrint (already in ui.txt)
+# WeasyPrint for HTML to PDF
 weasyprint>=60.1,<62.4
 
 # PyPDF for PDF manipulation
 pypdf>=3.17.0,<4.3.0
 
-# PDFKit
+# PDFKit for PDF generation
 pdfkit>=1.0.0,<1.1.0
 
 # ----------------------------------------------------------------------------
 # HTML Processing
 # ----------------------------------------------------------------------------
-# BeautifulSoup (already in data.txt)
+# BeautifulSoup for HTML parsing
 beautifulsoup4>=4.12.0,<4.13.0
 
-# lxml (already in data.txt)
+# lxml for XML/HTML processing
 lxml>=4.9.0,<5.3.0
 
 # ----------------------------------------------------------------------------
 # Code Highlighting
 # ----------------------------------------------------------------------------
-# Pygments (already in ui.txt)
+# Pygments for syntax highlighting
 pygments>=2.17.0,<2.19.0
 
 # ----------------------------------------------------------------------------
 # Spell Checking
 # ----------------------------------------------------------------------------
-# PySpellChecker
+# PySpellChecker for spell checking
 pyspellchecker>=0.8.0,<0.9.0
 
-# Hunspell
+# Hunspell for advanced spell checking
 hunspell>=0.5.0,<0.6.0
 
 # ----------------------------------------------------------------------------
 # Link Checking
 # ----------------------------------------------------------------------------
-# Linkchecker
+# Linkchecker for broken link detection
 linkchecker>=10.4.0,<10.5.0
 
 # ----------------------------------------------------------------------------
 # Changelog Generation
 # ----------------------------------------------------------------------------
-# Towncrier (already in dev.txt)
+# Towncrier for changelog management
 towncrier>=23.11.0,<24.8.0
 
-# Gitchangelog
+# Gitchangelog for automatic changelog
 gitchangelog>=3.0.0,<3.1.0
 
-# Auto-changelog
+# Auto-changelog for changelog generation
 auto-changelog>=0.6.0,<0.7.0
 
 # ----------------------------------------------------------------------------
 # Version Bumping
 # ----------------------------------------------------------------------------
-# Bump2version
+# Bump2version for version management
 bump2version>=1.0.0,<1.1.0
 
-# Semantic versioning
+# Semantic versioning support
 semantic-version>=2.10.0,<2.11.0
 
 # ----------------------------------------------------------------------------
 # YAML Documentation
 # ----------------------------------------------------------------------------
-# YAML (already in base.txt)
+# YAML parser for configuration documentation
 pyyaml>=6.0.1,<7.0.0
 ruamel.yaml>=0.18.5,<0.19.0
 
 # ----------------------------------------------------------------------------
 # JSON Schema Documentation
 # ----------------------------------------------------------------------------
-# JSON Schema (already in base.txt)
+# JSON Schema validation
 jsonschema>=4.20.0,<4.23.0
 
-# JSON Schema to Markdown
+# JSON Schema to Markdown conversion
 jsonschema2md>=0.5.0,<0.6.0
 
 # ----------------------------------------------------------------------------
 # OpenAPI/Swagger Documentation
 # ----------------------------------------------------------------------------
-# OpenAPI spec generation
+# OpenAPI specification validation
 openapi-spec-validator>=0.7.0,<0.8.0
-
-# Swagger codegen
-# Use FastAPI's built-in OpenAPI
-
-# ----------------------------------------------------------------------------
-# Docusaurus Alternative
-# ----------------------------------------------------------------------------
-# Python bindings (use Node.js Docusaurus directly)
 
 # ----------------------------------------------------------------------------
 # Static Site Generators
 # ----------------------------------------------------------------------------
-# Pelican
+# Pelican for static site generation
 pelican>=4.9.0,<4.10.0
 
-# Nikola
+# Nikola for static site generation
 nikola>=8.3.0,<8.4.0
-
-# ----------------------------------------------------------------------------
-# Documentation Testing
-# ----------------------------------------------------------------------------
-# Doctest (built-in)
-
-# Sphinx doctest
-# Built-in to Sphinx
 
 # ----------------------------------------------------------------------------
 # Code Examples Extraction
 # ----------------------------------------------------------------------------
-# Extract code from markdown
+# Extract code blocks from markdown
 markdown-code-blocks>=3.1.0,<3.2.0
 
 # ----------------------------------------------------------------------------
 # Badges Generation
 # ----------------------------------------------------------------------------
-# Shields.io badges (via URL)
-
-# Coverage badge (already in dev.txt)
+# Coverage badge generation
 coverage-badge>=1.1.0,<1.2.0
-
-# ----------------------------------------------------------------------------
-# Documentation Hosting
-# ----------------------------------------------------------------------------
-# GitHub Pages (via git)
-
-# Read the Docs
-# Configuration via .readthedocs.yml
 
 # ----------------------------------------------------------------------------
 # Tutorials and Examples
 # ----------------------------------------------------------------------------
-# Jupyter Book
+# Jupyter Book for interactive documentation
 jupyter-book>=0.15.0,<1.1.0
 
 # ----------------------------------------------------------------------------
 # Localization
 # ----------------------------------------------------------------------------
-# Babel (already in ui.txt)
+# Babel for internationalization
 babel>=2.14.0,<2.16.0
 
-# Sphinx i18n
+# Sphinx internationalization
 sphinx-intl>=2.1.0,<2.3.0
 
 # ----------------------------------------------------------------------------
 # Academic Paper Formatting
 # ----------------------------------------------------------------------------
-# Pandoc (install system package)
-# pypandoc wrapper
+# Pypandoc wrapper for Pandoc
 pypandoc>=1.12,<1.14
-
-# LaTeX
-# System installation required
 
 # ----------------------------------------------------------------------------
 # Citation Management
 # ----------------------------------------------------------------------------
-# Bibtex parser
+# BibTeX parser for citations
 bibtexparser>=1.4.0,<2.1.0
-
-# ----------------------------------------------------------------------------
-# Documentation Analytics
-# ----------------------------------------------------------------------------
-# Google Analytics (via theme config)
-
-# ----------------------------------------------------------------------------
-# Documentation Search
-# ----------------------------------------------------------------------------
-# Algolia DocSearch (via theme integration)
-
-# Elasticsearch (separate service)
 
 # ============================================================================
 # Installation Notes for Documentation Requirements
@@ -464,95 +411,134 @@ bibtexparser>=1.4.0,<2.1.0
 #    mkdocs serve
 #    open http://127.0.0.1:8000
 #
-# 4. Documentation structure:
+# 4. Documentation structure aligned with Project Structure:
 #    docs/
 #    ├── index.md                    # Landing page
-#    ├── 00_START_HERE.md            # Onboarding
-#    ├── getting_started/            # Installation, quickstart
-#    ├── level_1_beginner/           # 5-minute guides
-#    ├── level_2_intermediate/       # Advanced tutorials
-#    ├── level_3_advanced/           # Research workflows
-#    ├── user_guide/                 # Comprehensive guides
-#    ├── developer_guide/            # Contributing, architecture
-#    ├── api_reference/              # API documentation
-#    ├── tutorials/                  # Step-by-step tutorials
-#    ├── best_practices/             # Best practices
-#    ├── examples/                   # Code examples
-#    ├── cheatsheets/                # Quick references
-#    └── architecture/               # ADRs, diagrams
+#    ├── 00_START_HERE.md           # Onboarding guide
+#    ├── getting_started/           # Installation and quickstart
+#    ├── level_1_beginner/          # Beginner tutorials
+#    ├── level_2_intermediate/      # Intermediate guides
+#    ├── level_3_advanced/          # Advanced research workflows
+#    ├── platform_guides/           # Colab, Kaggle, Local guides
+#    ├── user_guide/                # Comprehensive user documentation
+#    ├── developer_guide/           # Development and contribution
+#    ├── api_reference/             # API documentation
+#    ├── ide_guides/                # VSCode, PyCharm, Vim, Jupyter, etc.
+#    ├── tutorials/                 # Step-by-step tutorials
+#    ├── best_practices/            # Best practices documentation
+#    ├── examples/                  # Code examples
+#    ├── cheatsheets/               # Quick reference PDFs
+#    ├── troubleshooting/           # Platform and quota issues
+#    └── architecture/              # ADRs and system diagrams
 #
-# 5. Specialized guides (15 top-level MD files):
-#    - README.md
-#    - ARCHITECTURE.md
-#    - PERFORMANCE.md
-#    - SECURITY.md
-#    - TROUBLESHOOTING.md
-#    - SOTA_MODELS_GUIDE.md
-#    - OVERFITTING_PREVENTION.md
-#    - ROADMAP.md
-#    - FREE_DEPLOYMENT_GUIDE.md
-#    - IDE_SETUP_GUIDE.md
-#    - LOCAL_MONITORING_GUIDE.md
-#    - QUICK_START.md
-#    - HEALTH_CHECK.md
-#    - CHANGELOG.md
-#    - CITATION.cff
+# 5. Root-level specialized guides:
+#    - README.md                    # Project overview
+#    - ARCHITECTURE.md              # System architecture
+#    - PERFORMANCE.md               # Performance benchmarks
+#    - SECURITY.md                  # Security considerations
+#    - TROUBLESHOOTING.md           # Common issues
+#    - SOTA_MODELS_GUIDE.md         # SOTA model selection
+#    - OVERFITTING_PREVENTION.md    # Anti-overfitting system
+#    - ROADMAP.md                   # Project roadmap
+#    - FREE_DEPLOYMENT_GUIDE.md     # Free platform deployment
+#    - PLATFORM_OPTIMIZATION_GUIDE.md # Platform optimization
+#    - IDE_SETUP_GUIDE.md           # Multi-IDE setup
+#    - LOCAL_MONITORING_GUIDE.md    # Local monitoring stack
+#    - QUICK_START.md               # Quick start guide
+#    - HEALTH_CHECK.md              # System health check
+#    - CHANGELOG.md                 # Version changelog
+#    - CITATION.cff                 # Citation metadata
 #
-# 6. Generate diagrams:
-#    - PlantUML: java -jar plantuml.jar docs/architecture/diagrams/*.puml
-#    - Mermaid: mmdc -i input.mmd -o output.svg
+# 6. Generate architecture diagrams:
+#    PlantUML diagrams from architecture/diagrams/:
+#    java -jar plantuml.jar docs/architecture/diagrams/*.puml
+#    
+#    Mermaid diagrams:
+#    mmdc -i input.mmd -o output.svg
 #
 # 7. Build PDF documentation:
 #    cd docs/
 #    make latexpdf
-#    # or with MkDocs:
+#    
+#    Or with MkDocs:
 #    mkdocs build --config-file mkdocs.yml --strict
 #
-# 8. Check documentation:
-#    - Spell check: sphinx-build -b spelling docs/ _build/spelling
-#    - Link check: sphinx-build -b linkcheck docs/ _build/linkcheck
-#    - Coverage: interrogate src/ -vv
+# 8. Documentation quality checks:
+#    Spell check:
+#    sphinx-build -b spelling docs/ _build/spelling
+#    
+#    Link check:
+#    sphinx-build -b linkcheck docs/ _build/linkcheck
+#    
+#    Coverage check:
+#    interrogate src/ -vv
 #
 # 9. Multi-version documentation:
 #    sphinx-multiversion docs/ _build/html
 #
-# 10. Generate API reference:
+# 10. Generate API reference from source:
 #     sphinx-apidoc -o docs/api_reference src/
-#     # or with MkDocs:
+#     
+#     Or with MkDocs:
 #     mkdocs serve
 #
-# System requirements:
-# - Java (for PlantUML): sudo apt install default-jre
-# - Graphviz: sudo apt install graphviz
-# - LaTeX (for PDF): sudo apt install texlive-full
-# - Pandoc: sudo apt install pandoc
-# - Node.js (for Mermaid CLI): npm install -g @mermaid-js/mermaid-cli
+# System dependencies required:
+# - Java Runtime Environment for PlantUML:
+#   sudo apt install default-jre
 #
-# Documentation best practices:
-# - Use progressive disclosure (beginner → advanced)
-# - Include runnable code examples
-# - Add diagrams for complex workflows
-# - Maintain CHANGELOG.md
-# - Keep README.md up-to-date
-# - Generate API docs automatically
-# - Test documentation builds in CI
-# - Version documentation with releases
+# - Graphviz for graph diagrams:
+#   sudo apt install graphviz
 #
-# Project-specific documentation:
-# - 15 specialized guides at root level
+# - LaTeX for PDF generation:
+#   sudo apt install texlive-full
+#
+# - Pandoc for document conversion:
+#   sudo apt install pandoc
+#
+# - Node.js for Mermaid CLI:
+#   npm install -g @mermaid-js/mermaid-cli
+#
+# Documentation best practices for AG News Text Classification:
+# - Use progressive disclosure from beginner to advanced
+# - Include runnable code examples in all tutorials
+# - Add architecture diagrams for complex workflows
+# - Maintain CHANGELOG.md with each release
+# - Keep README.md synchronized with main documentation
+# - Generate API documentation automatically from docstrings
+# - Test documentation builds in CI/CD pipeline
+# - Version documentation with software releases
+# - Follow academic documentation standards
+# - Include citations for SOTA models and techniques
+# - Document overfitting prevention system thoroughly
+# - Provide platform-specific optimization guides
+# - Maintain IDE setup guides for all supported environments
+#
+# Project-specific documentation features:
+# - 15 specialized root-level guides
 # - 3-level progressive structure (level_1/2/3)
-# - IDE-specific guides (docs/ide_guides/)
+# - 6 IDE-specific guides (docs/ide_guides/)
 # - Architecture Decision Records (docs/architecture/decisions/)
-# - Runbooks (docs/operations/runbooks/)
-# - Cheatsheets (docs/cheatsheets/) - PDF format
+# - Operational runbooks (docs/operations/runbooks/)
+# - Cheatsheets in PDF format (docs/cheatsheets/)
+# - Platform comparison guides
+# - Auto-training documentation
+# - Quota management guides
 #
-# Documentation deployment:
-# - GitHub Pages: mkdocs gh-deploy
-# - Read the Docs: Auto-deploy on push
-# - Self-hosted: Deploy _build/html or site/ directory
+# Documentation deployment options:
+# - GitHub Pages:
+#   mkdocs gh-deploy
 #
-# For detailed documentation guide:
+# - Read the Docs:
+#   Automatic deployment on git push
+#   Configuration in .readthedocs.yml
+#
+# - Self-hosted:
+#   Deploy _build/html or site/ directory
+#   Configure web server (nginx, Apache)
+#
+# For detailed documentation contribution guide:
 # - See docs/developer_guide/contributing.md
-# - See .readthedocs.yml for RTD configuration
+# - See .readthedocs.yml for Read the Docs configuration
 # - See mkdocs.yml for MkDocs configuration
+# - See docs/architecture/decisions/ for design rationale
 # ============================================================================
