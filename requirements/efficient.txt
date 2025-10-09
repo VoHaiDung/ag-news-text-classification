@@ -4,6 +4,7 @@
 # Project: AG News Text Classification (ag-news-text-classification)
 # Description: Parameter-efficient fine-tuning and memory optimization
 # Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
 # License: MIT
 # Python: >=3.8,<3.12
 # ============================================================================
@@ -14,235 +15,126 @@
 # - Prefix tuning and prompt tuning
 # - IA3 (Infused Adapter by Inhibiting and Amplifying)
 # - Gradient checkpointing and memory optimization
-# - Mixed precision training
+# - Mixed precision training (FP16, BF16)
 # - Model quantization and pruning
 # - Efficient inference optimization
+# - Knowledge distillation
+# - Multi-stage progressive training
 # ============================================================================
 
 # Include base requirements
 -r base.txt
 
 # ----------------------------------------------------------------------------
-# Core Efficient Fine-Tuning Libraries
+# Core Parameter-Efficient Fine-Tuning Libraries
 # ----------------------------------------------------------------------------
-# PEFT for parameter-efficient fine-tuning
+# PEFT for LoRA, QLoRA, Adapters, Prefix tuning, Prompt tuning, IA3
 peft>=0.7.0,<0.12.0
 
-# Adapters for transformer models
+# Adapters library for transformer models
 adapters>=0.2.0,<0.3.0; python_version >= "3.9"
 
 # ----------------------------------------------------------------------------
 # Quantization Libraries
 # ----------------------------------------------------------------------------
-# BitsAndBytes for 4-bit/8-bit quantization
+# BitsAndBytes for 4-bit and 8-bit quantization (QLoRA)
 bitsandbytes>=0.41.0,<0.44.0
 
 # AutoGPTQ for GPTQ quantization
 auto-gptq>=0.6.0,<0.8.0; python_version >= "3.9"
 
-# GPTQ-for-LLaMA
+# GPTQ-for-LLaMA implementation
 gptq-for-llama>=0.1.0,<0.2.0; python_version >= "3.9" and platform_system == "Linux"
 
-# Optimum for quantization
+# Optimum for model quantization and optimization
 optimum>=1.16.0,<1.21.0
 
-# Intel Neural Compressor
+# Intel Neural Compressor for quantization
 neural-compressor>=2.4.0,<2.6.0
-
-# ----------------------------------------------------------------------------
-# LoRA-Specific Tools
-# ----------------------------------------------------------------------------
-# LoRA implementation (via PEFT)
-# peft>=0.7.0 (already included above)
-
-# LoRA weight merging utilities
-# Custom implementation in src/models/efficient/lora/lora_utils.py
 
 # ----------------------------------------------------------------------------
 # Mixed Precision Training
 # ----------------------------------------------------------------------------
-# Accelerate for mixed precision
+# Accelerate for distributed training and mixed precision
 accelerate>=0.25.0,<0.31.0
 
-# NVIDIA Apex for mixed precision
+# NVIDIA Apex for advanced mixed precision training
 apex>=0.1; platform_system != "Windows"
 
 # ----------------------------------------------------------------------------
-# Gradient Checkpointing
+# Gradient Checkpointing and Memory Optimization
 # ----------------------------------------------------------------------------
-# Gradient checkpointing utilities
-# Built-in to transformers and PyTorch
-
-# FairScale for activation checkpointing
+# FairScale for activation checkpointing and FSDP
 fairscale>=0.4.13,<0.5.0
 
 # ----------------------------------------------------------------------------
-# Memory Optimization
+# Advanced Memory Optimization
 # ----------------------------------------------------------------------------
-# DeepSpeed ZeRO for memory optimization
+# DeepSpeed ZeRO for memory-efficient training
 deepspeed>=0.12.0,<0.15.0; platform_system != "Windows"
-
-# FairScale for FSDP
-fairscale>=0.4.13,<0.5.0
-
-# PyTorch FSDP
-# Built-in to PyTorch 2.0+
 
 # ----------------------------------------------------------------------------
 # Model Pruning
 # ----------------------------------------------------------------------------
-# Torch Pruning
+# Torch Pruning for structured pruning
 torch-pruning>=1.3.0,<1.4.0
-
-# Neural Network Pruning
-# Custom implementation
 
 # SparseGPT for LLM pruning
 sparsegpt>=0.1.0,<0.2.0; python_version >= "3.9"
 
-# Wanda pruning
+# Wanda pruning for efficient models
 wanda>=0.1.0,<0.2.0; python_version >= "3.9"
 
 # ----------------------------------------------------------------------------
-# Knowledge Distillation
+# Flash Attention for Efficient Attention
 # ----------------------------------------------------------------------------
-# Torch Distillation
-# Custom implementation in src/training/strategies/distillation/
-
-# Transformers KD utilities
-# Via transformers library
-
-# ----------------------------------------------------------------------------
-# Flash Attention for Efficient Training
-# ----------------------------------------------------------------------------
-# Flash Attention 2
+# Flash Attention 2 for memory-efficient attention
 flash-attn>=2.4.0,<2.6.0; platform_system == "Linux" and python_version >= "3.9"
 
-# xFormers for memory-efficient attention
+# xFormers for memory-efficient transformers
 xformers>=0.0.23,<0.0.27; python_version >= "3.9"
-
-# ----------------------------------------------------------------------------
-# Efficient Transformers
-# ----------------------------------------------------------------------------
-# Longformer for efficient long sequences
-# Via transformers library
-
-# BigBird for sparse attention
-# Via transformers library
-
-# Linformer
-# Custom implementation or use efficient-transformers
-
-# ----------------------------------------------------------------------------
-# Gradient Accumulation
-# ----------------------------------------------------------------------------
-# Gradient accumulation utilities
-# Built-in to PyTorch and HuggingFace Trainer
-
-# ----------------------------------------------------------------------------
-# Dynamic Batching
-# ----------------------------------------------------------------------------
-# Dynamic batching for variable length sequences
-# Custom implementation in src/data/loaders/dynamic_batching.py
 
 # ----------------------------------------------------------------------------
 # Efficient Data Loading
 # ----------------------------------------------------------------------------
-# Datasets library with streaming
+# Datasets library with streaming support
 datasets>=2.16.0,<2.20.0
-
-# Prefetching data loader
-# Custom implementation in src/data/loaders/prefetch_loader.py
-
-# ----------------------------------------------------------------------------
-# CPU Offloading
-# ----------------------------------------------------------------------------
-# Accelerate CPU offloading
-# Via accelerate library
-
-# DeepSpeed CPU offloading
-# Via deepspeed library
-
-# ----------------------------------------------------------------------------
-# Model Parallelism
-# ----------------------------------------------------------------------------
-# Accelerate for model parallelism
-accelerate>=0.25.0,<0.31.0
-
-# DeepSpeed for pipeline parallelism
-deepspeed>=0.12.0,<0.15.0; platform_system != "Windows"
-
-# FairScale for model parallelism
-fairscale>=0.4.13,<0.5.0
 
 # ----------------------------------------------------------------------------
 # Efficient Optimizers
 # ----------------------------------------------------------------------------
-# 8-bit optimizers (via bitsandbytes)
-bitsandbytes>=0.41.0,<0.44.0
-
-# Adafactor for memory-efficient optimization
-# Via transformers library
-
-# LAMB optimizer
-# Custom implementation or torch-optimizer
-
-# ----------------------------------------------------------------------------
-# Gradient Compression
-# ----------------------------------------------------------------------------
-# Gradient compression
-# Custom implementation
+# 8-bit optimizers via BitsAndBytes
+# Included in bitsandbytes package above
 
 # ----------------------------------------------------------------------------
 # Low-Rank Decomposition
 # ----------------------------------------------------------------------------
-# Tensor decomposition
+# TensorLy for tensor decomposition
 tensorly>=0.8.0,<0.9.0
 
 # ----------------------------------------------------------------------------
 # Efficient Inference
 # ----------------------------------------------------------------------------
-# ONNX Runtime for inference
+# ONNX Runtime for optimized inference
 onnxruntime>=1.16.0,<1.18.0
 
-# ONNX Runtime GPU
+# ONNX Runtime GPU support
 onnxruntime-gpu>=1.16.0,<1.18.0
 
-# OpenVINO for inference optimization
+# OpenVINO for Intel hardware optimization
 openvino>=2023.2.0,<2024.2.0; python_version >= "3.9"
-
-# TensorRT (optional, for NVIDIA GPUs)
-# nvidia-tensorrt>=8.6.0,<10.0.0
 
 # ----------------------------------------------------------------------------
 # Model Compression
 # ----------------------------------------------------------------------------
-# PyTorch model compression
-# Via torch.quantization
-
-# ONNX model optimization
+# ONNX for model export and optimization
 onnx>=1.15.0,<1.17.0
-
-# ----------------------------------------------------------------------------
-# Weight Sharing
-# ----------------------------------------------------------------------------
-# Weight tying
-# Custom implementation
-
-# ----------------------------------------------------------------------------
-# Adaptive Computation
-# ----------------------------------------------------------------------------
-# Early exit mechanisms
-# Custom implementation
 
 # ----------------------------------------------------------------------------
 # Efficient Embeddings
 # ----------------------------------------------------------------------------
-# Product quantization for embeddings
+# FAISS for efficient similarity search
 faiss-cpu>=1.7.4,<1.9.0
-
-# Hashing embeddings
-# Custom implementation
 
 # ----------------------------------------------------------------------------
 # Distributed Training Utilities
@@ -251,15 +143,12 @@ faiss-cpu>=1.7.4,<1.9.0
 horovod>=0.28.0,<0.29.0; platform_system != "Windows"
 
 # ----------------------------------------------------------------------------
-# Memory Profiling
+# Memory Profiling and Monitoring
 # ----------------------------------------------------------------------------
-# Memory profiler
+# Memory profiler for tracking memory usage
 memory-profiler>=0.61.0,<0.62.0
 
-# PyTorch memory profiler
-# Built-in to PyTorch
-
-# GPU memory utilities
+# GPU utilities for monitoring
 gputil>=1.4.0,<1.5.0
 
 # PyNVML for NVIDIA GPU monitoring
@@ -268,85 +157,43 @@ pynvml>=11.5.0,<11.6.0
 # ----------------------------------------------------------------------------
 # Efficient Tokenization
 # ----------------------------------------------------------------------------
-# Fast tokenizers
+# Fast tokenizers from HuggingFace
 tokenizers>=0.15.0,<0.16.0
 
-# SentencePiece for efficient tokenization
+# SentencePiece for subword tokenization
 sentencepiece>=0.1.99,<0.3.0
 
 # ----------------------------------------------------------------------------
 # Caching for Efficiency
 # ----------------------------------------------------------------------------
-# Disk cache
+# Disk cache for efficient data caching
 diskcache>=5.6.3,<5.7.0
 
-# Joblib for caching
+# Joblib for efficient caching
 joblib>=1.3.2,<1.5.0
-
-# ----------------------------------------------------------------------------
-# Efficient Metrics Computation
-# ----------------------------------------------------------------------------
-# Fast metrics
-# Via scikit-learn and custom implementations
-
-# ----------------------------------------------------------------------------
-# Lazy Loading
-# ----------------------------------------------------------------------------
-# Memory-mapped arrays
-# Via numpy memmap
-
-# ----------------------------------------------------------------------------
-# Efficient Configuration
-# ----------------------------------------------------------------------------
-# YAML parsing (already in base.txt)
-pyyaml>=6.0.1,<7.0.0
 
 # ----------------------------------------------------------------------------
 # Profiling and Benchmarking
 # ----------------------------------------------------------------------------
-# Line profiler
+# Line profiler for code profiling
 line-profiler>=4.1.0,<4.2.0
 
-# Py-spy
+# Py-spy for sampling profiler
 py-spy>=0.3.0,<0.4.0
 
-# Scalene
+# Scalene for CPU and GPU profiling
 scalene>=1.5.0,<1.6.0; python_version >= "3.9"
 
 # ----------------------------------------------------------------------------
-# Automatic Mixed Precision (AMP)
+# Hyperparameter Search
 # ----------------------------------------------------------------------------
-# PyTorch AMP
-# Built-in to PyTorch 1.6+
-
-# ----------------------------------------------------------------------------
-# Efficient Loss Functions
-# ----------------------------------------------------------------------------
-# Custom efficient loss implementations
-# In src/training/objectives/losses/
-
-# ----------------------------------------------------------------------------
-# Efficient Callbacks
-# ----------------------------------------------------------------------------
-# Memory monitoring callback
-# Custom implementation in src/training/callbacks/memory_monitor_callback.py
-
-# ----------------------------------------------------------------------------
-# Efficient Batch Size Finding
-# ----------------------------------------------------------------------------
-# Auto batch size finder
-# Via PyTorch Lightning or custom implementation
-
-# ----------------------------------------------------------------------------
-# Efficient Hyperparameter Search
-# ----------------------------------------------------------------------------
-# Optuna for efficient search
+# Optuna for efficient hyperparameter optimization
 optuna>=3.5.0,<3.7.0
 
 # ----------------------------------------------------------------------------
 # Efficient Model Serving
 # ----------------------------------------------------------------------------
-# TorchServe
+# TorchServe for model serving
 torchserve>=0.9.0,<0.10.0
 
 # ----------------------------------------------------------------------------
@@ -355,19 +202,13 @@ torchserve>=0.9.0,<0.10.0
 # PyArrow for efficient data serialization
 pyarrow>=14.0.0,<16.2.0
 
-# HDF5 for large arrays
+# HDF5 for large array storage
 h5py>=3.10.0,<3.12.0
 
 # ----------------------------------------------------------------------------
-# Efficient Random Number Generation
+# Efficient Model Storage
 # ----------------------------------------------------------------------------
-# NumPy RNG
-numpy>=1.24.0,<1.27.0
-
-# ----------------------------------------------------------------------------
-# Sharding for Large Models
-# ----------------------------------------------------------------------------
-# Safetensors for efficient model loading
+# SafeTensors for efficient model serialization
 safetensors>=0.4.0,<0.5.0
 
 # ============================================================================
@@ -377,121 +218,143 @@ safetensors>=0.4.0,<0.5.0
 #    pip install -r requirements/efficient.txt
 #
 # 2. LoRA fine-tuning example:
-#    python scripts/training/single_model/train_xlarge_lora.py
+#    python scripts/training/single_model/train_xlarge_lora.py \
+#      --model_config configs/models/recommended/tier_1_sota/deberta_v3_xlarge_lora.yaml
 #
 # 3. QLoRA fine-tuning example:
-#    python scripts/training/single_model/train_llm_qlora.py
+#    python scripts/training/single_model/train_llm_qlora.py \
+#      --model_config configs/models/recommended/tier_2_llm/llama2_7b_qlora.yaml
 #
-# 4. Check memory usage:
+# 4. Check GPU memory:
 #    python -c "import torch; print(f'CUDA: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB')"
 #
-# 5. Gradient checkpointing:
+# 5. Enable gradient checkpointing in model:
 #    model.gradient_checkpointing_enable()
 #
-# 6. Mixed precision training:
-#    accelerate launch scripts/training/train_single_model.py --mixed_precision fp16
+# 6. Mixed precision training with Accelerate:
+#    accelerate launch scripts/training/train_single_model.py \
+#      --mixed_precision fp16
 #
-# 7. DeepSpeed ZeRO:
-#    deepspeed scripts/training/train_single_model.py --deepspeed configs/training/efficient/zero3.json
+# 7. DeepSpeed ZeRO training:
+#    deepspeed scripts/training/train_single_model.py \
+#      --deepspeed configs/training/efficient/zero3.json
 #
 # 8. Flash Attention installation (Linux only):
 #    pip install flash-attn --no-build-isolation
 #
-# 9. Profile memory:
+# 9. Profile memory usage:
 #    python -m memory_profiler scripts/training/train_single_model.py
 #
-# 10. Quantize model:
+# 10. Quantize model for deployment:
 #     python scripts/optimization/quantization_optimization.py
 #
-# Parameter-efficient methods comparison:
-# Method         | Trainable Params | Memory   | Speed    | Accuracy
-# Full FT        | 100%             | High     | Slow     | Highest
-# LoRA           | 0.1-1%           | Low      | Fast     | High
-# QLoRA 4-bit    | 0.1-1%           | Very Low | Fast     | High
-# Adapters       | 2-4%             | Low      | Medium   | High
-# Prefix Tuning  | 0.1-3%           | Low      | Fast     | Medium
-# Prompt Tuning  | <0.01%           | Very Low | Very Fast| Medium
-# IA3            | 0.01-0.1%        | Very Low | Fast     | Medium
+# Parameter-efficient fine-tuning methods comparison:
+# Method            | Trainable Params | Memory Usage | Training Speed | Accuracy
+# Full Fine-tuning  | 100%             | High         | Slow           | Highest
+# LoRA              | 0.1-1%           | Low          | Fast           | High
+# QLoRA 4-bit       | 0.1-1%           | Very Low     | Fast           | High
+# Adapters          | 2-4%             | Low          | Medium         | High
+# Prefix Tuning     | 0.1-3%           | Low          | Fast           | Medium
+# Prompt Tuning     | <0.01%           | Very Low     | Very Fast      | Medium
+# IA3               | 0.01-0.1%        | Very Low     | Fast           | Medium
 #
-# LoRA configurations for AG News:
-# Model Size     | Rank | Alpha | Trainable Params | Memory
-# DeBERTa-base   | 8    | 16    | ~0.3M           | 4GB
-# DeBERTa-large  | 16   | 32    | ~1.2M           | 8GB
-# DeBERTa-xlarge | 32   | 64    | ~4.8M           | 16GB
-# LLaMA-2-7B     | 64   | 128   | ~28M            | 24GB (4-bit)
+# LoRA configurations for AG News Text Classification:
+# Model Size        | Rank | Alpha | Trainable Params | Memory Required
+# DeBERTa-base      | 8    | 16    | ~0.3M           | 4GB
+# DeBERTa-large     | 16   | 32    | ~1.2M           | 8GB
+# DeBERTa-xlarge    | 32   | 64    | ~4.8M           | 16GB
+# DeBERTa-xxlarge   | 64   | 128   | ~9.6M           | 24GB (8-bit)
+# LLaMA-2-7B        | 64   | 128   | ~28M            | 24GB (4-bit)
+# LLaMA-2-13B       | 64   | 128   | ~52M            | 40GB (4-bit)
 #
-# QLoRA memory requirements:
+# QLoRA memory requirements by quantization:
 # Model          | Full FP32 | FP16  | 8-bit | 4-bit (QLoRA)
-# LLaMA-2-7B     | 28GB     | 14GB  | 7GB   | 4-5GB
-# LLaMA-2-13B    | 52GB     | 26GB  | 13GB  | 7-8GB
-# LLaMA-2-70B    | 280GB    | 140GB | 70GB  | 35-40GB
-# Mistral-7B     | 28GB     | 14GB  | 7GB   | 4-5GB
+# LLaMA-2-7B     | 28GB      | 14GB  | 7GB   | 4-5GB
+# LLaMA-2-13B    | 52GB      | 26GB  | 13GB  | 7-8GB
+# LLaMA-2-70B    | 280GB     | 140GB | 70GB  | 35-40GB
+# Mistral-7B     | 28GB      | 14GB  | 7GB   | 4-5GB
+# Mixtral-8x7B   | 224GB     | 112GB | 56GB  | 28-32GB
 #
 # Gradient checkpointing trade-offs:
-# Benefit: Reduce memory by ~40-50%
-# Cost: Increase training time by ~20-30%
-# Recommended: For large models (XLarge+) on limited memory
+# Benefit: Reduces memory consumption by 40-50%
+# Cost: Increases training time by 20-30%
+# Recommendation: Use for large models (xlarge and above) on limited memory
 #
-# Mixed precision (FP16/BF16):
-# Benefit: 2x speedup, 50% memory reduction
-# Cost: Potential numerical instability
-# Recommended: Almost always use with gradient scaling
+# Mixed precision training (FP16/BF16):
+# Benefit: 2x training speedup, 50% memory reduction
+# Cost: Potential numerical instability (mitigated with gradient scaling)
+# Recommendation: Always use with gradient scaling for stability
 #
 # Flash Attention benefits:
-# Speedup: 2-4x faster for long sequences
-# Memory: O(N) instead of O(N^2)
-# Limitation: Linux only, requires CUDA
+# Speedup: 2-4x faster attention for long sequences
+# Memory: O(N) memory complexity instead of O(N^2)
+# Limitation: Linux only, requires CUDA-capable GPU
 #
-# DeepSpeed ZeRO stages:
+# DeepSpeed ZeRO optimization stages:
 # Stage 1: Optimizer state partitioning (4x memory reduction)
 # Stage 2: Gradient partitioning (8x memory reduction)
-# Stage 3: Parameter partitioning (Linear memory reduction with GPUs)
+# Stage 3: Parameter partitioning (linear memory scaling with GPUs)
 #
-# Project-specific efficient training configs:
+# Efficient training configurations in Project Structure:
 # - LoRA configs: configs/training/efficient/lora/
 # - QLoRA configs: configs/training/efficient/qlora/
 # - Adapter configs: configs/training/efficient/adapters/
 # - Prefix tuning: configs/training/efficient/prefix_tuning/
 # - Prompt tuning: configs/training/efficient/prompt_tuning/
-# - IA3: configs/training/efficient/ia3/
+# - IA3 configs: configs/training/efficient/ia3/
+# - Combined methods: configs/training/efficient/combined/
 #
-# Model-specific recommendations:
+# Model-specific efficiency recommendations:
 # - DeBERTa-v3-base (184M): LoRA rank 8-16, no quantization needed
 # - DeBERTa-v3-large (435M): LoRA rank 16-32, FP16 mixed precision
 # - DeBERTa-v3-xlarge (900M): LoRA rank 32-64, gradient checkpointing
 # - DeBERTa-v2-xxlarge (1.5B): QLoRA 8-bit, gradient checkpointing
-# - LLaMA-2-7B: QLoRA 4-bit, Flash Attention, rank 64
-# - LLaMA-2-13B: QLoRA 4-bit, DeepSpeed ZeRO-2, rank 64
-# - LLaMA-2-70B: QLoRA 4-bit, DeepSpeed ZeRO-3, multi-GPU
+# - LLaMA-2-7B: QLoRA 4-bit, Flash Attention, LoRA rank 64
+# - LLaMA-2-13B: QLoRA 4-bit, DeepSpeed ZeRO-2, LoRA rank 64
+# - LLaMA-2-70B: QLoRA 4-bit, DeepSpeed ZeRO-3, multi-GPU required
+# - Mistral-7B: QLoRA 4-bit, Flash Attention, LoRA rank 64
+# - Mixtral-8x7B: QLoRA 4-bit, DeepSpeed ZeRO-3, multi-GPU required
 #
-# Colab/Kaggle free tier optimization:
-# - Use QLoRA 4-bit for models >1B parameters
-# - Enable gradient checkpointing
-# - Use gradient accumulation (effective batch size)
-# - Reduce sequence length if possible
-# - Use LoRA rank 8-16 (lower is more memory efficient)
+# Platform-specific optimization (Colab/Kaggle free tier):
+# - Use QLoRA 4-bit for models larger than 1B parameters
+# - Enable gradient checkpointing for all large models
+# - Use gradient accumulation for effective larger batch sizes
+# - Reduce maximum sequence length if memory constrained
+# - Use LoRA rank 8-16 for maximum memory efficiency
+# - Clear CUDA cache between training steps
 #
-# Training scripts:
-# - LoRA: scripts/training/single_model/train_xlarge_lora.py
-# - QLoRA: scripts/training/single_model/train_xxlarge_qlora.py
+# Training scripts for efficient fine-tuning:
+# - LoRA training: scripts/training/single_model/train_xlarge_lora.py
+# - QLoRA training: scripts/training/single_model/train_xxlarge_qlora.py
 # - LLM QLoRA: scripts/training/single_model/train_llm_qlora.py
-# - Adapters: scripts/training/single_model/train_with_adapters.py
+# - Adapter training: scripts/training/single_model/train_with_adapters.py
+# - Distillation: scripts/training/distillation/distill_from_llama.py
 #
 # Memory optimization checklist:
-# - Enable gradient checkpointing
-# - Use mixed precision (FP16/BF16)
-# - Use LoRA/QLoRA for large models
-# - Enable gradient accumulation
-# - Reduce batch size
-# - Use Flash Attention for long sequences
-# - Offload optimizer states (DeepSpeed ZeRO)
-# - Use efficient data loading (prefetching)
-# - Clear cache between training steps
+# - Enable gradient checkpointing for large models
+# - Use mixed precision training (FP16 or BF16)
+# - Apply LoRA or QLoRA for models above 1B parameters
+# - Enable gradient accumulation for effective batch size
+# - Reduce batch size if out of memory
+# - Use Flash Attention for sequences longer than 512 tokens
+# - Offload optimizer states with DeepSpeed ZeRO
+# - Use efficient data loading with prefetching
+# - Clear CUDA cache between major operations
+# - Use CPU offloading for very large models
 #
-# For detailed efficient training guide:
-# - See docs/user_guide/lora_guide.md
-# - See docs/user_guide/qlora_guide.md
-# - See docs/best_practices/parameter_efficient_finetuning.md
-# - See SOTA_MODELS_GUIDE.md for model-specific configs
-# - See configs/training/efficient/ for all configurations
+# Advanced efficient training techniques:
+# - Knowledge distillation: configs/training/advanced/knowledge_distillation/
+# - Multi-stage training: configs/training/advanced/multi_stage/
+# - Curriculum learning: configs/training/strategies/curriculum/
+# - Progressive layer unfreezing
+# - Gradual unfreezing strategies
+#
+# For detailed parameter-efficient fine-tuning guides:
+# - LoRA guide: docs/user_guide/lora_guide.md
+# - QLoRA guide: docs/user_guide/qlora_guide.md
+# - Distillation guide: docs/user_guide/distillation_guide.md
+# - Best practices: docs/best_practices/parameter_efficient_finetuning.md
+# - SOTA models guide: SOTA_MODELS_GUIDE.md
+# - All configurations: configs/training/efficient/
+# - Platform optimization: PLATFORM_OPTIMIZATION_GUIDE.md
 # ============================================================================
