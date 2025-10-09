@@ -1,67 +1,211 @@
-# ================================================
-# Docker Ignore File
-# ================================================
-#
-# Files and directories to exclude from Docker context
-# Following Docker best practices from:
-# - Docker Documentation (https://docs.docker.com/engine/reference/builder/#dockerignore-file)
-# - Dockerfile Best Practices (https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
-#
+# ============================================================================
+# Docker Ignore Configuration for AG News Text Classification
+# ============================================================================
+# Project: AG News Text Classification (ag-news-text-classification)
+# Description: Files and directories excluded from Docker build context
 # Author: Võ Hải Dũng
-# Project: AG News Text Classification
+# Email: vohaidung.work@gmail.com
+# License: MIT
+# ============================================================================
+#
+# Academic Rationale:
+#   Following Docker best practices from "Docker Deep Dive" (Poulton, 2020)
+#   and official Docker documentation, this configuration minimizes build
+#   context size, improving:
+#   - Build speed (smaller context transferred to Docker daemon)
+#   - Image size (fewer layers, smaller final image)
+#   - Security (exclude sensitive files and credentials)
+#   - Reproducibility (exclude environment-specific artifacts)
+#
+# Pattern Syntax:
+#   - Lines starting with # are comments
+#   - Blank lines are ignored
+#   - Standard glob patterns (* matches any sequence)
+#   - ! negates a pattern (include previously excluded files)
+#   - ** matches zero or more directories
+#   - Patterns are relative to build context root
+#
+# Performance Impact:
+#   - Excluding data/ and outputs/ can reduce context from GB to MB
+#   - Faster builds enable rapid iteration during development
+#   - Smaller images reduce deployment time and storage costs
+#
+# Security Considerations:
+#   - Never include .env files with real credentials
+#   - Exclude all .git/ to prevent source history exposure
+#   - Remove IDE configs that may contain local paths
+#
+# Build Context Size Check:
+#   Before: du -sh .
+#   After: docker build --no-cache --progress=plain . 2>&1 | grep "transferring context"
+#
+# References:
+#   - Docker documentation: https://docs.docker.com/engine/reference/builder/#dockerignore-file
+#   - Best practices: https://docs.docker.com/develop/develop-images/dockerfile_best-practices/
+#
+# ============================================================================
 
-# ===== Version Control =====
+# ============================================================================
+# Version Control System
+# ============================================================================
+# Exclude version control metadata. Docker images should be built from
+# clean source, not git repositories.
+
 .git/
 .gitignore
 .gitattributes
+.gitmodules
 .github/
 .gitlab/
+.gitlab-ci.yml
 .bitbucket/
+.hg/
+.svn/
+.bzr/
 
-# ===== Development Files =====
+# ============================================================================
+# Development Environment Files
+# ============================================================================
+# IDE and editor configurations are developer-specific and should not
+# be included in container images.
+
 .vscode/
+.vscode-server/
+*.code-workspace
+.history/
+
 .idea/
+*.iml
+*.ipr
+*.iws
+.idea_modules/
+.fleet/
+
+*.sublime-project
+*.sublime-workspace
+.sublime/
+
 *.swp
 *.swo
+*.swn
 *~
-.DS_Store
-Thumbs.db
-.env
-.env.*
-!.env.example
-.editorconfig
+.vim/
+.neovim/
+*.un~
+Session.vim
+.netrwhist
 
-# ===== Python Files =====
+.project
+.pydevproject
+.settings/
+.classpath
+.atom/
+.eclipse/
+
+.editorconfig
+.pre-commit-config.yaml
+.flake8
+.pylintrc
+.mypy.ini
+.bandit
+
+# ============================================================================
+# Operating System Files
+# ============================================================================
+# OS-specific metadata files that serve no purpose in containers.
+
+.DS_Store
+.DS_Store?
+._*
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.DocumentRevisions-V100
+.fseventsd
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ============================================================================
+# Python Runtime and Build Artifacts
+# ============================================================================
+# Bytecode and build artifacts should be regenerated in container.
+
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.dylib
+*.dll
 .Python
-*.egg
-*.egg-info/
-dist/
+
 build/
+develop-eggs/
+dist/
+downloads/
 eggs/
 .eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
 wheels/
-pip-wheel-metadata/
 share/python-wheels/
-*.manifest
-*.spec
+pip-wheel-metadata/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# ===== Virtual Environments =====
+# ============================================================================
+# Python Virtual Environments
+# ============================================================================
+# Virtual environments are host-specific and rebuilt in container.
+
 env/
 venv/
 ENV/
 env.bak/
 venv.bak/
 .venv/
+.virtualenv/
+.pyenv/
+.conda/
+__pypackages__/
 pipenv/
 .pipenv/
-poetry.lock
 .poetry/
 
-# ===== Testing =====
+# Poetry lock can be kept if using Poetry in container
+# Uncomment to exclude: poetry.lock
+
+# ============================================================================
+# Python Testing and Coverage
+# ============================================================================
+# Test artifacts are generated during CI, not needed in production image.
+
 .pytest_cache/
 .coverage
 .coverage.*
@@ -70,96 +214,186 @@ htmlcov/
 .nox/
 coverage.xml
 *.cover
+*.py,cover
 .hypothesis/
+.test_cache/
 test-results/
 test-reports/
+test_outputs/
 .benchmarks/
 
-# ===== Documentation =====
+# ============================================================================
+# Python Development Tools
+# ============================================================================
+# Development tool caches and outputs.
+
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+cython_debug/
+
+# ============================================================================
+# Documentation Build Outputs
+# ============================================================================
+# Documentation is built separately, not needed in application container.
+
 docs/_build/
 docs/.doctrees/
+docs/_static/
+docs/_templates/
 site/
 .mkdocs/
+.buildinfo
+.doctrees
+.sphinx_build/
 
-# ===== Jupyter Notebooks =====
+# Keep documentation source
+!docs/**/*.md
+!docs/**/*.rst
+
+# ============================================================================
+# Jupyter Notebooks
+# ============================================================================
+# Notebooks are for development and exploration, not production.
+
 .ipynb_checkpoints/
+*.ipynb_checkpoints/
+notebooks/
 *.ipynb
-!notebooks/tutorials/*.ipynb
-notebooks/scratch/
-notebooks/experiments/
 
-# ===== Data Files =====
-# Exclude large data files but keep structure
-data/raw/*
-!data/raw/.gitkeep
-data/processed/*
-!data/processed/.gitkeep
-data/external/*
-!data/external/.gitkeep
-data/augmented/*
-!data/augmented/.gitkeep
-*.csv
-*.tsv
-*.json
-!configs/**/*.json
-*.parquet
-*.h5
-*.hdf5
-*.pkl
-*.pickle
+# Exception: Keep tutorial notebooks if needed for demos
+# !notebooks/tutorials/*.ipynb
 
-# ===== Model Files =====
-models/*
-!models/.gitkeep
+# ============================================================================
+# Data Directories
+# ============================================================================
+# Data should be mounted as volumes or loaded from external storage,
+# not baked into images. This dramatically reduces image size.
+
+data/
+data/raw/
+data/processed/
+data/augmented/
+data/external/
+data/cache/
+data/platform_cache/
+data/quota_tracking/
+data/test_samples/
+data/metadata/
+
+# Keep directory structure markers
+!data/.gitkeep
+!data/**/.gitkeep
+
+# Keep small sample data if needed for testing
+# !data/test_samples/*.json
+
+# ============================================================================
+# Model Files
+# ============================================================================
+# Model weights are typically large (GB) and should be loaded at runtime
+# from model registry, cloud storage, or mounted volumes.
+
+outputs/
+outputs/models/
+outputs/models/checkpoints/
+outputs/models/pretrained/
+outputs/models/fine_tuned/
+outputs/models/lora_adapters/
+outputs/models/qlora_adapters/
+outputs/models/ensembles/
+outputs/models/distilled/
+outputs/models/optimized/
+outputs/models/exported/
+outputs/models/prompted/
+
+models/
 *.pt
 *.pth
+*.ckpt
+*.safetensors
+*.bin
+*.h5
+*.hdf5
 *.onnx
 *.pb
 *.tflite
-*.safetensors
-*.bin
-!models/README.md
-checkpoints/
-*.ckpt
+*.keras
+*.weights
+*.pkl
+*.pickle
+*.joblib
+*.msgpack
 
-# ===== Logs and Outputs =====
+# Exception: Keep small model configs
+!outputs/models/**/*.yaml
+!outputs/models/**/*.json
+!models/README.md
+
+# ============================================================================
+# Logs and Results
+# ============================================================================
+# Logs are ephemeral and should be written to volumes or log aggregators.
+
+outputs/logs/
+outputs/results/
+outputs/analysis/
+outputs/artifacts/
+outputs/profiling/
+
 logs/
 *.log
-outputs/
-results/
-reports/
+*.log.*
+
+# TensorBoard, MLflow, W&B
+runs/
 wandb/
 mlruns/
-tensorboard/
+mlartifacts/
+.mlflow/
+events.out.tfevents.*
 
-# ===== Cache =====
+# ============================================================================
+# Experiment Outputs
+# ============================================================================
+# Experimental artifacts from research should not be in production images.
+
+experiments/
+experiments/results/
+experiments/outputs/
+benchmarks/results/
+benchmarks/outputs/
+
+# Keep experiment configurations
+!experiments/**/*.yaml
+!experiments/**/*.py
+!benchmarks/**/*.yaml
+
+# ============================================================================
+# Cache Directories
+# ============================================================================
+# Caches should be regenerated in container or mounted as volumes.
+
 .cache/
-*.cache
-.mypy_cache/
-.ruff_cache/
+cache/
+.torch/
+.huggingface/
+transformers_cache/
+model_cache/
 .pip_cache/
 pip-cache/
 .npm/
+.yarn/
 node_modules/
 
-# ===== CI/CD =====
-.github/workflows/
-.gitlab-ci.yml
-.travis.yml
-.circleci/
-azure-pipelines.yml
-Jenkinsfile
+# ============================================================================
+# Temporary and Backup Files
+# ============================================================================
+# Temporary files and backups should never be in images.
 
-# ===== Deployment =====
-kubernetes/
-k8s/
-helm/
-terraform/
-ansible/
-*.tfstate
-*.tfvars
-
-# ===== Temporary Files =====
 tmp/
 temp/
 *.tmp
@@ -167,60 +401,114 @@ temp/
 *.bak
 *.backup
 *.old
+*.orig
+*.swp
 
-# ===== OS Files =====
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-desktop.ini
+backup/
+backups/
+.backups/
 
-# ===== IDE Files =====
-.vscode/
-.idea/
-*.sublime-project
-*.sublime-workspace
-.project
-.classpath
-.settings/
-*.iml
+# ============================================================================
+# Environment and Secrets
+# ============================================================================
+# Never include environment files or secrets in images.
+# Use Docker secrets, environment variables, or config management.
 
-# ===== Security =====
-*.pem
+.env
+.env.*
+!.env.example
+.env.local
+.env.prod
+.env.production
+.env.development
+.env.staging
+.env.test
+
+.secrets
+.secrets.yaml
+secrets.yaml
+secrets/
 *.key
+*.pem
 *.crt
 *.p12
-.env*
-!.env.example
-secrets/
-credentials/
-tokens/
+*.pfx
+credentials.json
+service-account.json
+token.json
+.secrets.baseline
 
-# ===== Package Managers =====
+configs/secrets/local_secrets.yaml
+
+# ============================================================================
+# CI/CD Configuration
+# ============================================================================
+# CI/CD configs are for build pipelines, not runtime.
+
+.github/workflows/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+azure-pipelines.yml
+Jenkinsfile
+.drone.yml
+bitbucket-pipelines.yml
+
+# ============================================================================
+# Deployment and Orchestration
+# ============================================================================
+# Kubernetes, Terraform, and other IaC should be separate.
+
+kubernetes/
+k8s/
+helm/
+terraform/
+ansible/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+.terraform/
+
+# Keep Dockerfile and docker-compose for reference
+!Dockerfile
+!Dockerfile.*
+!docker-compose.yml
+!docker-compose.*.yml
+
+# ============================================================================
+# Package Manager Lock Files
+# ============================================================================
+# Decision: Include or exclude based on your strategy.
+
+# Option 1: Include locks for reproducibility (recommended)
+# !requirements/lock/*.lock
+# !poetry.lock
+# !package-lock.json
+
+# Option 2: Exclude locks and pin versions in requirements.txt
 package-lock.json
 yarn.lock
 Pipfile.lock
-poetry.lock
-composer.lock
+# poetry.lock
 
-# ===== Database =====
+# ============================================================================
+# Database Files
+# ============================================================================
+# Database files should use volumes, not be in images.
+
 *.db
 *.sqlite
 *.sqlite3
 postgres-data/
 mysql-data/
 mongodb-data/
+redis-data/
 
-# ===== Backup Files =====
-backup/
-backups/
-*.backup
-*.dump
+# ============================================================================
+# Media and Archive Files
+# ============================================================================
+# Large media files bloat images unnecessarily.
 
-# ===== Media Files =====
 *.mp4
 *.avi
 *.mov
@@ -233,37 +521,230 @@ backups/
 *.png
 *.gif
 *.svg
-!docs/images/*.png
-!app/assets/images/*.png
 
-# ===== Archives =====
+# Exception: Keep essential images for app
+!app/assets/images/*.png
+!app/assets/images/*.svg
+!docs/images/*.png
+
 *.zip
 *.tar
 *.tar.gz
 *.tgz
 *.rar
 *.7z
+*.gz
+*.bz2
+*.xz
 
-# ===== Specific Project Files =====
-# Exclude large experiment results
-experiments/results/
-experiments/runs/
-experiments/outputs/
+# ============================================================================
+# Data Format Files
+# ============================================================================
+# Large data files should be external.
 
-# Exclude benchmarks
-benchmarks/results/
-benchmarks/outputs/
+*.csv
+*.tsv
+*.parquet
+*.feather
+*.arrow
+*.json
 
-# Keep important config files
-!Dockerfile
-!docker-compose.yml
+# Exception: Keep small config JSON files
+!configs/**/*.json
+!app/**/*.json
+!.vscode/*.json
+
+# ============================================================================
+# Monitoring and Profiling
+# ============================================================================
+# Monitoring data is runtime-specific.
+
+monitoring/
+monitoring/local/data/
+monitoring/local/prometheus/
+monitoring/local/grafana/
+
+*.prof
+*.lprof
+*.trace
+*.hprof
+*.dump
+
+# ============================================================================
+# IDE-Specific Project Files
+# ============================================================================
+
+.devcontainer/
+.gitpod/
+.gitpod.yml
+.gitpod.Dockerfile
+
+# Keep main devcontainer config if using it for Docker
+# !.devcontainer/devcontainer.json
+
+# ============================================================================
+# Documentation Source (Keep Selected)
+# ============================================================================
+
+# Exclude built docs but keep source
+# docs/
+
+# Keep essential documentation
+!README.md
+!LICENSE
+!CHANGELOG.md
+!CONTRIBUTING.md
+!AUTHORS.md
+!CITATION.cff
+
+# ============================================================================
+# Tools and Scripts (Selective)
+# ============================================================================
+
+# Exclude development tools
+tools/profiling/
+tools/debugging/
+tools/visualization/
+
+# Keep essential scripts
+!scripts/setup/
+!scripts/deployment/
+!scripts/training/
+!scripts/evaluation/
+
+# ============================================================================
+# Plugin and Extension Directories
+# ============================================================================
+
+plugins/cache/
+plugins/custom_models/outputs/
+
+# ============================================================================
+# Whitelist Essential Files
+# ============================================================================
+# Explicitly include files that may match exclude patterns.
+
+# Project metadata
+!README.md
+!LICENSE
+!CITATION.cff
+!CHANGELOG.md
+!AUTHORS.md
+!CONTRIBUTING.md
+
+# Build and package files
+!setup.py
+!setup.cfg
+!pyproject.toml
+!MANIFEST.in
+!Makefile
+!install.sh
+
+# Requirements
 !requirements.txt
 !requirements/*.txt
-!setup.py
-!pyproject.toml
-!Makefile
+!requirements/lock/*.lock
 
-# ===== Notes =====
-# This file ensures Docker builds are efficient by excluding
-# unnecessary files from the build context.
-# Smaller contexts = faster builds and smaller images.
+# Source code
+!src/
+!src/**/*.py
+
+# Essential configs
+!configs/
+!configs/**/*.yaml
+!configs/**/*.yml
+!configs/**/*.json
+
+# Scripts needed for container
+!scripts/setup/*.py
+!scripts/deployment/*.py
+
+# Application files
+!app/
+!app/**/*.py
+
+# Tests (if running in container)
+# !tests/
+# !tests/**/*.py
+
+# Keep .dockerignore itself for documentation
+!.dockerignore
+
+# ============================================================================
+# Project-Specific Excludes
+# ============================================================================
+
+# IDE configurations (comprehensive)
+.ide/
+.ide/sync/
+tools/ide_tools/cache/
+
+# Platform-specific caches
+data/platform_cache/colab_cache/
+data/platform_cache/kaggle_cache/
+data/platform_cache/local_cache/
+
+# Quota tracking databases
+data/quota_tracking/quota_history.json
+data/quota_tracking/session_logs.json
+data/quota_tracking/platform_usage.db
+
+# Migration data
+migrations/data/cache/
+
+# Backup strategies
+backup/strategies/local_backup_data/
+
+# Application runtime
+app/.streamlit/
+app/assets/runtime/
+
+# Make caches
+.make.cache
+.build_cache
+
+# ============================================================================
+# Notes
+# ============================================================================
+#
+# Build Context Optimization:
+#   - Current context size: du -sh . (before optimization)
+#   - After excludes: Check during build
+#   - Target: < 50MB for application code
+#
+# Build Strategy:
+#   1. Exclude all data and models (load at runtime)
+#   2. Include source code and configs
+#   3. Include requirements files for pip install
+#   4. Multi-stage builds can further reduce final image size
+#
+# Volume Mounting Strategy:
+#   - Data: Mount data/ as volume
+#   - Models: Mount outputs/models/ or use model registry
+#   - Logs: Mount outputs/logs/ or use log aggregator
+#   - Config: Pass via environment variables or ConfigMaps
+#
+# Security Best Practices:
+#   - Never include .env with real credentials
+#   - Scan images: docker scan <image>
+#   - Use .dockerignore with .gitignore patterns
+#   - Minimize attack surface by excluding dev tools
+#
+# Debugging:
+#   - List what's included: docker build --no-cache -t test . && docker run --rm test ls -la
+#   - Check context size: docker build . 2>&1 | grep "Sending build context"
+#   - Compare sizes: docker images
+#
+# Multi-Stage Build Example:
+#   # Stage 1: Builder
+#   FROM python:3.10 as builder
+#   COPY requirements.txt .
+#   RUN pip wheel --no-cache-dir --wheel-dir /wheels -r requirements.txt
+#   
+#   # Stage 2: Runtime
+#   FROM python:3.10-slim
+#   COPY --from=builder /wheels /wheels
+#   COPY src/ /app/src/
+#   # Much smaller final image
+#
+# ============================================================================
