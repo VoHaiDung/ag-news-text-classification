@@ -2,355 +2,419 @@
 # Data Processing Requirements for AG News Text Classification
 # ============================================================================
 # Project: AG News Text Classification (ag-news-text-classification)
-# Description: Data handling, preprocessing, augmentation, and validation
+# Description: Comprehensive data handling, preprocessing, and augmentation
 # Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
 # License: MIT
 # Python: >=3.8,<3.12
 # ============================================================================
-# This file contains packages required for:
-# - Data loading and preprocessing (AG News and external news corpora)
-# - Text cleaning and normalization
-# - Data augmentation (back-translation, paraphrasing, synthetic generation)
-# - Data validation and quality checks
-# - Data versioning and tracking
-# - Cross-validation and stratified splitting
-# - Active learning and data selection
-# - Data profiling and statistics
+#
+# Academic Rationale:
+#   Data quality is fundamental to machine learning research as established
+#   in "Data Quality for Machine Learning" (Goodfellow et al., 2016) and
+#   "Overfitting Prevention in Deep Learning" (Keskar et al., 2017). This
+#   configuration supports:
+#   - Rigorous data preprocessing pipelines
+#   - Statistically sound data augmentation
+#   - Data validation and quality assurance
+#   - Reproducible data versioning
+#   - Active learning and intelligent data selection
+#
+# Package Categories:
+#   - Data formats and storage (Parquet, HDF5, Arrow)
+#   - Text processing (NLTK, spaCy, TextBlob)
+#   - Data augmentation (back-translation, paraphrasing, synthetic)
+#   - Data validation (Great Expectations, Pandera)
+#   - Data profiling (pandas-profiling, Sweetviz)
+#   - Web scraping (BeautifulSoup, Scrapy, Newspaper3k)
+#   - Data versioning (DVC)
+#   - Active learning (modAL)
+#
+# Installation:
+#   pip install -r requirements/data.txt
+#
+# Data Pipeline:
+#   1. Download: scripts/data_preparation/prepare_ag_news.py
+#   2. Validate: scripts/data_preparation/verify_data_splits.py
+#   3. Augment: scripts/data_preparation/create_augmented_data.py
+#   4. Profile: python -c "from ydata_profiling import ProfileReport; ..."
+#
 # ============================================================================
 
 # Include base requirements
 -r base.txt
 
-# ----------------------------------------------------------------------------
-# Data Formats and Storage
-# ----------------------------------------------------------------------------
-# Apache Arrow and Parquet
-pyarrow>=14.0.0,<16.2.0
+# ============================================================================
+# High-Performance Data Formats
+# ============================================================================
+# Modern data formats optimized for columnar storage and fast I/O.
 
-# HDF5 for large datasets
+# Apache Arrow for columnar data
+# Used for fast data serialization and IPC
+pyarrow>=14.0.0,<17.1.0
+
+# HDF5 for hierarchical data storage
+# Efficient storage for large datasets
 h5py>=3.10.0,<3.12.0
 tables>=3.9.0,<3.10.0
 
-# Excel files
+# ============================================================================
+# Structured Data Formats
+# ============================================================================
+# Support for various spreadsheet and database export formats.
+
+# Excel file handling
 openpyxl>=3.1.0,<3.2.0
 xlrd>=2.0.0,<2.1.0
 
-# CSV handling (already in pandas, but for advanced features)
+# CSV processing utilities
 csvkit>=1.3.0,<2.1.0
 
-# JSON Lines format
+# JSON Lines format for streaming data
 jsonlines>=4.0.0,<4.1.0
 
-# Feather format
-pyarrow>=14.0.0,<16.2.0
+# Feather binary columnar format
+# Already covered by pyarrow
 
-# Pickle alternatives
+# Alternative pickle implementations
 cloudpickle>=3.0.0,<3.1.0
 
-# Protocol Buffers
-protobuf>=4.25.0,<5.28.0
+# Protocol Buffers for structured data
+protobuf>=4.25.0,<5.29.0
 
-# ----------------------------------------------------------------------------
-# Database Connectors
-# ----------------------------------------------------------------------------
-# SQLAlchemy ORM
+# ============================================================================
+# Database Connectors and ORM
+# ============================================================================
+# Database support for storing processed data and metadata.
+
+# SQLAlchemy ORM for database abstraction
 sqlalchemy>=2.0.0,<2.1.0
 
-# PostgreSQL
+# PostgreSQL adapter
 psycopg2-binary>=2.9.0,<2.10.0
 
-# MySQL
+# MySQL connector
 pymysql>=1.1.0,<1.2.0
 
-# SQLite (built-in, but utilities)
+# SQLite utilities
 sqlite-utils>=3.36.0,<3.37.0
 
-# MongoDB
+# MongoDB driver
 pymongo>=4.6.0,<4.8.0
 
-# Redis for caching
+# Redis for caching and queuing
 redis>=5.0.0,<5.1.0
 hiredis>=2.3.0,<2.4.0
 
-# ----------------------------------------------------------------------------
-# Data Versioning and Lineage
-# ----------------------------------------------------------------------------
-# Data Version Control
-dvc>=3.37.0,<3.54.0
+# ============================================================================
+# Data Version Control and Lineage
+# ============================================================================
+# Tools for versioning datasets and tracking data transformations.
+
+# Data Version Control (DVC)
+dvc>=3.37.0,<3.55.0
 dvc-s3>=3.0.0,<3.3.0
 dvc-gdrive>=3.0.0,<3.1.0
 
-# Data lineage tracking
+# Data quality and validation framework
 great-expectations>=0.18.0,<0.19.0
 
-# Dataset versioning
-datasets>=2.16.0,<2.20.0
+# HuggingFace Datasets for versioning
+# Already in base.txt
+datasets>=2.16.0,<2.21.0
 
-# ----------------------------------------------------------------------------
+# ============================================================================
 # Web Scraping and Data Collection
-# ----------------------------------------------------------------------------
-# Beautiful Soup for HTML parsing
+# ============================================================================
+# Libraries for collecting external news data and web content.
+
+# HTML parsing with BeautifulSoup
 beautifulsoup4>=4.12.0,<4.13.0
 
-# lxml parser
+# Fast XML/HTML parser
 lxml>=4.9.0,<5.3.0
 
-# HTML5 parsing
+# HTML5 compliant parser
 html5lib>=1.1,<1.2
 
-# Scrapy framework
+# Web scraping framework
 scrapy>=2.11.0,<2.12.0
 
-# Newspaper3k for article extraction
+# Article extraction for news
 newspaper3k>=0.2.8,<0.3.0
 
 # News API client
 newsapi-python>=0.2.7,<0.3.0
 
-# RSS feed parsing
+# RSS/Atom feed parsing
 feedparser>=6.0.0,<6.1.0
 
-# HTTP requests (already in base.txt)
-requests>=2.31.0,<2.33.0
+# Browser automation for dynamic content
+selenium>=4.16.0,<4.24.0
 
-# Selenium for dynamic content
-selenium>=4.16.0,<4.23.0
+# Modern browser automation
+playwright>=1.40.0,<1.47.0
 
-# Playwright alternative
-playwright>=1.40.0,<1.46.0
+# ============================================================================
+# Natural Language Processing Libraries
+# ============================================================================
+# Core NLP tools for text preprocessing and analysis.
 
-# ----------------------------------------------------------------------------
-# Text Processing Libraries
-# ----------------------------------------------------------------------------
-# Natural Language Toolkit (already in ml.txt)
+# Natural Language Toolkit
 nltk>=3.8.0,<3.9.0
 
-# spaCy for advanced NLP (already in ml.txt)
+# Industrial-strength NLP
 spacy>=3.7.0,<3.8.0
 
-# spaCy language models
-# en_core_web_sm via: python -m spacy download en_core_web_sm
-# en_core_web_lg via: python -m spacy download en_core_web_lg
+# spaCy models installation:
+# python -m spacy download en_core_web_sm
+# python -m spacy download en_core_web_lg
+# python -m spacy download en_core_web_trf
 
-# TextBlob for simple NLP
+# Simple NLP tasks
 textblob>=0.17.0,<0.18.0
 
-# Pattern for text analysis
-pattern>=3.6.0,<3.7.0; python_version < "3.10"
+# Web mining and NLP
+# pattern>=3.6.0,<3.7.0; python_version < "3.10"
 
-# NLTK data downloader
-nltk-data>=0.1.0,<0.2.0; python_version >= "3.9"
-
-# Language detection (already in ml.txt)
+# Language detection
 langdetect>=1.0.9,<1.1.0
+
+# Fast language identification
+fasttext>=0.9.2,<0.10.0
 
 # Character encoding detection
 chardet>=5.2.0,<5.3.0
 charset-normalizer>=3.3.0,<3.4.0
 
-# Unidecode for text normalization
+# Unicode normalization
 unidecode>=1.3.0,<1.4.0
 
-# Text preprocessing
+# Text cleaning
 clean-text>=0.6.0,<0.7.0
 
-# Emoji handling
+# Emoji handling and processing
 emoji>=2.9.0,<2.13.0
 
-# ----------------------------------------------------------------------------
-# Data Augmentation
-# ----------------------------------------------------------------------------
-# NLP augmentation (already in ml.txt)
+# ============================================================================
+# Text Preprocessing and Normalization
+# ============================================================================
+# Utilities for cleaning and normalizing text data.
+
+# Fix mojibake and Unicode issues
+ftfy>=6.1.0,<6.3.0
+
+# Expand contractions (don't -> do not)
+contractions>=0.1.0,<0.2.0
+
+# Additional stopwords
+stop-words>=2018.7.0,<2024.1.0
+
+# ============================================================================
+# Tokenization Libraries
+# ============================================================================
+# Various tokenization approaches for different use cases.
+
+# Fast tokenizers with Rust backend
+# Already in base.txt
+tokenizers>=0.15.0,<0.16.0
+
+# SentencePiece for subword tokenization
+sentencepiece>=0.1.99,<0.3.0
+
+# Moses tokenizer for statistical MT
+sacremoses>=0.1.0,<0.2.0
+
+# ============================================================================
+# Data Augmentation for NLP
+# ============================================================================
+# Augmentation techniques to expand training data and improve robustness.
+
+# Comprehensive NLP augmentation
+# Supports:
+# - Contextual word embeddings
+# - Back translation
+# - Synonym replacement
+# - Random insertion/swap/deletion
 nlpaug>=1.1.11,<1.2.0
 
-# Text augmentation
+# Simple augmentation techniques
 textaugment>=1.4.0,<1.5.0
 
-# EDA (Easy Data Augmentation)
-eda-nlp>=0.1.0,<0.2.0; python_version >= "3.9"
+# Easy Data Augmentation (EDA)
+# eda-nlp>=0.1.0,<0.2.0; python_version >= "3.9"
 
-# Back-translation
+# Translation for back-translation
 googletrans>=4.0.0rc1,<4.1.0
 deep-translator>=1.11.0,<1.12.0
 
-# Translation API
+# General translation API
 translate>=3.6.0,<3.7.0
 
-# Paraphrasing
-parrot-paraphraser>=0.1.0,<0.2.0; python_version >= "3.9"
+# Paraphrasing with Parrot
+# parrot-paraphraser>=0.1.0,<0.2.0; python_version >= "3.9"
 
-# Pegasus paraphrasing (via transformers, already in ml.txt)
+# Pegasus and T5 for paraphrasing via transformers
+# Already covered by transformers in base.txt
 
-# Contextual word embeddings for augmentation
-# Uses transformers library (already in ml.txt)
-
-# ----------------------------------------------------------------------------
+# ============================================================================
 # Synthetic Data Generation
-# ----------------------------------------------------------------------------
-# Faker for fake data (already in dev.txt)
-faker>=20.1.0,<26.1.0
+# ============================================================================
+# Libraries for generating synthetic training data.
 
-# SDV (Synthetic Data Vault)
-sdv>=1.9.0,<1.14.0
+# Fake data generation
+faker>=20.1.0,<27.1.0
 
-# CTGAN for synthetic tabular data
+# Synthetic Data Vault
+sdv>=1.9.0,<1.15.0
+
+# Conditional tabular GAN
 ctgan>=0.10.0,<0.11.0
 
-# ----------------------------------------------------------------------------
-# Data Validation and Quality
-# ----------------------------------------------------------------------------
-# Great Expectations (already mentioned above)
+# ============================================================================
+# Data Validation and Quality Assurance
+# ============================================================================
+# Frameworks for ensuring data quality and detecting issues.
+
+# Great Expectations for data validation
+# Already listed above
 great-expectations>=0.18.0,<0.19.0
 
-# Pandera for DataFrame validation
+# DataFrame schema validation
 pandera>=0.18.0,<0.20.0
 
-# Pydantic for data validation (already in base.txt)
-pydantic>=2.5.0,<2.8.0
+# Pydantic for data models
+# Already in base.txt
+pydantic>=2.5.0,<2.9.0
 
-# Cerberus for validation
+# Cerberus validation
 cerberus>=1.3.0,<1.4.0
 
-# Marshmallow for serialization
+# Marshmallow for serialization/deserialization
 marshmallow>=3.20.0,<3.22.0
 
-# ----------------------------------------------------------------------------
-# Data Profiling and Statistics
-# ----------------------------------------------------------------------------
-# Pandas Profiling
-pandas-profiling>=3.6.0,<3.7.0
-ydata-profiling>=4.6.0,<4.10.0
+# ============================================================================
+# Data Profiling and Exploratory Data Analysis
+# ============================================================================
+# Tools for understanding dataset characteristics.
 
-# Sweetviz for EDA
+# Comprehensive data profiling
+# pandas-profiling>=3.6.0,<3.7.0  # Deprecated, use ydata-profiling
+ydata-profiling>=4.6.0,<4.11.0
+
+# Beautiful EDA reports
 sweetviz>=2.3.0,<2.4.0
 
-# DataPrep for data profiling
+# Interactive data profiling
 dataprep>=0.4.5,<0.5.0
 
-# Lux for interactive visualization
+# Lux for automatic visualization
 lux-api>=0.5.0,<0.6.0
 
-# ----------------------------------------------------------------------------
-# Text Statistics
-# ----------------------------------------------------------------------------
-# Text statistics (already in ml.txt)
+# ============================================================================
+# Text Statistics and Readability
+# ============================================================================
+# Calculate text complexity metrics.
+
+# Text statistics (readability, complexity)
 textstat>=0.7.3,<0.8.0
 
-# Readability metrics
+# Readability formulas
 readability>=0.3.0,<0.4.0
 
-# ----------------------------------------------------------------------------
+# ============================================================================
 # Data Splitting and Sampling
-# ----------------------------------------------------------------------------
-# Scikit-learn (already in base.txt for train_test_split)
+# ============================================================================
+# Utilities for train/val/test splitting and stratified sampling.
+
+# Scikit-learn for splitting
+# Already in base.txt
 scikit-learn>=1.3.0,<1.5.0
 
-# Stratified sampling
-stratified-split>=0.1.0,<0.2.0; python_version >= "3.9"
+# Stratified sampling utilities
+# stratified-split>=0.1.0,<0.2.0; python_version >= "3.9"
 
-# Imbalanced learning (already in ml.txt)
+# Imbalanced learning
 imbalanced-learn>=0.11.0,<0.13.0
 
-# ----------------------------------------------------------------------------
+# ============================================================================
 # Active Learning
-# ----------------------------------------------------------------------------
-# modAL for active learning (already in ml.txt)
+# ============================================================================
+# Active learning strategies for efficient labeling.
+
+# modAL for active learning
 modAL>=0.4.1,<0.5.0
 
-# ALiPy for active learning
-alipy>=1.3.0,<1.4.0; python_version >= "3.9"
+# ALiPy active learning toolkit
+# alipy>=1.3.0,<1.4.0; python_version >= "3.9"
 
-# ----------------------------------------------------------------------------
-# Data Selection and Coreset
-# ----------------------------------------------------------------------------
-# Coreset selection (already in ml.txt)
-# Custom implementation in src/data/selection/
+# ============================================================================
+# Data Selection and Coreset Methods
+# ============================================================================
+# Intelligent data subset selection.
 
-# Influence functions (already in ml.txt)
-pytorch-influence-functions>=0.1.1,<0.2.0
+# Coreset selection
+# Custom implementation in src/data/selection/coreset_sampler.py
 
-# ----------------------------------------------------------------------------
-# Text Normalization
-# ----------------------------------------------------------------------------
-# NFKD normalization (built-in unicodedata)
+# Influence functions
+# pytorch-influence-functions>=0.1.1,<0.2.0
 
-# Text cleaning
-ftfy>=6.1.0,<6.3.0
+# ============================================================================
+# Regular Expressions and Pattern Matching
+# ============================================================================
+# Advanced pattern matching for text processing.
 
-# Contractions expansion
-contractions>=0.1.0,<0.2.0
+# Enhanced regex
+# Already in base.txt
+regex>=2023.12.0,<2024.8.0
 
-# ----------------------------------------------------------------------------
-# Stopwords and Vocabulary
-# ----------------------------------------------------------------------------
-# Stopwords removal (via NLTK)
-# nltk.corpus.stopwords (already in nltk)
-
-# Custom stopwords
-stop-words>=2018.7.0,<2024.1.0
-
-# ----------------------------------------------------------------------------
-# Tokenization
-# ----------------------------------------------------------------------------
-# HuggingFace tokenizers (already in base.txt)
-tokenizers>=0.15.0,<0.16.0
-
-# SentencePiece (already in ml.txt)
-sentencepiece>=0.1.99,<0.3.0
-
-# Moses tokenizer (already in ml.txt)
-sacremoses>=0.1.0,<0.2.0
-
-# NLTK tokenizers (already in nltk)
-
-# spaCy tokenizers (already in spacy)
-
-# ----------------------------------------------------------------------------
-# Regex and Pattern Matching
-# ----------------------------------------------------------------------------
-# Regex (already in base.txt)
-regex>=2023.12.0,<2024.6.0
-
-# Flashtext for keyword extraction
+# Fast keyword extraction and replacement
 flashtext>=2.7.0,<2.8.0
 
-# ----------------------------------------------------------------------------
+# ============================================================================
 # Data Streaming
-# ----------------------------------------------------------------------------
-# Kafka for data streaming
+# ============================================================================
+# Stream processing for real-time data pipelines.
+
+# Kafka client
 kafka-python>=2.0.0,<2.1.0
 
 # Stream processing
 streamz>=0.6.0,<0.7.0
 
-# ----------------------------------------------------------------------------
-# Data Annotation
-# ----------------------------------------------------------------------------
+# ============================================================================
+# Data Annotation Tools
+# ============================================================================
+# Integration with labeling platforms.
+
 # Label Studio SDK
 label-studio-sdk>=0.0.32,<0.0.35
 
-# Prodigy (commercial, install separately)
+# Doccano client for annotation
+# doccano-client>=0.2.0,<0.3.0; python_version >= "3.9"
 
-# Doccano client
-doccano-client>=0.2.0,<0.3.0; python_version >= "3.9"
+# ============================================================================
+# Deduplication and Fuzzy Matching
+# ============================================================================
+# Finding and removing duplicate or similar records.
 
-# ----------------------------------------------------------------------------
-# Data Deduplication
-# ----------------------------------------------------------------------------
-# Fuzzy matching
+# Fuzzy string matching
 fuzzywuzzy>=0.18.0,<0.19.0
 python-Levenshtein>=0.23.0,<0.26.0
 
-# RapidFuzz (faster alternative)
+# Faster fuzzy matching
 rapidfuzz>=3.6.0,<3.10.0
 
-# Dedupe library
+# Record deduplication
 dedupe>=2.0.0,<2.1.0
 
-# ----------------------------------------------------------------------------
-# Data Compression
-# ----------------------------------------------------------------------------
-# Zstandard (already in base.txt)
+# ============================================================================
+# Compression Algorithms
+# ============================================================================
+# Fast compression for data storage.
+
+# Zstandard compression
+# Already in base.txt
 zstandard>=0.22.0,<0.23.0
 
 # LZ4 compression
@@ -359,205 +423,401 @@ lz4>=4.3.0,<4.4.0
 # Snappy compression
 python-snappy>=0.6.0,<0.8.0
 
-# ----------------------------------------------------------------------------
-# Data Hashing
-# ----------------------------------------------------------------------------
-# xxhash (already in base.txt)
+# ============================================================================
+# Hashing Functions
+# ============================================================================
+# Fast hashing for deduplication and caching.
+
+# xxHash
+# Already in base.txt
 xxhash>=3.4.1,<3.5.0
 
 # MurmurHash
 mmh3>=4.1.0,<5.1.0
 
-# ----------------------------------------------------------------------------
-# Metadata Extraction
-# ----------------------------------------------------------------------------
+# ============================================================================
+# Document Format Extraction
+# ============================================================================
+# Extract text from various document formats.
+
 # PDF text extraction
 pdfplumber>=0.10.0,<0.12.0
-pypdf>=3.17.0,<4.3.0
+pypdf>=3.17.0,<5.1.0
 pdfminer-six>=20221105,<20231229
 
-# DOCX extraction
+# Microsoft Word documents
 python-docx>=1.1.0,<1.2.0
 
-# ----------------------------------------------------------------------------
-# Time Series for News Data
-# ----------------------------------------------------------------------------
-# Arrow for dates (already in base.txt via python-dateutil)
+# ============================================================================
+# Time Series and Date Handling
+# ============================================================================
+# Temporal data processing for news timestamps.
+
+# Date parsing and manipulation
+# Already in base.txt
 python-dateutil>=2.8.2,<2.10.0
 
 # Timezone handling
 pytz>=2023.3,<2024.2
 
-# ----------------------------------------------------------------------------
+# Arrow for better date/time handling
+arrow>=1.3.0,<1.4.0
+
+# ============================================================================
 # Data Caching
-# ----------------------------------------------------------------------------
-# Joblib (already in base.txt)
+# ============================================================================
+# Persistent caching for expensive operations.
+
+# Joblib for caching
+# Already in base.txt
 joblib>=1.3.2,<1.5.0
 
-# Diskcache (already in base.txt)
+# Disk-based cache
+# Already in base.txt
 diskcache>=5.6.3,<5.7.0
 
-# ----------------------------------------------------------------------------
-# Data Pipeline
-# ----------------------------------------------------------------------------
-# Kedro for data pipelines
+# ============================================================================
+# Data Pipeline Orchestration
+# ============================================================================
+# Workflow management for complex data pipelines.
+
+# Kedro for reproducible pipelines
 kedro>=0.19.0,<0.20.0
 
-# Prefect for workflow orchestration
-prefect>=2.14.0,<2.20.0
+# Prefect for workflow automation
+prefect>=2.14.0,<2.21.0
 
 # Apache Airflow (heavy, install separately if needed)
 # apache-airflow>=2.8.0,<2.10.0
 
-# ----------------------------------------------------------------------------
-# Data Loading Performance
-# ----------------------------------------------------------------------------
-# Parallel processing (already in base.txt)
+# ============================================================================
+# Parallel Data Processing
+# ============================================================================
+# Distributed and parallel computing for large datasets.
+
+# Multiprocessing
+# Already in base.txt
 multiprocess>=0.70.15,<0.71.0
 
 # Dask for parallel computing
-dask[complete]>=2023.12.0,<2024.7.0
+dask[complete]>=2023.12.0,<2024.8.0
 
-# Modin for faster pandas
+# Modin for parallelized pandas
 modin[all]>=0.25.0,<0.31.0
 
-# Polars (fast DataFrame library)
-polars>=0.20.0,<1.4.0
+# Polars for fast DataFrame operations
+polars>=0.20.0,<1.5.0
 
-# ----------------------------------------------------------------------------
-# Text Encoding
-# ----------------------------------------------------------------------------
-# Base64 encoding (built-in)
+# ============================================================================
+# Table Formatting and Export
+# ============================================================================
+# Pretty printing tabular data.
 
-# URL encoding (built-in urllib)
-
-# ----------------------------------------------------------------------------
-# Data Export
-# ----------------------------------------------------------------------------
-# Tabulate for pretty tables
+# Tabulate for ASCII tables
 tabulate>=0.9.0,<0.10.0
 
-# ----------------------------------------------------------------------------
-# Special Text Formats
-# ----------------------------------------------------------------------------
-# Markdown processing (already in base.txt and llm.txt)
+# ============================================================================
+# Markup Language Processing
+# ============================================================================
+# Processing various markup formats.
+
+# Markdown parsing
+# Already in base.txt
 markdown>=3.5.1,<3.7.0
 
 # reStructuredText
 docutils>=0.20.0,<0.22.0
 
-# ----------------------------------------------------------------------------
-# News-Specific Libraries
-# ----------------------------------------------------------------------------
-# News category classification
-# Custom implementation in src/models/
+# ============================================================================
+# News-Specific Utilities
+# ============================================================================
+# Specialized tools for news data processing.
 
-# News article summarization (via transformers)
+# News article components:
+# - Title extraction (via newspaper3k)
+# - Author extraction (via newspaper3k)
+# - Date extraction (via newspaper3k)
+# - Content extraction (via newspaper3k)
+# - Category classification (custom models in src/)
 
-# Named Entity Recognition for news (via spacy)
+# Named Entity Recognition for news
+# Via spaCy models (see spacy above)
 
-# ----------------------------------------------------------------------------
+# ============================================================================
 # Data Quality Metrics
-# ----------------------------------------------------------------------------
-# Data quality framework
-dquality>=0.1.0,<0.2.0; python_version >= "3.9"
+# ============================================================================
+# Frameworks for measuring data quality.
 
-# ----------------------------------------------------------------------------
+# Data quality assessment
+# dquality>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# ============================================================================
 # Schema Validation
-# ----------------------------------------------------------------------------
-# JSON Schema (already in base.txt)
+# ============================================================================
+# Validating data against predefined schemas.
+
+# JSON Schema validation
+# Already in base.txt
 jsonschema>=4.20.0,<4.23.0
 
-# YAML validation (via pyyaml, already in base.txt)
+# YAML validation
+# Via pyyaml in base.txt
 
-# ----------------------------------------------------------------------------
-# Data Anonymization
-# ----------------------------------------------------------------------------
-# Anonymization toolkit
-anonymization>=0.1.0,<0.2.0; python_version >= "3.9"
+# ============================================================================
+# Data Anonymization and Privacy
+# ============================================================================
+# Tools for protecting sensitive information.
 
-# PII detection
+# PII detection and anonymization
 presidio-analyzer>=2.2.0,<2.3.0
 presidio-anonymizer>=2.2.0,<2.3.0
 
-# ----------------------------------------------------------------------------
-# Data Sampling
-# ----------------------------------------------------------------------------
-# Reservoir sampling
-reservoir-sampling>=0.1.0,<0.2.0; python_version >= "3.9"
-
-# ----------------------------------------------------------------------------
-# Special Requirements for AG News Dataset
-# ----------------------------------------------------------------------------
-# HuggingFace datasets (already in base.txt)
-datasets>=2.16.0,<2.20.0
-
-# Custom loaders in src/data/datasets/ag_news.py
+# General anonymization toolkit
+# anonymization>=0.1.0,<0.2.0; python_version >= "3.9"
 
 # ============================================================================
-# Installation Notes for Data Processing Requirements
+# Statistical Sampling
 # ============================================================================
-# 1. Install data processing dependencies:
-#    pip install -r requirements/data.txt
+# Advanced sampling techniques.
+
+# Reservoir sampling for streaming data
+# reservoir-sampling>=0.1.0,<0.2.0; python_version >= "3.9"
+
+# ============================================================================
+# AG News Dataset Specific
+# ============================================================================
+# Dataset-specific utilities.
+
+# HuggingFace datasets for AG News
+# Already in base.txt
+datasets>=2.16.0,<2.21.0
+
+# Custom loaders:
+# - src/data/datasets/ag_news.py
+# - src/data/datasets/external_news.py
+# - src/data/datasets/combined_dataset.py
+# - src/data/datasets/instruction_dataset.py
+# - src/data/datasets/distillation_dataset.py
+
+# ============================================================================
+# Installation and Usage Notes
+# ============================================================================
 #
-# 2. Download NLTK data:
-#    python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords')"
+# Quick Installation:
+#   pip install -r requirements/data.txt
 #
-# 3. Download spaCy models:
+# Post-Installation Setup:
+#
+# 1. Download NLTK data:
+#    python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet'); nltk.download('averaged_perceptron_tagger')"
+#
+# 2. Download spaCy models:
 #    python -m spacy download en_core_web_sm
 #    python -m spacy download en_core_web_lg
+#    # For transformer-based models (large):
+#    python -m spacy download en_core_web_trf
 #
-# 4. Setup DVC (if using data versioning):
+# 3. Setup DVC (if using data versioning):
 #    dvc init
-#    dvc remote add -d myremote /path/to/remote/storage
+#    dvc remote add -d storage /path/to/remote/storage
+#    dvc pull
 #
-# 5. Load AG News dataset:
+# 4. Download AG News dataset:
+#    python scripts/setup/download_all_data.py
+#    # Or specific script:
 #    python scripts/data_preparation/prepare_ag_news.py
 #
-# 6. Data augmentation:
-#    python scripts/data_preparation/create_augmented_data.py
-#
-# 7. Back-translation setup:
-#    - Requires translation API keys (Google Translate, DeepL)
-#    - See configs/data/augmentation/back_translation.yaml
-#
-# 8. Data profiling:
-#    python -c "from ydata_profiling import ProfileReport; import pandas as pd; df = pd.read_csv('data/raw/ag_news/train.csv'); ProfileReport(df).to_file('profile.html')"
-#
-# 9. Data validation:
+# 5. Verify data integrity:
 #    python scripts/data_preparation/verify_data_splits.py
 #
-# 10. Create stratified splits:
-#     python scripts/data_preparation/create_data_splits.py
+# 6. Create data splits:
+#    python scripts/data_preparation/create_data_splits.py
 #
-# Platform-specific notes:
-# - Windows: Some web scraping packages may need additional setup
-# - Linux: All packages fully supported
-# - macOS: Full support
+# 7. Generate data augmentation:
+#    python scripts/data_preparation/create_augmented_data.py
 #
-# Memory requirements:
-# - AG News dataset: ~500MB RAM
-# - With augmentation: ~2GB RAM
-# - Data profiling: ~1GB RAM
-# - Large external corpora: 4GB+ RAM
+# 8. Profile dataset:
+#    python -c "from ydata_profiling import ProfileReport; import pandas as pd; df = pd.read_csv('data/raw/ag_news/train.csv'); ProfileReport(df, title='AG News Profile').to_file('ag_news_profile.html')"
 #
-# Storage requirements:
-# - Raw AG News: ~30MB
-# - Processed data: ~100MB
-# - Augmented data: ~500MB
-# - External news corpus: 1-10GB (optional)
+# ============================================================================
+# Data Processing Workflow
+# ============================================================================
 #
-# Project-specific data scripts:
-# - Download data: scripts/setup/download_all_data.py
-# - Prepare AG News: scripts/data_preparation/prepare_ag_news.py
-# - Create augmentation: scripts/data_preparation/create_augmented_data.py
-# - External corpus: scripts/data_preparation/prepare_external_data.py
-# - LLM generation: scripts/data_preparation/generate_with_llama.py
-# - Validation: scripts/data_preparation/verify_data_splits.py
-# - Register test set: scripts/data_preparation/register_test_set.py
+# Standard workflow for AG News data processing:
 #
-# For detailed data preparation guide:
-# - See docs/user_guide/data_preparation.md
-# - See configs/data/ for all data configurations
-# - See src/data/ for data processing implementations
+# 1. Download raw data:
+#    from datasets import load_dataset
+#    dataset = load_dataset("ag_news")
+#
+# 2. Basic preprocessing:
+#    - Text cleaning (remove special characters, normalize whitespace)
+#    - Lowercasing (optional)
+#    - Tokenization
+#    - Stopword removal (optional)
+#
+# 3. Advanced preprocessing:
+#    - Lemmatization/Stemming
+#    - Named Entity Recognition
+#    - POS tagging
+#
+# 4. Data validation:
+#    - Check for missing values
+#    - Check for duplicates
+#    - Validate label distribution
+#    - Verify data types
+#
+# 5. Data augmentation (optional):
+#    - Back-translation
+#    - Synonym replacement
+#    - Contextual word embeddings
+#    - Paraphrasing
+#
+# 6. Data splitting:
+#    - Stratified train/val/test split
+#    - K-fold cross-validation setup
+#
+# 7. Data profiling:
+#    - Statistical summary
+#    - Distribution analysis
+#    - Correlation analysis
+#
+# 8. Save processed data:
+#    - Save to Parquet for fast loading
+#    - Save metadata
+#    - Version with DVC
+#
+# ============================================================================
+# Platform-Specific Notes
+# ============================================================================
+#
+# Windows:
+#   - Some web scraping packages may need Visual C++ Build Tools
+#   - Use WSL2 for better compatibility
+#
+# Linux:
+#   - Full support for all packages
+#   - Recommended for production use
+#
+# macOS:
+#   - Full support
+#   - May need Xcode Command Line Tools
+#
+# Google Colab:
+#   - Many packages pre-installed
+#   - See requirements/colab.txt for minimal installation
+#
+# Kaggle:
+#   - Similar to Colab
+#   - See requirements/kaggle.txt
+#
+# ============================================================================
+# Memory and Storage Requirements
+# ============================================================================
+#
+# AG News Dataset:
+#   - Raw data: ~30 MB
+#   - Processed data: ~100 MB
+#   - Augmented data: ~500 MB
+#   - External news corpus: 1-10 GB (optional)
+#
+# Memory Requirements:
+#   - Basic preprocessing: 500 MB RAM
+#   - With augmentation: 2 GB RAM
+#   - Data profiling: 1 GB RAM
+#   - Large external corpora: 4-8 GB RAM
+#
+# Storage Requirements:
+#   - Minimum: 500 MB
+#   - Recommended: 5 GB (with augmentation)
+#   - With external data: 15+ GB
+#
+# ============================================================================
+# Performance Optimization
+# ============================================================================
+#
+# Tips for faster data processing:
+#
+# 1. Use Parquet format for storage:
+#    df.to_parquet('data.parquet', compression='snappy')
+#
+# 2. Use Polars instead of Pandas for large datasets:
+#    import polars as pl
+#    df = pl.read_csv('data.csv')
+#
+# 3. Use Dask for parallel processing:
+#    import dask.dataframe as dd
+#    df = dd.read_csv('data/*.csv')
+#
+# 4. Cache expensive operations with joblib:
+#    from joblib import Memory
+#    memory = Memory('cache/', verbose=0)
+#    @memory.cache
+#    def expensive_function(data):
+#        ...
+#
+# 5. Use multiprocessing for parallel augmentation:
+#    from multiprocessing import Pool
+#    with Pool(8) as p:
+#        results = p.map(augment_text, texts)
+#
+# ============================================================================
+# Data Augmentation Best Practices
+# ============================================================================
+#
+# Recommended augmentation strategies for text classification:
+#
+# 1. Synonym Replacement:
+#    - Replace 10-20% of words with synonyms
+#    - Maintain semantic meaning
+#
+# 2. Back-Translation:
+#    - Translate to intermediate language and back
+#    - Use multiple language pairs
+#
+# 3. Contextual Word Embeddings:
+#    - Use BERT/RoBERTa for word substitution
+#    - Maintain context
+#
+# 4. Random Insertion/Deletion:
+#    - Insert/delete 5-10% of words
+#    - Preserve grammatical structure
+#
+# 5. Paraphrasing:
+#    - Use T5/Pegasus models
+#    - Generate diverse paraphrases
+#
+# Overfitting Prevention:
+#   - Limit augmentation ratio (1-3x original data)
+#   - Validate augmentation quality
+#   - Monitor train/val gap
+#   - See OVERFITTING_PREVENTION.md for details
+#
+# ============================================================================
+# Project-Specific Scripts
+# ============================================================================
+#
+# Available in scripts/data_preparation/:
+#   - prepare_ag_news.py: Download and prepare AG News
+#   - prepare_external_data.py: External news corpus
+#   - create_augmented_data.py: Data augmentation
+#   - create_instruction_data.py: Format for instruction tuning
+#   - generate_with_llama.py: LLM-based augmentation
+#   - generate_with_mistral.py: Mistral augmentation
+#   - generate_pseudo_labels.py: Semi-supervised learning
+#   - create_data_splits.py: Train/val/test splitting
+#   - generate_contrast_sets.py: Robustness evaluation
+#   - select_quality_data.py: Data selection
+#   - verify_data_splits.py: Validation
+#   - register_test_set.py: Test set protection
+#
+# ============================================================================
+# Documentation References
+# ============================================================================
+#
+# For detailed guides, see:
+#   - docs/user_guide/data_preparation.md
+#   - docs/best_practices/avoiding_overfitting.md
+#   - configs/data/ for all data configurations
+#   - src/data/ for implementation details
+#
 # ============================================================================
