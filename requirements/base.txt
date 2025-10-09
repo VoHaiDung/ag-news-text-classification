@@ -4,72 +4,174 @@
 # Project: AG News Text Classification (ag-news-text-classification)
 # Description: Core dependencies required for all project functionalities
 # Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
 # License: MIT
 # Python: >=3.8,<3.12
 # ============================================================================
-# This file contains essential packages that form the foundation of the
-# AG News Text Classification system. All other requirement files extend
-# from this base configuration.
+#
+# Academic Rationale:
+#   This requirements file follows software engineering best practices from
+#   "Research Software Engineering with Python" (Damien Irving et al., 2021)
+#   and reproducible research principles. Version pinning ensures exact
+#   reproducibility of experimental results across different environments.
+#
+# Design Principles:
+#   1. Minimal base: Only essential packages for core functionality
+#   2. Version constraints: Upper and lower bounds for stability
+#   3. Platform compatibility: Tested on Linux, macOS, Windows
+#   4. Academic standards: Support for reproducible research
+#   5. Security: Regular updates for CVE patches
+#
+# Version Pinning Strategy:
+#   - Lower bound: Minimum version with required features
+#   - Upper bound: Exclude breaking changes in major versions
+#   - Format: package>=min_version,<max_version
+#
+# Installation:
+#   pip install -r requirements/base.txt
+#
+# Update lock file:
+#   pip-compile requirements/base.txt -o requirements/lock/base.lock
+#
+# References:
+#   - PEP 508: https://peps.python.org/pep-0508/
+#   - Semantic Versioning: https://semver.org/
+#   - PyPA packaging guide: https://packaging.python.org/
+#
 # ============================================================================
 
-# ----------------------------------------------------------------------------
-# Core Deep Learning Frameworks
-# ----------------------------------------------------------------------------
-# PyTorch ecosystem for neural network training and inference
-torch>=2.1.0,<2.3.0
-torchvision>=0.16.0,<0.18.0
-torchaudio>=2.1.0,<2.3.0
+# ============================================================================
+# Deep Learning Framework - PyTorch Ecosystem
+# ============================================================================
+# PyTorch is the primary deep learning framework for this project, chosen
+# for its flexibility, dynamic computation graphs, and strong NLP support
+# through the Hugging Face ecosystem.
 
-# HuggingFace Transformers ecosystem for pre-trained models
-transformers>=4.36.0,<4.41.0
+# Core PyTorch library
+torch>=2.1.0,<2.4.0
+
+# Computer vision utilities (required by some transformers)
+torchvision>=0.16.0,<0.19.0
+
+# Audio processing (optional but included for completeness)
+torchaudio>=2.1.0,<2.4.0
+
+# ============================================================================
+# Transformer Models - Hugging Face Ecosystem
+# ============================================================================
+# Hugging Face provides state-of-the-art pre-trained models and is the
+# foundation for this text classification system.
+
+# Transformers library with support for:
+# - DeBERTa (v2, v3 variants including xlarge, xxlarge)
+# - RoBERTa (base, large, xlm-roberta)
+# - ELECTRA (base, large discriminator)
+# - XLNet (base, large)
+# - Longformer (base, large with long context)
+# - T5 (base, large, 3B, FLAN-T5)
+# - LLaMA 2/3 (7B, 13B, 70B via QLoRA)
+# - Mistral (7B, 7B-instruct, Mixtral 8x7B)
+# - Falcon (7B, 40B)
+# - MPT (7B, 30B)
+# - Phi (2, 3)
+transformers>=4.36.0,<4.42.0
+
+# Fast tokenizers with Rust backend
 tokenizers>=0.15.0,<0.16.0
-datasets>=2.16.0,<2.20.0
 
-# Accelerate for distributed training and mixed precision
-accelerate>=0.25.0,<0.31.0
+# Datasets library for AG News and external corpora
+datasets>=2.16.0,<2.21.0
 
-# SafeTensors for secure model weight serialization
+# Hugging Face Hub for model downloads
+huggingface-hub>=0.20.0,<0.25.0
+
+# ============================================================================
+# Efficient Training and Inference
+# ============================================================================
+# Accelerate provides unified API for distributed training, mixed precision,
+# and device management across different backends.
+
+# Accelerate for:
+# - Mixed precision training (FP16, BF16)
+# - Distributed training (DDP, FSDP)
+# - Device management (CPU, GPU, TPU)
+# - Gradient accumulation
+accelerate>=0.25.0,<0.32.0
+
+# SafeTensors for secure model serialization
 safetensors>=0.4.0,<0.5.0
 
-# ----------------------------------------------------------------------------
+# ============================================================================
 # Scientific Computing Stack
-# ----------------------------------------------------------------------------
-# Numerical computing and array operations
+# ============================================================================
+# NumPy, Pandas, and SciPy form the foundation for numerical operations,
+# data manipulation, and statistical analysis.
+
+# Numerical computing with N-dimensional arrays
 numpy>=1.24.0,<1.27.0
+
+# Scientific computing and optimization
 scipy>=1.10.0,<1.13.0
 
-# Data manipulation and analysis
+# Data structures and analysis (DataFrame operations)
 pandas>=2.0.0,<2.3.0
 
-# Machine learning utilities
+# ============================================================================
+# Machine Learning Utilities
+# ============================================================================
+# Scikit-learn provides classical ML algorithms, metrics, and preprocessing
+# tools used throughout the project.
+
+# Machine learning algorithms and metrics for:
+# - Train/val/test splitting
+# - Stratified sampling
+# - Classification metrics
+# - Baseline models
 scikit-learn>=1.3.0,<1.5.0
 
-# ----------------------------------------------------------------------------
+# ============================================================================
 # Configuration Management
-# ----------------------------------------------------------------------------
-# YAML parsing for configuration files
+# ============================================================================
+# YAML-based configuration system with 300+ config files supporting model
+# architectures, training strategies, and platform-specific settings.
+
+# YAML parsing and serialization
 pyyaml>=6.0.1,<7.0.0
 
-# Advanced configuration with variable interpolation
+# Advanced configuration with OmegaConf for:
+# - Variable interpolation
+# - Config composition
+# - Type checking
 omegaconf>=2.3.0,<2.4.0
 
 # Environment variable management
 python-dotenv>=1.0.0,<1.1.0
 
-# Template rendering for config generation
+# Jinja2 templating for config generation
 jinja2>=3.1.0,<3.2.0
 
-# Data validation and settings management
-pydantic>=2.5.0,<2.8.0
-pydantic-settings>=2.1.0,<2.3.0
+# ============================================================================
+# Data Validation and Settings
+# ============================================================================
+# Pydantic provides runtime type checking and data validation critical for
+# research reproducibility and error prevention.
 
-# ----------------------------------------------------------------------------
-# CLI and Console Interface
-# ----------------------------------------------------------------------------
-# Modern CLI framework with type hints
+# Data validation with type hints
+pydantic>=2.5.0,<2.9.0
+pydantic-settings>=2.1.0,<2.4.0
+
+# ============================================================================
+# Command Line Interface
+# ============================================================================
+# Modern CLI framework for user-friendly command-line tools.
+
+# Typer for type-safe CLI with:
+# - Auto-completion
+# - Type hints
+# - Rich formatting
 typer[all]>=0.9.0,<0.13.0
 
-# Rich text and formatting in terminal
+# Rich text formatting in terminal
 rich>=13.7.0,<13.8.0
 
 # Click for additional CLI utilities
@@ -78,197 +180,290 @@ click>=8.1.7,<8.2.0
 # Progress bars and status indicators
 tqdm>=4.66.0,<4.67.0
 
-# ----------------------------------------------------------------------------
-# HTTP and API Utilities
-# ----------------------------------------------------------------------------
-# HTTP library for API requests
+# ============================================================================
+# HTTP Clients and API Utilities
+# ============================================================================
+# HTTP libraries for external API calls and data downloads.
+
+# Synchronous HTTP client
 requests>=2.31.0,<2.33.0
 
-# Async HTTP client
+# Asynchronous HTTP client
 httpx>=0.25.0,<0.28.0
 
-# URL parsing and manipulation
+# URL parsing and handling
 urllib3>=2.1.0,<2.3.0
 
-# ----------------------------------------------------------------------------
-# Data Validation and Serialization
-# ----------------------------------------------------------------------------
+# ============================================================================
+# Data Validation and Schema
+# ============================================================================
+# JSON schema validation and data class utilities.
+
 # JSON schema validation
 jsonschema>=4.20.0,<4.23.0
 
-# Data class utilities
-attrs>=23.1.0,<24.0.0
+# Declarative data classes
+attrs>=23.1.0,<24.3.0
 
-# Type checking at runtime
-typeguard>=4.1.0,<4.3.0
+# Runtime type checking
+typeguard>=4.1.0,<4.4.0
 
-# ----------------------------------------------------------------------------
-# Logging and Monitoring
-# ----------------------------------------------------------------------------
-# Structured logging
+# ============================================================================
+# Structured Logging
+# ============================================================================
+# Advanced logging with structured output for debugging and monitoring.
+
+# Loguru for elegant logging
 loguru>=0.7.0,<0.8.0
 
-# Python logging configuration
+# JSON logging formatter
 python-json-logger>=2.0.7,<2.1.0
 
-# ----------------------------------------------------------------------------
-# File and Path Operations
-# ----------------------------------------------------------------------------
-# Path manipulation utilities
+# ============================================================================
+# File System Operations
+# ============================================================================
+# Utilities for path manipulation and file operations.
+
+# Modern path handling (built-in pathlib supplement)
 pathlib2>=2.3.7,<2.4.0; python_version < "3.10"
 
-# File system event monitoring
-watchdog>=3.0.0,<4.1.0
+# File system monitoring
+watchdog>=3.0.0,<5.1.0
 
-# File operations with retry logic
-filelock>=3.13.0,<3.15.0
+# File locking for concurrent operations
+filelock>=3.13.0,<3.16.0
 
-# ----------------------------------------------------------------------------
-# Utilities
-# ----------------------------------------------------------------------------
+# ============================================================================
+# General Utilities
+# ============================================================================
+# Miscellaneous utilities for common operations.
+
 # Type hints for older Python versions
-typing-extensions>=4.9.0,<4.12.0
+typing-extensions>=4.9.0,<4.13.0
 
 # Retry logic for robust operations
-tenacity>=8.2.3,<8.4.0
+tenacity>=8.2.3,<9.1.0
 
 # Date and time utilities
 python-dateutil>=2.8.2,<2.10.0
 
-# Regular expressions
-regex>=2023.12.0,<2024.6.0
+# Enhanced regular expressions
+regex>=2023.12.0,<2024.8.0
 
-# Hash functions
+# Fast hashing functions
 xxhash>=3.4.1,<3.5.0
 
-# Progress tracking
+# Animated progress tracking
 alive-progress>=3.1.5,<3.2.0
 
-# ----------------------------------------------------------------------------
-# Caching
-# ----------------------------------------------------------------------------
-# Disk and memory caching
+# ============================================================================
+# Caching Layer
+# ============================================================================
+# Disk and memory caching for improved performance.
+
+# Disk-based cache
 diskcache>=5.6.3,<5.7.0
 
-# Job caching for expensive operations
+# Efficient caching for expensive computations
 joblib>=1.3.2,<1.5.0
 
-# ----------------------------------------------------------------------------
+# ============================================================================
 # Serialization
-# ----------------------------------------------------------------------------
-# Fast serialization
+# ============================================================================
+# Fast binary serialization formats.
+
+# MessagePack serialization
 msgpack>=1.0.7,<1.1.0
 
-# Pickle extensions
+# Extended pickle functionality
 dill>=0.3.7,<0.4.0
 
-# ----------------------------------------------------------------------------
-# Version and Dependency Management
-# ----------------------------------------------------------------------------
-# Package version parsing
+# ============================================================================
+# Package Management
+# ============================================================================
+# Tools for dependency management and version parsing.
+
+# Version number parsing
 packaging>=23.2,<24.2.0
 
-# Dependency resolution
+# Dependency resolution and locking
 pip-tools>=7.3.0,<7.5.0
 
-# ----------------------------------------------------------------------------
-# Testing Utilities (for health checks and validation)
-# ----------------------------------------------------------------------------
-# Basic assertion utilities
+# ============================================================================
+# Testing Framework (Core)
+# ============================================================================
+# Minimal testing tools for health checks and validation.
+
+# Core testing framework
 pytest>=7.4.0,<8.3.0
+
+# Code coverage measurement
 pytest-cov>=4.1.0,<5.1.0
+
+# Parallel test execution
 pytest-xdist>=3.5.0,<3.7.0
 
-# ----------------------------------------------------------------------------
-# Security
-# ----------------------------------------------------------------------------
-# Cryptographic functions
-cryptography>=41.0.7,<43.0.0
+# ============================================================================
+# Security and Cryptography
+# ============================================================================
+# Cryptographic functions and secret management.
 
-# Secret management
+# Cryptographic primitives
+cryptography>=41.0.7,<43.1.0
+
+# Secure credential storage
 keyring>=24.3.0,<25.3.0
 
-# ----------------------------------------------------------------------------
-# Code Quality (for auto-fix and validation)
-# ----------------------------------------------------------------------------
-# Code formatting
+# ============================================================================
+# Code Quality Tools (Minimal)
+# ============================================================================
+# Essential code formatting and linting for development.
+
+# Code formatter
 black>=23.12.0,<24.5.0
 
 # Import sorting
 isort>=5.13.0,<5.14.0
 
-# Linting
+# Python linter
 flake8>=7.0.0,<7.1.0
+
+# Advanced static analyzer
 pylint>=3.0.3,<3.3.0
 
-# Type checking
+# Static type checker
 mypy>=1.8.0,<1.11.0
 
-# ----------------------------------------------------------------------------
-# Git Integration (for reproducibility tracking)
-# ----------------------------------------------------------------------------
-# Git repository interaction
+# ============================================================================
+# Git Integration
+# ============================================================================
+# Git repository interaction for version tracking.
+
+# Git repository manipulation
 gitpython>=3.1.40,<3.2.0
 
-# ----------------------------------------------------------------------------
-# Multiprocessing and Concurrency
-# ----------------------------------------------------------------------------
-# Parallel processing
+# ============================================================================
+# Multiprocessing
+# ============================================================================
+# Parallel processing for data loading and training.
+
+# Fork of multiprocessing
 multiprocess>=0.70.15,<0.71.0
 
-# Thread pool management
+# Backport for older Python versions
 concurrent-futures>=3.1.1,<3.2.0; python_version < "3.9"
 
-# ----------------------------------------------------------------------------
-# System and Platform Utilities
-# ----------------------------------------------------------------------------
-# Cross-platform system utilities
+# ============================================================================
+# System Utilities
+# ============================================================================
+# Cross-platform system and process utilities.
+
+# System and process information
 psutil>=5.9.6,<6.1.0
 
-# Platform detection
+# Linux distribution detection
 distro>=1.8.0,<1.10.0
 
-# ----------------------------------------------------------------------------
+# ============================================================================
 # Compression
-# ----------------------------------------------------------------------------
-# Fast compression
+# ============================================================================
+# Fast compression algorithms.
+
+# Zstandard compression
 zstandard>=0.22.0,<0.23.0
 
-# ----------------------------------------------------------------------------
-# Environment Detection
-# ----------------------------------------------------------------------------
-# Jupyter notebook detection
-ipython>=8.12.0,<8.27.0; python_version >= "3.9"
+# ============================================================================
+# Interactive Computing
+# ============================================================================
+# IPython and Jupyter support for notebooks and debugging.
+
+# Enhanced Python shell
+ipython>=8.12.0,<8.28.0; python_version >= "3.9"
+
+# Jupyter kernel
 ipykernel>=6.27.0,<6.30.0
 
-# ----------------------------------------------------------------------------
+# ============================================================================
 # Documentation Support
-# ----------------------------------------------------------------------------
-# Markdown processing
+# ============================================================================
+# Markdown and YAML processing for documentation.
+
+# Markdown parser
 markdown>=3.5.1,<3.7.0
 
-# YAML with comments
+# YAML with comments support
 ruamel.yaml>=0.18.5,<0.19.0
 
 # ============================================================================
-# Installation Notes:
+# Installation and Usage Notes
 # ============================================================================
-# 1. Install with: pip install -r requirements/base.txt
-# 2. For development: pip install -r requirements/dev.txt
-# 3. For production: pip install -r requirements/all_local.txt
-# 4. Check compatibility: python scripts/setup/verify_dependencies.py
+#
+# Installation:
+#   pip install -r requirements/base.txt
+#
+# Verification:
+#   python scripts/setup/verify_dependencies.py
+#
+# Generate lock file:
+#   pip-compile requirements/base.txt -o requirements/lock/base.lock
+#
+# Install from lock:
+#   pip-sync requirements/lock/base.lock
+#
+# Update dependencies:
+#   pip-compile --upgrade requirements/base.txt
+#
+# Platform-Specific Installation:
+#   Linux:   pip install -r requirements/base.txt
+#   macOS:   pip install -r requirements/base.txt
+#   Windows: pip install -r requirements/base.txt
+#
+# Minimal Installation:
+#   For minimal footprint, see requirements/minimal.txt
 #
 # Hardware Requirements:
-# - Minimum RAM: 8GB
-# - Recommended RAM: 16GB+
-# - GPU: Optional but recommended (CUDA 11.8+ or 12.1+)
+#   Minimum RAM: 8GB
+#   Recommended RAM: 16GB+
+#   GPU: Optional (CUDA 11.8+ or 12.1+)
+#   Disk Space: 10GB+ for models and data
 #
-# Tested Platforms:
-# - Ubuntu 20.04/22.04
-# - macOS 12+
-# - Windows 10/11
-# - Google Colab
-# - Kaggle Kernels
+# Python Version Compatibility:
+#   Tested on Python 3.8, 3.9, 3.10, 3.11
+#   Not compatible with Python 3.12+ (some dependencies)
 #
-# For platform-specific issues, see: docs/getting_started/troubleshooting.md
+# Platform Testing:
+#   - Ubuntu 20.04 LTS, 22.04 LTS
+#   - macOS 12 Monterey, 13 Ventura, 14 Sonoma
+#   - Windows 10, Windows 11
+#   - Google Colab (Python 3.10)
+#   - Kaggle Kernels (Python 3.10)
+#
+# Dependency Tree:
+#   View full dependency tree: pipdeptree
+#
+# Security Updates:
+#   Check for vulnerabilities: safety check
+#   Update all packages: pip install --upgrade -r requirements/base.txt
+#
+# Troubleshooting:
+#   - Installation fails: Upgrade pip with `pip install --upgrade pip`
+#   - Version conflicts: Use virtual environment
+#   - CUDA errors: Install correct PyTorch version for your CUDA
+#   - Import errors: Verify installation with pytest tests/
+#
+# Related Requirements Files:
+#   - requirements/ml.txt: Machine learning and NLP packages
+#   - requirements/llm.txt: Large language model packages
+#   - requirements/efficient.txt: LoRA, QLoRA, parameter-efficient methods
+#   - requirements/data.txt: Data processing and augmentation
+#   - requirements/ui.txt: Gradio and Streamlit for demos
+#   - requirements/dev.txt: Development and testing tools
+#   - requirements/docs.txt: Documentation generation
+#   - requirements/colab.txt: Google Colab optimization
+#   - requirements/kaggle.txt: Kaggle Kernels optimization
+#   - requirements/all_local.txt: Complete local installation
+#
+# For Issues:
+#   See TROUBLESHOOTING.md or open issue on GitHub
+#
 # ============================================================================
