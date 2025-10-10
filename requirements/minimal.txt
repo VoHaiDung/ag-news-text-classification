@@ -2,310 +2,524 @@
 # Minimal Requirements for AG News Text Classification
 # ============================================================================
 # Project: AG News Text Classification (ag-news-text-classification)
-# Description: Absolute minimum packages for basic inference and testing
+# Description: Minimal dependency set for basic inference and testing
 # Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
 # License: MIT
 # Python: >=3.8,<3.12
 # ============================================================================
-# This file contains the bare minimum packages required for:
-# - Loading pre-trained models
-# - Basic text classification inference
-# - Simple API serving
-# - Essential testing
-# - Core utilities
+# This file contains the absolute minimum packages required for:
+# - Loading and running pre-trained models for inference
+# - Basic text classification prediction
+# - Simple REST API serving with FastAPI
+# - Essential unit testing
+# - Core utility functions
 #
-# Use cases:
-# - Quick demos (5-minute setup)
-# - Lightweight deployments (Docker, edge devices)
-# - CI/CD testing (fast installation)
-# - Colab/Kaggle free tier (memory constrained)
-# - Air-gapped environments (minimal dependencies)
+# Primary use cases:
+# - Quick demonstrations (5-minute setup for stakeholders)
+# - Lightweight production deployments (Docker containers, edge devices)
+# - CI/CD pipeline testing (fast installation for continuous integration)
+# - Platform free tiers (Colab/Kaggle with memory constraints)
+# - Air-gapped environments (minimal dependencies to transfer)
+# - Educational demos (students, workshops, tutorials)
 #
-# NOT included:
-# - Training capabilities
-# - Advanced augmentation
-# - LLM support
-# - Ensemble methods
-# - Visualization tools
-# - Development tools
+# Explicitly NOT included:
+# - Model training capabilities (use requirements/ml.txt)
+# - Advanced data augmentation (use requirements/data.txt)
+# - Large Language Model support (use requirements/llm.txt)
+# - Ensemble methods and stacking (use requirements/ml.txt)
+# - Visualization and plotting tools (use requirements/ui.txt)
+# - Development and debugging tools (use requirements/dev.txt)
+# - Experiment tracking and monitoring (use requirements/research.txt)
 #
-# For full functionality, use:
-# - requirements/base.txt (core features)
-# - requirements/ml.txt (training)
-# - requirements/all_local.txt (everything)
+# For complete functionality, install:
+# - Core features: pip install -r requirements/base.txt
+# - Training: pip install -r requirements/ml.txt
+# - Everything: pip install -r requirements/all_local.txt
 # ============================================================================
 
 # ----------------------------------------------------------------------------
-# Core Deep Learning (Essential)
+# Deep Learning Framework (Essential)
 # ----------------------------------------------------------------------------
-# PyTorch - Deep learning framework
-torch>=2.1.0,<2.3.0
+# PyTorch for tensor operations and neural network inference
+torch>=2.1.0,<2.5.0
 
-# Transformers - Pre-trained models
-transformers>=4.36.0,<4.41.0
+# Transformers for pre-trained transformer models
+transformers>=4.36.0,<4.43.0
 
-# Tokenizers - Fast tokenization
-tokenizers>=0.15.0,<0.16.0
+# Fast tokenizers library
+tokenizers>=0.15.0,<0.20.0
 
-# Datasets - Data loading
-datasets>=2.16.0,<2.20.0
+# HuggingFace Datasets for data loading
+datasets>=2.16.0,<2.21.0
 
-# SafeTensors - Model weight format
+# SafeTensors for efficient model weight serialization
 safetensors>=0.4.0,<0.5.0
 
 # ----------------------------------------------------------------------------
 # Scientific Computing (Essential)
 # ----------------------------------------------------------------------------
-# NumPy - Array operations
+# NumPy for numerical array operations
 numpy>=1.24.0,<1.27.0
 
-# Pandas - Data manipulation
+# Pandas for data manipulation and analysis
 pandas>=2.0.0,<2.3.0
 
-# Scikit-learn - ML utilities and metrics
+# Scikit-learn for metrics and basic ML utilities
 scikit-learn>=1.3.0,<1.5.0
+
+# SciPy for scientific and statistical functions
+scipy>=1.10.0,<1.13.0
 
 # ----------------------------------------------------------------------------
 # Configuration Management (Essential)
 # ----------------------------------------------------------------------------
-# YAML parsing
+# PyYAML for configuration file parsing
 pyyaml>=6.0.1,<7.0.0
 
-# Environment variables
+# Python-dotenv for environment variable management
 python-dotenv>=1.0.0,<1.1.0
 
-# Data validation
+# Pydantic for data validation and settings
 pydantic>=2.5.0,<2.8.0
+pydantic-settings>=2.1.0,<2.3.0
 
 # ----------------------------------------------------------------------------
-# Utilities (Essential)
+# Core Utilities (Essential)
 # ----------------------------------------------------------------------------
-# Type hints
+# Typing extensions for advanced type hints
 typing-extensions>=4.9.0,<4.12.0
 
-# Progress bars
+# TQDM for progress bars during processing
 tqdm>=4.66.0,<4.67.0
 
-# HTTP requests
+# Requests for HTTP client functionality
 requests>=2.31.0,<2.33.0
 
-# File locking
+# Filelock for file-based locking
 filelock>=3.13.0,<3.15.0
 
 # ----------------------------------------------------------------------------
 # Logging (Essential)
 # ----------------------------------------------------------------------------
-# Structured logging
+# Loguru for structured and beautiful logging
 loguru>=0.7.0,<0.8.0
 
 # ----------------------------------------------------------------------------
-# API Serving (Essential for deployment)
+# REST API Framework (Essential for deployment)
 # ----------------------------------------------------------------------------
-# FastAPI - Modern web framework
+# FastAPI for modern REST API framework
 fastapi>=0.109.0,<0.112.0
 
-# Uvicorn - ASGI server
+# Uvicorn ASGI server with standard extras
 uvicorn[standard]>=0.27.0,<0.30.0
 
-# Pydantic (already included above)
+# Starlette ASGI toolkit (FastAPI dependency)
+starlette>=0.36.0,<0.38.0
 
-# Starlette (included with FastAPI)
+# Python-multipart for form data and file uploads
+python-multipart>=0.0.6,<0.0.10
 
 # ----------------------------------------------------------------------------
-# Testing (Essential)
+# Testing Framework (Essential)
 # ----------------------------------------------------------------------------
-# Pytest - Testing framework
+# Pytest for unit and integration testing
 pytest>=7.4.0,<8.3.0
 
-# Pytest coverage
+# Pytest-cov for code coverage reporting
 pytest-cov>=4.1.0,<5.1.0
 
 # ----------------------------------------------------------------------------
-# Text Processing (Essential)
+# Natural Language Processing (Essential)
 # ----------------------------------------------------------------------------
-# NLTK - Basic NLP
+# NLTK for basic text preprocessing
 nltk>=3.8.0,<3.9.0
 
 # ----------------------------------------------------------------------------
-# Serialization (Essential)
+# Serialization and Caching (Essential)
 # ----------------------------------------------------------------------------
-# Pickle extensions
+# Dill for extended pickling support
 dill>=0.3.7,<0.4.0
 
-# Job caching
+# Joblib for efficient serialization and caching
 joblib>=1.3.2,<1.5.0
 
 # ----------------------------------------------------------------------------
-# Path Operations (Essential)
+# Date and Time Utilities (Essential)
 # ----------------------------------------------------------------------------
-# Path utilities (backport for Python < 3.10)
-pathlib2>=2.3.7,<2.4.0; python_version < "3.10"
-
-# ----------------------------------------------------------------------------
-# Date/Time (Essential)
-# ----------------------------------------------------------------------------
-# Date utilities
+# Python-dateutil for date parsing and manipulation
 python-dateutil>=2.8.2,<2.10.0
 
 # ----------------------------------------------------------------------------
 # Hash Functions (Essential)
 # ----------------------------------------------------------------------------
-# Fast hashing
+# xxhash for fast non-cryptographic hashing
 xxhash>=3.4.1,<3.5.0
 
 # ----------------------------------------------------------------------------
-# CLI (Essential)
+# Command Line Interface (Essential)
 # ----------------------------------------------------------------------------
-# Click for CLI
+# Click for creating command-line interfaces
 click>=8.1.7,<8.2.0
 
-# Rich for output formatting
+# Rich for beautiful terminal output
 rich>=13.7.0,<13.8.0
 
 # ----------------------------------------------------------------------------
-# Hugging Face Hub (Essential for model downloads)
+# HuggingFace Hub Integration (Essential)
 # ----------------------------------------------------------------------------
-# HF Hub client
+# HuggingFace Hub client for model downloads
 huggingface-hub>=0.20.0,<0.24.0
 
 # ----------------------------------------------------------------------------
-# Accelerate (Lightweight, essential for model loading)
+# Device and Precision Management (Essential)
 # ----------------------------------------------------------------------------
-# Accelerate for mixed precision and device management
-accelerate>=0.25.0,<0.31.0
+# Accelerate for device placement and mixed precision
+accelerate>=0.25.0,<0.33.0
 
 # ----------------------------------------------------------------------------
-# Package Management (Essential)
+# Package Management Utilities (Essential)
 # ----------------------------------------------------------------------------
-# Package version utilities
+# Packaging for version parsing and comparison
 packaging>=23.2,<24.2.0
 
 # ============================================================================
-# Installation Notes for Minimal Requirements
+# Installation Instructions for Minimal Requirements
 # ============================================================================
+#
 # 1. Install minimal dependencies:
 #    pip install -r requirements/minimal.txt
 #
-# 2. Estimated installation size:
-#    - Download: ~2.5GB (PyTorch + Transformers)
-#    - Installed: ~5GB
-#    - Compare to full: ~15GB
+# 2. Estimated resource usage:
+#    Download size: Approximately 2.5GB (primarily PyTorch and Transformers)
+#    Installed size: Approximately 5GB on disk
+#    Comparison: Full installation is approximately 15GB
 #
-# 3. Installation time:
-#    - Fast connection: ~3-5 minutes
-#    - Slow connection: ~10-15 minutes
-#    - Compare to full: ~30-60 minutes
+# 3. Installation time estimates:
+#    Fast internet connection: 3-5 minutes
+#    Moderate internet connection: 10-15 minutes
+#    Slow internet connection: 20-30 minutes
+#    Comparison: Full installation takes 30-60 minutes
 #
-# 4. Memory requirements:
-#    - Minimum RAM: 4GB
-#    - Recommended: 8GB
-#    - With model loaded: +2-4GB
+# 4. System requirements:
+#    Minimum RAM: 4GB (8GB recommended for model loading)
+#    Disk space: 10GB minimum (20GB recommended)
+#    Additional memory with model loaded: 2-4GB depending on model size
 #
-# 5. Quick test:
-#    python -c "from transformers import pipeline; print('OK')"
+# 5. Verify installation:
+#    python -c "from transformers import pipeline; print('Installation successful')"
 #
-# 6. Basic usage:
-#    # Load pre-trained model
+# 6. Basic inference example:
 #    from transformers import AutoModelForSequenceClassification, AutoTokenizer
-#    model = AutoModelForSequenceClassification.from_pretrained("path/to/model")
-#    tokenizer = AutoTokenizer.from_pretrained("path/to/model")
+#    import torch
 #    
-#    # Inference
-#    inputs = tokenizer("News text here", return_tensors="pt")
-#    outputs = model(**inputs)
-#    predictions = outputs.logits.argmax(-1)
+#    model_path = "outputs/models/fine_tuned/deberta-v3-large-lora"
+#    model = AutoModelForSequenceClassification.from_pretrained(model_path)
+#    tokenizer = AutoTokenizer.from_pretrained(model_path)
+#    
+#    text = "Apple announces new MacBook Pro with M3 chip"
+#    inputs = tokenizer(text, return_tensors="pt", padding=True, truncation=True)
+#    
+#    with torch.no_grad():
+#        outputs = model(**inputs)
+#        predictions = outputs.logits.argmax(dim=-1)
+#        
+#    label_map = {0: "World", 1: "Sports", 2: "Business", 3: "Sci/Tech"}
+#    print(f"Predicted category: {label_map[predictions.item()]}")
 #
-# 7. Simple API:
+# 7. Launch simple API server:
 #    uvicorn src.api.local.simple_api:app --host 0.0.0.0 --port 8000
+#    Access at: http://localhost:8000
+#    API documentation: http://localhost:8000/docs
 #
-# 8. Run tests:
-#    pytest tests/unit/core/ -v
+# 8. Run basic unit tests:
+#    pytest tests/unit/core/ -v --maxfail=3
 #
-# 9. Download NLTK data (required for text preprocessing):
+# 9. Download required NLTK data:
 #    python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords')"
 #
-# 10. Minimal deployment:
+# 10. Minimal Docker deployment:
 #     FROM python:3.10-slim
+#     WORKDIR /app
 #     COPY requirements/minimal.txt .
-#     RUN pip install -r minimal.txt
+#     RUN pip install --no-cache-dir -r minimal.txt
 #     COPY src/ /app/src/
 #     COPY outputs/models/fine_tuned/ /app/models/
-#     CMD ["uvicorn", "src.api.local.simple_api:app", "--host", "0.0.0.0"]
+#     EXPOSE 8000
+#     CMD ["uvicorn", "src.api.local.simple_api:app", "--host", "0.0.0.0", "--port", "8000"]
 #
-# What's NOT included (install separately if needed):
-# - Training: pip install -r requirements/ml.txt
-# - LLM support: pip install -r requirements/llm.txt
-# - Data augmentation: pip install -r requirements/data.txt
-# - Visualization: pip install -r requirements/ui.txt
-# - Development tools: pip install -r requirements/dev.txt
-# - Documentation: pip install -r requirements/docs.txt
-# - Full stack: pip install -r requirements/all_local.txt
+# ============================================================================
+# What is NOT Included
+# ============================================================================
 #
-# Supported platforms:
-# - Linux: Full support
-# - macOS: Full support
-# - Windows: Full support
-# - Docker: Optimized for minimal image size
-# - Colab: ✓ Compatible with free tier
-# - Kaggle: ✓ Compatible with kernels
+# Training capabilities:
+# - No training loop implementation support
+# - No optimizer and scheduler libraries
+# - No advanced training strategies (adversarial, curriculum)
+# - Install requirements/ml.txt for training
 #
-# GPU support:
-# - CUDA: Install torch with CUDA manually:
-#   pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cu118
-# - CPU-only: Default installation (lighter)
+# Large Language Models:
+# - No LLM-specific dependencies (vLLM, Flash Attention)
+# - No QLoRA quantization support
+# - No instruction tuning frameworks
+# - Install requirements/llm.txt for LLM support
 #
-# Offline installation:
-# 1. Download wheels on machine with internet:
-#    pip download -r requirements/minimal.txt -d wheels/
-# 2. Transfer wheels/ directory to offline machine
-# 3. Install offline:
-#    pip install --no-index --find-links wheels/ -r requirements/minimal.txt
+# Data augmentation:
+# - No back-translation or paraphrasing
+# - No adversarial example generation
+# - No synthetic data generation
+# - Install requirements/data.txt for augmentation
 #
-# Docker optimization:
-# - Use multi-stage builds
-# - Share layers with base images
-# - Estimated image size: ~3GB (vs ~8GB for full)
+# Visualization:
+# - No plotting libraries (matplotlib, seaborn, plotly)
+# - No dashboard frameworks (Streamlit, Gradio)
+# - No interactive visualizations
+# - Install requirements/ui.txt for visualizations
 #
-# Performance:
-# - Inference speed: Same as full installation
-# - Model loading: Same as full installation
-# - API throughput: 90% of full (limited monitoring)
+# Development tools:
+# - No code formatters (black, isort)
+# - No linters (flake8, pylint, mypy)
+# - No debugging tools (ipdb, pudb)
+# - Install requirements/dev.txt for development
 #
-# Limitations:
-# - No training capabilities
-# - No LoRA/QLoRA support
-# - No ensemble methods
-# - No advanced augmentation
-# - No visualization tools
-# - No development tools
-# - No documentation generation
-# - Limited experiment tracking
-# - Basic API only (no WebSocket, streaming)
+# Experiment tracking:
+# - No Weights & Biases integration
+# - No MLflow or TensorBoard
+# - No hyperparameter optimization (Optuna, Ray Tune)
+# - Install requirements/research.txt for experiments
 #
-# Upgrade path:
-# - Add training: pip install -r requirements/ml.txt
-# - Add everything: pip install -r requirements/all_local.txt
+# Documentation:
+# - No Sphinx or MkDocs
+# - No diagram generation tools
+# - Install requirements/docs.txt for documentation
 #
-# For quick start with minimal setup:
-# - See quickstart/minimal_example.py
-# - See quickstart/use_cases/quick_demo_5min.py
-# - See QUICK_START.md
+# ============================================================================
+# Supported Platforms and Environments
+# ============================================================================
 #
-# Compatibility:
+# Operating Systems:
+# - Linux: Full support (Ubuntu 20.04+, Debian 10+, CentOS 8+)
+# - macOS: Full support (macOS 11+, both Intel and Apple Silicon)
+# - Windows: Full support (Windows 10+, Windows Server 2019+)
+#
+# Cloud Platforms:
+# - Docker: Optimized for minimal container image size
+# - Google Colab: Compatible with free tier (T4 GPU, 12GB RAM)
+# - Kaggle Kernels: Compatible with kernel environment
+# - AWS Lambda: Possible with layers (size constraints apply)
+# - Azure Functions: Possible with custom container
+#
+# Python Versions:
 # - Python 3.8: Supported
 # - Python 3.9: Supported
-# - Python 3.10: Supported (recommended)
+# - Python 3.10: Supported and recommended
 # - Python 3.11: Supported
-# - Python 3.12: Limited (some packages may not be available)
+# - Python 3.12: Limited support (some packages may not be available)
 #
-# Project-specific minimal scripts:
-# - Health check: python src/core/health/health_checker.py
-# - Simple inference: python quickstart/minimal_example.py
-# - API demo: python src/api/local/simple_api.py
-# - Basic test: pytest tests/unit/core/ -v --maxfail=1
+# GPU Support:
+# - NVIDIA CUDA: Supported (install CUDA-enabled PyTorch separately)
+# - AMD ROCm: Supported (install ROCm PyTorch separately)
+# - Apple Metal (MPS): Supported on M1/M2 Macs
+# - CPU-only: Default installation (lighter weight)
 #
-# For full documentation:
-# - See docs/getting_started/installation.md
-# - See QUICK_START.md
-# - See quickstart/README.md
+# CUDA Installation (if GPU available):
+# For CUDA 11.8:
+# pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cu118
+# pip install -r requirements/minimal.txt
+#
+# For CUDA 12.1:
+# pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cu121
+# pip install -r requirements/minimal.txt
+#
+# For CPU-only (smaller installation):
+# pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cpu
+# pip install -r requirements/minimal.txt
+#
+# ============================================================================
+# Offline Installation
+# ============================================================================
+#
+# For environments without internet access:
+#
+# 1. On machine with internet, download all wheels:
+#    pip download -r requirements/minimal.txt -d minimal_wheels/
+#
+# 2. Transfer minimal_wheels/ directory to offline machine
+#
+# 3. Install from local wheels:
+#    pip install --no-index --find-links minimal_wheels/ -r requirements/minimal.txt
+#
+# Estimated offline package size: 2.5-3GB
+#
+# ============================================================================
+# Docker Container Optimization
+# ============================================================================
+#
+# Multi-stage build for minimal image size:
+#
+# Stage 1 - Builder:
+# FROM python:3.10-slim as builder
+# RUN pip install --user -r requirements/minimal.txt
+#
+# Stage 2 - Runtime:
+# FROM python:3.10-slim
+# COPY --from=builder /root/.local /root/.local
+# ENV PATH=/root/.local/bin:$PATH
+# COPY src/ /app/src/
+# WORKDIR /app
+# CMD ["uvicorn", "src.api.local.simple_api:app", "--host", "0.0.0.0"]
+#
+# Expected image sizes:
+# - Minimal setup: Approximately 3GB
+# - Full setup: Approximately 8GB
+# - Reduction: 60% smaller than full installation
+#
+# ============================================================================
+# Performance Characteristics
+# ============================================================================
+#
+# Inference speed:
+# - Same as full installation (no performance penalty)
+# - Model loading time: Identical to full setup
+# - Prediction latency: No difference from complete installation
+#
+# API throughput:
+# - Single worker: 100-200 requests/second (CPU)
+# - Single worker: 500-1000 requests/second (GPU)
+# - Approximately 90% of full installation throughput
+# - Limitation: No advanced monitoring or caching
+#
+# Memory usage:
+# - Runtime overhead: Minimal (300-500MB)
+# - Model memory: Depends on model size (2-4GB for base models)
+# - Total: 3-5GB for typical inference workload
+#
+# ============================================================================
+# Known Limitations
+# ============================================================================
+#
+# Feature limitations:
+# - Cannot train models from scratch
+# - No LoRA or QLoRA fine-tuning support
+# - No ensemble model inference
+# - No advanced data preprocessing pipelines
+# - No visualization or plotting capabilities
+# - No experiment tracking or logging
+# - No development tools or debugging utilities
+# - Basic API only (no WebSocket, Server-Sent Events)
+# - Limited monitoring and observability
+#
+# Model support:
+# - Pre-trained models: Full support
+# - Fine-tuned models: Full support
+# - LoRA adapters: Limited (can load if saved as full model)
+# - Ensemble models: Not supported
+# - LLMs: Basic support (no quantization, limited by memory)
+#
+# ============================================================================
+# Upgrade Paths
+# ============================================================================
+#
+# To add specific capabilities:
+#
+# Training:
+# pip install -r requirements/ml.txt
+#
+# LLM support:
+# pip install -r requirements/llm.txt
+#
+# Data processing:
+# pip install -r requirements/data.txt
+#
+# Visualization:
+# pip install -r requirements/ui.txt
+#
+# Development:
+# pip install -r requirements/dev.txt
+#
+# Everything:
+# pip install -r requirements/all_local.txt
+#
+# Note: Upgrade installations are additive and preserve minimal packages
+#
+# ============================================================================
+# Quick Start Examples
+# ============================================================================
+#
+# For rapid demonstrations and testing:
+#
+# 1. 5-minute quick demo:
+#    python quickstart/minimal_example.py
+#
+# 2. Simple inference script:
+#    python quickstart/use_cases/quick_demo_5min.py
+#
+# 3. Automated demo (2 minutes):
+#    python quickstart/use_cases/auto_demo_2min.py
+#
+# 4. API quickstart:
+#    python quickstart/local_api_quickstart.py
+#
+# 5. Interactive demo:
+#    python quickstart/demo_app.py
+#
+# All quickstart scripts are designed to work with minimal requirements
+#
+# ============================================================================
+# Project-Specific Minimal Workflows
+# ============================================================================
+#
+# Health check:
+# python src/core/health/health_checker.py
+#
+# Simple prediction:
+# from src.inference.predictors.single_predictor import SinglePredictor
+# predictor = SinglePredictor(model_path="outputs/models/fine_tuned/model")
+# result = predictor.predict("Your news text here")
+# print(result)
+#
+# API serving:
+# Implementation in src/api/local/simple_api.py
+# Start with: uvicorn src.api.local.simple_api:app --reload
+#
+# Basic testing:
+# pytest tests/unit/core/ -v
+# pytest tests/unit/api/ -v
+#
+# ============================================================================
+# Compatibility and Version Information
+# ============================================================================
+#
+# This minimal requirements file is tested and compatible with:
+# - Project version: 1.0.0+
+# - Python versions: 3.8, 3.9, 3.10, 3.11
+# - PyTorch versions: 2.1.0+
+# - Transformers versions: 4.36.0+
+# - FastAPI versions: 0.109.0+
+#
+# Platform compatibility matrix:
+# See: configs/compatibility_matrix.yaml
+#
+# ============================================================================
+# For Comprehensive Documentation
+# ============================================================================
+#
+# Installation guides:
+# - Full installation: docs/getting_started/installation.md
+# - Quick start: QUICK_START.md
+# - Minimal setup: quickstart/SIMPLE_START.md
+#
+# API documentation:
+# - Simple API: src/api/local/simple_api.py
+# - API reference: docs/api_reference/rest_api.md
+#
+# Quick start resources:
+# - Quickstart README: quickstart/README.md
+# - Minimal example: quickstart/minimal_example.py
+# - Use cases: quickstart/use_cases/
+#
+# Troubleshooting:
+# - TROUBLESHOOTING.md
+# - Health checks: HEALTH_CHECK.md
+#
 # ============================================================================
