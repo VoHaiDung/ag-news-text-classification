@@ -2,82 +2,86 @@
 # Local Production Requirements for AG News Text Classification
 # ============================================================================
 # Project: AG News Text Classification (ag-news-text-classification)
-# Description: Dependencies for local production deployment and serving
+# Description: Local production deployment and REST API serving
 # Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
 # License: MIT
 # Python: >=3.8,<3.12
 # ============================================================================
 # This file contains packages required for:
-# - Local production API serving (FastAPI, Uvicorn)
-# - Model inference optimization (ONNX, quantization)
-# - Local monitoring and logging (TensorBoard, MLflow)
-# - Caching and performance optimization
-# - Background task processing
+# - Production-grade REST API serving (FastAPI with Uvicorn/Gunicorn)
+# - Model inference optimization (ONNX Runtime, quantization, batching)
+# - Local monitoring and logging (TensorBoard, MLflow, Prometheus)
+# - Caching and performance optimization (Redis, Diskcache)
+# - Background task processing (Celery, APScheduler)
 # - Health checks and readiness probes
-# - Local authentication and security
-# - Docker deployment support
-# - Systemd service integration
+# - Local authentication and security (token-based, rate limiting)
+# - Docker containerization support
+# - Systemd service integration for Linux
+# - High availability and graceful shutdown
+# - Request validation and error handling
+# - API documentation generation (Swagger/OpenAPI)
 # ============================================================================
 
-# Include ML requirements for model loading
+# Include ML requirements for model loading and inference
 -r ml.txt
 
 # ----------------------------------------------------------------------------
-# API Framework and Serving
+# FastAPI REST API Framework
 # ----------------------------------------------------------------------------
-# FastAPI for REST API
+# FastAPI for modern, fast web API framework
 fastapi>=0.109.0,<0.112.0
 
-# Uvicorn ASGI server with standard extras
-uvicorn[standard]>=0.27.0,<0.30.0
-
-# Gunicorn for production WSGI
-gunicorn>=21.2.0,<22.1.0
-
-# Starlette (included with FastAPI, but explicit version)
-starlette>=0.36.0,<0.38.0
-
-# Pydantic for request/response validation
+# Pydantic for data validation and settings management
 pydantic>=2.5.0,<2.8.0
 pydantic-settings>=2.1.0,<2.3.0
 
-# Python-multipart for file uploads
+# Python-multipart for file upload support
 python-multipart>=0.0.6,<0.0.10
 
 # ----------------------------------------------------------------------------
-# CORS and Security
+# ASGI Server
 # ----------------------------------------------------------------------------
-# CORS middleware (built-in to Starlette)
+# Uvicorn with standard extras (websockets, httptools, uvloop)
+uvicorn[standard]>=0.27.0,<0.30.0
 
-# Security utilities
+# Gunicorn for production WSGI/ASGI management
+gunicorn>=21.2.0,<22.1.0
+
+# Starlette ASGI framework (FastAPI dependency)
+starlette>=0.36.0,<0.38.0
+
+# ----------------------------------------------------------------------------
+# Security and Authentication
+# ----------------------------------------------------------------------------
+# Python-jose for JWT token handling
 python-jose[cryptography]>=3.3.0,<3.4.0
+
+# Passlib for password hashing
 passlib[bcrypt]>=1.7.4,<1.8.0
-python-multipart>=0.0.6,<0.0.10
 
 # Rate limiting
 slowapi>=0.1.9,<0.2.0
 
-# ----------------------------------------------------------------------------
-# API Documentation
-# ----------------------------------------------------------------------------
-# OpenAPI documentation (built-in to FastAPI)
+# Cryptography for secure operations
+cryptography>=41.0.7,<43.0.0
 
 # ----------------------------------------------------------------------------
-# HTTP Client for Health Checks
+# HTTP Clients
 # ----------------------------------------------------------------------------
-# Requests for HTTP calls
+# Requests for synchronous HTTP calls
 requests>=2.31.0,<2.33.0
 
-# HTTPX for async HTTP
+# HTTPX for async HTTP client
 httpx>=0.25.0,<0.28.0
 
 # ----------------------------------------------------------------------------
 # WebSocket Support
 # ----------------------------------------------------------------------------
-# WebSockets
+# WebSockets library
 websockets>=12.0,<13.0
 
-# Python-socketio
+# Python-socketio for Socket.IO support
 python-socketio>=5.10.0,<5.12.0
 
 # ----------------------------------------------------------------------------
@@ -93,27 +97,24 @@ sse-starlette>=1.8.0,<2.2.0
 celery>=5.3.0,<5.4.0
 celery[redis]>=5.3.0,<5.4.0
 
-# Redis client
-redis>=5.0.0,<5.1.0
-hiredis>=2.3.0,<2.4.0
-
-# APScheduler for scheduled tasks
+# APScheduler for cron-like scheduling
 apscheduler>=3.10.0,<3.11.0
 
 # ----------------------------------------------------------------------------
-# Caching
+# Caching Layer
 # ----------------------------------------------------------------------------
-# Redis for caching (already included above)
+# Redis Python client
 redis>=5.0.0,<5.1.0
+hiredis>=2.3.0,<2.4.0
 
 # Diskcache for local file-based caching
 diskcache>=5.6.3,<5.7.0
 
-# Cachetools for in-memory caching
+# Cachetools for in-memory caching strategies
 cachetools>=5.3.0,<5.4.0
 
 # ----------------------------------------------------------------------------
-# Database (for local metadata storage)
+# Database for Metadata
 # ----------------------------------------------------------------------------
 # SQLAlchemy ORM
 sqlalchemy>=2.0.0,<2.1.0
@@ -121,204 +122,134 @@ sqlalchemy>=2.0.0,<2.1.0
 # SQLite utilities
 sqlite-utils>=3.36.0,<3.37.0
 
-# Alembic for migrations
+# Alembic for database migrations
 alembic>=1.13.0,<1.14.0
 
 # ----------------------------------------------------------------------------
-# Local Monitoring
+# Local Monitoring (from local_monitoring.txt)
 # ----------------------------------------------------------------------------
-# TensorBoard for visualization
+# TensorBoard for training visualization
 tensorboard>=2.15.0,<2.17.0
 
 # MLflow for experiment tracking
 mlflow>=2.9.0,<2.15.0
 
-# Prometheus client for metrics
+# Prometheus client for metrics exposition
 prometheus-client>=0.19.0,<0.21.0
 
-# Statsd client
+# Statsd client for metric aggregation
 statsd>=4.0.0,<4.1.0
 
 # ----------------------------------------------------------------------------
-# Logging
+# Structured Logging
 # ----------------------------------------------------------------------------
-# Loguru for structured logging
+# Loguru for beautiful structured logging
 loguru>=0.7.0,<0.8.0
 
 # Python JSON logger
 python-json-logger>=2.0.7,<2.1.0
 
-# Log rotation
-# Built-in to loguru
-
 # ----------------------------------------------------------------------------
-# Performance Monitoring
+# System Monitoring
 # ----------------------------------------------------------------------------
-# Py-spy for profiling
-py-spy>=0.3.0,<0.4.0
-
-# Memory profiler
-memory-profiler>=0.61.0,<0.62.0
-
-# psutil for system monitoring
+# psutil for system resource monitoring
 psutil>=5.9.6,<6.1.0
 
 # GPUtil for GPU monitoring
 gputil>=1.4.0,<1.5.0
 
-# PyNVML for NVIDIA GPU
+# PyNVML for NVIDIA GPU metrics
 pynvml>=11.5.0,<11.6.0
+
+# ----------------------------------------------------------------------------
+# Performance Profiling
+# ----------------------------------------------------------------------------
+# Py-spy for production profiling
+py-spy>=0.3.0,<0.4.0
+
+# Memory profiler
+memory-profiler>=0.61.0,<0.62.0
 
 # ----------------------------------------------------------------------------
 # Model Serving Optimization
 # ----------------------------------------------------------------------------
-# ONNX Runtime for fast inference
+# ONNX Runtime for optimized inference
 onnxruntime>=1.16.0,<1.18.0
 
-# ONNX Runtime GPU (optional)
+# ONNX Runtime GPU (optional, uncomment if using GPU)
 # onnxruntime-gpu>=1.16.0,<1.18.0
 
-# Model quantization
-# Via torch.quantization (built-in)
-
 # ----------------------------------------------------------------------------
-# Batch Processing
+# File System Operations
 # ----------------------------------------------------------------------------
-# Batch inference utilities
-# Custom implementation in src/inference/serving/batch_predictor.py
-
-# ----------------------------------------------------------------------------
-# File Storage
-# ----------------------------------------------------------------------------
-# Local file system utilities
-# Built-in pathlib
-
-# File locking
+# File locking for concurrent access
 filelock>=3.13.0,<3.15.0
 
 # ----------------------------------------------------------------------------
 # Configuration Management
 # ----------------------------------------------------------------------------
-# YAML parsing
+# PyYAML for YAML config files
 pyyaml>=6.0.1,<7.0.0
 
-# Environment variables
+# Python-dotenv for environment variable loading
 python-dotenv>=1.0.0,<1.1.0
 
-# OmegaConf for complex configs
+# OmegaConf for hierarchical configuration
 omegaconf>=2.3.0,<2.4.0
 
 # ----------------------------------------------------------------------------
-# Health Checks
+# Service Discovery (Optional)
 # ----------------------------------------------------------------------------
-# Health check utilities
-# Custom implementation in src/core/health/
-
-# ----------------------------------------------------------------------------
-# Service Discovery (for multi-instance)
-# ----------------------------------------------------------------------------
-# Consul client (optional)
+# Python-consul for service discovery
 python-consul>=1.1.0,<1.2.0
 
 # ----------------------------------------------------------------------------
-# Load Balancing (for multi-instance)
+# Docker SDK
 # ----------------------------------------------------------------------------
-# HAProxy configuration (external)
-
-# Nginx configuration (external)
-
-# ----------------------------------------------------------------------------
-# Process Management
-# ----------------------------------------------------------------------------
-# Supervisor for process management (external, but config included)
-
-# Systemd service files
-# See deployment/local/systemd/
-
-# ----------------------------------------------------------------------------
-# Docker Support
-# ----------------------------------------------------------------------------
-# Docker SDK (for health checks)
+# Docker Python SDK for container management
 docker>=6.1.0,<7.2.0
 
 # ----------------------------------------------------------------------------
-# Signal Handling
+# Middleware and Request Tracking
 # ----------------------------------------------------------------------------
-# Graceful shutdown
-# Built-in signal module
-
-# ----------------------------------------------------------------------------
-# Middleware
-# ----------------------------------------------------------------------------
-# ASGI middleware
-# Built-in to Starlette/FastAPI
-
-# Request ID tracking
+# ASGI correlation ID for request tracking
 asgi-correlation-id>=4.3.0,<4.4.0
 
 # ----------------------------------------------------------------------------
-# Error Tracking
+# Error Tracking (Optional)
 # ----------------------------------------------------------------------------
-# Sentry for error tracking (optional)
+# Sentry SDK for error monitoring
 sentry-sdk>=1.39.0,<2.8.0
-
-# ----------------------------------------------------------------------------
-# Metrics Collection
-# ----------------------------------------------------------------------------
-# Custom metrics
-# Implementation in src/services/monitoring/local_metrics_service.py
-
-# ----------------------------------------------------------------------------
-# API Versioning
-# ----------------------------------------------------------------------------
-# FastAPI versioning
-# Custom implementation
-
-# ----------------------------------------------------------------------------
-# Response Compression
-# ----------------------------------------------------------------------------
-# GZip middleware (built-in to Starlette)
-
-# ----------------------------------------------------------------------------
-# Request Validation
-# ----------------------------------------------------------------------------
-# Pydantic (already included above)
-pydantic>=2.5.0,<2.8.0
 
 # ----------------------------------------------------------------------------
 # JSON Serialization
 # ----------------------------------------------------------------------------
-# orjson for fast JSON
+# orjson for fast JSON encoding/decoding
 orjson>=3.9.0,<3.11.0
 
-# ujson alternative
+# ujson as alternative
 ujson>=5.9.0,<5.11.0
 
 # ----------------------------------------------------------------------------
 # Data Serialization
 # ----------------------------------------------------------------------------
-# MessagePack
+# MessagePack for binary serialization
 msgpack>=1.0.7,<1.1.0
 
 # Protocol Buffers
 protobuf>=4.25.0,<5.28.0
 
 # ----------------------------------------------------------------------------
-# Time and Date Handling
+# Date and Time Handling
 # ----------------------------------------------------------------------------
-# Python-dateutil
+# Python-dateutil for date parsing
 python-dateutil>=2.8.2,<2.10.0
 
-# Timezone handling
+# Pytz for timezone support
 pytz>=2023.3,<2024.2
 
-# Arrow for datetime
+# Arrow for easier datetime manipulation
 arrow>=1.3.0,<1.4.0
-
-# ----------------------------------------------------------------------------
-# UUID Generation
-# ----------------------------------------------------------------------------
-# UUID utilities (built-in)
 
 # ----------------------------------------------------------------------------
 # Hash Functions
@@ -327,56 +258,33 @@ arrow>=1.3.0,<1.4.0
 xxhash>=3.4.1,<3.5.0
 
 # ----------------------------------------------------------------------------
-# Concurrency
+# Concurrency Utilities
 # ----------------------------------------------------------------------------
-# Asyncio (built-in)
-
-# Threading utilities (built-in)
-
-# Multiprocessing
+# Multiprocess for parallel processing
 multiprocess>=0.70.15,<0.71.0
-
-# ----------------------------------------------------------------------------
-# Queue Management
-# ----------------------------------------------------------------------------
-# Queue (built-in)
-
-# Priority queues (built-in heapq)
 
 # ----------------------------------------------------------------------------
 # Job Scheduling
 # ----------------------------------------------------------------------------
-# APScheduler (already included above)
-apscheduler>=3.10.0,<3.11.0
-
-# Crontab parsing
+# Python-crontab for cron expression parsing
 python-crontab>=3.0.0,<3.3.0
-
-# ----------------------------------------------------------------------------
-# Backup and Recovery
-# ----------------------------------------------------------------------------
-# Backup utilities
-# Custom scripts in backup/scripts/
 
 # ----------------------------------------------------------------------------
 # SSL/TLS Support
 # ----------------------------------------------------------------------------
-# Cryptography
-cryptography>=41.0.7,<43.0.0
-
-# PyOpenSSL
+# PyOpenSSL for SSL certificate handling
 pyopenssl>=23.3.0,<24.3.0
 
 # ----------------------------------------------------------------------------
 # Command Line Interface
 # ----------------------------------------------------------------------------
-# Click for CLI
+# Click for CLI creation
 click>=8.1.7,<8.2.0
 
-# Rich for output
+# Rich for beautiful terminal output
 rich>=13.7.0,<13.8.0
 
-# Typer for modern CLI
+# Typer for modern CLI with type hints
 typer[all]>=0.9.0,<0.13.0
 
 # ----------------------------------------------------------------------------
@@ -386,221 +294,569 @@ typer[all]>=0.9.0,<0.13.0
 tqdm>=4.66.0,<4.67.0
 
 # ----------------------------------------------------------------------------
-# System Information
+# Platform Detection
 # ----------------------------------------------------------------------------
-# Platform detection
+# Distro for Linux distribution info
 distro>=1.8.0,<1.10.0
 
 # ----------------------------------------------------------------------------
-# Network Utilities
+# URL Parsing
 # ----------------------------------------------------------------------------
-# URL parsing
+# urllib3 for URL utilities
 urllib3>=2.1.0,<2.3.0
-
-# ----------------------------------------------------------------------------
-# Local Authentication
-# ----------------------------------------------------------------------------
-# Simple token-based auth
-# Custom implementation in security/local_auth/simple_token.py
-
-# Local RBAC
-# Custom implementation in security/local_auth/local_rbac.py
 
 # ----------------------------------------------------------------------------
 # Data Privacy
 # ----------------------------------------------------------------------------
-# PII detection
+# Presidio for PII detection and anonymization
 presidio-analyzer>=2.2.0,<2.3.0
 presidio-anonymizer>=2.2.0,<2.3.0
 
 # ----------------------------------------------------------------------------
-# Model Security
-# ----------------------------------------------------------------------------
-# Model checksums
-# Custom implementation in security/model_security/model_checksum.py
-
-# ----------------------------------------------------------------------------
-# API Client
-# ----------------------------------------------------------------------------
-# Requests (already included)
-requests>=2.31.0,<2.33.0
-
-# ----------------------------------------------------------------------------
-# Testing for Production
+# Testing for Production Endpoints
 # ----------------------------------------------------------------------------
 # Pytest for smoke tests
 pytest>=7.4.0,<8.3.0
 
-# Requests-mock for testing
+# Requests-mock for mocking HTTP requests
 requests-mock>=1.11.0,<1.13.0
 
 # ----------------------------------------------------------------------------
-# Documentation
+# API Documentation
 # ----------------------------------------------------------------------------
-# Markdown for API docs
+# Markdown for documentation rendering
 markdown>=3.5.1,<3.7.0
 
 # ----------------------------------------------------------------------------
-# Utilities
+# Type Checking
 # ----------------------------------------------------------------------------
-# Type hints
+# Typing extensions for advanced type hints
 typing-extensions>=4.9.0,<4.12.0
 
-# Retry logic
+# ----------------------------------------------------------------------------
+# Retry Logic
+# ----------------------------------------------------------------------------
+# Tenacity for retry mechanisms
 tenacity>=8.2.3,<8.4.0
 
 # ============================================================================
-# Installation Notes for Local Production Requirements
+# Installation Instructions for Local Production Deployment
 # ============================================================================
+#
 # 1. Install local production dependencies:
 #    pip install -r requirements/local_prod.txt
 #
 # 2. Setup local production environment:
 #    bash scripts/setup/setup_local_environment.sh
 #
-# 3. Start local API server:
+# 3. Configure environment variables:
+#    cp .env.example .env.local
+#    Edit .env.local with your configuration
+#
+# 4. Start local API server (development):
+#    uvicorn src.api.rest.app:app --reload --host 0.0.0.0 --port 8000
+#    Access at: http://localhost:8000
+#
+# 5. Start local API server (production with Gunicorn):
+#    gunicorn src.api.rest.app:app \
+#      -w 4 \
+#      -k uvicorn.workers.UvicornWorker \
+#      --bind 0.0.0.0:8000 \
+#      --timeout 60 \
+#      --keepalive 5 \
+#      --access-logfile outputs/logs/api/access.log \
+#      --error-logfile outputs/logs/api/error.log
+#
+# 6. Start with all services (recommended):
 #    bash deployment/local/scripts/start_all.sh
-#    # Or manually:
-#    uvicorn src.api.rest.app:app --host 0.0.0.0 --port 8000 --workers 4
 #
-# 4. Start with Gunicorn (production):
-#    gunicorn src.api.rest.app:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
-#
-# 5. Start local monitoring:
-#    bash monitoring/local/setup_local_monitoring.sh
-#    # TensorBoard:
-#    tensorboard --logdir outputs/logs/tensorboard --port 6006
-#    # MLflow:
-#    mlflow ui --port 5000
-#
-# 6. Start background workers:
-#    celery -A src.services.local.local_queue_service worker --loglevel=info
+#    This starts:
+#    - FastAPI application
+#    - Redis cache server
+#    - Celery worker for background tasks
+#    - TensorBoard for monitoring
+#    - MLflow UI for experiment tracking
 #
 # 7. Health check:
 #    curl http://localhost:8000/health
-#    # Or use script:
-#    python src/core/health/health_checker.py
+#    
+#    Expected response:
+#    {
+#      "status": "healthy",
+#      "version": "1.0.0",
+#      "models_loaded": true,
+#      "cache_status": "connected"
+#    }
 #
-# 8. API documentation:
-#    http://localhost:8000/docs (Swagger UI)
-#    http://localhost:8000/redoc (ReDoc)
+# 8. API documentation (Swagger UI):
+#    http://localhost:8000/docs
 #
-# 9. Prometheus metrics:
+#    ReDoc alternative documentation:
+#    http://localhost:8000/redoc
+#
+# 9. Prometheus metrics endpoint:
 #    http://localhost:8000/metrics
 #
-# 10. Docker deployment:
-#     docker-compose -f deployment/docker/docker-compose.local.yml up -d
+# 10. Test prediction endpoint:
+#     curl -X POST "http://localhost:8000/api/v1/predict" \
+#       -H "Content-Type: application/json" \
+#       -d '{
+#         "text": "Apple announces new iPhone with advanced AI features",
+#         "model": "deberta-v3-large-lora"
+#       }'
 #
-# Production deployment checklist:
-# - Set environment variables in .env.local
-# - Configure logging levels
-# - Setup SSL/TLS certificates
-# - Configure rate limiting
-# - Setup backup strategy
-# - Configure monitoring alerts
-# - Test health checks
-# - Setup systemd services
-# - Configure firewall rules
-# - Setup log rotation
+# ============================================================================
+# Environment Variables Configuration
+# ============================================================================
 #
-# Environment variables (.env.local):
+# Create .env.local file with following variables:
+#
+# API Configuration
 # API_HOST=0.0.0.0
 # API_PORT=8000
 # API_WORKERS=4
+# API_RELOAD=false
+# API_TITLE=AG News Text Classification API
+# API_VERSION=1.0.0
+# API_PREFIX=/api/v1
+#
+# Logging
 # LOG_LEVEL=INFO
-# REDIS_URL=redis://localhost:6379
-# MODEL_PATH=outputs/models/fine_tuned/
-# CACHE_DIR=cache/local/
-# MAX_BATCH_SIZE=32
+# LOG_FORMAT=json
+# LOG_DIR=outputs/logs/api
+#
+# Redis Cache
+# REDIS_HOST=localhost
+# REDIS_PORT=6379
+# REDIS_DB=0
+# REDIS_PASSWORD=
+# CACHE_TTL=3600
+#
+# Model Configuration
+# MODEL_PATH=outputs/models/fine_tuned
+# DEFAULT_MODEL=deberta-v3-large-lora
+# MODEL_CACHE_SIZE=3
+# BATCH_SIZE=32
+# MAX_LENGTH=512
+#
+# Performance
+# MAX_WORKERS=4
 # REQUEST_TIMEOUT=30
-# RATE_LIMIT=100/minute
+# KEEPALIVE_TIMEOUT=5
+# GRACEFUL_SHUTDOWN_TIMEOUT=10
 #
-# Systemd service:
-# - Install: sudo cp deployment/local/systemd/ag-news-api.service /etc/systemd/system/
-# - Enable: sudo systemctl enable ag-news-api
-# - Start: sudo systemctl start ag-news-api
-# - Status: sudo systemctl status ag-news-api
-# - Logs: journalctl -u ag-news-api -f
+# Rate Limiting
+# RATE_LIMIT_ENABLED=true
+# RATE_LIMIT_PER_MINUTE=100
+# RATE_LIMIT_PER_HOUR=1000
 #
-# Nginx reverse proxy:
-# - Config: deployment/local/nginx/ag-news.conf
-# - Install: sudo cp deployment/local/nginx/ag-news.conf /etc/nginx/sites-available/
-# - Enable: sudo ln -s /etc/nginx/sites-available/ag-news.conf /etc/nginx/sites-enabled/
-# - Test: sudo nginx -t
-# - Reload: sudo systemctl reload nginx
+# Security
+# API_KEY_ENABLED=true
+# API_KEY_HEADER=X-API-Key
+# CORS_ENABLED=true
+# CORS_ORIGINS=http://localhost:3000,http://localhost:8501
 #
-# Performance tuning:
-# - Workers: Number of CPU cores * 2 + 1
-# - Worker class: uvicorn.workers.UvicornWorker
-# - Timeout: 30-60 seconds
+# Monitoring
+# METRICS_ENABLED=true
+# METRICS_PORT=8000
+# TENSORBOARD_ENABLED=true
+# MLFLOW_ENABLED=true
+#
+# ============================================================================
+# Production Deployment Checklist
+# ============================================================================
+#
+# Pre-deployment:
+# [x] Set environment variables in .env.local
+# [x] Configure logging levels (INFO or WARNING for production)
+# [x] Setup SSL/TLS certificates
+# [x] Configure rate limiting thresholds
+# [x] Setup backup strategy for models and data
+# [x] Configure monitoring alerts
+# [x] Test health check endpoints
+# [x] Verify model loading and inference
+# [x] Load test API endpoints
+# [x] Setup firewall rules
+# [x] Configure log rotation
+#
+# Post-deployment:
+# [x] Monitor API response times
+# [x] Check error rates and logs
+# [x] Verify GPU utilization (if using GPU)
+# [x] Monitor memory usage
+# [x] Check cache hit rates
+# [x] Verify rate limiting working
+# [x] Test graceful shutdown
+# [x] Verify backup procedures
+#
+# ============================================================================
+# Systemd Service Installation (Linux)
+# ============================================================================
+#
+# 1. Copy service files:
+#    sudo cp deployment/local/systemd/ag-news-api.service /etc/systemd/system/
+#    sudo cp deployment/local/systemd/ag-news-monitor.service /etc/systemd/system/
+#
+# 2. Reload systemd:
+#    sudo systemctl daemon-reload
+#
+# 3. Enable services:
+#    sudo systemctl enable ag-news-api
+#    sudo systemctl enable ag-news-monitor
+#
+# 4. Start services:
+#    sudo systemctl start ag-news-api
+#    sudo systemctl start ag-news-monitor
+#
+# 5. Check status:
+#    sudo systemctl status ag-news-api
+#
+# 6. View logs:
+#    journalctl -u ag-news-api -f
+#
+# 7. Restart service:
+#    sudo systemctl restart ag-news-api
+#
+# 8. Stop service:
+#    sudo systemctl stop ag-news-api
+#
+# ============================================================================
+# Nginx Reverse Proxy Setup
+# ============================================================================
+#
+# 1. Install Nginx:
+#    sudo apt-get install nginx
+#
+# 2. Copy configuration:
+#    sudo cp deployment/local/nginx/ag-news.conf /etc/nginx/sites-available/
+#
+# 3. Create symlink:
+#    sudo ln -s /etc/nginx/sites-available/ag-news.conf /etc/nginx/sites-enabled/
+#
+# 4. Test configuration:
+#    sudo nginx -t
+#
+# 5. Reload Nginx:
+#    sudo systemctl reload nginx
+#
+# 6. Access via Nginx:
+#    http://your-domain.com/api/v1/
+#
+# Benefits of Nginx:
+# - SSL/TLS termination
+# - Load balancing across multiple workers
+# - Static file serving
+# - Request buffering
+# - Gzip compression
+# - Rate limiting at proxy level
+#
+# ============================================================================
+# Docker Deployment
+# ============================================================================
+#
+# 1. Build Docker image:
+#    docker build -f deployment/docker/Dockerfile.local -t ag-news-api:latest .
+#
+# 2. Run container:
+#    docker run -d \
+#      --name ag-news-api \
+#      -p 8000:8000 \
+#      -v $(pwd)/outputs:/app/outputs \
+#      -e API_HOST=0.0.0.0 \
+#      -e API_PORT=8000 \
+#      ag-news-api:latest
+#
+# 3. Docker Compose (recommended):
+#    docker-compose -f deployment/docker/docker-compose.local.yml up -d
+#
+#    Services in docker-compose:
+#    - api: FastAPI application
+#    - redis: Cache server
+#    - celery: Background worker
+#    - tensorboard: Monitoring
+#    - mlflow: Experiment tracking
+#
+# 4. View logs:
+#    docker logs ag-news-api -f
+#
+# 5. Stop container:
+#    docker stop ag-news-api
+#
+# 6. Remove container:
+#    docker rm ag-news-api
+#
+# ============================================================================
+# Performance Tuning
+# ============================================================================
+#
+# Number of workers:
+# - Formula: (2 × CPU cores) + 1
+# - Example: 4 CPU cores → 9 workers
+# - Adjust based on memory availability
+#
+# Worker class:
+# - uvicorn.workers.UvicornWorker for async support
+# - Supports WebSockets and Server-Sent Events
+#
+# Timeout settings:
+# - Request timeout: 30-60 seconds
 # - Keepalive: 5 seconds
-# - Max requests: 1000 (per worker restart)
-# - Preload app: True (for faster startup)
+# - Graceful shutdown: 10-30 seconds
 #
-# Monitoring:
-# - TensorBoard: Training metrics, model graphs
-# - MLflow: Experiment tracking, model registry
-# - Prometheus: API metrics, system metrics
-# - Logs: JSON structured logs to file
-# - Health checks: /health endpoint
+# Worker restart:
+# - Max requests per worker: 1000-5000
+# - Prevents memory leaks in long-running workers
+# - Automatic worker recycling
 #
-# Caching strategy:
-# - Model caching: Load once, cache in memory
-# - Prediction caching: Cache frequent predictions in Redis
-# - Static content: Disk cache
-# - Session data: Redis
+# Preload application:
+# - Set to True for faster worker startup
+# - Models loaded once and forked to workers
+# - Reduces memory usage
 #
-# Scaling:
-# - Vertical: Increase workers, memory
-# - Horizontal: Multiple instances with load balancer
-# - Model parallelism: Multiple GPUs
-# - Batch inference: Group requests
+# ============================================================================
+# Monitoring in Production
+# ============================================================================
 #
-# Security:
-# - API key authentication
-# - Rate limiting per IP/user
-# - Input validation
-# - CORS configuration
-# - SSL/TLS encryption
-# - PII detection and masking
+# TensorBoard:
+# - Training metrics and model graphs
+# - Access: http://localhost:6006
 #
-# Backup:
-# - Model checkpoints: Daily backup
-# - Configuration: Version controlled
-# - Logs: Rotate and archive
-# - Database: Daily SQLite backup
+# MLflow:
+# - Experiment tracking and model registry
+# - Access: http://localhost:5000
 #
-# High availability:
-# - Multiple API instances
-# - Redis sentinel for failover
-# - Health check endpoints
-# - Graceful shutdown
-# - Rolling updates
+# Prometheus:
+# - Real-time API and system metrics
+# - Scrape endpoint: http://localhost:8000/metrics
+# - Access Prometheus UI: http://localhost:9090
+#
+# Logs:
+# - Application logs: outputs/logs/api/
+# - Access logs: outputs/logs/api/access.log
+# - Error logs: outputs/logs/api/error.log
+# - Structured JSON format for parsing
+#
+# Health checks:
+# - Liveness: /health
+# - Readiness: /ready
+# - Metrics: /metrics
+#
+# ============================================================================
+# Caching Strategy
+# ============================================================================
+#
+# Model caching:
+# - Load models once at startup
+# - Cache in memory for all workers (preload=True)
+# - LRU cache for multiple models
+#
+# Prediction caching:
+# - Cache frequent predictions in Redis
+# - TTL: 1 hour (configurable)
+# - Cache key: hash(text + model_name)
+# - Significant speedup for repeated queries
+#
+# Static content caching:
+# - Disk cache for preprocessing results
+# - Tokenization cache
+#
+# Session data:
+# - Redis for session storage
+# - Persistent across server restarts
+#
+# ============================================================================
+# Scaling Strategies
+# ============================================================================
+#
+# Vertical scaling:
+# - Increase number of workers
+# - Add more RAM for model caching
+# - Use larger GPU for faster inference
+#
+# Horizontal scaling:
+# - Multiple API instances behind load balancer
+# - Shared Redis cache across instances
+# - Shared model storage (NFS, S3)
+#
+# Model parallelism:
+# - Multiple GPUs with model sharding
+# - Batch inference across GPUs
+#
+# Request batching:
+# - Group requests into batches
+# - Process batch on GPU
+# - Dynamic batching based on load
+#
+# ============================================================================
+# Security Best Practices
+# ============================================================================
+#
+# Authentication:
+# - API key in header or query parameter
+# - JWT tokens for user sessions
+# - Simple token-based auth for internal use
+#
+# Rate limiting:
+# - Per IP address: 100 requests/minute
+# - Per API key: 1000 requests/hour
+# - Gradual backoff for repeated violations
+#
+# Input validation:
+# - Pydantic models for request validation
+# - Max text length enforcement
+# - Sanitize inputs to prevent injection
+#
+# CORS configuration:
+# - Whitelist allowed origins
+# - Restrict to specific domains in production
+#
+# SSL/TLS:
+# - Use HTTPS in production
+# - Certificate from Let's Encrypt
+# - Automatic renewal with Certbot
+#
+# PII detection:
+# - Detect and mask personally identifiable information
+# - Optional logging of PII-redacted requests
+#
+# ============================================================================
+# Backup and Recovery
+# ============================================================================
+#
+# Model checkpoints:
+# - Daily backup to external storage
+# - Version control for models
+# - Quick rollback capability
+#
+# Configuration:
+# - Version controlled in Git
+# - Separate configs for dev/staging/prod
+#
+# Logs:
+# - Rotate and archive old logs
+# - Retention: 30 days
+# - Compress with gzip or zstandard
+#
+# Database:
+# - Daily SQLite backup
+# - Export MLflow experiments
+#
+# Recovery procedures:
+# - Document in deployment/local/recovery/
+# - Test recovery process quarterly
+#
+# ============================================================================
+# High Availability
+# ============================================================================
+#
+# Multiple API instances:
+# - Run 2+ instances for redundancy
+# - Load balancer distributes traffic
+# - Health checks for automatic failover
+#
+# Redis high availability:
+# - Redis Sentinel for automatic failover
+# - Master-slave replication
+# - Automatic promotion of slaves
+#
+# Graceful shutdown:
+# - Finish processing current requests
+# - Reject new requests during shutdown
+# - Timeout after 30 seconds
+#
+# Rolling updates:
+# - Update one instance at a time
+# - Verify health before updating next
+# - Zero-downtime deployment
+#
+# ============================================================================
+# Expected Performance Metrics
+# ============================================================================
+#
+# Latency (single prediction):
+# - CPU inference: 50-200ms
+# - GPU inference (T4): 10-50ms
+# - GPU inference (A100): 5-20ms
+# - With caching: <5ms
+#
+# Throughput:
+# - 4 workers, CPU: 100-200 req/sec
+# - 4 workers, GPU: 500-1000 req/sec
+# - With batching, GPU: 2000-5000 req/sec
 #
 # Resource requirements:
 # - CPU: 4+ cores recommended
 # - RAM: 8GB minimum, 16GB recommended
-# - GPU: Optional, improves inference speed
-# - Disk: 20GB minimum for models and cache
+# - GPU: Optional, improves throughput 5-10x
+# - Disk: 20GB for models, cache, logs
 # - Network: 1Gbps for high throughput
 #
-# Expected performance:
-# - Latency: 50-200ms per request (CPU)
-# - Latency: 10-50ms per request (GPU)
-# - Throughput: 100-500 req/sec (4 workers, CPU)
-# - Throughput: 500-2000 req/sec (GPU with batching)
+# ============================================================================
+# API Endpoints
+# ============================================================================
 #
-# Project-specific endpoints:
-# - POST /api/v1/predict: Single prediction
-# - POST /api/v1/predict/batch: Batch prediction
-# - GET /api/v1/models: List available models
-# - GET /api/v1/health: Health check
-# - GET /api/v1/metrics: Prometheus metrics
-# - GET /docs: API documentation
+# Core endpoints:
+# - POST /api/v1/predict - Single text classification
+# - POST /api/v1/predict/batch - Batch classification
+# - GET /api/v1/models - List available models
+# - POST /api/v1/models/{model_id}/load - Load specific model
+# - DELETE /api/v1/cache - Clear prediction cache
 #
-# For detailed deployment guide:
-# - See FREE_DEPLOYMENT_GUIDE.md
-# - See LOCAL_MONITORING_GUIDE.md
-# - See deployment/local/README.md
-# - See docs/getting_started/local_setup.md
+# Health and monitoring:
+# - GET /health - Liveness probe
+# - GET /ready - Readiness probe
+# - GET /metrics - Prometheus metrics
+# - GET /stats - API statistics
+#
+# Documentation:
+# - GET /docs - Swagger UI
+# - GET /redoc - ReDoc documentation
+# - GET /openapi.json - OpenAPI schema
+#
+# ============================================================================
+# Integration with Project Structure
+# ============================================================================
+#
+# API implementation:
+# - src/api/rest/app.py - FastAPI application
+# - src/api/rest/routers/classification.py - Prediction endpoints
+# - src/api/rest/routers/health.py - Health check endpoints
+# - src/api/rest/routers/metrics.py - Metrics endpoints
+#
+# Services:
+# - src/services/core/prediction_service.py - Prediction logic
+# - src/services/core/model_management_service.py - Model loading
+# - src/services/local/local_cache_service.py - Caching layer
+# - src/services/local/local_queue_service.py - Background tasks
+#
+# Inference optimization:
+# - src/inference/predictors/single_predictor.py - Single prediction
+# - src/inference/predictors/ensemble_predictor.py - Ensemble prediction
+# - src/inference/optimization/model_quantization.py - Model compression
+# - src/inference/serving/batch_predictor.py - Batch inference
+#
+# Deployment configs:
+# - deployment/local/docker-compose.local.yml - Docker Compose
+# - deployment/local/systemd/ - Systemd services
+# - deployment/local/nginx/ - Nginx configuration
+# - deployment/local/scripts/start_all.sh - Startup script
+#
+# ============================================================================
+# For Detailed Documentation
+# ============================================================================
+#
+# Deployment guides:
+# - FREE_DEPLOYMENT_GUIDE.md - Zero-cost deployment
+# - LOCAL_MONITORING_GUIDE.md - Local monitoring setup
+# - deployment/local/README.md - Local deployment details
+#
+# User guides:
+# - docs/getting_started/local_setup.md - Initial setup
+# - docs/user_guide/local_deployment.md - Deployment guide
+# - docs/api_reference/rest_api.md - API documentation
+#
+# API reference:
+# - Swagger UI: http://localhost:8000/docs
+# - ReDoc: http://localhost:8000/redoc
+#
 # ============================================================================
