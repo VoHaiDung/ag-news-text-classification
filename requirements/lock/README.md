@@ -341,7 +341,7 @@ Every lock file begins with a comprehensive header:
 # Author: Võ Hải Dũng
 # Email: vohaidung.work@gmail.com
 # License: MIT
-# Generated: YYYY-MM-DD
+# Generated: 2025-09-19
 # Python: 3.10.12
 # Platform: linux-x86_64
 # CUDA: 11.8 (if applicable)
@@ -474,7 +474,7 @@ snyk test --file=requirements/lock/all.lock
 
 ### Last Security Audit
 
-- **Date**: 2024-01-15
+- **Date**: 2025-09-19
 - **Critical Vulnerabilities**: 0
 - **High Vulnerabilities**: 0
 - **Medium Vulnerabilities**: 0
@@ -502,7 +502,7 @@ snyk test --file=requirements/lock/all.lock
 cp requirements/lock/*.lock requirements/lock/backup/
 
 # Create feature branch
-git checkout -b update-dependencies-2024-02
+git checkout -b update-dependencies-2025-09
 
 # Review release notes
 # Check security advisories
@@ -586,10 +586,10 @@ safety check -r requirements/lock/all.lock
 ```bash
 # Commit changes
 git add requirements/lock/*.lock CHANGELOG.md
-git commit -m "chore: update dependencies to 2024-02"
+git commit -m "chore: update dependencies to 2025-09"
 
 # Create pull request
-git push origin update-dependencies-2024-02
+git push origin update-dependencies-2025-09
 # Review, approve, merge
 
 # Tag release
@@ -1212,3 +1212,9 @@ This documentation and all lock files are part of the AG News Text Classificatio
 **Copyright** (c) 2025 Võ Hải Dũng
 
 **Licensed** under the MIT License. See the [LICENSE](LICENSE) file in the project root for full license text.
+
+---
+
+**Last Updated**: 2025-09-19  
+**Version**: 1.0.0  
+**Maintained by**: Võ Hải Dũng
