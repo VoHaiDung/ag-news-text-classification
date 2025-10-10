@@ -2,98 +2,125 @@
 # Machine Learning Requirements for AG News Text Classification
 # ============================================================================
 # Project: AG News Text Classification (ag-news-text-classification)
-# Description: ML/DL specific libraries for model training and evaluation
+# Description: Core ML/DL libraries for training, evaluation, and inference
 # Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
 # License: MIT
 # Python: >=3.8,<3.12
 # ============================================================================
 # This file contains packages required for:
-# - Deep learning model training (transformers, LLMs)
-# - Parameter-efficient fine-tuning (LoRA, QLoRA, Adapters)
-# - Ensemble methods (voting, stacking, blending)
-# - Classical ML baselines
-# - Model evaluation and metrics
-# - Hyperparameter optimization
-# - Data augmentation
+# - Transformer models (DeBERTa, RoBERTa, ELECTRA, XLNet, LLMs)
+# - Parameter-efficient fine-tuning (LoRA, QLoRA, Adapters, Prefix Tuning)
+# - Ensemble methods (voting, stacking, blending, advanced ensembles)
+# - Knowledge distillation (standard, feature-based, progressive)
+# - Classical ML baselines (SVM, XGBoost, LightGBM, CatBoost)
+# - Training strategies (adversarial, curriculum, meta-learning)
+# - Evaluation metrics and analysis
+# - Data augmentation and preprocessing
 # ============================================================================
 
 # Include base requirements
 -r base.txt
 
 # ----------------------------------------------------------------------------
+# Core Deep Learning Framework
+# ----------------------------------------------------------------------------
+# PyTorch already included in base.txt
+# torchvision>=0.16.0,<0.20.0
+# torchaudio>=2.1.0,<2.5.0
+
+# ----------------------------------------------------------------------------
+# Transformers and NLP Models
+# ----------------------------------------------------------------------------
+# HuggingFace Transformers already in base.txt
+# transformers>=4.36.0,<4.43.0
+
+# Sentence transformers for embeddings
+sentence-transformers>=2.2.0,<3.1.0
+
+# Tokenizers
+tokenizers>=0.15.0,<0.20.0
+sentencepiece>=0.1.99,<0.3.0
+sacremoses>=0.1.0,<0.2.0
+
+# ----------------------------------------------------------------------------
 # Parameter-Efficient Fine-Tuning (PEFT)
 # ----------------------------------------------------------------------------
-# LoRA, QLoRA, Adapters, Prefix Tuning, Prompt Tuning
+# LoRA, QLoRA, Adapters, Prefix/Prompt Tuning, IA3
 peft>=0.7.0,<0.12.0
 
-# Quantization for QLoRA (4-bit, 8-bit)
+# Quantization for QLoRA (4-bit, 8-bit quantization)
 bitsandbytes>=0.41.0,<0.44.0
 
-# Adapter modules for transformers
-adapters>=0.2.0,<0.3.0; python_version >= "3.9"
+# Adapter modules (Houlsby, Pfeiffer, Parallel, Fusion)
+adapters>=0.2.0,<0.3.0
+
+# OpenPrompt for prompt-based learning
+openprompt>=1.0.1,<1.1.0
 
 # ----------------------------------------------------------------------------
-# Advanced Training Techniques
+# Efficient Training and Optimization
 # ----------------------------------------------------------------------------
-# Mixed precision training utilities
-apex>=0.1; platform_system != "Windows"
+# Mixed precision training (automatic mixed precision)
+# apex - install from source: https://github.com/NVIDIA/apex
 
 # Gradient checkpointing and memory optimization
 fairscale>=0.4.13,<0.5.0
 
-# DeepSpeed for efficient training
-deepspeed>=0.12.0,<0.15.0; platform_system != "Windows"
+# DeepSpeed for ZeRO optimization and large model training
+deepspeed>=0.12.0,<0.15.0
 
-# Fully Sharded Data Parallel (FSDP)
-torch-fsdp>=0.1.0,<0.2.0; python_version >= "3.9"
+# Accelerate for distributed training abstraction
+accelerate>=0.25.0,<0.33.0
 
 # ----------------------------------------------------------------------------
-# NLP Libraries and Tools
+# NLP Preprocessing and Tools
 # ----------------------------------------------------------------------------
 # Natural Language Toolkit
 nltk>=3.8.0,<3.9.0
 
-# Sentence piece tokenization
-sentencepiece>=0.1.99,<0.3.0
-
-# Moses tokenizer
-sacremoses>=0.1.0,<0.2.0
-
-# spaCy for advanced NLP
+# spaCy for advanced NLP tasks
 spacy>=3.7.0,<3.8.0
 
 # Language detection
 langdetect>=1.0.9,<1.1.0
 fasttext>=0.9.2,<0.10.0
 
+# Text normalization
+ftfy>=6.1.0,<6.3.0
+unidecode>=1.3.0,<1.4.0
+
+# Text statistics
+textstat>=0.7.3,<0.8.0
+
 # ----------------------------------------------------------------------------
-# Text Augmentation
+# Data Augmentation
 # ----------------------------------------------------------------------------
 # NLP augmentation library
 nlpaug>=1.1.11,<1.2.0
 
-# TextAttack for adversarial examples
-textattack>=0.3.8,<0.4.0
+# Back-translation and paraphrasing
+# Custom implementations in src/data/augmentation/
 
-# Text generation for augmentation
-textaugment>=1.4.0,<1.5.0
+# Mixup and CutMix for text
+# Custom implementations in src/data/augmentation/
+
+# Contrast set generation
+# Custom implementation in src/data/augmentation/contrast_set_generator.py
 
 # ----------------------------------------------------------------------------
 # Classical Machine Learning
 # ----------------------------------------------------------------------------
-# Gradient boosting frameworks for ensemble meta-learners
+# Gradient boosting for ensemble meta-learners
 xgboost>=2.0.0,<2.1.0
 lightgbm>=4.1.0,<4.4.0
 catboost>=1.2.0,<1.3.0
 
-# Support Vector Machines
-thundersvm>=0.3.4,<0.4.0; platform_system != "Windows"
+# Imbalanced learning
+imbalanced-learn>=0.11.0,<0.13.0
 
 # Feature selection
 scikit-learn-extra>=0.3.0,<0.4.0
-
-# Imbalanced learning
-imbalanced-learn>=0.11.0,<0.13.0
 
 # ----------------------------------------------------------------------------
 # Ensemble Methods
@@ -103,100 +130,103 @@ mlxtend>=0.23.0,<0.24.0
 
 # Bayesian optimization for ensemble weights
 scikit-optimize>=0.9.0,<0.10.0
+bayesian-optimization>=1.4.3,<1.5.0
 
-# Snapshot ensemble
-torch-snapshot-ensemble>=0.1.0,<0.2.0; python_version >= "3.9"
+# Snapshot ensemble implementation
+# Custom implementation in src/models/ensemble/advanced/snapshot_ensemble.py
 
 # ----------------------------------------------------------------------------
-# Evaluation Metrics
+# Evaluation and Metrics
 # ----------------------------------------------------------------------------
 # HuggingFace evaluate library
 evaluate>=0.4.0,<0.5.0
 
-# Sequence labeling evaluation
+# Sequence evaluation metrics
 seqeval>=1.2.2,<1.3.0
 
-# Metrics for NLP
-nlp-metrics>=0.1.0,<0.2.0
+# Classification metrics
+# scikit-learn already in base.txt
 
-# Interpretability metrics
+# Model interpretability metrics
 interpret>=0.5.0,<0.7.0
 
 # Uncertainty quantification
 uncertainty-toolbox>=0.1.1,<0.2.0
 
+# Calibration metrics
+netcal>=1.3.5,<1.4.0
+
 # ----------------------------------------------------------------------------
 # Hyperparameter Optimization
 # ----------------------------------------------------------------------------
-# Optuna for hyperparameter search
+# Optuna for Bayesian optimization
 optuna>=3.5.0,<3.7.0
 optuna-integration>=3.5.0,<3.7.0
 
-# Ray Tune for distributed hyperparameter tuning
+# Ray Tune for distributed hyperparameter search
 ray[tune]>=2.9.0,<2.10.0
 
-# Weights & Biases sweeps
-wandb>=0.16.0,<0.17.0
-
-# Hyperband algorithm
+# Hyperband and BOHB
 hyperopt>=0.2.7,<0.3.0
-
-# Bayesian optimization
-bayes-opt>=1.4.3,<1.5.0
 
 # ----------------------------------------------------------------------------
 # Knowledge Distillation
 # ----------------------------------------------------------------------------
-# Distillation utilities
-torch-distillation>=0.1.0,<0.2.0; python_version >= "3.9"
-
-# Knowledge distillation for transformers
-transformers-interpret>=0.10.0,<0.11.0
+# Distillation implementations in src/training/strategies/distillation/
+# - knowledge_distillation.py (standard KD)
+# - feature_distillation.py (layer-wise KD)
+# - llama_distillation.py (LLM to smaller model)
+# - mistral_distillation.py (Mistral to smaller model)
+# - ensemble_distillation.py (ensemble to single model)
+# - progressive_distillation.py (multi-stage KD)
 
 # ----------------------------------------------------------------------------
 # Regularization Techniques
 # ----------------------------------------------------------------------------
-# R-Drop implementation
-r-drop>=0.1.0,<0.2.0; python_version >= "3.9"
+# R-Drop for consistency regularization
+# Custom implementation in src/training/strategies/regularization/r_drop.py
 
-# Mixout regularization
-mixout>=0.1.0,<0.2.0; python_version >= "3.9"
+# Mixout for regularization
+# Custom implementation in src/training/strategies/regularization/mixout.py
 
 # Spectral normalization
-spectral-normalization-pytorch>=0.1.0,<0.2.0; python_version >= "3.9"
+# Custom implementation in src/training/strategies/regularization/spectral_norm.py
 
 # ----------------------------------------------------------------------------
 # Adversarial Training
 # ----------------------------------------------------------------------------
-# Free Large-scale Adversarial Training
-freelb>=0.1.0,<0.2.0; python_version >= "3.9"
+# TextAttack for adversarial examples
+textattack>=0.3.8,<0.4.0
 
-# SMART adversarial regularization
-smart-pytorch>=0.1.0,<0.2.0; python_version >= "3.9"
-
-# Adversarial training utilities
+# Adversarial Robustness Toolkit
 adversarial-robustness-toolbox>=1.15.0,<1.18.0
+
+# FGM, PGD, FreeLB, SMART implementations
+# Custom implementations in src/training/strategies/adversarial/
 
 # ----------------------------------------------------------------------------
 # Contrastive Learning
 # ----------------------------------------------------------------------------
-# SimCLR and contrastive learning
+# PyTorch Metric Learning for contrastive learning
 pytorch-metric-learning>=2.4.0,<2.6.0
 
 # Supervised contrastive learning
-supcontrast>=0.1.0,<0.2.0; python_version >= "3.9"
+# Custom implementation in configs/training/advanced/contrastive_learning.yaml
 
 # ----------------------------------------------------------------------------
-# Meta Learning
+# Meta-Learning
 # ----------------------------------------------------------------------------
-# MAML and meta-learning algorithms
+# MAML and Reptile
 learn2learn>=0.2.0,<0.3.0
+
+# Higher-order gradients
+higher>=0.2.1,<0.3.0
 
 # ----------------------------------------------------------------------------
 # Curriculum Learning
 # ----------------------------------------------------------------------------
-# Curriculum learning utilities
-curricularface>=0.1.0,<0.2.0; python_version >= "3.9"
+# Curriculum learning implementations
+# Custom in src/training/strategies/curriculum/
 
 # ----------------------------------------------------------------------------
 # Model Compression
@@ -205,165 +235,128 @@ curricularface>=0.1.0,<0.2.0; python_version >= "3.9"
 torch-pruning>=1.3.0,<1.4.0
 
 # Model quantization
-neural-compressor>=2.4.0,<2.6.0
+# neural-compressor>=2.4.0,<2.6.0
 
-# ONNX for model optimization
+# ONNX for model export
 onnx>=1.15.0,<1.17.0
 onnxruntime>=1.16.0,<1.18.0
 
 # OpenVINO for inference optimization
-openvino>=2023.2.0,<2024.2.0; python_version >= "3.9"
-
-# TensorRT (optional, for NVIDIA GPUs)
-# nvidia-tensorrt>=8.6.0,<10.0.0
+openvino>=2023.2.0,<2024.2.0
 
 # ----------------------------------------------------------------------------
-# Attention Visualization
+# Model Interpretability
 # ----------------------------------------------------------------------------
+# SHAP for feature importance
+shap>=0.44.0,<0.46.0
+
+# LIME for local explanations
+lime>=0.2.0,<0.3.0
+
+# Captum for PyTorch interpretability
+captum>=0.7.0,<0.8.0
+
 # BertViz for attention visualization
 bertviz>=1.4.0,<1.5.0
-
-# Captum for model interpretability
-captum>=0.7.0,<0.8.0
 
 # ----------------------------------------------------------------------------
 # Feature Extraction
 # ----------------------------------------------------------------------------
-# TF-IDF and text features
-textstat>=0.7.3,<0.8.0
-
 # Word embeddings
 gensim>=4.3.0,<4.4.0
 
 # FastText embeddings
-fasttext>=0.9.2,<0.10.0
+# fasttext already included above
 
 # ----------------------------------------------------------------------------
-# Data Selection and Sampling
+# Data Selection and Active Learning
 # ----------------------------------------------------------------------------
-# Coreset selection
-coresets>=0.1.0,<0.2.0; python_version >= "3.9"
-
-# Influence functions
-pytorch-influence-functions>=0.1.1,<0.2.0
-
 # Active learning
 modAL>=0.4.1,<0.5.0
 
-# ----------------------------------------------------------------------------
-# Prompt Engineering and Instruction Tuning
-# ----------------------------------------------------------------------------
-# Prompt tuning utilities
-openprompt>=1.0.1,<1.1.0
+# Influence functions for data selection
+# Custom implementation in src/data/selection/influence_function.py
 
-# Instruction tuning
-stanford-alpaca>=0.1.0,<0.2.0; python_version >= "3.9"
+# Coreset selection
+# Custom implementation in src/data/selection/coreset_sampler.py
 
 # ----------------------------------------------------------------------------
-# Multi-Task Learning
+# Multi-Task and Transfer Learning
 # ----------------------------------------------------------------------------
-# Multi-task learning framework
-pytorch-adapt>=0.2.0,<0.3.0
+# Domain adaptation
+# Custom implementations in scripts/domain_adaptation/
 
 # ----------------------------------------------------------------------------
-# Domain Adaptation
+# Prompt Engineering
 # ----------------------------------------------------------------------------
-# Domain adaptation toolkit
-adapt>=0.4.0,<0.5.0
-
-# Transfer learning utilities
-pytorch-adapt>=0.2.0,<0.3.0
-
-# ----------------------------------------------------------------------------
-# Text Generation (for LLM-based augmentation)
-# ----------------------------------------------------------------------------
-# Text generation utilities
-textgenrnn>=2.0.0,<3.0.0
-
-# Controlled generation
-ctrl-gen>=0.1.0,<0.2.0; python_version >= "3.9"
-
-# ----------------------------------------------------------------------------
-# Vocabulary and Tokenization
-# ----------------------------------------------------------------------------
-# Byte-pair encoding
-tokenizers>=0.15.0,<0.16.0
-
-# SentencePiece training
-sentencepiece-trainer>=0.1.0,<0.2.0; python_version >= "3.9"
+# Prompt templates and formatters
+# Custom implementations in src/data/preprocessing/prompt_formatter.py
+# and src/data/preprocessing/instruction_formatter.py
 
 # ----------------------------------------------------------------------------
 # Loss Functions
 # ----------------------------------------------------------------------------
-# Advanced loss functions
-pytorch-softmax>=1.0.0,<2.0.0
-
-# Focal loss
+# Focal loss for imbalanced classification
 focal-loss>=0.0.7,<0.1.0
 
 # Label smoothing
-label-smoothing-pytorch>=0.1.0,<0.2.0; python_version >= "3.9"
+# Custom implementation in src/training/objectives/losses/label_smoothing.py
+
+# Contrastive loss
+# Custom implementation in src/training/objectives/losses/contrastive_loss.py
 
 # ----------------------------------------------------------------------------
 # Optimizers
 # ----------------------------------------------------------------------------
-# Advanced optimizers
+# Advanced optimizers (Lamb, Lookahead, SAM)
 torch-optimizer>=0.3.0,<0.4.0
 
-# SAM (Sharpness-Aware Minimization)
-sam-pytorch>=0.1.0,<0.2.0; python_version >= "3.9"
-
-# AdamW variants
-pytorch-optimizer>=3.0.0,<3.1.0
-
-# LAMB optimizer
-lamb-optimizer>=0.1.0,<0.2.0; python_version >= "3.9"
-
-# Lookahead optimizer
-lookahead-pytorch>=0.1.0,<0.2.0; python_version >= "3.9"
+# Sharpness-Aware Minimization
+# Custom implementation in src/training/strategies/regularization/sharpness_aware_minimization.py
 
 # ----------------------------------------------------------------------------
 # Learning Rate Schedulers
 # ----------------------------------------------------------------------------
-# Advanced LR schedulers
-torch-lr-scheduler>=0.1.0,<0.2.0; python_version >= "3.9"
+# Cosine annealing with warmup
+# Custom implementation in src/training/optimization/schedulers/cosine_warmup.py
 
-# Cosine annealing with warm restarts
-cosine-annealing-warmup>=0.1.0,<0.2.0; python_version >= "3.9"
+# Polynomial decay
+# Custom implementation in src/training/optimization/schedulers/polynomial_decay.py
 
 # ----------------------------------------------------------------------------
 # Gradient Utilities
 # ----------------------------------------------------------------------------
 # Gradient accumulation
-gradient-accumulator>=0.4.0,<0.5.0
+# Built into trainers in src/training/trainers/
 
 # Gradient clipping
-torch-gradclip>=0.1.0,<0.2.0; python_version >= "3.9"
+# Built into PyTorch and trainers
+
+# Gradient checkpointing
+# Via transformers and custom implementations
 
 # ----------------------------------------------------------------------------
 # Memory Optimization
 # ----------------------------------------------------------------------------
-# Gradient checkpointing
-checkpoint-sequential>=0.1.0,<0.2.0; python_version >= "3.9"
-
 # Memory profiling
 memory-profiler>=0.61.0,<0.62.0
 
-# GPU memory management
+# GPU utilities
 gputil>=1.4.0,<1.5.0
+pynvml>=11.5.0,<11.6.0
 
 # ----------------------------------------------------------------------------
 # Distributed Training
 # ----------------------------------------------------------------------------
 # Horovod for distributed training
-horovod>=0.28.0,<0.29.0; platform_system != "Windows"
+# horovod>=0.28.0,<0.29.0
+
+# Distributed training via PyTorch DDP
+# Built into PyTorch
 
 # ----------------------------------------------------------------------------
-# Experiment Tracking Integration
+# Experiment Tracking
 # ----------------------------------------------------------------------------
-# MLflow integration
-mlflow>=2.9.0,<2.15.0
-
 # TensorBoard
 tensorboard>=2.15.0,<2.17.0
 tensorboardX>=2.6.2,<2.7.0
@@ -371,129 +364,296 @@ tensorboardX>=2.6.2,<2.7.0
 # Weights & Biases
 wandb>=0.16.0,<0.17.0
 
-# Neptune.ai
-neptune>=1.8.0,<1.11.0
-
-# Comet ML
-comet-ml>=3.35.0,<3.44.0
+# MLflow
+mlflow>=2.9.0,<2.15.0
 
 # ----------------------------------------------------------------------------
 # Statistical Analysis
 # ----------------------------------------------------------------------------
-# Statistical tests
+# SciPy for statistical tests
 scipy>=1.10.0,<1.13.0
+
+# Statsmodels for statistical modeling
 statsmodels>=0.14.0,<0.15.0
-
-# Permutation tests
-permute>=0.2.0,<0.3.0; python_version >= "3.9"
-
-# Bootstrap confidence intervals
-arch>=6.2.0,<7.1.0
 
 # ----------------------------------------------------------------------------
 # Visualization
 # ----------------------------------------------------------------------------
-# Plotting libraries
+# Matplotlib for plotting
 matplotlib>=3.8.0,<3.10.0
+
+# Seaborn for statistical visualization
 seaborn>=0.13.0,<0.14.0
 
-# Interactive plots
+# Plotly for interactive plots
 plotly>=5.18.0,<5.23.0
 
-# Confusion matrix visualization
+# Scikit-plot for ML visualizations
 scikit-plot>=0.3.7,<0.4.0
 
 # ----------------------------------------------------------------------------
-# Data Quality and Validation
+# Data Validation
 # ----------------------------------------------------------------------------
-# Data validation
+# Great Expectations for data quality
 great-expectations>=0.18.0,<0.19.0
 
-# Data profiling
-pandas-profiling>=3.6.0,<3.7.0
+# Pandas profiling
+ydata-profiling>=4.6.0,<4.10.0
+
+# ----------------------------------------------------------------------------
+# Platform Detection and Auto-Configuration
+# ----------------------------------------------------------------------------
+# psutil for system information
+psutil>=5.9.0,<5.10.0
+
+# platform detection utilities
+# Custom implementation in src/deployment/platform_detector.py
+
+# ----------------------------------------------------------------------------
+# Quota and Resource Management
+# ----------------------------------------------------------------------------
+# Resource monitoring
+# Custom implementations in src/deployment/quota_tracker.py
+# and src/deployment/resource_monitor.py
+
+# ----------------------------------------------------------------------------
+# Caching and Storage
+# ----------------------------------------------------------------------------
+# Disk cache
+diskcache>=5.6.0,<5.7.0
+
+# Joblib for caching
+joblib>=1.3.0,<1.5.0
+
+# ----------------------------------------------------------------------------
+# Configuration Management
+# ----------------------------------------------------------------------------
+# YAML parsing (PyYAML already in base.txt)
+# pyyaml>=6.0.1,<6.1.0
+
+# OmegaConf for hierarchical configs
+omegaconf>=2.3.0,<2.4.0
+
+# Hydra for configuration
+hydra-core>=1.3.0,<1.4.0
+
+# ----------------------------------------------------------------------------
+# Logging and Monitoring
+# ----------------------------------------------------------------------------
+# Rich for beautiful terminal output
+rich>=13.7.0,<13.8.0
+
+# Loguru for better logging
+loguru>=0.7.0,<0.8.0
+
+# ----------------------------------------------------------------------------
+# Progress Bars
+# ----------------------------------------------------------------------------
+# TQDM for progress bars (already in base.txt)
+# tqdm>=4.66.0,<4.67.0
+
+# ----------------------------------------------------------------------------
+# Testing Utilities
+# ----------------------------------------------------------------------------
+# Hypothesis for property-based testing
+hypothesis>=6.92.0,<6.109.0
+
+# ----------------------------------------------------------------------------
+# Robustness and OOD Detection
+# ----------------------------------------------------------------------------
+# Out-of-distribution detection
+pytorch-ood>=0.2.0,<0.3.0
+
+# Contrast sets
+# Custom implementation in src/data/augmentation/contrast_set_generator.py
+
+# ----------------------------------------------------------------------------
+# Model Serving
+# ----------------------------------------------------------------------------
+# TorchServe
+# torchserve>=0.9.0,<0.10.0
+# torch-model-archiver>=0.9.0,<0.10.0
 
 # ----------------------------------------------------------------------------
 # Special Model Support
 # ----------------------------------------------------------------------------
-# Longformer for long documents
-longformer>=0.1.0,<0.2.0; python_version >= "3.9"
+# Longformer support via transformers
+# longformer models available in transformers library
 
-# BigBird for long sequences
-bigbird>=0.1.0,<0.2.0; python_version >= "3.9"
+# BigBird support via transformers
+# bigbird models available in transformers library
 
-# T5 utilities
-t5>=0.9.4,<0.10.0
-
-# ----------------------------------------------------------------------------
-# Robustness Testing
-# ----------------------------------------------------------------------------
-# Contrast sets
-contrast-sets>=0.1.0,<0.2.0; python_version >= "3.9"
-
-# Out-of-distribution detection
-pytorch-ood>=0.2.0,<0.3.0
-
-# Calibration metrics
-netcal>=1.3.5,<1.4.0
+# T5 support via transformers
+# t5 models available in transformers library
 
 # ----------------------------------------------------------------------------
-# Efficient Inference
+# Platform-Specific Optimizations
 # ----------------------------------------------------------------------------
-# ONNX Runtime
-onnxruntime>=1.16.0,<1.18.0
+# TPU support (Kaggle)
+# torch-xla for TPU training (install separately on Kaggle)
 
-# TorchScript optimization
-torch-jit-utils>=0.1.0,<0.2.0; python_version >= "3.9"
-
-# ----------------------------------------------------------------------------
-# Platform-Specific Dependencies
-# ----------------------------------------------------------------------------
 # Apple Silicon optimization (M1/M2)
-# torch-mlx>=0.1.0,<0.2.0; platform_system == "Darwin" and platform_machine == "arm64"
+# Handled by PyTorch MPS backend
 
 # ROCm for AMD GPUs
-# torch-rocm>=2.0.0,<2.2.0; platform_system == "Linux"
+# Use ROCm-specific PyTorch build
 
 # ============================================================================
-# Installation Notes:
+# Installation Instructions
 # ============================================================================
-# 1. Install ML requirements:
+#
+# 1. Basic Installation:
 #    pip install -r requirements/ml.txt
 #
-# 2. For specific use cases:
-#    - LoRA/QLoRA only: pip install -r requirements/efficient.txt
-#    - LLM training: pip install -r requirements/llm.txt
-#    - Research: pip install -r requirements/research.txt
+# 2. Platform-Specific Installation:
 #
-# 3. GPU-specific installation:
-#    - CUDA 11.8: pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cu118
-#    - CUDA 12.1: pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cu121
-#    - ROCm: pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/rocm5.7
-#    - CPU only: pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cpu
+#    a) Local GPU (CUDA 11.8):
+#       pip install torch==2.1.0 torchvision==0.16.0 --index-url https://download.pytorch.org/whl/cu118
+#       pip install -r requirements/ml.txt
 #
-# 4. Memory requirements by model size:
-#    - Base models (110M-340M params): 4GB+ GPU/RAM
-#    - Large models (340M-770M params): 8GB+ GPU/RAM
-#    - XLarge models (770M-1.5B params): 16GB+ GPU/RAM with LoRA
-#    - XXLarge models (1.5B+ params): 24GB+ GPU/RAM with QLoRA
-#    - LLMs (7B-13B params): 24GB+ GPU with QLoRA 4-bit
-#    - LLMs (70B+ params): 80GB+ GPU with QLoRA 4-bit or multi-GPU
+#    b) Local GPU (CUDA 12.1):
+#       pip install torch==2.1.0 torchvision==0.16.0 --index-url https://download.pytorch.org/whl/cu121
+#       pip install -r requirements/ml.txt
 #
-# 5. Troubleshooting:
-#    - Import errors: Run python scripts/setup/verify_dependencies.py
-#    - Version conflicts: Use requirements/lock/ for locked versions
-#    - Platform issues: See docs/getting_started/troubleshooting.md
+#    c) Local CPU:
+#       pip install torch==2.1.0 torchvision==0.16.0 --index-url https://download.pytorch.org/whl/cpu
+#       pip install -r requirements/ml.txt
 #
-# 6. Optional dependencies (install as needed):
-#    - apex: For mixed precision (install from source)
-#    - deepspeed: For ZeRO optimization (Linux only)
-#    - horovod: For distributed training (requires MPI)
+#    d) Apple Silicon (M1/M2):
+#       pip install torch==2.1.0 torchvision==0.16.0
+#       pip install -r requirements/ml.txt
 #
-# 7. Compatibility matrix:
+#    e) Google Colab:
+#       pip install -r requirements/colab.txt
+#
+#    f) Kaggle:
+#       pip install -r requirements/kaggle.txt
+#
+# 3. Optional Components:
+#
+#    a) Apex (mixed precision, Linux only):
+#       git clone https://github.com/NVIDIA/apex
+#       cd apex
+#       pip install -v --disable-pip-version-check --no-cache-dir --no-build-isolation --config-settings "--build-option=--cpp_ext" --config-settings "--build option=--cuda_ext" ./
+#
+#    b) DeepSpeed (Linux only):
+#       pip install deepspeed
+#
+#    c) Horovod (distributed training):
+#       HOROVOD_WITH_PYTORCH=1 pip install horovod
+#
+# 4. Verify Installation:
+#    python scripts/setup/verify_dependencies.py
+#
+# 5. Check Platform Optimization:
+#    python scripts/setup/verify_platform.py
+#
+# 6. Memory Requirements by Model Tier:
+#
+#    Tier 1 - SOTA Transformers (LoRA):
+#    - DeBERTa-v3-large: 16GB GPU RAM (LoRA rank 16-32)
+#    - DeBERTa-v3-xlarge: 24GB GPU RAM (LoRA rank 8-16)
+#    - DeBERTa-v2-xxlarge: 40GB GPU RAM (LoRA rank 4-8)
+#    - RoBERTa-large: 16GB GPU RAM (LoRA rank 16-32)
+#    - ELECTRA-large: 16GB GPU RAM (LoRA rank 16-32)
+#
+#    Tier 2 - LLM (QLoRA 4-bit):
+#    - LLaMA-2-7B: 16GB GPU RAM (QLoRA rank 8-16)
+#    - LLaMA-2-13B: 24GB GPU RAM (QLoRA rank 4-8)
+#    - LLaMA-3-8B: 16GB GPU RAM (QLoRA rank 8-16)
+#    - Mistral-7B: 16GB GPU RAM (QLoRA rank 8-16)
+#    - Mixtral-8x7B: 40GB GPU RAM (QLoRA rank 4-8)
+#
+#    Tier 3 - Ensemble:
+#    - 3-model ensemble: 24GB GPU RAM (inference)
+#    - 5-model ensemble: 40GB GPU RAM (inference)
+#
+#    Tier 4 - Distilled:
+#    - Distilled models: 8-16GB GPU RAM
+#
+#    Tier 5 - Platform Optimized:
+#    - Colab Free (T4 16GB): Auto-selected configs
+#    - Colab Pro (V100/A100): Auto-selected configs
+#    - Kaggle (P100/T4): Auto-selected configs
+#    - Local CPU: Quantized models
+#
+# 7. Compatibility Matrix:
 #    See configs/compatibility_matrix.yaml for tested combinations
 #
-# For detailed documentation on each package:
-# - See docs/user_guide/model_training.md
-# - See docs/best_practices/parameter_efficient_finetuning.md
-# - See SOTA_MODELS_GUIDE.md for model-specific requirements
+# 8. Troubleshooting:
+#    See docs/getting_started/troubleshooting.md
+#    See TROUBLESHOOTING.md
+#
+# 9. Performance Tuning:
+#    See PLATFORM_OPTIMIZATION_GUIDE.md
+#
+# 10. Anti-Overfitting System:
+#     See OVERFITTING_PREVENTION.md
+#
+# ============================================================================
+# Project Structure References
+# ============================================================================
+#
+# Core implementations:
+# - Models: src/models/
+#   - Transformers: src/models/transformers/
+#   - LLMs: src/models/llm/
+#   - Efficient: src/models/efficient/
+#   - Ensemble: src/models/ensemble/
+#
+# - Training: src/training/
+#   - Trainers: src/training/trainers/
+#   - Strategies: src/training/strategies/
+#   - Optimization: src/training/optimization/
+#
+# - Data: src/data/
+#   - Augmentation: src/data/augmentation/
+#   - Preprocessing: src/data/preprocessing/
+#   - Validation: src/data/validation/
+#
+# - Evaluation: src/evaluation/
+#   - Metrics: src/evaluation/metrics/
+#   - Analysis: src/evaluation/analysis/
+#
+# - Deployment: src/deployment/
+#   - Platform detection: src/deployment/platform_detector.py
+#   - Auto-selection: src/deployment/smart_selector.py
+#   - Quota tracking: src/deployment/quota_tracker.py
+#
+# - Overfitting prevention: src/core/overfitting_prevention/
+#   - Validators: src/core/overfitting_prevention/validators/
+#   - Monitors: src/core/overfitting_prevention/monitors/
+#   - Constraints: src/core/overfitting_prevention/constraints/
+#
+# Configuration files:
+# - Model configs: configs/models/
+#   - Recommended: configs/models/recommended/
+#   - Single: configs/models/single/
+#   - Ensemble: configs/models/ensemble/
+#
+# - Training configs: configs/training/
+#   - Platform adaptive: configs/training/platform_adaptive/
+#   - Efficient: configs/training/efficient/
+#   - Advanced: configs/training/advanced/
+#
+# - Overfitting prevention: configs/overfitting_prevention/
+#
+# Scripts:
+# - Setup: scripts/setup/
+# - Training: scripts/training/
+# - Evaluation: scripts/evaluation/
+# - Platform: scripts/platform/
+#
+# Experiments:
+# - Hyperparameter search: experiments/hyperparameter_search/
+# - Ablation studies: experiments/ablation_studies/
+# - SOTA experiments: experiments/sota_experiments/
+# - Benchmarks: experiments/benchmarks/
+#
+# For detailed usage, see:
+# - docs/user_guide/model_training.md
+# - docs/best_practices/parameter_efficient_finetuning.md
+# - SOTA_MODELS_GUIDE.md
+# - QUICK_START.md
+#
 # ============================================================================
