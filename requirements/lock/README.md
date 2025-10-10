@@ -341,7 +341,7 @@ Every lock file begins with a comprehensive header:
 # Author: Võ Hải Dũng
 # Email: vohaidung.work@gmail.com
 # License: MIT
-# Generated: 2025-09-19
+# Generated: YYYY-MM-DD
 # Python: 3.10.12
 # Platform: linux-x86_64
 # CUDA: 11.8 (if applicable)
