@@ -4,118 +4,151 @@
 # Project: AG News Text Classification (ag-news-text-classification)
 # Description: Complete dependency set for full local development and deployment
 # Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
 # License: MIT
 # Python: >=3.8,<3.12
 # ============================================================================
-# This file includes ALL project dependencies for:
-# - Complete local development environment
-# - Full training capabilities (all models, techniques)
-# - Research and experimentation
-# - Production deployment
-# - Documentation generation
-# - Testing and quality assurance
-# - Monitoring and observability
-# - UI and visualization
+# This file aggregates ALL project dependencies for comprehensive local setup:
+# - Complete local development environment with all IDE support
+# - Full training capabilities including all model architectures and techniques
+# - Research and experimentation with hyperparameter optimization
+# - Production-grade deployment with monitoring and observability
+# - Documentation generation and maintenance
+# - Testing and quality assurance infrastructure
+# - User interface and visualization tools
+# - Robustness testing and fairness evaluation
+# - Local monitoring without cloud dependencies
 #
-# Installation size: ~15GB
-# Installation time: ~30-60 minutes
+# Total installation characteristics:
+# - Estimated download size: 5-7GB (packages)
+# - Estimated installed size: 15-20GB (with cache)
+# - Installation time: 30-60 minutes (depending on internet speed)
+# - Number of packages: 300+ unique dependencies
 #
-# Use this file when:
-# - Setting up complete development environment
-# - Preparing for full SOTA experiments
-# - Running all project features locally
-# - Contributing to the project
+# Primary use cases:
+# - Setting up complete development workstation
+# - Preparing for comprehensive SOTA experiments
+# - Running all project features locally without restrictions
+# - Contributing to the project with full capabilities
+# - Academic research requiring all tools
+# - Production deployment with complete monitoring stack
 #
-# For lightweight setups, use:
-# - requirements/minimal.txt (basic inference)
-# - requirements/base.txt (core features)
-# - requirements/colab.txt (Colab/Kaggle)
+# For lightweight or specialized setups, use targeted requirement files:
+# - Minimal inference: pip install -r requirements/minimal.txt
+# - Core features: pip install -r requirements/base.txt
+# - Training only: pip install -r requirements/ml.txt
+# - LLM experiments: pip install -r requirements/llm.txt
+# - Colab/Kaggle: pip install -r requirements/colab.txt
 # ============================================================================
 
 # ----------------------------------------------------------------------------
-# Core Dependencies
+# Core Foundation Dependencies
 # ----------------------------------------------------------------------------
-# Base requirements (essential packages)
+# Base requirements containing essential packages
 -r base.txt
 
 # ----------------------------------------------------------------------------
-# Machine Learning and Training
+# Machine Learning and Model Training
 # ----------------------------------------------------------------------------
-# ML requirements (training, models, evaluation)
+# ML requirements for training, evaluation, and classical methods
 -r ml.txt
 
 # ----------------------------------------------------------------------------
-# Large Language Models
+# Large Language Model Support
 # ----------------------------------------------------------------------------
-# LLM requirements (LLaMA, Mistral, instruction tuning)
+# LLM requirements for LLaMA, Mistral, Mixtral, instruction tuning
 -r llm.txt
 
 # ----------------------------------------------------------------------------
-# Parameter-Efficient Fine-Tuning
+# Parameter-Efficient Fine-Tuning Methods
 # ----------------------------------------------------------------------------
-# Efficient training (LoRA, QLoRA, adapters)
+# Efficient training including LoRA, QLoRA, adapters, prefix tuning
 -r efficient.txt
 
 # ----------------------------------------------------------------------------
-# Data Processing
+# Data Processing and Augmentation
 # ----------------------------------------------------------------------------
-# Data requirements (preprocessing, augmentation, validation)
+# Data requirements for preprocessing, augmentation, validation
 -r data.txt
 
 # ----------------------------------------------------------------------------
-# User Interface
+# User Interface and Visualization
 # ----------------------------------------------------------------------------
-# UI requirements (Streamlit, Gradio, visualizations)
+# UI requirements for Streamlit, Gradio, dashboards, visualizations
 -r ui.txt
 
 # ----------------------------------------------------------------------------
-# Development Tools
+# Development Tools and Quality Assurance
 # ----------------------------------------------------------------------------
-# Development requirements (testing, linting, debugging)
+# Development requirements for testing, linting, debugging, formatting
 -r dev.txt
 
 # ----------------------------------------------------------------------------
-# Documentation
+# Documentation Generation
 # ----------------------------------------------------------------------------
-# Documentation requirements (Sphinx, MkDocs, diagrams)
+# Documentation requirements for Sphinx, MkDocs, diagrams, PDF generation
 -r docs.txt
 
 # ----------------------------------------------------------------------------
 # Research and Experimentation
 # ----------------------------------------------------------------------------
-# Research requirements (experiment tracking, hyperparameter optimization)
+# Research requirements for experiment tracking, hyperparameter optimization
 -r research.txt
 
 # ----------------------------------------------------------------------------
-# Robustness Testing
+# Robustness and Fairness Testing
 # ----------------------------------------------------------------------------
-# Robustness requirements (adversarial testing, fairness)
+# Robustness requirements for adversarial testing, OOD detection, fairness
 -r robustness.txt
 
 # ----------------------------------------------------------------------------
-# Local Production
+# Local Production Deployment
 # ----------------------------------------------------------------------------
-# Local production requirements (API serving, monitoring)
+# Local production requirements for API serving, monitoring, caching
 -r local_prod.txt
 
 # ----------------------------------------------------------------------------
-# Platform-Specific Optional Dependencies
+# Local Monitoring Infrastructure
 # ----------------------------------------------------------------------------
-# Note: Some platform-specific packages are conditionally installed
-# within the individual requirement files based on:
-# - platform_system (Linux, Windows, Darwin)
-# - python_version (3.8, 3.9, 3.10, 3.11)
+# Local monitoring for TensorBoard, MLflow, Prometheus, dashboards
+-r local_monitoring.txt
 
 # ============================================================================
-# Additional System Dependencies (Install Separately)
+# Platform-Specific Conditional Dependencies
 # ============================================================================
-# These are not Python packages and must be installed via system package manager
 #
-# Ubuntu/Debian:
-# sudo apt update
-# sudo apt install -y \
+# Note: Some packages in the included requirement files are conditionally
+# installed based on platform and Python version:
+#
+# Platform detection:
+# - platform_system: Linux, Windows, Darwin (macOS)
+# - python_version: 3.8, 3.9, 3.10, 3.11, 3.12
+#
+# Examples of conditional packages:
+# - Flash Attention: Linux only, requires CUDA
+# - vLLM: Linux only, production LLM inference
+# - DeepSpeed: Linux only, ZeRO optimization
+# - Horovod: Linux preferred, requires MPI
+# - apex: Linux only, mixed precision training
+# - pygraphviz: Not available on Windows
+#
+# These conditionals are handled within individual requirement files
+# using pip environment markers like:
+# package>=version; platform_system == "Linux"
+# package>=version; python_version >= "3.9"
+#
+# ============================================================================
+# External System Dependencies (Not Python Packages)
+# ============================================================================
+#
+# The following must be installed via system package manager before
+# installing Python dependencies:
+#
+# Ubuntu/Debian Linux:
+# sudo apt update && sudo apt install -y \
 #   build-essential \
 #   python3-dev \
+#   python3-pip \
 #   git \
 #   git-lfs \
 #   curl \
@@ -131,16 +164,17 @@
 #   redis-server \
 #   sqlite3 \
 #   nginx \
-#   supervisor
+#   supervisor \
+#   libopenmpi-dev \
+#   openmpi-bin
 #
-# For GPU support (CUDA 11.8):
-# wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
-# sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
-# wget https://developer.download.nvidia.com/compute/cuda/11.8.0/local_installers/cuda-repo-ubuntu2004-11-8-local_11.8.0-520.61.05-1_amd64.deb
-# sudo dpkg -i cuda-repo-ubuntu2004-11-8-local_11.8.0-520.61.05-1_amd64.deb
-# sudo cp /var/cuda-repo-ubuntu2004-11-8-local/cuda-*-keyring.gpg /usr/share/keyrings/
-# sudo apt-get update
-# sudo apt-get -y install cuda
+# For NVIDIA GPU support (CUDA 11.8):
+# wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.0-1_all.deb
+# sudo dpkg -i cuda-keyring_1.0-1_all.deb
+# sudo apt update
+# sudo apt install -y cuda-11-8
+# export PATH=/usr/local/cuda-11.8/bin:$PATH
+# export LD_LIBRARY_PATH=/usr/local/cuda-11.8/lib64:$LD_LIBRARY_PATH
 #
 # macOS (using Homebrew):
 # brew install \
@@ -150,225 +184,373 @@
 #   graphviz \
 #   pandoc \
 #   redis \
-#   nginx
+#   nginx \
+#   openmpi
 #
-# Windows (using Chocolatey):
+# Windows (using Chocolatey as administrator):
 # choco install -y \
 #   python \
 #   git \
 #   graphviz \
 #   pandoc \
-#   redis
+#   redis-64
 #
-# Node.js (for Mermaid diagrams):
+# Node.js (for Mermaid diagram generation):
+# Ubuntu/Debian:
 # curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-# sudo apt-get install -y nodejs
+# sudo apt install -y nodejs
 # npm install -g @mermaid-js/mermaid-cli
 #
-# Docker (for containerized deployment):
+# macOS:
+# brew install node
+# npm install -g @mermaid-js/mermaid-cli
+#
+# Docker and Docker Compose:
 # curl -fsSL https://get.docker.com -o get-docker.sh
 # sudo sh get-docker.sh
 # sudo usermod -aG docker $USER
-#
-# Docker Compose:
-# sudo curl -L "https://github.com/docker/compose/releases/download/v2.23.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+# sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 # sudo chmod +x /usr/local/bin/docker-compose
-
+#
 # ============================================================================
-# Installation Instructions
+# Comprehensive Installation Instructions
 # ============================================================================
-# 1. Create virtual environment:
-#    python -m venv venv
+#
+# Step-by-step installation for complete local environment:
+#
+# 1. System preparation:
+#    Install system dependencies listed above for your platform
+#
+# 2. Create Python virtual environment:
+#    python3.10 -m venv venv
 #    source venv/bin/activate  # Linux/macOS
 #    venv\Scripts\activate     # Windows
 #
-# 2. Upgrade pip and setuptools:
+# 3. Upgrade core Python packaging tools:
 #    pip install --upgrade pip setuptools wheel
 #
-# 3. Install all dependencies:
+# 4. Install CUDA-enabled PyTorch (if GPU available):
+#    For CUDA 11.8:
+#    pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cu118
+#
+#    For CUDA 12.1:
+#    pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cu121
+#
+#    For CPU-only (smaller, no GPU):
+#    pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cpu
+#
+#    For Apple Silicon (M1/M2):
+#    pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0
+#
+# 5. Install all project dependencies:
 #    pip install -r requirements/all_local.txt
 #
-# 4. Verify installation:
+#    Alternative with progress bar:
+#    pip install -r requirements/all_local.txt --progress-bar on
+#
+#    Alternative with verbose output:
+#    pip install -r requirements/all_local.txt -v
+#
+# 6. Verify core installation:
 #    python scripts/setup/verify_installation.py
 #    python scripts/setup/verify_dependencies.py
 #
-# 5. Download NLTK data:
-#    python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet')"
+# 7. Verify platform-specific features:
+#    python scripts/setup/verify_platform.py
 #
-# 6. Download spaCy models:
+# 8. Download NLTK data:
+#    python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet'); nltk.download('omw-1.4')"
+#
+# 9. Download spaCy language models:
 #    python -m spacy download en_core_web_sm
-#    python -m spacy download en_core_web_lg
+#    python -m spacy download en_core_web_lg  # Optional, larger model
 #
-# 7. Setup pre-commit hooks:
-#    pre-commit install
-#    pre-commit install --hook-type commit-msg
+# 10. Setup Git pre-commit hooks:
+#     pre-commit install
+#     pre-commit install --hook-type commit-msg
 #
-# 8. Download data:
-#    python scripts/setup/download_all_data.py
+# 11. Download AG News dataset:
+#     python scripts/setup/download_all_data.py
 #
-# 9. Setup IDE configurations:
-#    bash scripts/ide/setup_all_ides.sh
+# 12. Setup IDE configurations (optional):
+#     VSCode:
+#     bash scripts/ide/setup_vscode.py
 #
-# 10. Initialize monitoring:
+#     PyCharm:
+#     bash scripts/ide/setup_pycharm.py
+#
+#     All IDEs:
+#     bash scripts/ide/setup_all_ides.sh
+#
+# 13. Initialize local monitoring infrastructure:
 #     bash monitoring/local/setup_local_monitoring.sh
 #
-# 11. Run health checks:
-#     python src/core/health/health_checker.py
+# 14. Run comprehensive health checks:
+#     python src/core/health/health_checker.py --comprehensive
 #
-# 12. Test installation:
-#     pytest tests/ -v --maxfail=5
-
+# 15. Run installation verification tests:
+#     pytest tests/unit/ -v --maxfail=10
+#     pytest tests/integration/ -v --maxfail=5
+#
 # ============================================================================
-# GPU-Specific Installation
+# Post-Installation Configuration
 # ============================================================================
-# For CUDA 11.8:
-# pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cu118
 #
-# For CUDA 12.1:
-# pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cu121
+# 1. Configure environment variables:
+#    cp .env.example .env.local
+#    Edit .env.local with your settings
 #
-# For CPU-only (smaller installation):
-# pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cpu
+# 2. Setup HuggingFace authentication (for LLaMA and gated models):
+#    huggingface-cli login
+#    Enter your HuggingFace token from: https://huggingface.co/settings/tokens
 #
-# For Apple Silicon (M1/M2):
-# pip install torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0
-# (MPS backend is automatically used)
-
-# ============================================================================
-# Troubleshooting Common Installation Issues
-# ============================================================================
-# Issue: CUDA out of memory during installation
-# Solution: Install CPU version first, then reinstall with CUDA
+# 3. Configure Git LFS for large files:
+#    git lfs install
+#    git lfs track "*.bin"
+#    git lfs track "*.safetensors"
 #
-# Issue: Flash Attention installation fails
-# Solution: Linux only, requires CUDA. Install with:
-#   pip install flash-attn --no-build-isolation
+# 4. Setup Docker environment (optional):
+#    docker-compose -f deployment/docker/docker-compose.local.yml build
 #
-# Issue: DeepSpeed installation fails on Windows
-# Solution: DeepSpeed is Linux-only. Use WSL2 or skip DeepSpeed
+# 5. Initialize monitoring services:
+#    TensorBoard:
+#    tensorboard --logdir outputs/logs/tensorboard --port 6006 --bind_all
 #
-# Issue: Horovod installation fails
-# Solution: Requires MPI. Install OpenMPI first:
-#   sudo apt install openmpi-bin openmpi-common libopenmpi-dev
+#    MLflow:
+#    mlflow ui --backend-store-uri sqlite:///mlruns.db --port 5000 --host 0.0.0.0
 #
-# Issue: Some packages fail to install on Python 3.12
-# Solution: Use Python 3.10 or 3.11 (recommended)
+# 6. Test API server:
+#    uvicorn src.api.rest.app:app --reload --host 0.0.0.0 --port 8000
+#    Access at: http://localhost:8000/docs
 #
-# Issue: Out of disk space
-# Solution: Clean pip cache:
-#   pip cache purge
+# 7. Launch Streamlit UI:
+#    streamlit run app/streamlit_app.py
+#    Access at: http://localhost:8501
 #
-# Issue: Permission denied errors
-# Solution: Use virtual environment or --user flag
-#
-# Issue: SSL certificate errors
-# Solution: Update certificates:
-#   pip install --upgrade certifi
-#
-# Issue: Slow installation
-# Solution: Use pip with --no-cache-dir flag or mirror:
-#   pip install -r requirements/all_local.txt --no-cache-dir
-
 # ============================================================================
 # Resource Requirements
 # ============================================================================
-# Minimum system requirements:
-# - CPU: 4 cores
-# - RAM: 16GB
-# - Disk: 50GB free space
-# - GPU: Optional (NVIDIA with 8GB+ VRAM recommended)
 #
-# Recommended system requirements:
-# - CPU: 8+ cores
-# - RAM: 32GB
-# - Disk: 100GB+ SSD
-# - GPU: NVIDIA RTX 3090/4090 or A100 (24GB+ VRAM)
+# Minimum system configuration:
+# - CPU: 4 cores (Intel i5/AMD Ryzen 5 or equivalent)
+# - RAM: 16GB (32GB recommended for LLM training)
+# - Disk: 50GB free space (SSD recommended)
+# - GPU: Optional but recommended (NVIDIA with 8GB+ VRAM)
+# - Network: Broadband for initial download (10+ Mbps)
+#
+# Recommended system configuration:
+# - CPU: 8+ cores (Intel i7/AMD Ryzen 7 or better)
+# - RAM: 32GB minimum, 64GB ideal for large LLMs
+# - Disk: 100GB+ NVMe SSD
+# - GPU: NVIDIA RTX 3090/4090 (24GB VRAM) or A100 (40GB/80GB VRAM)
+# - Network: High-speed internet for model downloads
 #
 # Disk space breakdown:
-# - Python packages: ~15GB
-# - NLTK/spaCy data: ~2GB
-# - Pre-trained models: ~10GB
-# - Datasets: ~2GB
-# - Logs and outputs: ~5GB
-# - Docker images (optional): ~10GB
-# - Total: ~50GB
-
-# ============================================================================
-# Package Count Summary
-# ============================================================================
-# Total unique packages: ~300+
+# - Python packages: 15-20GB
+# - NLTK/spaCy data: 2-3GB
+# - Pre-trained models: 10-50GB (depending on models downloaded)
+# - Datasets (AG News + external): 2-5GB
+# - Logs and outputs: 5-10GB (grows over time)
+# - Docker images (if used): 10-20GB
+# - Cache and temporary files: 5-10GB
+# - Total recommended: 100GB minimum, 200GB+ for extensive experiments
 #
-# By category:
-# - Base/Core: ~50 packages
-# - ML/Training: ~100 packages
-# - LLM: ~40 packages
-# - Data: ~50 packages
-# - UI: ~30 packages
-# - Development: ~60 packages
+# GPU memory requirements by use case:
+# - Inference only: 4GB minimum (8GB recommended)
+# - Training base models: 8GB minimum (16GB recommended)
+# - Training large models with LoRA: 16GB minimum (24GB recommended)
+# - Training XLarge models with QLoRA: 24GB minimum (40GB recommended)
+# - Training LLMs (7B) with QLoRA 4-bit: 16GB minimum
+# - Training LLMs (13B) with QLoRA 4-bit: 24GB minimum
+# - Training LLMs (70B) with QLoRA 4-bit: 80GB (A100 80GB or multi-GPU)
+#
+# ============================================================================
+# Package Statistics and Breakdown
+# ============================================================================
+#
+# Total unique packages: Approximately 300-350
+#
+# Breakdown by category:
+# - Base/Core utilities: ~50 packages
+# - ML/Training frameworks: ~100 packages
+# - LLM-specific: ~40 packages
+# - Data processing: ~50 packages
+# - UI/Visualization: ~30 packages
+# - Development tools: ~60 packages
 # - Documentation: ~30 packages
-# - Research: ~50 packages
-# - Robustness: ~30 packages
-# - Local Production: ~40 packages
-
+# - Research/Experimentation: ~50 packages
+# - Robustness/Testing: ~30 packages
+# - Production/Monitoring: ~40 packages
+#
+# Major dependencies by size:
+# - PyTorch: ~2GB
+# - Transformers: ~500MB
+# - CUDA libraries: ~3GB (if GPU version)
+# - spaCy models: ~500MB - 2GB
+# - NLTK data: ~500MB
+# - Other packages: ~8GB
+#
+# ============================================================================
+# Troubleshooting Common Installation Issues
+# ============================================================================
+#
+# Issue: CUDA out of memory during installation
+# Solution: Install CPU version first, then reinstall GPU version:
+# pip install torch --index-url https://download.pytorch.org/whl/cpu
+# pip install -r requirements/all_local.txt
+# pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cu118 --force-reinstall
+#
+# Issue: Flash Attention installation fails
+# Solution: Flash Attention is Linux-only and requires CUDA:
+# pip install flash-attn --no-build-isolation
+# If fails, skip Flash Attention (xFormers will be used as fallback)
+#
+# Issue: DeepSpeed installation fails on Windows
+# Solution: DeepSpeed is Linux-only. Use Windows Subsystem for Linux (WSL2)
+# or skip DeepSpeed installation
+#
+# Issue: Horovod installation fails
+# Solution: Horovod requires MPI libraries:
+# Ubuntu: sudo apt install openmpi-bin openmpi-common libopenmpi-dev
+# Then: HOROVOD_WITH_PYTORCH=1 pip install horovod
+#
+# Issue: Some packages fail on Python 3.12
+# Solution: Use Python 3.10 or 3.11 (recommended for best compatibility)
+#
+# Issue: Out of disk space during installation
+# Solution: Clean pip cache and temporary files:
+# pip cache purge
+# rm -rf /tmp/*
+# df -h  # Check available space
+#
+# Issue: Permission denied errors
+# Solution: Use virtual environment (recommended) or install with --user flag:
+# pip install -r requirements/all_local.txt --user
+#
+# Issue: SSL certificate verification errors
+# Solution: Update certificates:
+# pip install --upgrade certifi
+# Or temporarily disable SSL verification (not recommended for production):
+# pip install -r requirements/all_local.txt --trusted-host pypi.org --trusted-host files.pythonhosted.org
+#
+# Issue: Very slow installation
+# Solution: Use pip cache directory or PyPI mirror:
+# pip install -r requirements/all_local.txt --cache-dir /path/to/cache
+# Or use a faster mirror:
+# pip install -r requirements/all_local.txt --index-url https://mirrors.aliyun.com/pypi/simple/
+#
+# Issue: Dependency conflicts
+# Solution: Use locked requirements:
+# pip install -r requirements/lock/all.lock
+#
+# Issue: ImportError after installation
+# Solution: Verify installation and check for missing dependencies:
+# python scripts/setup/verify_dependencies.py
+# pip check
+#
 # ============================================================================
 # Maintenance and Updates
 # ============================================================================
+#
 # Check for outdated packages:
 # pip list --outdated
 #
-# Update all packages (caution: may break compatibility):
+# Update specific package:
+# pip install --upgrade package_name
+#
+# Update all packages (caution: may introduce breaking changes):
 # pip install --upgrade $(pip freeze | cut -d= -f1)
 #
-# Generate locked requirements:
+# Generate current locked requirements:
 # pip freeze > requirements/lock/all.lock
 #
 # Check for security vulnerabilities:
 # pip install safety
-# safety check
+# safety check --json
 #
 # Check for dependency conflicts:
 # pip check
-
-# ============================================================================
-# Docker Alternative
-# ============================================================================
-# Instead of installing locally, use Docker:
-# docker-compose -f deployment/docker/docker-compose.local.yml up -d
 #
-# This provides:
+# Audit dependencies:
+# pip-audit
+#
+# ============================================================================
+# Docker Alternative Installation
+# ============================================================================
+#
+# Instead of local installation, use Docker for consistent environment:
+#
+# 1. Build Docker image:
+#    docker-compose -f deployment/docker/docker-compose.local.yml build
+#
+# 2. Start all services:
+#    docker-compose -f deployment/docker/docker-compose.local.yml up -d
+#
+# 3. Access services:
+#    API: http://localhost:8000
+#    Streamlit: http://localhost:8501
+#    TensorBoard: http://localhost:6006
+#    MLflow: http://localhost:5000
+#    Jupyter: http://localhost:8888
+#
+# 4. Stop services:
+#    docker-compose -f deployment/docker/docker-compose.local.yml down
+#
+# Benefits of Docker:
 # - Pre-configured environment
 # - All dependencies installed
-# - Consistent across systems
-# - Easy cleanup
-
-# ============================================================================
-# CI/CD Usage
-# ============================================================================
-# For CI/CD pipelines, use locked requirements:
-# pip install -r requirements/lock/all.lock
+# - Consistent across different systems
+# - Easy cleanup and reset
+# - Isolated from host system
+# - Quick deployment
 #
-# Or use Docker:
-# docker build -f deployment/docker/Dockerfile.local -t ag-news-local .
-
 # ============================================================================
-# Development Workflow
+# CI/CD Pipeline Usage
 # ============================================================================
-# After installation, typical workflow:
 #
-# 1. Start monitoring:
-#    bash monitoring/local/setup_local_monitoring.sh
+# For continuous integration and deployment:
 #
-# 2. Activate environment:
+# GitHub Actions:
+# - Use locked requirements for reproducibility
+# - Cache pip packages between runs
+# - Run tests in matrix across Python versions
+#
+# Example GitHub Actions workflow:
+# - name: Install dependencies
+#   run: |
+#     pip install -r requirements/lock/all.lock
+#   cache: pip
+#
+# GitLab CI:
+# - Use Docker images with pre-installed dependencies
+# - Cache pip directory
+#
+# Jenkins:
+# - Use virtual environments
+# - Archive test results and coverage reports
+#
+# ============================================================================
+# Typical Development Workflow
+# ============================================================================
+#
+# After complete installation, daily development workflow:
+#
+# 1. Activate environment:
 #    source venv/bin/activate
 #
-# 3. Start Jupyter Lab (for experiments):
-#    jupyter lab
+# 2. Start monitoring services:
+#    bash monitoring/local/setup_local_monitoring.sh
 #
-# 4. Train models:
-#    python scripts/training/train_single_model.py
+# 3. Open IDE (VSCode, PyCharm, or Jupyter):
+#    code .  # VSCode
+#    charm . # PyCharm
+#    jupyter lab  # Jupyter
 #
-# 5. Run experiments:
-#    python experiments/sota_experiments/phase5_ultimate_sota.py
+# 4. Run experiments:
+#    python experiments/sota_experiments/phase1_xlarge_lora.py
+#
+# 5. Train models:
+#    python scripts/training/train_single_model.py --config configs/models/recommended/quick_start.yaml
 #
 # 6. Evaluate results:
 #    python scripts/evaluation/evaluate_all_models.py
@@ -376,38 +558,83 @@
 # 7. Generate reports:
 #    python scripts/evaluation/generate_reports.py
 #
-# 8. Start API:
+# 8. Start API for testing:
 #    uvicorn src.api.rest.app:app --reload
 #
-# 9. Launch UI:
+# 9. Launch UI for demonstrations:
 #    streamlit run app/streamlit_app.py
-
-# ============================================================================
-# Uninstallation
-# ============================================================================
-# To remove all packages:
-# pip uninstall -r requirements/all_local.txt -y
 #
-# To remove virtual environment:
-# deactivate
-# rm -rf venv/
+# 10. Run tests before committing:
+#     pytest tests/ -v
+#     pre-commit run --all-files
 #
-# To clean all artifacts:
-# bash scripts/local/cleanup_cache.sh
-
 # ============================================================================
-# For More Information
+# Uninstallation and Cleanup
 # ============================================================================
-# - Installation guide: docs/getting_started/installation.md
+#
+# Complete removal of all installed packages:
+#
+# 1. Uninstall all Python packages:
+#    pip freeze > installed.txt
+#    pip uninstall -r installed.txt -y
+#
+# 2. Remove virtual environment:
+#    deactivate
+#    rm -rf venv/
+#
+# 3. Clean all project artifacts:
+#    bash scripts/local/cleanup_cache.sh
+#    rm -rf outputs/
+#    rm -rf data/cache/
+#    rm -rf __pycache__/
+#    find . -type d -name "*.egg-info" -exec rm -rf {} +
+#
+# 4. Clean pip cache:
+#    pip cache purge
+#
+# 5. Clean system cache (optional):
+#    rm -rf ~/.cache/huggingface
+#    rm -rf ~/.cache/torch
+#
+# ============================================================================
+# For Comprehensive Documentation
+# ============================================================================
+#
+# Installation guides:
+# - Complete installation: docs/getting_started/installation.md
 # - Local setup: docs/getting_started/local_setup.md
 # - IDE setup: docs/getting_started/ide_setup.md
-# - Troubleshooting: TROUBLESHOOTING.md
+# - Platform optimization: PLATFORM_OPTIMIZATION_GUIDE.md
+#
+# Quick start guides:
 # - Quick start: QUICK_START.md
-# - Health check: HEALTH_CHECK.md
+# - Simple start: quickstart/SIMPLE_START.md
+# - Auto mode: docs/getting_started/auto_mode.md
+#
+# Troubleshooting:
+# - Troubleshooting guide: TROUBLESHOOTING.md
+# - Health checks: HEALTH_CHECK.md
+# - Platform issues: docs/troubleshooting/platform_issues.md
+#
+# Development guides:
+# - Contributing: docs/developer_guide/contributing.md
+# - Architecture: ARCHITECTURE.md
+# - Development workflow: docs/level_3_advanced/03_research_workflow.md
+#
+# Deployment guides:
+# - Free deployment: FREE_DEPLOYMENT_GUIDE.md
+# - Local deployment: docs/user_guide/local_deployment.md
+# - Docker deployment: deployment/docker/README.md
+#
+# Monitoring guides:
+# - Local monitoring: LOCAL_MONITORING_GUIDE.md
+# - Monitoring setup: monitoring/README.md
 #
 # For specific use cases:
 # - Training only: pip install -r requirements/ml.txt
 # - LLM experiments: pip install -r requirements/llm.txt
+# - Research: pip install -r requirements/research.txt
 # - Inference only: pip install -r requirements/minimal.txt
-# - Colab/Kaggle: pip install -r requirements/colab.txt
+# - Platform-specific: pip install -r requirements/{colab,kaggle}.txt
+#
 # ============================================================================
