@@ -2,153 +2,154 @@
 # User Interface Requirements for AG News Text Classification
 # ============================================================================
 # Project: AG News Text Classification (ag-news-text-classification)
-# Description: Web UI, dashboards, visualizations, and interactive tools
+# Description: Web applications, dashboards, and interactive visualizations
 # Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
 # License: MIT
 # Python: >=3.8,<3.12
 # ============================================================================
 # This file contains packages required for:
-# - Streamlit web application (16 pages)
-# - Gradio demo interface
-# - Interactive dashboards (overfitting monitoring, model comparison)
-# - Data visualization (training curves, confusion matrices, attention)
-# - CLI interfaces with rich output
+# - Streamlit multi-page web application (20 pages)
+# - Gradio demo interface for model interaction
+# - Interactive dashboards (overfitting monitoring, model comparison, quota tracking)
+# - Data visualization (training curves, confusion matrices, attention maps, LoRA weights)
+# - Command-line interfaces with rich formatting
 # - Progress tracking and status displays
-# - Interactive configuration builders
+# - Interactive configuration builders and model selectors
+# - Real-time monitoring dashboards
+# - Experiment tracking visualizations
 # ============================================================================
 
 # Include base requirements
 -r base.txt
 
 # ----------------------------------------------------------------------------
-# Web Application Frameworks
+# Primary Web Application Frameworks
 # ----------------------------------------------------------------------------
-# Streamlit for ML web apps
+# Streamlit for rapid ML web application development
 streamlit>=1.30.0,<1.37.0
 
-# Gradio for quick demos
+# Gradio for quick interactive demos
 gradio>=4.12.0,<4.38.0
 
-# Dash alternative for dashboards
+# ----------------------------------------------------------------------------
+# Alternative Dashboard Frameworks
+# ----------------------------------------------------------------------------
+# Dash for production-grade dashboards
 dash>=2.14.0,<2.18.0
 dash-bootstrap-components>=1.5.0,<1.7.0
 
-# Panel for interactive dashboards
+# Panel for flexible interactive dashboards
 panel>=1.3.0,<1.5.0
 
-# Voila for Jupyter notebook as web app
+# Voila for Jupyter notebooks as web apps
 voila>=0.5.0,<0.6.0
 
 # ----------------------------------------------------------------------------
-# FastAPI for REST API UI (already in minimal, but for UI integration)
+# FastAPI Integration (for backend)
 # ----------------------------------------------------------------------------
+# FastAPI framework
 fastapi>=0.109.0,<0.112.0
+
+# Uvicorn ASGI server
 uvicorn[standard]>=0.27.0,<0.30.0
 
-# API documentation UI
-fastapi-utils>=0.2.1,<0.3.0
-
-# Swagger UI customization
-flasgger>=0.9.0,<0.10.0
-
 # ----------------------------------------------------------------------------
-# Visualization Libraries
+# Interactive Plotting Libraries
 # ----------------------------------------------------------------------------
-# Interactive plotting
+# Plotly for interactive web-based visualizations
 plotly>=5.18.0,<5.23.0
 
-# Plotly Express
-plotly-express>=0.4.1,<0.5.0
+# Plotly Express for simplified plotting
+# Included with plotly 5.0+
 
-# Declarative visualization
+# Altair for declarative statistical visualization
 altair>=5.2.0,<5.4.0
 vega>=4.0.0,<4.1.0
 vega-datasets>=0.9.0,<0.10.0
 
-# Matplotlib for static plots (already in ml.txt)
-matplotlib>=3.8.0,<3.10.0
-seaborn>=0.13.0,<0.14.0
-
 # Bokeh for interactive visualizations
 bokeh>=3.3.0,<3.5.0
 
-# HoloViews for complex visualizations
+# HoloViews for complex data exploration
 holoviews>=1.18.0,<1.20.0
+
+# ----------------------------------------------------------------------------
+# Static Plotting Libraries
+# ----------------------------------------------------------------------------
+# Matplotlib for publication-quality static plots
+matplotlib>=3.8.0,<3.10.0
+
+# Seaborn for statistical data visualization
+seaborn>=0.13.0,<0.14.0
+
+# ----------------------------------------------------------------------------
+# Specialized Chart Libraries
+# ----------------------------------------------------------------------------
+# Plotnine for ggplot2-style plotting in Python
+plotnine>=0.12.0,<0.14.0
 
 # Pygal for SVG charts
 pygal>=3.0.0,<3.1.0
 
 # ----------------------------------------------------------------------------
-# Chart and Graph Libraries
+# Graph and Network Visualization
 # ----------------------------------------------------------------------------
-# Vega-Altair (already included above)
-
-# Plotnine (ggplot2 for Python)
-plotnine>=0.12.0,<0.14.0
-
-# Graphviz for graph visualization
+# Graphviz for directed graph visualization
 graphviz>=0.20.0,<0.21.0
-pygraphviz>=1.12,<1.14; platform_system != "Windows"
 
-# NetworkX for graph data
+# NetworkX for graph data structures
 networkx>=3.2.0,<3.4.0
 
 # PyVis for interactive network graphs
 pyvis>=0.3.0,<0.4.0
 
 # ----------------------------------------------------------------------------
-# Confusion Matrix and Classification Visualizations
+# Machine Learning Visualization
 # ----------------------------------------------------------------------------
-# Scikit-plot (already in ml.txt)
+# Scikit-plot for ML visualizations
 scikit-plot>=0.3.7,<0.4.0
 
-# Yellowbrick for ML visualizations
+# Yellowbrick for ML visual diagnostics
 yellowbrick>=1.5.0,<1.6.0
 
 # ----------------------------------------------------------------------------
-# Progress Bars and Status Displays
+# Progress Bars and CLI Enhancement
 # ----------------------------------------------------------------------------
-# Rich for beautiful CLI (already in base.txt)
+# Rich for beautiful terminal output
 rich>=13.7.0,<13.8.0
 
-# TQDM progress bars (already in base.txt)
+# TQDM for progress bars
 tqdm>=4.66.0,<4.67.0
 
-# Alive-progress animated bars (already in base.txt)
+# Alive-progress for animated progress bars
 alive-progress>=3.1.5,<3.2.0
 
-# Progress for simple progress bars
-progress>=1.6,<1.7
-
-# Halo for spinners
+# Halo for terminal spinners
 halo>=0.0.31,<0.1.0
 
 # Yaspin for yet another spinner
 yaspin>=3.0.0,<3.1.0
 
 # ----------------------------------------------------------------------------
-# Tables and Data Display
+# Table Formatting and Display
 # ----------------------------------------------------------------------------
-# Tabulate for pretty tables (already in data.txt)
+# Tabulate for pretty tables
 tabulate>=0.9.0,<0.10.0
 
-# Rich tables (included in rich)
-
-# PrettyTable
+# PrettyTable for ASCII tables
 prettytable>=3.9.0,<3.11.0
-
-# Pandas styling (built-in to pandas)
 
 # ----------------------------------------------------------------------------
 # Streamlit Components and Extensions
 # ----------------------------------------------------------------------------
-# Streamlit aggrid for interactive tables
+# Streamlit AgGrid for interactive tables
 streamlit-aggrid>=0.3.0,<0.4.0
 
-# Streamlit plotly events
+# Streamlit Plotly events
 streamlit-plotly-events>=0.0.6,<0.1.0
 
-# Streamlit extras
+# Streamlit extras for additional components
 streamlit-extras>=0.3.0,<0.5.0
 
 # Streamlit option menu
@@ -157,186 +158,134 @@ streamlit-option-menu>=0.3.0,<0.4.0
 # Streamlit authenticator
 streamlit-authenticator>=0.2.0,<0.4.0
 
-# Streamlit chat
+# Streamlit chat components
 streamlit-chat>=0.1.0,<0.2.0
-
-# Streamlit camera input
-streamlit-webrtc>=0.47.0,<0.48.0
 
 # Streamlit code editor
 streamlit-ace>=0.1.0,<0.2.0
 
-# Streamlit elements
-streamlit-elements>=0.1.0,<0.2.0
-
 # ----------------------------------------------------------------------------
-# Gradio Extensions
+# Gradio Client
 # ----------------------------------------------------------------------------
-# Gradio client
+# Gradio client for programmatic interaction
 gradio-client>=0.8.0,<0.18.0
 
 # ----------------------------------------------------------------------------
-# Dashboarding
+# Jupyter Widgets for Interactive Notebooks
 # ----------------------------------------------------------------------------
-# Jupyter widgets for interactive UI
+# IPyWidgets for interactive Jupyter widgets
 ipywidgets>=8.1.0,<8.2.0
+
+# IPyMPL for Matplotlib Jupyter integration
 ipympl>=0.9.0,<0.10.0
 
-# Jupyter notebook extensions (already in base.txt)
-# ipython, ipykernel
-
-# Voila templates
+# ----------------------------------------------------------------------------
+# Dashboard Templating
+# ----------------------------------------------------------------------------
+# Voila Material theme
 voila-material>=0.5.0,<0.6.0
 
 # ----------------------------------------------------------------------------
-# Form Building
+# Form Building and Validation
 # ----------------------------------------------------------------------------
-# WTForms for web forms
+# WTForms for web form handling
 wtforms>=3.1.0,<3.2.0
 
-# Streamlit forms (built-in)
-
-# Pydantic forms (via pydantic, already in base.txt)
+# Pydantic for data validation
 pydantic>=2.5.0,<2.8.0
 
 # ----------------------------------------------------------------------------
-# Color and Styling
+# Terminal Color and Styling
 # ----------------------------------------------------------------------------
-# Colorama for terminal colors (already in dev.txt)
+# Colorama for cross-platform colored terminal output
 colorama>=0.4.6,<0.5.0
 
-# Termcolor for colored output (already in dev.txt)
+# Termcolor for colored terminal text
 termcolor>=2.4.0,<2.5.0
 
 # Pygments for syntax highlighting
 pygments>=2.17.0,<2.19.0
 
 # ----------------------------------------------------------------------------
-# Data Table Components
+# Interactive Data Tables
 # ----------------------------------------------------------------------------
-# Pandas styler (built-in to pandas)
-
-# Itables for interactive pandas tables
+# ITables for interactive pandas tables
 itables>=1.6.0,<2.2.0
 
-# DTale for pandas UI
+# DTale for pandas DataFrame visualization
 dtale>=3.10.0,<3.15.0
 
 # ----------------------------------------------------------------------------
-# File Upload/Download Components
+# File Upload and Download
 # ----------------------------------------------------------------------------
-# Python-multipart for file uploads
+# Python-multipart for file upload support
 python-multipart>=0.0.6,<0.0.10
 
 # ----------------------------------------------------------------------------
-# Notification and Alerts
+# Desktop Notifications
 # ----------------------------------------------------------------------------
-# Streamlit notifications (built-in)
-
-# Plyer for desktop notifications
+# Plyer for cross-platform desktop notifications
 plyer>=2.1.0,<2.2.0
 
 # ----------------------------------------------------------------------------
-# Session Management
+# Caching for Performance
 # ----------------------------------------------------------------------------
-# Streamlit session state (built-in)
-
-# Cachetools for caching
+# Cachetools for caching utilities
 cachetools>=5.3.0,<5.4.0
 
 # ----------------------------------------------------------------------------
-# Model Visualization
+# Neural Network Architecture Visualization
 # ----------------------------------------------------------------------------
-# Netron for neural network visualization
+# Netron for neural network model visualization
 netron>=7.4.0,<7.8.0
 
-# TorchViz for PyTorch model visualization
+# TorchViz for PyTorch computational graph visualization
 torchviz>=0.0.2,<0.1.0
 
-# Graphviz (already included above)
-
 # ----------------------------------------------------------------------------
-# Attention Visualization
+# Attention Mechanism Visualization
 # ----------------------------------------------------------------------------
-# BertViz (already in ml.txt)
+# BertViz for transformer attention visualization
 bertviz>=1.4.0,<1.5.0
 
-# Captum for interpretability (already in ml.txt)
+# Captum for model interpretability
 captum>=0.7.0,<0.8.0
 
 # Ecco for language model explanations
-ecco>=0.1.0,<0.2.0; python_version >= "3.9"
+# ecco>=0.1.0,<0.2.0
 
 # ----------------------------------------------------------------------------
-# Embeddings Visualization
+# Dimensionality Reduction for Embeddings
 # ----------------------------------------------------------------------------
-# Scikit-learn for t-SNE (already in base.txt)
-
-# UMAP for dimensionality reduction
+# UMAP for dimension reduction
 umap-learn>=0.5.0,<0.6.0
 
-# PaCMAP
+# PaCMAP for pair-wise controlled manifold approximation
 pacmap>=0.7.0,<0.8.0
-
-# ----------------------------------------------------------------------------
-# Interactive Plots for Jupyter
-# ----------------------------------------------------------------------------
-# Matplotlib inline (via IPython)
-
-# Plotly in Jupyter
-plotly>=5.18.0,<5.23.0
-
-# Bokeh in Jupyter
-bokeh>=3.3.0,<3.5.0
 
 # ----------------------------------------------------------------------------
 # 3D Visualization
 # ----------------------------------------------------------------------------
-# Plotly 3D (included in plotly)
-
-# Mayavi for 3D scientific visualization
-# mayavi>=4.8.0,<4.9.0; platform_system != "Windows"
-
-# PyVista for 3D plotting
+# PyVista for 3D scientific visualization
 pyvista>=0.43.0,<0.45.0
 
 # ----------------------------------------------------------------------------
-# Heatmaps and Correlation Plots
-# ----------------------------------------------------------------------------
-# Seaborn (already included)
-seaborn>=0.13.0,<0.14.0
-
-# Plotly heatmaps (included in plotly)
-
-# ----------------------------------------------------------------------------
-# Time Series Visualization
-# ----------------------------------------------------------------------------
-# Plotly time series (included in plotly)
-
-# Altair time series (included in altair)
-
-# ----------------------------------------------------------------------------
-# Word Clouds
+# Word Cloud Generation
 # ----------------------------------------------------------------------------
 # WordCloud for text visualization
 wordcloud>=1.9.0,<1.10.0
 
 # ----------------------------------------------------------------------------
-# Icons and Emojis (for UI, not in code)
+# PDF and Document Export
 # ----------------------------------------------------------------------------
-# Streamlit emoji (built-in via markdown)
-
-# ----------------------------------------------------------------------------
-# PDF Export for Dashboards
-# ----------------------------------------------------------------------------
-# WeasyPrint for HTML to PDF
+# WeasyPrint for HTML to PDF conversion
 weasyprint>=60.1,<62.4
 
 # ReportLab for PDF generation
 reportlab>=4.0.0,<4.3.0
 
 # ----------------------------------------------------------------------------
-# Image Processing for UI
+# Image Processing for Visualizations
 # ----------------------------------------------------------------------------
 # Pillow for image manipulation
 pillow>=10.1.0,<10.4.0
@@ -344,201 +293,348 @@ pillow>=10.1.0,<10.4.0
 # ----------------------------------------------------------------------------
 # Markdown Rendering
 # ----------------------------------------------------------------------------
-# Markdown (already in base.txt and llm.txt)
+# Markdown for markdown processing
 markdown>=3.5.1,<3.7.0
 
-# Markdown extensions
+# Pymdown-extensions for markdown extensions
 pymdown-extensions>=10.5.0,<10.9.0
 
-# Mistune for fast markdown
+# Mistune for fast markdown parsing
 mistune>=3.0.0,<3.1.0
 
 # ----------------------------------------------------------------------------
-# LaTeX Rendering
+# QR Code and Barcode Generation
 # ----------------------------------------------------------------------------
-# MathJax (via Streamlit markdown)
-
-# ----------------------------------------------------------------------------
-# Code Highlighting
-# ----------------------------------------------------------------------------
-# Pygments (already included above)
-pygments>=2.17.0,<2.19.0
-
-# ----------------------------------------------------------------------------
-# QR Code Generation
-# ----------------------------------------------------------------------------
-# QRCode for generating QR codes
+# QRCode for QR code generation
 qrcode[pil]>=7.4.0,<7.5.0
 
-# ----------------------------------------------------------------------------
-# Barcode Generation
-# ----------------------------------------------------------------------------
-# Python-barcode
+# Python-barcode for barcode generation
 python-barcode>=0.15.0,<0.16.0
 
 # ----------------------------------------------------------------------------
-# Animation
+# Audio Processing (for multimodal demos)
 # ----------------------------------------------------------------------------
-# Matplotlib animation (built-in)
-
-# Plotly animation (built-in)
-
-# ----------------------------------------------------------------------------
-# Layout and Styling
-# ----------------------------------------------------------------------------
-# Bootstrap (via dash-bootstrap-components or streamlit-bootstrap)
-
-# ----------------------------------------------------------------------------
-# Accessibility
-# ----------------------------------------------------------------------------
-# Accessible color palettes (via seaborn, matplotlib)
-
-# ----------------------------------------------------------------------------
-# Internationalization (i18n)
-# ----------------------------------------------------------------------------
-# Babel for i18n
-babel>=2.14.0,<2.16.0
-
-# gettext for translations
-# Built-in Python module
-
-# ----------------------------------------------------------------------------
-# Audio/Video (for multimodal demos)
-# ----------------------------------------------------------------------------
-# Streamlit audio/video (built-in)
-
 # Pydub for audio processing
 pydub>=0.25.0,<0.26.0
 
 # ----------------------------------------------------------------------------
-# Screenshots and Screen Recording
+# Browser Automation for Testing
 # ----------------------------------------------------------------------------
-# Playwright for screenshots (already in data.txt)
+# Playwright for browser automation
 playwright>=1.40.0,<1.46.0
 
-# ----------------------------------------------------------------------------
-# Browser Automation for Testing UI
-# ----------------------------------------------------------------------------
-# Selenium (already in data.txt)
+# Selenium for web testing
 selenium>=4.16.0,<4.23.0
 
 # ----------------------------------------------------------------------------
-# WebSocket for Real-time Updates
+# WebSocket for Real-time Communication
 # ----------------------------------------------------------------------------
-# WebSockets
+# WebSockets library
 websockets>=12.0,<13.0
 
-# Socket.IO
+# Python-socketio for Socket.IO
 python-socketio>=5.10.0,<5.12.0
 
 # ----------------------------------------------------------------------------
-# SSE (Server-Sent Events) for Streaming
+# Server-Sent Events for Streaming
 # ----------------------------------------------------------------------------
-# SSE starlette
+# SSE-starlette for server-sent events
 sse-starlette>=1.8.0,<2.2.0
 
 # ----------------------------------------------------------------------------
-# CSS and HTML Processing
+# HTML and CSS Processing
 # ----------------------------------------------------------------------------
-# BeautifulSoup (already in data.txt)
+# BeautifulSoup for HTML parsing
 beautifulsoup4>=4.12.0,<4.13.0
 
 # ----------------------------------------------------------------------------
-# Component State Management
+# Internationalization
 # ----------------------------------------------------------------------------
-# Pydantic (already in base.txt)
-pydantic>=2.5.0,<2.8.0
+# Babel for i18n and l10n
+babel>=2.14.0,<2.16.0
 
 # ============================================================================
-# Installation Notes for UI Requirements
+# Installation Instructions for UI Requirements
 # ============================================================================
+#
 # 1. Install UI dependencies:
 #    pip install -r requirements/ui.txt
 #
-# 2. Launch Streamlit app:
-#    streamlit run app/streamlit_app.py
+# 2. Launch Streamlit web application:
+#    streamlit run app/streamlit_app.py --server.port 8501
 #    Access at: http://localhost:8501
 #
-# 3. Launch Gradio demo:
+#    With custom configuration:
+#    streamlit run app/streamlit_app.py \
+#      --server.port 8501 \
+#      --server.address localhost \
+#      --theme.base light
+#
+# 3. Launch Gradio demo interface:
 #    python app/gradio_app.py
 #    Access at: http://localhost:7860
 #
-# 4. Streamlit app structure:
-#    - Main app: app/streamlit_app.py
-#    - 16 pages in app/pages/:
-#      * 01_Home.py
-#      * 02_Single_Prediction.py
-#      * 03_Batch_Analysis.py
-#      * 04_Model_Comparison.py
-#      * 05_Overfitting_Dashboard.py
-#      * 06_Model_Recommender.py
-#      * 07_Parameter_Efficiency_Dashboard.py
-#      * 08_Interpretability.py
-#      * 09_Performance_Dashboard.py
-#      * 10_Real_Time_Demo.py
-#      * 11_Model_Selection.py
-#      * 12_Documentation.py
-#      * 13_Prompt_Testing.py
-#      * 14_Local_Monitoring.py
-#      * 15_IDE_Setup_Guide.py
-#      * 16_Experiment_Tracker.py
+# 4. Available Streamlit pages (20 pages total):
+#    app/pages/
+#    ├── 01_Home.py                             # Project overview and quick navigation
+#    ├── 02_Single_Prediction.py                # Single text classification interface
+#    ├── 03_Batch_Analysis.py                   # Batch processing and CSV upload
+#    ├── 04_Model_Comparison.py                 # Compare multiple models side-by-side
+#    ├── 05_Overfitting_Dashboard.py            # Monitor train-val gaps and overfitting metrics
+#    ├── 06_Model_Recommender.py                # Interactive model selection wizard
+#    ├── 07_Parameter_Efficiency_Dashboard.py   # LoRA/QLoRA metrics and comparisons
+#    ├── 08_Interpretability.py                 # Attention visualization and SHAP explanations
+#    ├── 09_Performance_Dashboard.py            # Training curves and performance metrics
+#    ├── 10_Real_Time_Demo.py                   # Live prediction demonstration
+#    ├── 11_Model_Selection.py                  # Browse available models and configurations
+#    ├── 12_Documentation.py                    # Interactive documentation browser
+#    ├── 13_Prompt_Testing.py                   # Test different prompt templates
+#    ├── 14_Local_Monitoring.py                 # Local monitoring dashboard integration
+#    ├── 15_IDE_Setup_Guide.py                  # Interactive IDE setup wizard
+#    ├── 16_Experiment_Tracker.py               # Browse and compare experiments
+#    ├── 17_Platform_Info.py                    # Platform detection and optimization info
+#    ├── 18_Quota_Dashboard.py                  # Platform quota usage tracking
+#    ├── 19_Platform_Selector.py                # Choose optimal platform for training
+#    └── 20_Auto_Train_UI.py                    # Automated training workflow UI
 #
-# 5. Components:
-#    - Prediction: app/components/prediction_component.py
-#    - Overfitting monitor: app/components/overfitting_monitor.py
-#    - LoRA config selector: app/components/lora_config_selector.py
-#    - Ensemble builder: app/components/ensemble_builder.py
-#    - Model selector: app/components/model_selector.py
+# 5. Streamlit components:
+#    app/components/
+#    ├── prediction_component.py                # Reusable prediction widget
+#    ├── overfitting_monitor.py                 # Overfitting detection component
+#    ├── lora_config_selector.py                # LoRA hyperparameter selector
+#    ├── ensemble_builder.py                    # Build ensemble configurations
+#    ├── visualization_component.py             # Shared visualization utilities
+#    ├── model_selector.py                      # Model selection dropdown
+#    ├── file_uploader.py                       # File upload component
+#    ├── result_display.py                      # Formatted result display
+#    ├── performance_monitor.py                 # Real-time performance metrics
+#    ├── prompt_builder.py                      # Interactive prompt editor
+#    ├── ide_configurator.py                    # IDE configuration generator
+#    ├── platform_info_component.py             # Platform information display
+#    ├── quota_monitor_component.py             # Quota usage visualization
+#    └── resource_gauge.py                      # Resource utilization gauge
 #
-# 6. Customization:
-#    - Theme: app/assets/css/custom.css
-#    - JavaScript: app/assets/js/custom.js
-#    - Images: app/assets/images/
+# 6. Customization and theming:
+#    app/assets/
+#    ├── css/custom.css                         # Custom CSS styling
+#    ├── js/custom.js                           # Custom JavaScript
+#    └── images/
+#        ├── logo.png                           # Project logo
+#        └── banner.png                         # Application banner
 #
-# 7. Session state:
-#    - Managed in app/utils/session_manager.py
-#    - Caching in app/utils/caching.py
+# 7. Visualization implementations:
+#    src/evaluation/visualizations/
+#    ├── training_curves.py                     # Plot training and validation metrics
+#    ├── confusion_matrix.py                    # Generate confusion matrix heatmaps
+#    ├── attention_visualization.py             # Visualize attention weights
+#    └── lora_weight_visualization.py           # Visualize LoRA adapter weights
 #
-# 8. Visualizations:
-#    - Training curves: src/evaluation/visualizations/training_curves.py
-#    - Confusion matrix: src/evaluation/visualizations/confusion_matrix.py
-#    - Attention viz: src/evaluation/visualizations/attention_visualization.py
-#    - LoRA weights: src/evaluation/visualizations/lora_weight_visualization.py
+# 8. Dashboard integrations:
+#    monitoring/dashboards/
+#    ├── wandb/
+#    │   ├── training_dashboard.json            # W&B training dashboard config
+#    │   ├── overfitting_dashboard.json         # W&B overfitting monitoring
+#    │   └── parameter_efficiency_dashboard.json # W&B PEFT metrics
+#    ├── platform_dashboard.json                # Platform-specific metrics
+#    ├── quota_dashboard.json                   # Quota tracking dashboard
+#    └── local_dashboard.py                     # Local Streamlit monitoring dashboard
 #
-# 9. Interactive dashboards:
-#    - Overfitting: monitoring/dashboards/wandb/overfitting_dashboard.json
-#    - Parameter efficiency: monitoring/dashboards/wandb/parameter_efficiency_dashboard.json
-#    - Training: monitoring/dashboards/wandb/training_dashboard.json
+# 9. CLI tools with rich output:
+#    tools/cli_helpers/
+#    ├── rich_console.py                        # Rich console utilities
+#    ├── progress_bars.py                       # Custom progress bar implementations
+#    ├── interactive_prompts.py                 # Interactive CLI prompts
+#    └── ascii_art.py                           # ASCII art for CLI
 #
-# 10. CLI with rich output:
-#     - Rich console: tools/cli_helpers/rich_console.py
-#     - Progress bars: tools/cli_helpers/progress_bars.py
-#     - Interactive prompts: tools/cli_helpers/interactive_prompts.py
+# 10. Session state management:
+#     app/utils/
+#     ├── session_manager.py                    # Streamlit session state management
+#     ├── caching.py                            # Caching utilities for UI
+#     ├── theming.py                            # Theme customization
+#     └── helpers.py                            # UI helper functions
 #
-# Platform-specific notes:
-# - Windows: Most packages work, some 3D viz may have issues
-# - Linux: Full support
-# - macOS: Full support
+# ============================================================================
+# Platform and Browser Compatibility
+# ============================================================================
 #
-# Browser compatibility:
-# - Chrome/Edge: Full support (recommended)
-# - Firefox: Full support
-# - Safari: Mostly supported
+# Operating System Support:
+# - Windows: Full support (all UI components work)
+# - Linux: Full support (recommended for production)
+# - macOS: Full support (both Intel and Apple Silicon)
 #
-# Performance tips:
-# - Use st.cache_data for expensive computations
+# Browser Compatibility:
+# - Google Chrome/Chromium: Full support (recommended)
+# - Microsoft Edge: Full support
+# - Mozilla Firefox: Full support
+# - Safari: Mostly supported (some minor CSS differences)
+# - Opera: Supported
+# - Brave: Supported
+#
+# Mobile Browsers:
+# - Chrome Mobile: Basic support (responsive design)
+# - Safari iOS: Basic support
+# - Note: Optimized for desktop experience
+#
+# ============================================================================
+# Performance Optimization Tips
+# ============================================================================
+#
+# Streamlit optimization:
+# - Use st.cache_data for expensive data operations
+# - Use st.cache_resource for model loading
 # - Enable WebSocket compression
-# - Use session state efficiently
-# - Lazy load large visualizations
+# - Minimize session state usage
+# - Lazy load visualizations
+# - Use st.experimental_memo for memoization
 #
-# Deployment:
-# - Local: streamlit run app/streamlit_app.py
-# - Streamlit Cloud: Free tier available
-# - Hugging Face Spaces: See deployment/huggingface/
-# - Docker: See deployment/docker/
+# Example caching:
+# @st.cache_resource
+# def load_model(model_path):
+#     return AutoModelForSequenceClassification.from_pretrained(model_path)
 #
-# For detailed UI documentation:
-# - Streamlit: https://docs.streamlit.io
-# - Gradio: https://gradio.app/docs
-# - See quickstart/demo_app.py for simple example
+# @st.cache_data
+# def load_data(file_path):
+#     return pd.read_csv(file_path)
+#
+# Gradio optimization:
+# - Enable queue for better concurrency
+# - Use caching for model predictions
+# - Optimize image sizes for faster loading
+# - Enable batch processing when possible
+#
+# Dashboard performance:
+# - Limit data points in real-time plots
+# - Use downsampling for large datasets
+# - Implement pagination for large tables
+# - Use server-side filtering when possible
+#
+# ============================================================================
+# Deployment Options
+# ============================================================================
+#
+# Local deployment:
+# streamlit run app/streamlit_app.py --server.port 8501
+#
+# Streamlit Cloud (free tier):
+# - Connect GitHub repository
+# - Configure secrets in dashboard
+# - Automatic deployment on push
+# - Free tier: 1GB RAM, limited compute
+#
+# Hugging Face Spaces:
+# - See deployment/huggingface/app.py
+# - Free tier available
+# - GPU instances available (paid)
+# - Gradio or Streamlit supported
+#
+# Docker deployment:
+# docker build -f deployment/docker/Dockerfile.streamlit -t ag-news-ui .
+# docker run -p 8501:8501 ag-news-ui
+#
+# Custom server:
+# - Use Nginx reverse proxy
+# - Enable HTTPS with Let's Encrypt
+# - Configure firewall rules
+# - Setup monitoring and logging
+#
+# ============================================================================
+# Accessibility Features
+# ============================================================================
+#
+# Implemented accessibility:
+# - Semantic HTML structure
+# - ARIA labels for interactive elements
+# - Keyboard navigation support
+# - Color contrast compliance (WCAG AA)
+# - Screen reader compatibility
+# - Alt text for all images
+#
+# Color palettes:
+# - Colorblind-friendly schemes available
+# - High contrast mode support
+# - Customizable themes
+#
+# ============================================================================
+# Internationalization (i18n)
+# ============================================================================
+#
+# Current language support:
+# - English (primary)
+#
+# Adding new languages:
+# - Use Babel for message extraction
+# - Create translation files
+# - Configure locale in Streamlit
+#
+# ============================================================================
+# Security Considerations
+# ============================================================================
+#
+# Authentication:
+# - Streamlit-authenticator for user login
+# - Session-based authentication
+# - Password hashing with bcrypt
+#
+# Input validation:
+# - Sanitize user inputs
+# - Validate file uploads
+# - Limit upload file sizes
+# - Check file types
+#
+# HTTPS:
+# - Use reverse proxy (Nginx) with SSL
+# - Configure CORS appropriately
+# - Set secure cookie flags
+#
+# ============================================================================
+# Integration with Project Structure
+# ============================================================================
+#
+# Application entry points:
+# - Streamlit: app/streamlit_app.py
+# - Gradio: app/gradio_app.py
+#
+# Component library:
+# - app/components/
+#
+# Page implementations:
+# - app/pages/
+#
+# Utilities:
+# - app/utils/
+#
+# Assets:
+# - app/assets/
+#
+# Visualization tools:
+# - src/evaluation/visualizations/
+#
+# CLI tools:
+# - tools/cli_helpers/
+#
+# Dashboards:
+# - monitoring/dashboards/
+#
+# ============================================================================
+# For Detailed Documentation
+# ============================================================================
+#
+# Streamlit documentation:
+# - Official docs: https://docs.streamlit.io
+# - Deployment guide: docs/getting_started/ui_deployment.md
+#
+# Gradio documentation:
+# - Official docs: https://gradio.app/docs
+# - Quick demo: quickstart/demo_app.py
+#
+# Project-specific guides:
+# - UI development: docs/developer_guide/ui_development.md
+# - Component creation: docs/developer_guide/creating_components.md
+# - Dashboard setup: monitoring/dashboards/README.md
+#
+# Examples:
+# - Simple Streamlit app: quickstart/demo_app.py
+# - Full application: app/streamlit_app.py
+# - Gradio demo: app/gradio_app.py
+#
 # ============================================================================
