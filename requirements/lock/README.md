@@ -1,430 +1,872 @@
 # AG News Text Classification - Lock Files
 
+## Project Information
+
+- **Project**: AG News Text Classification (ag-news-text-classification)
+- **Author**: Võ Hải Dũng
+- **Email**: vohaidung.work@gmail.com
+- **License**: MIT
+
 ## Overview
 
-This directory contains locked dependency files with exact package versions for reproducible installations across different environments.
+This directory contains locked dependency files with exact package versions for reproducible installations across different development, testing, and production environments.
 
-## Purpose
+## Purpose and Benefits
 
-Lock files ensure:
-- **Reproducibility**: Same versions across team members and environments
-- **Stability**: Prevent unexpected breaking changes from new package releases
-- **Security**: Track exact versions for vulnerability audits
-- **CI/CD**: Consistent builds in automated pipelines
-- **Production**: Identical dependencies between development and production
+Lock files provide critical guarantees for software development:
+
+### Reproducibility
+- Ensures identical package versions across all team members
+- Guarantees consistent behavior in different environments
+- Enables exact replication of research results
+- Facilitates debugging by eliminating version-related variability
+
+### Stability
+- Prevents unexpected breaking changes from automatic updates
+- Protects against incompatible dependency upgrades
+- Reduces "works on my machine" problems
+- Provides predictable deployment outcomes
+
+### Security
+- Creates auditable record of exact package versions
+- Enables precise vulnerability tracking
+- Facilitates targeted security patching
+- Supports compliance and regulatory requirements
+
+### CI/CD Integration
+- Ensures consistent builds in automated pipelines
+- Reduces flaky tests due to dependency changes
+- Enables reliable rollbacks to known-good states
+- Supports reproducible artifacts
+
+### Production Deployment
+- Guarantees development-production parity
+- Minimizes deployment risks
+- Enables gradual rollouts with confidence
+- Supports disaster recovery procedures
 
 ## Available Lock Files
 
 ### Core Lock Files
 
-| File | Description | Size | Use Case |
-|------|-------------|------|----------|
-| `base.lock` | Core dependencies only | ~2GB | Minimal setup, testing |
-| `ml.lock` | ML training dependencies | ~8GB | Model training |
-| `llm.lock` | LLM-specific dependencies | ~10GB | LLM fine-tuning |
-| `all.lock` | Complete dependency set | ~15GB | Full development |
+| Lock File | Packages | Size | Installation Time | Primary Use Case |
+|-----------|----------|------|-------------------|------------------|
+| `base.lock` | ~150 | ~2GB | 5-10 min | Core dependencies, minimal setup |
+| `ml.lock` | ~290 | ~8GB | 15-20 min | Machine learning training |
+| `llm.lock` | ~320 | ~10GB | 20-30 min | Large language model fine-tuning |
+| `all.lock` | ~415 | ~15GB | 30-60 min | Complete development environment |
 
-### Lock File Hierarchy
+### Lock File Hierarchy and Dependencies
 
 ```
-base.lock (50 packages)
-  └── ml.lock (150+ packages)
-        └── llm.lock (200+ packages)
-              └── all.lock (400+ packages)
+base.lock
+├── Core PyTorch (CPU/GPU)
+├── Transformers ecosystem
+├── Scientific computing (NumPy, SciPy, Pandas)
+├── Configuration management
+└── Essential utilities
+
+ml.lock (extends base.lock)
+├── All base.lock packages
+├── Parameter-efficient fine-tuning (LoRA, QLoRA)
+├── Classical ML (XGBoost, LightGBM, CatBoost)
+├── Ensemble methods
+├── Hyperparameter optimization
+├── Experiment tracking
+├── Data augmentation
+└── Model compression
+
+llm.lock (extends ml.lock)
+├── All ml.lock packages
+├── LLM training frameworks (TRL)
+├── Efficient attention (Flash Attention, xFormers)
+├── LLM inference (vLLM)
+├── Prompt engineering (LangChain, LlamaIndex)
+├── Vector databases (ChromaDB, FAISS)
+├── LLM APIs and embeddings
+└── Document processing
+
+all.lock (extends llm.lock)
+├── All llm.lock packages
+├── Web UI frameworks (Streamlit, Gradio, Dash)
+├── Advanced visualization
+├── Development tools (testing, linting, debugging)
+├── Documentation generation (Sphinx, MkDocs)
+├── Data scraping and collection
+├── Database support
+├── API frameworks (FastAPI)
+├── Monitoring and observability
+├── Security scanning tools
+└── Robustness testing
 ```
 
-## When to Use Lock Files
+## Usage Scenarios
 
-### Use Lock Files When:
-- Setting up CI/CD pipelines
-- Deploying to production
-- Reproducing research results
-- Debugging environment-specific issues
-- Installing on air-gapped systems
-- Need exact reproducibility
+### When to Use Lock Files
 
-### Use Regular Requirements When:
-- Local development
-- Experimenting with new packages
-- Want latest security patches
-- Testing compatibility with newer versions
-
-## Installation
-
-### Install from Lock File
+#### Production Deployment
+Always use lock files in production to ensure stability and reproducibility.
 
 ```bash
-# Install exact versions
-pip install -r requirements/lock/base.lock
-
-# Or for full ML stack
-pip install -r requirements/lock/ml.lock
-
-# Or for LLM support
-pip install -r requirements/lock/llm.lock
-
-# Or everything
 pip install -r requirements/lock/all.lock
+python scripts/setup/verify_installation.py
 ```
 
-### Install from Regular Requirements (Latest Versions)
+#### CI/CD Pipelines
+Use lock files for consistent automated builds and tests.
+
+```yaml
+# GitHub Actions example
+- name: Install dependencies
+  run: pip install -r requirements/lock/ml.lock
+```
+
+#### Research Reproducibility
+Use lock files to ensure exact replication of experimental results.
 
 ```bash
-# Install latest compatible versions
-pip install -r requirements/base.txt
+# Reproduce experiment from paper
+pip install -r requirements/lock/llm.lock
+python experiments/sota_experiments/phase5_ultimate_sota.py
+```
+
+#### Bug Investigation
+Use lock files to recreate the exact environment where a bug occurred.
+
+```bash
+# Reproduce bug environment
+git checkout bug-report-commit
+pip install -r requirements/lock/all.lock
+pytest tests/test_specific_bug.py
+```
+
+#### Offline Installation
+Pre-download lock file dependencies for air-gapped systems.
+
+```bash
+# On online machine
+pip download -r requirements/lock/ml.lock -d packages/
+
+# Transfer packages/ to offline machine
+pip install --no-index --find-links packages/ -r requirements/lock/ml.lock
+```
+
+### When to Use Regular Requirements
+
+#### Local Development
+Use regular requirements for flexibility during active development.
+
+```bash
 pip install -r requirements/ml.txt
-pip install -r requirements/llm.txt
+```
+
+#### Experimenting with New Packages
+Test new package versions without affecting lock files.
+
+```bash
+pip install -r requirements/ml.txt
+pip install new-experimental-package
+```
+
+#### Security Updates
+Quickly adopt latest security patches.
+
+```bash
+pip install -r requirements/ml.txt --upgrade
+```
+
+#### Dependency Resolution
+Let pip resolve latest compatible versions.
+
+```bash
 pip install -r requirements/all_local.txt
 ```
 
-## Generating Lock Files
+## Installation Instructions
 
-### Manual Generation
+### Standard Installation from Lock File
 
 ```bash
-# Create clean virtual environment
-python -m venv lock_env
-source lock_env/bin/activate  # or lock_env\Scripts\activate on Windows
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+# venv\Scripts\activate  # Windows
 
-# Install from requirements
+# Upgrade pip
 pip install --upgrade pip setuptools wheel
-pip install -r requirements/base.txt
 
-# Generate lock file
-pip freeze > requirements/lock/base.lock
-
-# Cleanup
-deactivate
-rm -rf lock_env
+# Install from lock file
+pip install -r requirements/lock/all.lock
 ```
 
-### Automated Generation
+### Platform-Specific Installation
 
-Use the provided script:
+#### Linux with CUDA 11.8 (Recommended)
 
 ```bash
-bash scripts/ci/update_lock_files.sh
+# Install PyTorch with CUDA 11.8 first
+pip install torch==2.1.2+cu118 torchvision==0.16.2+cu118 torchaudio==2.1.2+cu118 \
+  --index-url https://download.pytorch.org/whl/cu118
+
+# Install rest from lock file
+pip install -r requirements/lock/ml.lock
 ```
 
-This script:
-1. Creates temporary virtual environments
-2. Installs from each requirements file
-3. Generates corresponding lock files
-4. Runs security audits
-5. Validates installations
-6. Cleans up temporary files
-
-## Lock File Format
-
-Lock files contain:
-- Exact package versions (e.g., `torch==2.1.2`)
-- Platform-specific builds (e.g., `torch==2.1.2+cu118`)
-- All transitive dependencies
-- Auto-installed dependencies
-
-Example:
-```text
-# Direct dependency
-transformers==4.37.2
-
-# Transitive dependencies (auto-installed by transformers)
-tokenizers==0.15.1
-safetensors==0.4.2
-huggingface-hub==0.20.3
-```
-
-## Platform-Specific Considerations
-
-### CUDA Versions
-
-Lock files in this directory are for **CUDA 11.8**:
-- `torch==2.1.2+cu118`
-- `torchvision==0.16.2+cu118`
-- `torchaudio==2.1.2+cu118`
-
-For other CUDA versions:
+#### CUDA 12.1
 
 ```bash
-# CUDA 12.1
+# Install PyTorch with CUDA 12.1
 pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 \
   --index-url https://download.pytorch.org/whl/cu121
 
-# Then install rest
-pip install -r requirements/ml.txt  # Not the lock file!
+# Install from source requirements (not lock file)
+pip install -r requirements/ml.txt
 ```
 
-### CPU-Only
+#### CPU-Only
 
 ```bash
 # Install CPU version of PyTorch
 pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 \
   --index-url https://download.pytorch.org/whl/cpu
 
-# Then install rest
-pip install -r requirements/ml.txt
-```
-
-### Apple Silicon (M1/M2)
-
-```bash
-# Default PyTorch has MPS support
+# Install rest
 pip install -r requirements/lock/ml.lock
-# (MPS backend automatically used)
 ```
 
-### Windows
+#### Apple Silicon (M1/M2/M3)
 
-Some packages in lock files are Linux-specific:
-- `flash-attn`: Skip on Windows
-- `deepspeed`: Skip on Windows
-- `horovod`: Skip on Windows
-
-For Windows:
 ```bash
-# Use regular requirements instead
-pip install -r requirements/ml.txt
+# Default installation uses MPS backend
+pip install -r requirements/lock/ml.lock
 ```
 
-## Verification
-
-### Verify Installation
+#### Windows
 
 ```bash
-# Check installed packages match lock file
-pip list --format=freeze > installed.txt
-diff requirements/lock/base.lock installed.txt
+# Some Linux-only packages will be skipped
+pip install -r requirements/ml.txt  # Use source requirements
 ```
 
-### Run Health Checks
+### Verification After Installation
 
 ```bash
-python src/core/health/health_checker.py
+# Verify all packages installed correctly
 python scripts/setup/verify_installation.py
-python scripts/setup/verify_dependencies.py
+
+# Check for dependency conflicts
+pip check
+
+# Verify critical imports
+python -c "import torch; import transformers; import peft; print('OK')"
+
+# Check CUDA availability (if GPU)
+python -c "import torch; print(f'CUDA: {torch.cuda.is_available()}')"
+
+# Run health checks
+python src/core/health/health_checker.py --comprehensive
 ```
 
-### Test Imports
+## Generating Lock Files
 
-```python
-# Test critical imports
-python -c "
-import torch
-import transformers
-import peft
-print(f'PyTorch: {torch.__version__}')
-print(f'Transformers: {transformers.__version__}')
-print(f'PEFT: {peft.__version__}')
-print(f'CUDA available: {torch.cuda.is_available()}')
-"
+### Manual Generation Process
+
+```bash
+# Create temporary clean environment
+python -m venv /tmp/lock_env
+source /tmp/lock_env/bin/activate
+
+# Upgrade pip
+pip install --upgrade pip setuptools wheel
+
+# Install from source requirements
+pip install -r requirements/base.txt
+
+# Generate lock file
+pip freeze > requirements/lock/base.lock
+
+# Add header documentation
+# (Edit file to add project information and documentation)
+
+# Cleanup
+deactivate
+rm -rf /tmp/lock_env
 ```
 
-## Security
+### Automated Generation Script
 
-### Security Audits
+```bash
+# Use provided automation script
+bash scripts/ci/update_lock_files.sh
 
-Lock files are regularly audited for vulnerabilities:
+# Or for specific lock file
+bash scripts/ci/update_lock_files.sh base
+bash scripts/ci/update_lock_files.sh ml
+bash scripts/ci/update_lock_files.sh llm
+bash scripts/ci/update_lock_files.sh all
+```
+
+The automated script performs:
+1. Creates isolated virtual environments
+2. Installs from source requirements
+3. Freezes exact versions
+4. Adds documentation headers
+5. Runs security audits
+6. Validates installations
+7. Generates compatibility reports
+8. Cleans up temporary files
+
+### Lock File Generation Best Practices
+
+- Generate on clean virtual environment
+- Use consistent Python version (3.10.12 recommended)
+- Document generation date and platform
+- Include comprehensive header comments
+- Run security audit after generation
+- Test installation before committing
+- Update CHANGELOG.md with changes
+
+## Lock File Format and Structure
+
+### Header Section
+
+Every lock file begins with a comprehensive header:
+
+```text
+# ============================================================================
+# Locked [Type] Requirements for AG News Text Classification
+# ============================================================================
+# Project: AG News Text Classification (ag-news-text-classification)
+# Description: [Purpose of this lock file]
+# Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
+# License: MIT
+# Generated: YYYY-MM-DD
+# Python: 3.10.12
+# Platform: linux-x86_64
+# CUDA: 11.8 (if applicable)
+# ============================================================================
+```
+
+### Package Sections
+
+Packages are organized by category with descriptive comments:
+
+```text
+# ----------------------------------------------------------------------------
+# Category Name
+# ----------------------------------------------------------------------------
+package-name==exact.version
+another-package==exact.version+build_tag
+```
+
+### Platform-Specific Builds
+
+PyTorch packages include build tags:
+
+```text
+torch==2.1.2+cu118        # CUDA 11.8 build
+torchvision==0.16.2+cu118 # CUDA 11.8 build
+torchaudio==2.1.2+cu118   # CUDA 11.8 build
+```
+
+### Transitive Dependencies
+
+Auto-installed dependencies are documented:
+
+```text
+# ----------------------------------------------------------------------------
+# Transitive Dependencies (Auto-Installed)
+# ----------------------------------------------------------------------------
+# Note: Automatically installed as dependencies of packages above
+dependency-of-main-package==version
+another-dependency==version
+```
+
+### Documentation Section
+
+Each lock file includes comprehensive installation and usage documentation at the end.
+
+## Platform Compatibility
+
+### Tested Platforms
+
+| Platform | Python | CUDA | Status | Notes |
+|----------|--------|------|--------|-------|
+| Ubuntu 20.04 LTS | 3.8, 3.9, 3.10 | 11.8 | Fully Tested | Recommended |
+| Ubuntu 22.04 LTS | 3.10, 3.11 | 11.8 | Fully Tested | Recommended |
+| Debian 11 | 3.9, 3.10 | 11.8 | Tested | Compatible |
+| Windows 10/11 | 3.10 | 11.8 | Partially Tested | Some packages unavailable |
+| macOS 12 Monterey | 3.10 | N/A | CPU Only | Intel |
+| macOS 13 Ventura | 3.10 | N/A | CPU+MPS | Apple Silicon |
+| Google Colab | 3.10 | 11.8 | Fully Tested | Free tier compatible |
+| Kaggle Kernels | 3.10 | 11.8 | Fully Tested | TPU support |
+
+### Known Platform-Specific Issues
+
+#### Windows
+- **DeepSpeed**: Not supported (Linux only)
+- **Horovod**: Requires MPI, may fail during installation
+- **Flash Attention**: Not available
+- **Recommendation**: Use WSL2 for full compatibility
+
+#### macOS
+- **CUDA**: Not available (use CPU or MPS backend)
+- **Flash Attention**: Not supported
+- **vLLM**: Not supported
+- **Recommendation**: Use for CPU inference or development only
+
+#### ARM64 Architecture
+- **Binary packages**: May have different versions
+- **Compilation**: Some packages require building from source
+- **Flash Attention**: Limited support
+
+#### Python 3.12
+- **Package availability**: Some packages not yet compatible
+- **Recommendation**: Use Python 3.10 or 3.11
+
+### Compatibility Matrix
+
+For detailed compatibility information, see:
+- `configs/compatibility_matrix.yaml`
+- Platform-specific guides in `docs/platform_guides/`
+
+## Security and Auditing
+
+### Security Audit Schedule
+
+| Audit Type | Frequency | Tools Used |
+|------------|-----------|------------|
+| Automated Scan | Weekly | GitHub Dependabot |
+| Manual Review | Monthly | pip-audit, safety, snyk |
+| Comprehensive Audit | Quarterly | Full security assessment |
+| Critical Updates | As needed | Immediate patching |
+
+### Running Security Audits
 
 ```bash
 # Install audit tools
 pip install pip-audit safety
 
-# Audit lock file
-pip-audit -r requirements/lock/all.lock
-safety check -r requirements/lock/all.lock
+# Run pip-audit
+pip-audit -r requirements/lock/all.lock --desc
 
-# Or use GitHub Dependabot (automated)
+# Run safety check
+safety check -r requirements/lock/all.lock --json
+
+# Generate audit report
+pip-audit -r requirements/lock/all.lock --format json > audit_report.json
+safety check -r requirements/lock/all.lock --json > safety_report.json
+
+# Online scanning with snyk
+snyk test --file=requirements/lock/all.lock
 ```
 
-### Last Audit
-- Date: 2024-01-15
-- Critical vulnerabilities: 0
-- High vulnerabilities: 0
-- Tools: pip-audit, safety, snyk
-
 ### Security Best Practices
-- Update lock files monthly
-- Review security advisories
-- Test updates in staging first
-- Keep audit logs
-- Document breaking changes
 
-## Maintenance
+1. **Regular Updates**: Update lock files monthly for security patches
+2. **Vulnerability Monitoring**: Enable GitHub Dependabot alerts
+3. **Audit Before Deployment**: Always audit before production deployment
+4. **Document Vulnerabilities**: Track known issues in security log
+5. **Emergency Patching**: Have process for critical vulnerability response
+6. **Secrets Management**: Never commit secrets to lock files
+7. **SBOM Generation**: Generate Software Bill of Materials for compliance
 
-### Update Schedule
+### Last Security Audit
 
-| Lock File | Update Frequency | Reason |
-|-----------|------------------|--------|
-| base.lock | Monthly | Security patches |
-| ml.lock | Monthly | New features, fixes |
-| llm.lock | Monthly | LLM library updates |
-| all.lock | Monthly | Complete refresh |
+- **Date**: 2024-01-15
+- **Critical Vulnerabilities**: 0
+- **High Vulnerabilities**: 0
+- **Medium Vulnerabilities**: 0
+- **Low Vulnerabilities**: 0
+- **Tools**: pip-audit 2.6.1, safety 3.0.1, snyk, GitHub Dependabot
 
-### Update Process
+## Maintenance and Updates
 
-1. **Preparation**
-   ```bash
-   # Backup current lock files
-   cp requirements/lock/*.lock requirements/lock/backup/
-   
-   # Create update branch
-   git checkout -b update-dependencies-2024-02
-   ```
+### Regular Maintenance Schedule
 
-2. **Generate New Lock Files**
-   ```bash
-   bash scripts/ci/update_lock_files.sh
-   ```
+| Activity | Frequency | Responsible |
+|----------|-----------|-------------|
+| Security monitoring | Weekly | Automated + Review |
+| Minor updates | Monthly | Maintainer |
+| Major updates | Quarterly | Team review |
+| Lock file regeneration | After req changes | Developer |
+| Documentation updates | As needed | Contributor |
 
-3. **Testing**
-   ```bash
-   # Install new versions
-   pip install -r requirements/lock/all.lock
-   
-   # Run full test suite
-   pytest tests/ -v
-   
-   # Run benchmarks
-   python experiments/benchmarks/accuracy_benchmark.py
-   
-   # Security audit
-   pip-audit -r requirements/lock/all.lock
-   ```
+### Update Process Workflow
 
-4. **Documentation**
-   ```text
-   # Update CHANGELOG.md
-   ## [1.1.0] - 2024-02-15
-   ### Changed
-   - Updated all dependencies to latest versions
-   - PyTorch 2.1.2 -> 2.2.0
-   - Transformers 4.37.2 -> 4.38.0
-   
-   ### Fixed
-   - CVE-2024-XXXXX in package XYZ
-   ```
+#### 1. Preparation Phase
 
-5. **Commit and Release**
-   ```bash
-   git add requirements/lock/*.lock CHANGELOG.md
-   git commit -m "chore: update dependencies to 2024-02"
-   git push origin update-dependencies-2024-02
-   # Create PR, review, merge
-   git tag v1.1.0
-   git push origin v1.1.0
-   ```
+```bash
+# Create backup
+cp requirements/lock/*.lock requirements/lock/backup/
+
+# Create feature branch
+git checkout -b update-dependencies-2024-02
+
+# Review release notes
+# Check security advisories
+# Plan breaking changes
+```
+
+#### 2. Update Source Requirements
+
+```bash
+# Update version constraints in requirements/*.txt
+# Example: transformers>=4.36.0,<4.41.0 -> transformers>=4.38.0,<4.43.0
+```
+
+#### 3. Generate New Lock Files
+
+```bash
+# Run automated update script
+bash scripts/ci/update_lock_files.sh
+
+# Or manual generation
+python -m venv temp_env
+source temp_env/bin/activate
+pip install -r requirements/all_local.txt
+pip freeze > requirements/lock/all.lock
+deactivate
+rm -rf temp_env
+```
+
+#### 4. Testing Phase
+
+```bash
+# Install new lock file
+pip install -r requirements/lock/all.lock
+
+# Run comprehensive tests
+pytest tests/ -v --cov
+
+# Run benchmarks
+python experiments/benchmarks/accuracy_benchmark.py
+python experiments/benchmarks/speed_benchmark.py
+
+# Run smoke tests
+pytest tests/smoke/ -v
+```
+
+#### 5. Security Validation
+
+```bash
+# Run security audit
+pip-audit -r requirements/lock/all.lock
+safety check -r requirements/lock/all.lock
+```
+
+#### 6. Documentation
+
+```markdown
+# Update CHANGELOG.md
+
+## [1.1.0] - 2025-10-19
+
+### Changed
+- Updated all dependencies to latest compatible versions
+- PyTorch 2.1.2 -> 2.2.0
+- Transformers 4.37.2 -> 4.38.0
+- Lock files regenerated with updated versions
+
+### Security
+- Fixed CVE-2024-XXXXX in package-name
+- Updated cryptography to patch vulnerability
 
 ### Breaking Changes
+- None
 
-When lock files have breaking changes:
+### Migration Notes
+- No manual migration required
+- Regenerate virtual environment recommended
+```
 
-1. **Document in CHANGELOG.md**
-   ```markdown
-   ## [2.0.0] - 2024-03-01
-   ### BREAKING CHANGES
-   - Transformers 4.x -> 5.0: API changes in AutoModel
-   - See migration guide: docs/migrations/v2.0.0.md
-   ```
+#### 7. Commit and Release
 
-2. **Create Migration Guide**
-   ```markdown
-   # Migration Guide: v1.x to v2.0
-   
-   ## Transformers 5.0 Changes
-   - `AutoModel.from_pretrained()` now requires `trust_remote_code=True`
-   - Updated code:
-     ```python
-     model = AutoModel.from_pretrained(
-         "model_name",
-         trust_remote_code=True  # New parameter
-     )
-     ```
-   ```
+```bash
+# Commit changes
+git add requirements/lock/*.lock CHANGELOG.md
+git commit -m "chore: update dependencies to 2024-02"
 
-3. **Increment Major Version**
-   - v1.9.0 -> v2.0.0
+# Create pull request
+git push origin update-dependencies-2024-02
+# Review, approve, merge
 
-## Compatibility Matrix
+# Tag release
+git tag v1.2.0
+git push origin v1.2.0
 
-Lock files tested on:
+# Generate release notes on GitHub
+```
 
-| Platform | Python | CUDA | Status |
-|----------|--------|------|--------|
-| Ubuntu 20.04 | 3.8 | 11.8 | Tested |
-| Ubuntu 20.04 | 3.9 | 11.8 | Tested |
-| Ubuntu 20.04 | 3.10 | 11.8 | Tested |
-| Ubuntu 22.04 | 3.10 | 11.8 | Tested |
-| Ubuntu 22.04 | 3.11 | 11.8 | Tested |
-| Windows 10 | 3.10 | 11.8 | Partial |
-| Windows 11 | 3.10 | 11.8 | Partial |
-| macOS 12 | 3.10 | N/A | CPU only |
-| macOS 13 | 3.10 | N/A | CPU+MPS |
-| Google Colab | 3.10 | 11.8 | Tested |
-| Kaggle | 3.10 | 11.8 | Tested |
+### Handling Breaking Changes
 
-See `configs/compatibility_matrix.yaml` for detailed compatibility information.
+When updates introduce breaking changes:
+
+#### 1. Version Increment
+
+Follow semantic versioning:
+- **Patch** (1.0.x): Bug fixes, security patches
+- **Minor** (1.x.0): New features, backward compatible
+- **Major** (x.0.0): Breaking changes
+
+#### 2. Migration Guide
+
+Create migration guide in `docs/migrations/vX.X.X.md`:
+
+```markdown
+# Migration Guide: v1.x to v2.0
+
+## Breaking Changes
+
+### Transformers 5.0 API Changes
+
+**Impact**: High
+
+**Change**: `AutoModel.from_pretrained()` now requires explicit trust
+
+**Before** (v1.x):
+```python
+model = AutoModel.from_pretrained("model_name")
+```
+
+**After** (v2.0):
+```python
+model = AutoModel.from_pretrained(
+    "model_name",
+    trust_remote_code=True  # Required in v5.0
+)
+```
+
+**Action Required**: Update all model loading code
+```
+
+#### 3. Deprecation Warnings
+
+Provide warnings in previous version:
+
+```python
+import warnings
+warnings.warn(
+    "AutoModel.from_pretrained() will require trust_remote_code=True in v2.0",
+    DeprecationWarning,
+    stacklevel=2
+)
+```
+
+#### 4. Compatibility Layer
+
+Provide backward compatibility when possible:
+
+```python
+def load_model(model_name, trust_remote_code=None):
+    if trust_remote_code is None:
+        # Auto-detect based on version
+        import transformers
+        if transformers.__version__ >= "5.0.0":
+            trust_remote_code = True
+    return AutoModel.from_pretrained(model_name, trust_remote_code=trust_remote_code)
+```
 
 ## Troubleshooting
 
-### Issue: Package Conflict
+### Common Installation Issues
+
+#### Issue: Package Installation Fails
 
 ```text
-ERROR: package-a 1.0 has requirement package-b>=2.0,
-but you have package-b 1.5
+ERROR: Could not find a version that satisfies the requirement package==version
 ```
 
-**Solution:**
-1. Check if using correct lock file
-2. Clear pip cache: `pip cache purge`
-3. Use fresh virtual environment
-4. Report issue on GitHub
+**Diagnosis**:
+- Package not available for your platform
+- Python version incompatibility
+- Corrupted pip cache
 
-### Issue: CUDA Version Mismatch
-
-```text
-RuntimeError: CUDA version mismatch
-```
-
-**Solution:**
+**Solutions**:
 ```bash
-# Check CUDA version
-nvcc --version
-nvidia-smi
+# Check Python version
+python --version  # Should be 3.8-3.11
+
+# Clear pip cache
+pip cache purge
+
+# Try installing from source requirements
+pip install -r requirements/ml.txt
+
+# Check platform compatibility
+python -c "import platform; print(platform.system(), platform.machine())"
+```
+
+#### Issue: CUDA Version Mismatch
+
+```text
+RuntimeError: CUDA version mismatch: runtime version XX.X, driver version YY.Y
+```
+
+**Diagnosis**:
+- PyTorch compiled for different CUDA version
+- CUDA driver/runtime mismatch
+
+**Solutions**:
+```bash
+# Check CUDA versions
+nvcc --version          # CUDA Toolkit version
+nvidia-smi              # CUDA Driver version
 
 # Install matching PyTorch
-# See: https://pytorch.org/get-started/locally/
+# For CUDA 11.8:
+pip install torch==2.1.2+cu118 --index-url https://download.pytorch.org/whl/cu118
+
+# For CUDA 12.1:
+pip install torch==2.1.2+cu121 --index-url https://download.pytorch.org/whl/cu121
 ```
 
-### Issue: Platform-Specific Package
-
-```text
-ERROR: Could not find a version that satisfies the requirement
-flash-attn==2.4.2 (from versions: none)
-```
-
-**Solution:**
-- flash-attn is Linux-only
-- Skip it on Windows/macOS
-- Use regular requirements instead of lock file
-
-### Issue: Out of Disk Space
+#### Issue: Out of Disk Space
 
 ```text
 ERROR: No space left on device
 ```
 
-**Solution:**
+**Solutions**:
 ```bash
 # Check disk space
 df -h
 
-# Clean pip cache
+# Clear pip cache
 pip cache purge
 
-# Clean conda cache (if using conda)
-conda clean --all
+# Clear conda cache (if applicable)
+conda clean --all -y
 
-# Clean Docker (if installed)
+# Clear Docker images (if applicable)
 docker system prune -a
+
+# Clear old virtual environments
+rm -rf old_venv/
+```
+
+#### Issue: Compilation Errors
+
+```text
+ERROR: Failed building wheel for package-name
+```
+
+**Solutions**:
+```bash
+# Install build tools
+
+# Ubuntu/Debian:
+sudo apt update
+sudo apt install build-essential python3-dev
+
+# macOS:
+xcode-select --install
+
+# Windows:
+# Install Visual Studio Build Tools
+# https://visualstudio.microsoft.com/downloads/
+```
+
+#### Issue: SSL Certificate Errors
+
+```text
+SSL: CERTIFICATE_VERIFY_FAILED
+```
+
+**Solutions**:
+```bash
+# Update certificates
+pip install --upgrade certifi
+
+# Use trusted hosts (temporary, not for production)
+pip install -r requirements/lock/ml.lock \
+  --trusted-host pypi.org \
+  --trusted-host files.pythonhosted.org
+```
+
+#### Issue: Memory Error During Installation
+
+```text
+MemoryError: Unable to allocate array
+```
+
+**Solutions**:
+```bash
+# Close other applications
+# Increase swap space (Linux)
+sudo fallocate -l 8G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+# Install in smaller chunks
+pip install -r requirements/lock/base.lock
+pip install -r requirements/lock/ml.lock  # Incrementally
+```
+
+### Verification Issues
+
+#### Issue: Import Errors After Installation
+
+```python
+ImportError: cannot import name 'X' from 'package'
+```
+
+**Solutions**:
+```bash
+# Verify installation
+pip list | grep package-name
+
+# Check for multiple installations
+pip show package-name
+
+# Reinstall in clean environment
+python -m venv new_venv
+source new_venv/bin/activate
+pip install -r requirements/lock/ml.lock
+```
+
+#### Issue: Version Conflicts
+
+```text
+ERROR: package-a requires package-b>=2.0, but package-b 1.5 is installed
+```
+
+**Solutions**:
+```bash
+# Use clean virtual environment
+deactivate
+rm -rf venv/
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements/lock/all.lock
+
+# Check for conflicts
+pip check
+```
+
+### Platform-Specific Issues
+
+#### Windows: Package Not Available
+
+Some packages are Linux-only. Use source requirements instead:
+
+```bash
+# Skip platform-specific packages
+pip install -r requirements/ml.txt
+```
+
+#### macOS: Flash Attention Not Available
+
+Flash Attention is Linux-only. xFormers will be used as fallback automatically.
+
+#### Colab/Kaggle: GPU Out of Memory
+
+Use platform-optimized configs:
+
+```bash
+pip install -r requirements/colab.txt  # Or kaggle.txt
 ```
 
 ## CI/CD Integration
@@ -432,7 +874,6 @@ docker system prune -a
 ### GitHub Actions
 
 ```yaml
-# .github/workflows/tests.yml
 name: Tests
 
 on: [push, pull_request]
@@ -440,33 +881,65 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+    
     steps:
       - uses: actions/checkout@v3
       
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: ${{ matrix.python-version }}
       
-      - name: Cache dependencies
+      - name: Cache pip packages
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: pip-${{ hashFiles('requirements/lock/ml.lock') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements/lock/ml.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
       
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install -r requirements/lock/ml.lock
       
       - name: Run tests
         run: |
-          pytest tests/ -v
+          pytest tests/ -v --cov
+      
+      - name: Security audit
+        run: |
+          pip install pip-audit safety
+          pip-audit -r requirements/lock/ml.lock
+          safety check -r requirements/lock/ml.lock
+```
+
+### GitLab CI
+
+```yaml
+test:
+  image: python:3.10
+  
+  cache:
+    paths:
+      - .cache/pip
+  
+  before_script:
+    - pip install -r requirements/lock/ml.lock
+  
+  script:
+    - pytest tests/ -v --cov
+    - pip-audit -r requirements/lock/ml.lock
+  
+  coverage: '/TOTAL.*\s+(\d+%)$/'
 ```
 
 ### Docker
 
 ```dockerfile
-# Dockerfile
 FROM python:3.10-slim
 
 WORKDIR /app
@@ -474,12 +947,18 @@ WORKDIR /app
 # Copy lock file
 COPY requirements/lock/ml.lock .
 
-# Install exact versions
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python packages
 RUN pip install --no-cache-dir -r ml.lock
 
 # Copy application
 COPY . .
 
+# Run
 CMD ["python", "train.py"]
 ```
 
@@ -487,124 +966,249 @@ CMD ["python", "train.py"]
 
 ### Q: Why use lock files instead of version ranges?
 
-**A:** Lock files provide:
-- Exact reproducibility
+**A**: Lock files provide exact reproducibility:
+- Same versions across all environments
 - Consistent CI/CD builds
-- Security audit trail
-- Production stability
+- Precise security audit trail
+- Predictable production deployments
+- Easier debugging (eliminate version variables)
 
 ### Q: How often should I update lock files?
 
-**A:** 
-- Security updates: Immediately
-- Regular updates: Monthly
-- Major versions: When needed (with testing)
+**A**: 
+- **Security patches**: Immediately for critical vulnerabilities
+- **Regular updates**: Monthly for new features and fixes
+- **Major versions**: After thorough testing, typically quarterly
+- **After dependency changes**: Whenever requirements/*.txt changes
 
 ### Q: Can I use lock files across different platforms?
 
-**A:** 
-- Same OS/CUDA: Yes
-- Different OS: May need adjustments
-- Different CUDA: Generate platform-specific lock file
+**A**:
+- **Same OS + CUDA**: Yes, fully compatible
+- **Different OS**: May need platform-specific adjustments
+- **Different CUDA**: Generate platform-specific lock file
+- **CPU vs GPU**: May have different package versions
 
 ### Q: What if a package in lock file is deprecated?
 
-**A:** 
-1. Find replacement package
-2. Update requirements/*.txt
+**A**:
+1. Find suitable replacement package
+2. Update in source requirements (requirements/*.txt)
 3. Regenerate lock files
 4. Test thoroughly
-5. Update documentation
+5. Update documentation and migration guide
+6. Communicate changes to team
 
-### Q: How to handle transitive dependencies?
+### Q: Should I commit lock files to Git?
 
-**A:** 
-- Lock files include ALL dependencies
-- No manual management needed
-- pip resolves automatically
+**A**: **Yes**, always commit lock files:
+- Ensures team uses same versions
+- Enables reproducible builds in CI/CD
+- Provides audit trail
+- Facilitates debugging
+
+### Q: How do I handle merge conflicts in lock files?
+
+**A**:
+```bash
+# Accept one version
+git checkout --theirs requirements/lock/ml.lock
+
+# Or regenerate
+bash scripts/ci/update_lock_files.sh ml
+
+# Always test after resolution
+pip install -r requirements/lock/ml.lock
+pytest tests/
+```
+
+### Q: What's the difference between lock file and requirements.txt?
+
+**A**:
+
+| Aspect | requirements.txt | lock file |
+|--------|-----------------|-----------|
+| Versions | Ranges (>=, <, ~=) | Exact (==) |
+| Purpose | Specify dependencies | Freeze versions |
+| Updates | Flexible | Fixed |
+| Use case | Development | Production |
+| Size | Smaller | Larger |
+| Dependencies | Direct only | All transitive |
 
 ## Best Practices
 
 ### Development Workflow
 
 ```bash
-# 1. Use regular requirements for development
+# 1. Daily development - use source requirements
 pip install -r requirements/ml.txt
 
-# 2. Install in editable mode
-pip install -e .
+# 2. Experiment freely with new packages
+pip install experimental-package
 
-# 3. Experiment freely
-
-# 4. Before committing, test with lock file
+# 3. Before committing - test with lock file
 pip install -r requirements/lock/ml.lock
 pytest tests/
+
+# 4. Update lock file if requirements changed
+bash scripts/ci/update_lock_files.sh ml
+
+# 5. Commit both source and lock files
+git add requirements/ml.txt requirements/lock/ml.lock
+git commit -m "feat: add new dependency"
 ```
 
 ### Production Deployment
 
 ```bash
-# Always use lock files in production
+# 1. Always use lock files in production
 pip install -r requirements/lock/all.lock
 
-# Verify installation
+# 2. Verify installation
 python scripts/setup/verify_installation.py
 
-# Run smoke tests
+# 3. Run smoke tests
 pytest tests/smoke/ -v
+
+# 4. Monitor for issues
+tail -f /var/log/application.log
 ```
 
 ### Team Collaboration
 
 ```bash
-# Share lock files via Git
-git add requirements/lock/*.lock
-git commit -m "chore: update lock files"
+# 1. Pull latest changes
+git pull origin main
 
-# Team members install exact versions
+# 2. Install from lock file
 pip install -r requirements/lock/ml.lock
+
+# 3. Report any installation issues
+# Open GitHub issue with:
+# - Lock file name
+# - Error message
+# - Platform details
+# - Python version
 ```
 
-## Related Files
+### Research Reproducibility
 
-- Regular requirements: `requirements/*.txt`
-- Compatibility matrix: `configs/compatibility_matrix.yaml`
-- Update script: `scripts/ci/update_lock_files.sh`
-- Installation guide: `docs/getting_started/installation.md`
-- Troubleshooting: `TROUBLESHOOTING.md`
+```bash
+# 1. Document exact versions in paper
+cat requirements/lock/llm.lock | grep "^torch=="
+cat requirements/lock/llm.lock | grep "^transformers=="
+
+# 2. Include lock file hash in paper
+sha256sum requirements/lock/llm.lock
+
+# 3. Archive lock file with results
+cp requirements/lock/llm.lock results/dependencies/
+```
+
+## Related Documentation
+
+### Project Documentation
+- **Installation Guide**: `docs/getting_started/installation.md`
+- **Troubleshooting**: `TROUBLESHOOTING.md`
+- **Health Checks**: `HEALTH_CHECK.md`
+- **Quick Start**: `QUICK_START.md`
+
+### Requirements Files
+- **Source Requirements**: `requirements/*.txt`
+- **Compatibility Matrix**: `configs/compatibility_matrix.yaml`
+- **Platform Guides**: `docs/platform_guides/`
+
+### Scripts
+- **Update Script**: `scripts/ci/update_lock_files.sh`
+- **Verification**: `scripts/setup/verify_installation.py`
+- **Health Check**: `src/core/health/health_checker.py`
+
+### Guides
+- **SOTA Models**: `SOTA_MODELS_GUIDE.md`
+- **Platform Optimization**: `PLATFORM_OPTIMIZATION_GUIDE.md`
+- **Free Deployment**: `FREE_DEPLOYMENT_GUIDE.md`
 
 ## Contributing
 
-To contribute lock file updates:
+To contribute lock file updates or documentation:
 
-1. Create issue describing need for update
-2. Run `bash scripts/ci/update_lock_files.sh`
-3. Test thoroughly
-4. Run security audit
-5. Update CHANGELOG.md
-6. Submit PR with:
-   - Updated lock files
-   - Test results
-   - Security audit results
-   - Migration guide (if breaking changes)
+### Update Process
 
-## Support
+1. **Create Issue**: Describe reason for update
+2. **Fork Repository**: Work in your own fork
+3. **Create Branch**: `update-dependencies-YYYY-MM`
+4. **Update Files**: Run update scripts
+5. **Test Thoroughly**: All tests must pass
+6. **Security Audit**: No vulnerabilities
+7. **Documentation**: Update CHANGELOG.md
+8. **Pull Request**: Include all changes
 
-For lock file issues:
-- Check this README
-- See TROUBLESHOOTING.md
-- Search existing GitHub issues
-- Open new issue with:
-  - Lock file name
-  - Python version
-  - Platform
-  - Error message
-  - Steps to reproduce
+### Pull Request Checklist
+
+- [ ] Lock files regenerated successfully
+- [ ] All tests pass with new versions
+- [ ] Security audit completed (0 critical/high vulnerabilities)
+- [ ] CHANGELOG.md updated
+- [ ] Migration guide created (if breaking changes)
+- [ ] Compatibility matrix updated
+- [ ] Documentation reviewed
+
+## Support and Resources
+
+### Getting Help
+
+For issues with lock files:
+
+1. **Check This README**: Comprehensive troubleshooting section
+2. **Search Issues**: Look for similar problems
+3. **Check Troubleshooting Guide**: `TROUBLESHOOTING.md`
+4. **Open New Issue**: Provide detailed information
+
+### Issue Template
+
+When opening an issue about lock files, include:
+
+```markdown
+**Lock File**: requirements/lock/ml.lock
+**Python Version**: 3.10.12
+**Platform**: Ubuntu 22.04 LTS
+**CUDA**: 11.8
+
+**Error Message**:
+```
+[Paste full error message]
+```
+
+**Steps to Reproduce**:
+1. Create virtual environment
+2. Run: pip install -r requirements/lock/ml.lock
+3. Error occurs at package X
+
+**Expected Behavior**: Installation completes successfully
+
+**Additional Context**: [Any other relevant information]
+```
+
+## Acknowledgments
+
+Lock file system design inspired by:
+- Python pip-tools
+- Poetry lock files
+- Pipenv lock files
+- Conda environment exports
+- Docker layer caching
+- Reproducible research best practices
+
+### Contact
+
+- **GitHub Issues**: Primary support channel
+- **Email**: vohaidung.work@gmail.com (for security issues)
+- **Repository**: https://github.com/VoHaiDung/ag-news-text-classification
 
 ## License
 
-This documentation and lock files are part of the AG News Text Classification project.
+This documentation and all lock files are part of the AG News Text Classification project.
 
-Copyright (c) 2025 Võ Hải Dũng
+**Copyright** (c) 2025 Võ Hải Dũng
 
-Licensed under the MIT License. See LICENSE file for details.
+**Licensed** under the MIT License. See the [LICENSE](LICENSE) file in the project root for full license text.
