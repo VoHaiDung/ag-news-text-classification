@@ -1,0 +1,766 @@
+# ============================================================================
+# Git Attributes Configuration for AG News Text Classification
+# ============================================================================
+# Project: AG News Text Classification (ag-news-text-classification)
+# Description: Git attributes for consistent repository handling
+# Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
+# License: MIT
+# ============================================================================
+#
+# Academic Rationale:
+#   Git attributes provide fine-grained control over how Git handles files,
+#   ensuring consistency across different platforms and contributing to
+#   reproducible research. This configuration follows best practices from
+#   "Version Control with Git" (Loeliger & McCullough) and addresses:
+#   - Line ending normalization (CRLF vs LF)
+#   - Binary file detection and handling
+#   - Diff and merge strategies for specialized file types
+#   - Large file storage recommendations
+#   - Language detection for code statistics
+#
+# Theoretical Foundation:
+#   The design is based on research in collaborative software development:
+#   1. Cross-platform compatibility (Torvalds, 2005 - Git design principles)
+#   2. Binary delta compression (MacDonald, 2000 - xdelta algorithm)
+#   3. Semantic diff algorithms (Myers, 1986 - diff algorithm)
+#   4. Large file versioning (GitHub, 2015 - Git LFS specification)
+#
+# Attribute Syntax:
+#   pattern attr1 attr2 ...
+#   
+#   Common attributes:
+#   - text                 Force text handling
+#   - text=auto            Auto-detect text files
+#   - binary               Treat as binary (no line ending conversion)
+#   - eol=lf               Force Unix line endings (LF)
+#   - eol=crlf             Force Windows line endings (CRLF)
+#   - diff=<driver>        Use specific diff driver
+#   - merge=<driver>       Use specific merge driver
+#   - filter=<name>        Use content filter
+#   - export-ignore        Exclude from git archive
+#   - linguist-vendored    Mark as vendored code (GitHub)
+#   - linguist-generated   Mark as generated code (GitHub)
+#   - linguist-documentation Mark as documentation (GitHub)
+#   - linguist-language=X  Override language detection
+#
+# Verification Commands:
+#   Check file attributes:       git check-attr -a <file>
+#   Check specific attribute:    git check-attr text <file>
+#   List all attributes:         git ls-files | xargs -n1 git check-attr -a
+#   Verify line endings:         git ls-files --eol
+#   Re-normalize line endings:   git add --renormalize .
+#
+# References:
+#   - Git documentation: https://git-scm.com/docs/gitattributes
+#   - GitHub Linguist: https://github.com/github/linguist
+#   - Git LFS: https://git-lfs.github.com/
+#   - EditorConfig: https://editorconfig.org/
+#
+# ============================================================================
+
+# ============================================================================
+# Default Behavior
+# ============================================================================
+# Automatic text file normalization with LF line endings.
+# Following Unix conventions for consistency across platforms.
+# Research: 92% of production servers run Unix-like systems (W3Techs, 2024).
+
+* text=auto eol=lf
+
+# ============================================================================
+# Source Code - Python
+# ============================================================================
+# Python source files with UTF-8 encoding and LF line endings.
+# PEP 263 specifies UTF-8 as default encoding.
+# PEP 8 recommends Unix-style line endings for consistency.
+
+*.py text eol=lf diff=python
+*.pyx text eol=lf diff=python
+*.pyi text eol=lf diff=python
+*.pxd text eol=lf
+*.pyw text eol=lf diff=python
+
+# Python compiled bytecode (should be in .gitignore)
+*.pyc binary
+*.pyo binary
+*.pyd binary
+
+# ============================================================================
+# Configuration Files - YAML
+# ============================================================================
+# YAML configuration files with strict LF endings.
+# YAML specification requires consistent indentation and line endings.
+
+*.yaml text eol=lf linguist-language=YAML
+*.yml text eol=lf linguist-language=YAML
+
+# YAML templates (Jinja2)
+*.yaml.j2 text eol=lf linguist-language=Jinja
+*.yml.j2 text eol=lf linguist-language=Jinja
+
+# ============================================================================
+# Configuration Files - JSON
+# ============================================================================
+# JSON data and configuration files.
+# RFC 8259 recommends LF line endings.
+
+*.json text eol=lf
+*.jsonl text eol=lf
+*.ndjson text eol=lf
+
+# JSON with comments (non-standard but used in VSCode, etc.)
+*.jsonc text eol=lf
+
+# ============================================================================
+# Configuration Files - TOML
+# ============================================================================
+# TOML configuration files (pyproject.toml, poetry configuration).
+
+*.toml text eol=lf linguist-language=TOML
+
+# ============================================================================
+# Configuration Files - INI
+# ============================================================================
+# INI and config files.
+
+*.ini text eol=lf
+*.cfg text eol=lf
+*.conf text eol=lf
+*.config text eol=lf
+
+# ============================================================================
+# Documentation - Markdown
+# ============================================================================
+# Markdown documentation with LF endings.
+# CommonMark specification recommends LF.
+
+*.md text eol=lf diff=markdown linguist-documentation
+*.markdown text eol=lf diff=markdown linguist-documentation
+*.mdown text eol=lf diff=markdown linguist-documentation
+*.mkd text eol=lf diff=markdown linguist-documentation
+
+# ============================================================================
+# Documentation - reStructuredText
+# ============================================================================
+# reStructuredText documentation (Sphinx).
+
+*.rst text eol=lf linguist-documentation
+*.rest text eol=lf linguist-documentation
+
+# ============================================================================
+# Documentation - Other Formats
+# ============================================================================
+
+*.txt text eol=lf
+*.adoc text eol=lf linguist-documentation
+*.textile text eol=lf linguist-documentation
+*.org text eol=lf linguist-documentation
+
+# ============================================================================
+# Shell Scripts
+# ============================================================================
+# Shell scripts must use LF endings (Unix requirement).
+# POSIX standard requires LF line endings.
+
+*.sh text eol=lf diff=bash
+*.bash text eol=lf diff=bash
+*.zsh text eol=lf
+*.fish text eol=lf
+*.ksh text eol=lf
+
+# Make executable after checkout
+*.sh filter=lfs diff=lfs merge=lfs -text
+
+# ============================================================================
+# Windows Scripts
+# ============================================================================
+# Windows batch and PowerShell scripts use CRLF.
+# Windows cmd.exe requires CRLF line endings.
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# ============================================================================
+# Makefiles
+# ============================================================================
+# Makefiles require tabs and LF endings (POSIX make specification).
+
+Makefile text eol=lf
+makefile text eol=lf
+*.mk text eol=lf
+GNUmakefile text eol=lf
+
+# ============================================================================
+# Docker
+# ============================================================================
+# Docker configuration files.
+
+Dockerfile text eol=lf
+Dockerfile.* text eol=lf
+*.dockerfile text eol=lf
+.dockerignore text eol=lf
+docker-compose.yml text eol=lf
+docker-compose.*.yml text eol=lf
+
+# ============================================================================
+# CI/CD Configuration
+# ============================================================================
+# Continuous integration and deployment configurations.
+
+.travis.yml text eol=lf
+.gitlab-ci.yml text eol=lf
+appveyor.yml text eol=lf
+*.jenkinsfile text eol=lf
+
+# GitHub Actions
+.github/**/*.yml text eol=lf
+.github/**/*.yaml text eol=lf
+
+# ============================================================================
+# Git Configuration
+# ============================================================================
+
+.gitattributes text eol=lf export-ignore
+.gitignore text eol=lf export-ignore
+.gitmodules text eol=lf
+.gitkeep text eol=lf
+
+# ============================================================================
+# EditorConfig
+# ============================================================================
+
+.editorconfig text eol=lf
+
+# ============================================================================
+# Environment Files
+# ============================================================================
+# Environment variable files.
+
+.env text eol=lf
+.env.* text eol=lf
+*.env text eol=lf
+
+# ============================================================================
+# License and Legal
+# ============================================================================
+
+LICENSE text eol=lf
+LICENSE.* text eol=lf
+COPYING text eol=lf
+COPYRIGHT text eol=lf
+NOTICE text eol=lf
+
+# ============================================================================
+# Project Documentation
+# ============================================================================
+
+README text eol=lf linguist-documentation
+README.* text eol=lf linguist-documentation
+CHANGELOG text eol=lf linguist-documentation
+CHANGELOG.* text eol=lf linguist-documentation
+CONTRIBUTING text eol=lf linguist-documentation
+CONTRIBUTING.* text eol=lf linguist-documentation
+AUTHORS text eol=lf linguist-documentation
+CONTRIBUTORS text eol=lf linguist-documentation
+CITATION text eol=lf linguist-documentation
+CITATION.* text eol=lf linguist-documentation
+
+# ============================================================================
+# HTML and Web Assets
+# ============================================================================
+
+*.html text eol=lf diff=html
+*.htm text eol=lf diff=html
+*.xhtml text eol=lf
+*.xml text eol=lf
+
+# ============================================================================
+# CSS and Styling
+# ============================================================================
+
+*.css text eol=lf diff=css
+*.scss text eol=lf
+*.sass text eol=lf
+*.less text eol=lf
+
+# ============================================================================
+# JavaScript and TypeScript
+# ============================================================================
+
+*.js text eol=lf
+*.jsx text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+
+# ============================================================================
+# SQL
+# ============================================================================
+
+*.sql text eol=lf
+
+# ============================================================================
+# LaTeX
+# ============================================================================
+# LaTeX source files for academic paper generation.
+
+*.tex text eol=lf diff=tex
+*.bib text eol=lf diff=bibtex
+*.cls text eol=lf
+*.sty text eol=lf
+*.dtx text eol=lf
+*.ins text eol=lf
+
+# ============================================================================
+# CSV and TSV Data Files
+# ============================================================================
+# Data files for AG News dataset and other text data.
+# These are text files but treated specially for diff.
+
+*.csv text eol=lf
+*.tsv text eol=lf
+*.tab text eol=lf
+*.psv text eol=lf
+
+# ============================================================================
+# Jupyter Notebooks
+# ============================================================================
+# Jupyter notebooks are JSON but need special handling.
+# Use nbstripout filter (configured in .gitconfig or pre-commit).
+
+*.ipynb text eol=lf linguist-language=Jupyter
+
+# Note: Consider using nbstripout to remove execution outputs:
+#   git config filter.nbstripout.clean 'nbstripout'
+#   git config filter.nbstripout.smudge 'cat'
+# Then add: *.ipynb filter=nbstripout
+
+# ============================================================================
+# Requirements and Lock Files
+# ============================================================================
+# Python dependency files.
+
+requirements.txt text eol=lf
+requirements/*.txt text eol=lf
+requirements/lock/*.lock text eol=lf
+
+# Poetry
+poetry.lock text eol=lf linguist-generated=true
+pyproject.toml text eol=lf
+
+# Pipenv
+Pipfile text eol=lf
+Pipfile.lock text eol=lf linguist-generated=true
+
+# Conda
+environment.yml text eol=lf
+environment.yaml text eol=lf
+*.conda text eol=lf
+
+# ============================================================================
+# Binary Files - Images
+# ============================================================================
+# Image files for documentation, diagrams, and visualization.
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text eol=lf
+*.eps binary
+*.ai binary
+*.bmp binary
+*.tif binary
+*.tiff binary
+*.webp binary
+
+# Diagrams
+*.drawio binary
+*.vsd binary
+*.vsdx binary
+
+# ============================================================================
+# Binary Files - Machine Learning Models
+# ============================================================================
+# Model weights and checkpoints - recommend Git LFS for files > 100MB.
+# Following HuggingFace model hub conventions.
+
+# PyTorch models
+*.pt binary
+*.pth binary
+*.ckpt binary
+
+# TensorFlow models
+*.pb binary
+*.h5 binary
+*.hdf5 binary
+*.keras binary
+
+# ONNX models
+*.onnx binary
+
+# Safetensors (HuggingFace format)
+*.safetensors binary
+
+# Other serialized models
+*.pkl binary
+*.pickle binary
+*.joblib binary
+*.bin binary
+*.msgpack binary
+
+# Model archives
+*.tar binary
+*.tar.gz binary
+*.tgz binary
+*.model binary
+*.weights binary
+
+# ============================================================================
+# Binary Files - Archives
+# ============================================================================
+
+*.zip binary
+*.7z binary
+*.rar binary
+*.gz binary
+*.bz2 binary
+*.xz binary
+*.lz binary
+*.lzma binary
+*.zst binary
+
+# ============================================================================
+# Binary Files - Documents
+# ============================================================================
+
+*.pdf binary diff=pdf
+*.doc binary
+*.docx binary
+*.ppt binary
+*.pptx binary
+*.xls binary
+*.xlsx binary
+*.odt binary
+*.ods binary
+*.odp binary
+
+# ============================================================================
+# Binary Files - Fonts
+# ============================================================================
+
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.eot binary
+
+# ============================================================================
+# Binary Files - Audio
+# ============================================================================
+# Audio files for potential multimodal extensions.
+
+*.mp3 binary
+*.wav binary
+*.flac binary
+*.ogg binary
+*.m4a binary
+
+# ============================================================================
+# Binary Files - Video
+# ============================================================================
+
+*.mp4 binary
+*.avi binary
+*.mov binary
+*.wmv binary
+*.flv binary
+*.webm binary
+
+# ============================================================================
+# Binary Files - Compiled Libraries
+# ============================================================================
+
+*.so binary
+*.dylib binary
+*.dll binary
+*.exe binary
+*.lib binary
+*.a binary
+*.o binary
+
+# ============================================================================
+# NumPy and Scientific Data
+# ============================================================================
+# NumPy arrays and scientific data formats.
+
+*.npy binary
+*.npz binary
+*.mat binary
+*.hdf binary
+
+# ============================================================================
+# Export Configuration
+# ============================================================================
+# Files to exclude from git archive (for releases).
+# These files are needed in development but not in distributed packages.
+
+.gitattributes export-ignore
+.gitignore export-ignore
+.github/ export-ignore
+.gitlab/ export-ignore
+.travis.yml export-ignore
+.gitlab-ci.yml export-ignore
+appveyor.yml export-ignore
+
+# Development tools
+.editorconfig export-ignore
+.pre-commit-config.yaml export-ignore
+.flake8 export-ignore
+.pylintrc export-ignore
+.coveragerc export-ignore
+.dockerignore export-ignore
+commitlint.config.js export-ignore
+
+# IDE configurations
+.vscode/ export-ignore
+.idea/ export-ignore
+.ide/ export-ignore
+
+# Testing
+tests/ export-ignore
+.pytest_cache/ export-ignore
+.tox/ export-ignore
+.coverage export-ignore
+htmlcov/ export-ignore
+
+# CI/CD
+.husky/ export-ignore
+
+# Documentation source (keep built docs)
+docs/ export-ignore
+
+# Development scripts
+scripts/ci/ export-ignore
+
+# ============================================================================
+# GitHub Linguist Configuration
+# ============================================================================
+# Control language detection and code statistics on GitHub.
+
+# Mark vendored code (third-party libraries)
+# Currently no vendored code in project
+
+# Mark generated code
+requirements/lock/*.lock linguist-generated=true
+poetry.lock linguist-generated=true
+
+# Mark documentation
+docs/** linguist-documentation
+*.md linguist-documentation
+*.rst linguist-documentation
+
+# Override language detection for ambiguous files
+*.yaml.j2 linguist-language=Jinja
+configs/templates/*.yaml.j2 linguist-language=Jinja
+
+# Data files should not be counted in language statistics
+data/**/*.csv linguist-vendored=true
+data/**/*.json linguist-vendored=true
+benchmarks/**/*.json linguist-vendored=true
+
+# ============================================================================
+# Diff Configuration
+# ============================================================================
+# Custom diff drivers for specific file types.
+
+# Python diff with function context
+*.py diff=python
+
+# Markdown diff
+*.md diff=markdown
+
+# CSS diff
+*.css diff=css
+
+# HTML diff
+*.html diff=html
+
+# ============================================================================
+# Merge Configuration
+# ============================================================================
+# Custom merge strategies for specific files.
+
+# Lock files: prefer ours during merge conflicts (regenerate after)
+requirements/lock/*.lock merge=ours
+poetry.lock merge=ours
+
+# CHANGELOG: union merge (combine both versions)
+CHANGELOG.md merge=union
+
+# ============================================================================
+# Git LFS Tracking
+# ============================================================================
+# Git Large File Storage for files > 100MB.
+# Uncomment and configure if using Git LFS.
+#
+# Installation:
+#   git lfs install
+#   git lfs track "*.pt"
+#
+# Note: Consider enabling LFS for:
+# - Model checkpoints > 100MB
+# - Large datasets > 1GB
+# - Compiled ONNX models
+#
+# Current recommendation: Use external storage (S3, GCS, HuggingFace Hub)
+# for large model files rather than Git LFS for better cost efficiency.
+
+# Uncomment if using Git LFS:
+# *.pt filter=lfs diff=lfs merge=lfs -text
+# *.pth filter=lfs diff=lfs merge=lfs -text
+# *.onnx filter=lfs diff=lfs merge=lfs -text
+# *.safetensors filter=lfs diff=lfs merge=lfs -text
+# *.bin filter=lfs diff=lfs merge=lfs -text
+# *.h5 filter=lfs diff=lfs merge=lfs -text
+# *.tar.gz filter=lfs diff=lfs merge=lfs -text
+
+# ============================================================================
+# Platform-Specific Configurations
+# ============================================================================
+
+# Colab notebooks (may have Windows-style endings from browser)
+notebooks/06_platform_specific/colab/*.ipynb text eol=lf
+
+# Kaggle notebooks
+notebooks/06_platform_specific/kaggle/*.ipynb text eol=lf
+
+# ============================================================================
+# Special Project Files
+# ============================================================================
+
+# Setup and installation
+setup.py text eol=lf diff=python
+setup.cfg text eol=lf
+MANIFEST.in text eol=lf
+install.sh text eol=lf
+
+# Source code
+src/**/*.py text eol=lf diff=python
+
+# Prompts
+prompts/**/*.txt text eol=lf
+
+# ============================================================================
+# IDE-Specific Configurations
+# ============================================================================
+
+# VSCode
+.vscode/*.json text eol=lf
+.vscode/*.code-snippets text eol=lf
+
+# PyCharm
+.idea/*.xml text eol=lf
+.idea/**/*.xml text eol=lf
+
+# Jupyter
+.jupyter/*.py text eol=lf diff=python
+.jupyter/**/*.json text eol=lf
+
+# Vim
+.vim/*.vim text eol=lf
+.vimrc text eol=lf
+
+# Neovim
+.config/nvim/*.lua text eol=lf
+init.lua text eol=lf
+
+# Sublime
+*.sublime-project text eol=lf
+*.sublime-settings text eol=lf
+*.sublime-snippet text eol=lf
+
+# ============================================================================
+# Security Files
+# ============================================================================
+
+# Security policy
+SECURITY.md text eol=lf linguist-documentation
+
+# Secrets templates (actual secrets in .gitignore)
+*.template.yaml text eol=lf
+secrets.template.yaml text eol=lf
+
+# ============================================================================
+# Troubleshooting and Maintenance
+# ============================================================================
+
+TROUBLESHOOTING.md text eol=lf linguist-documentation
+HEALTH_CHECK.md text eol=lf linguist-documentation
+
+# ============================================================================
+# Guides and Documentation
+# ============================================================================
+
+*_GUIDE.md text eol=lf linguist-documentation
+ROADMAP.md text eol=lf linguist-documentation
+ARCHITECTURE.md text eol=lf linguist-documentation
+PERFORMANCE.md text eol=lf linguist-documentation
+
+# ============================================================================
+# Notes
+# ============================================================================
+#
+# Line Ending Normalization:
+#   After modifying this file, normalize existing files with:
+#     git add --renormalize .
+#     git commit -m "chore: normalize line endings"
+#
+# Verification:
+#   Check file attributes:
+#     git check-attr -a path/to/file
+#   
+#   Check line endings:
+#     git ls-files --eol
+#
+# Performance Impact:
+#   Text normalization adds minimal overhead to Git operations.
+#   Binary file handling is optimized for delta compression.
+#   LFS reduces repository size but adds network dependency.
+#
+# Cross-Platform Collaboration:
+#   - LF endings work on all platforms (Windows Git handles conversion)
+#   - CRLF only for Windows-specific scripts
+#   - Binary detection prevents corruption
+#
+# GitHub Integration:
+#   - linguist-* attributes control language statistics
+#   - export-ignore reduces archive size
+#   - Proper language detection improves discoverability
+#
+# Best Practices:
+#   1. Review this file when adding new file types
+#   2. Test on all target platforms
+#   3. Document reasons for non-standard configurations
+#   4. Keep in sync with .gitignore and .editorconfig
+#   5. Use binary attribute for all non-text files
+#   6. Consider Git LFS for files > 100MB
+#
+# Academic Reproducibility:
+#   - Consistent line endings prevent spurious diffs
+#   - Binary handling ensures model file integrity
+#   - Export configuration creates clean release archives
+#   - Language detection aids in project classification
+#
+# References:
+#   - Git Attributes Documentation: https://git-scm.com/docs/gitattributes
+#   - GitHub Linguist: https://github.com/github/linguist/blob/master/docs/overrides.md
+#   - Git LFS: https://git-lfs.github.com/
+#   - EditorConfig: https://editorconfig.org/
+#   - Pro Git Book: https://git-scm.com/book/en/v2/Customizing-Git-Git-Attributes
+#
+# ============================================================================
