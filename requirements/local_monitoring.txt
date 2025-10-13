@@ -199,7 +199,7 @@ orjson>=3.9.0,<3.11.0
 # Statistical Analysis
 # ----------------------------------------------------------------------------
 # SciPy for scientific computing
-scipy>=1.10.0,<1.13.0
+scipy>=1.10.0,<1.14.0
 
 # Statsmodels for time series analysis
 statsmodels>=0.14.0,<0.15.0

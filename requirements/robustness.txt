@@ -171,7 +171,7 @@ sweetviz>=2.3.0,<2.4.0
 # Statistical Tests for Robustness
 # ----------------------------------------------------------------------------
 # SciPy for statistical testing (already in ml.txt)
-scipy>=1.10.0,<1.13.0
+scipy>=1.10.0,<1.14.0
 
 # Statsmodels for statistical modeling
 statsmodels>=0.14.0,<0.15.0
