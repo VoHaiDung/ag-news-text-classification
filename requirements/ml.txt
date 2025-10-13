@@ -129,7 +129,7 @@ scikit-learn-extra>=0.3.0,<0.4.0
 mlxtend>=0.23.0,<0.24.0
 
 # Bayesian optimization for ensemble weights
-scikit-optimize>=0.9.0,<0.10.0
+scikit-optimize>=0.9.0,<0.11.0
 bayesian-optimization>=1.4.3,<1.5.0
 
 # Snapshot ensemble implementation

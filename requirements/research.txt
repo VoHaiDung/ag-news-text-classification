@@ -75,7 +75,7 @@ ray[default]>=2.9.0,<2.10.0
 hyperopt>=0.2.7,<0.3.0
 
 # Scikit-optimize for Bayesian optimization
-scikit-optimize>=0.9.0,<0.10.0
+scikit-optimize>=0.9.0,<0.11.0
 
 # BayesOpt for Gaussian Process optimization
 bayesian-optimization>=1.4.3,<1.5.0
