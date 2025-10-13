@@ -194,7 +194,7 @@ tenacity>=8.2.3,<9.1.0
 plotly>=5.18.0,<5.24.0
 
 # Rich for beautiful console output
-rich>=13.7.0,<13.8.0
+rich>=13.7.0,<14.3.0
 
 # ============================================================================
 # Model Export and Deployment

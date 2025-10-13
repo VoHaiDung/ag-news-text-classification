@@ -282,7 +282,7 @@ pyopenssl>=23.3.0,<24.3.0
 click>=8.1.7,<8.2.0
 
 # Rich for beautiful terminal output
-rich>=13.7.0,<13.8.0
+rich>=13.7.0,<14.3.0
 
 # Typer for modern CLI with type hints
 typer[all]>=0.9.0,<0.13.0

@@ -214,7 +214,7 @@ zstandard>=0.22.0,<0.23.0
 # Terminal Output Enhancement
 # ----------------------------------------------------------------------------
 # Rich for beautiful terminal output
-rich>=13.7.0,<13.8.0
+rich>=13.7.0,<14.3.0
 
 # Click for command-line interfaces
 click>=8.1.7,<8.2.0
