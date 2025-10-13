@@ -123,7 +123,7 @@ tueplots>=0.0.13,<0.1.0
 # Jupyter Ecosystem
 # ----------------------------------------------------------------------------
 # Jupyter for interactive research
-jupyter>=1.0.0,<1.1.0
+jupyter>=1.0.0,<1.2.0
 jupyterlab>=4.0.0,<4.3.0
 notebook>=7.0.0,<7.3.0
 
