@@ -46,7 +46,7 @@ python-multipart>=0.0.6,<0.0.10
 uvicorn[standard]>=0.27.0,<0.30.0
 
 # Gunicorn for production WSGI/ASGI management
-gunicorn>=21.2.0,<22.1.0
+gunicorn>=21.2.0,<23.1.0
 
 # Starlette ASGI framework (FastAPI dependency)
 starlette>=0.36.0,<0.38.0

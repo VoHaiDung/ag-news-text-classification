@@ -247,7 +247,7 @@ robustness = [
 local_prod = [
     "fastapi>=0.109.0,<0.112.0",
     "uvicorn[standard]>=0.27.0,<0.31.0",
-    "gunicorn>=21.2.0,<23.0.0",
+    "gunicorn>=21.2.0,<24.0.0",
 ]
 
 local_monitoring = [
