@@ -164,7 +164,7 @@ optuna>=3.5.0,<3.7.0
 optuna-integration>=3.5.0,<3.7.0
 
 # Ray Tune for distributed hyperparameter search
-ray[tune]>=2.9.0,<2.10.0
+ray[tune]>=2.9.0,<2.51.0
 
 # Hyperband and BOHB
 hyperopt>=0.2.7,<0.3.0
