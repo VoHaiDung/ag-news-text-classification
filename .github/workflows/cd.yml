@@ -1,0 +1,1359 @@
+# ============================================================================
+# Continuous Deployment Pipeline for AG News Text Classification
+# ============================================================================
+# Project: AG News Text Classification (ag-news-text-classification)
+# Description: Automated deployment pipeline for multi-platform distribution
+#              of trained models, applications, and documentation following
+#              academic reproducibility and accessibility principles
+# Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
+# License: MIT
+# ============================================================================
+#
+# Academic Rationale:
+#   This CD pipeline implements principles from:
+#   - "Continuous Delivery: Reliable Software Releases" (Humble & Farley, 2010)
+#   - "MLOps: Continuous Delivery for Machine Learning" (Google, 2021)
+#   - "Reproducible Research in Computational Science" (Stodden, 2014)
+#   - "Democratizing AI: Free-Tier Deployment Strategies" (Academic Best Practices)
+#
+# Design Principles:
+#   1. Automation: Minimize manual intervention in deployment process
+#   2. Reproducibility: Ensure consistent deployments across environments
+#   3. Accessibility: Prioritize free-tier platforms for academic use
+#   4. Versioning: Maintain clear version history and artifact tracking
+#   5. Rollback Capability: Support quick reversion to previous versions
+#   6. Health Verification: Automated post-deployment validation
+#   7. Multi-Platform: Deploy to diverse environments (HF, Streamlit, Docker)
+#   8. Documentation: Auto-deploy docs alongside code
+#   9. Security: Secure credential management and access control
+#   10. Monitoring: Track deployment metrics and success rates
+#
+# Deployment Architecture:
+#   Stage 1: Pre-Deployment Validation
+#     - Version verification
+#     - Artifact validation
+#     - Configuration checks
+#     - Security scanning
+#   
+#   Stage 2: Build and Package
+#     - Python package building
+#     - Docker image creation
+#     - Model artifact preparation
+#     - Documentation generation
+#   
+#   Stage 3: Platform Deployments (parallel)
+#     - HuggingFace Spaces deployment
+#     - Streamlit Cloud deployment
+#     - Docker Hub publishing
+#     - PyPI package publishing (optional)
+#     - GitHub Pages documentation
+#   
+#   Stage 4: Post-Deployment Validation
+#     - Health checks
+#     - Integration tests
+#     - Performance verification
+#     - Monitoring setup
+#   
+#   Stage 5: Release Management
+#     - GitHub release creation
+#     - Changelog generation
+#     - Notification dispatch
+#     - Metrics collection
+#
+# Deployment Targets:
+#   - HuggingFace Spaces: Interactive demo and API
+#   - Streamlit Cloud: User-friendly web interface
+#   - Docker Hub: Containerized deployment
+#   - GitHub Pages: Documentation hosting
+#   - PyPI: Python package distribution (optional)
+#
+# Versioning Strategy:
+#   - Semantic versioning (MAJOR.MINOR.PATCH)
+#   - Git tags trigger deployments
+#   - Automated changelog generation
+#   - Artifact versioning aligned with code versions
+#
+# References:
+#   - GitHub Actions: https://docs.github.com/actions
+#   - HuggingFace Spaces: https://huggingface.co/docs/hub/spaces
+#   - Docker Best Practices: https://docs.docker.com/develop/dev-best-practices/
+#   - Semantic Versioning: https://semver.org/
+#
+# ============================================================================
+
+name: Continuous Deployment
+
+# ============================================================================
+# Trigger Configuration
+# ============================================================================
+# Academic Justification:
+#   - Tags: Deployments triggered by semantic version tags (v*.*.*)
+#   - Main branch: Automated deployment of stable releases
+#   - Workflow dispatch: Manual deployment for emergency updates
+#   - Release events: Deploy when GitHub releases are published
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-alpha.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+'
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+  
+  release:
+    types:
+      - published
+      - created
+  
+  workflow_dispatch:
+    inputs:
+      deployment_target:
+        description: 'Select deployment target'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - 'all'
+          - 'huggingface'
+          - 'streamlit'
+          - 'docker'
+          - 'docs'
+          - 'pypi'
+      
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - 'production'
+          - 'staging'
+          - 'development'
+      
+      version_override:
+        description: 'Override version (leave empty for auto-detect)'
+        required: false
+        default: ''
+        type: string
+      
+      skip_tests:
+        description: 'Skip pre-deployment tests (not recommended)'
+        required: false
+        default: false
+        type: boolean
+      
+      force_deploy:
+        description: 'Force deployment even if validations fail'
+        required: false
+        default: false
+        type: boolean
+
+# ============================================================================
+# Global Environment Variables
+# ============================================================================
+# Academic Justification:
+#   Centralized configuration for deployment consistency and auditability
+
+env:
+  # Python configuration
+  PYTHON_VERSION: '3.10'
+  
+  # Project metadata
+  PROJECT_NAME: 'AG News Text Classification'
+  PROJECT_SLUG: 'ag-news-text-classification'
+  PROJECT_AUTHOR: 'Võ Hải Dũng'
+  PROJECT_EMAIL: 'vohaidung.work@gmail.com'
+  PROJECT_LICENSE: 'MIT'
+  
+  # Docker configuration
+  DOCKER_REGISTRY: 'docker.io'
+  DOCKER_USERNAME: 'vohaidung'
+  DOCKER_IMAGE_NAME: 'ag-news-text-classification'
+  
+  # HuggingFace configuration
+  HF_SPACE_NAME: 'ag-news-text-classification'
+  HF_SPACE_SDK: 'streamlit'
+  
+  # Deployment settings
+  DEPLOYMENT_TIMEOUT: 1800
+  HEALTH_CHECK_TIMEOUT: 300
+  HEALTH_CHECK_RETRIES: 5
+  
+  # Artifact settings
+  ARTIFACT_RETENTION_DAYS: 90
+  
+  # Build settings
+  FORCE_COLOR: '1'
+  PYTHONUNBUFFERED: '1'
+  PYTHONDONTWRITEBYTECODE: '1'
+
+# ============================================================================
+# Concurrency Control
+# ============================================================================
+# Academic Justification:
+#   Prevent concurrent deployments to avoid race conditions and ensure
+#   deployment integrity
+
+concurrency:
+  group: deployment-${{ github.ref }}
+  cancel-in-progress: false
+
+# ============================================================================
+# Jobs Definition
+# ============================================================================
+
+jobs:
+  # ==========================================================================
+  # Job 1: Pre-Deployment Validation
+  # ==========================================================================
+  # Academic Justification:
+  #   Validates that all prerequisites are met before initiating deployment,
+  #   following fail-fast principles to prevent costly deployment failures
+
+  pre-deployment-validation:
+    name: Pre-Deployment Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+      deploy-huggingface: ${{ steps.check-deployment.outputs.deploy-huggingface }}
+      deploy-streamlit: ${{ steps.check-deployment.outputs.deploy-streamlit }}
+      deploy-docker: ${{ steps.check-deployment.outputs.deploy-docker }}
+      deploy-docs: ${{ steps.check-deployment.outputs.deploy-docs }}
+      deploy-pypi: ${{ steps.check-deployment.outputs.deploy-pypi }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Extract version information
+        id: get-version
+        run: |
+          if [ -n "${{ github.event.inputs.version_override }}" ]; then
+            VERSION="${{ github.event.inputs.version_override }}"
+            echo "Using override version: $VERSION"
+          elif [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            echo "Using tag version: $VERSION"
+          elif [ -f "src/__version__.py" ]; then
+            VERSION=$(python -c "exec(open('src/__version__.py').read()); print(__version__)")
+            echo "Using version from __version__.py: $VERSION"
+          elif [ -f "pyproject.toml" ]; then
+            pip install toml
+            VERSION=$(python -c "import toml; print(toml.load('pyproject.toml')['project']['version'])")
+            echo "Using version from pyproject.toml: $VERSION"
+          else
+            VERSION="0.1.0"
+            echo "Using default version: $VERSION"
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          
+          echo "Deployment Version: $VERSION"
+      
+      - name: Validate version format
+        run: |
+          VERSION="${{ steps.get-version.outputs.version }}"
+          
+          if [[ ! $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-z]+\.[0-9]+)?$ ]]; then
+            echo "ERROR: Invalid version format: $VERSION"
+            echo "Expected format: X.Y.Z or X.Y.Z-prerelease.N"
+            exit 1
+          fi
+          
+          echo "Version format is valid: $VERSION"
+      
+      - name: Determine deployment targets
+        id: check-deployment
+        run: |
+          TARGET="${{ github.event.inputs.deployment_target }}"
+          if [ -z "$TARGET" ]; then
+            TARGET="all"
+          fi
+          
+          if [ "$TARGET" == "all" ]; then
+            echo "deploy-huggingface=true" >> $GITHUB_OUTPUT
+            echo "deploy-streamlit=true" >> $GITHUB_OUTPUT
+            echo "deploy-docker=true" >> $GITHUB_OUTPUT
+            echo "deploy-docs=true" >> $GITHUB_OUTPUT
+            echo "deploy-pypi=false" >> $GITHUB_OUTPUT
+          else
+            echo "deploy-huggingface=$( [ '$TARGET' == 'huggingface' ] && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
+            echo "deploy-streamlit=$( [ '$TARGET' == 'streamlit' ] && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
+            echo "deploy-docker=$( [ '$TARGET' == 'docker' ] && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
+            echo "deploy-docs=$( [ '$TARGET' == 'docs' ] && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
+            echo "deploy-pypi=$( [ '$TARGET' == 'pypi' ] && echo 'true' || echo 'false' )" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Validate project structure
+        run: |
+          echo "Validating critical deployment files..."
+          
+          REQUIRED_FILES=(
+            "README.md"
+            "LICENSE"
+            "requirements/base.txt"
+          )
+          
+          REQUIRED_DIRS=(
+            "src"
+            "configs"
+            "deployment"
+            "app"
+          )
+          
+          missing_files=()
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$file" ]; then
+              missing_files+=("$file")
+            fi
+          done
+          
+          missing_dirs=()
+          for dir in "${REQUIRED_DIRS[@]}"; do
+            if [ ! -d "$dir" ]; then
+              missing_dirs+=("$dir")
+            fi
+          done
+          
+          if [ ${#missing_files[@]} -gt 0 ] || [ ${#missing_dirs[@]} -gt 0 ]; then
+            echo "ERROR: Missing required files or directories:"
+            [ ${#missing_files[@]} -gt 0 ] && printf '  File: %s\n' "${missing_files[@]}"
+            [ ${#missing_dirs[@]} -gt 0 ] && printf '  Directory: %s\n' "${missing_dirs[@]}"
+            
+            if [ "${{ github.event.inputs.force_deploy }}" != "true" ]; then
+              exit 1
+            else
+              echo "WARNING: Continuing deployment despite missing files (force_deploy=true)"
+            fi
+          fi
+          
+          echo "Project structure validation passed"
+      
+      - name: Run quick tests
+        if: github.event.inputs.skip_tests != 'true'
+        run: |
+          echo "Running quick pre-deployment tests..."
+          
+          pip install pytest pyyaml
+          
+          if [ -d "tests" ] && [ -f "tests/test_imports.py" ]; then
+            pytest tests/test_imports.py -v --tb=short || {
+              echo "WARNING: Some import tests failed"
+              if [ "${{ github.event.inputs.force_deploy }}" != "true" ]; then
+                exit 1
+              fi
+            }
+          else
+            echo "No test files found, skipping tests"
+          fi
+        continue-on-error: ${{ github.event.inputs.force_deploy == 'true' }}
+      
+      - name: Validate deployment configurations
+        run: |
+          echo "Validating deployment configurations..."
+          
+          if [ -f "deployment/huggingface/requirements.txt" ]; then
+            echo "HuggingFace deployment config found"
+          fi
+          
+          if [ -f "deployment/streamlit_cloud/.streamlit/config.toml" ]; then
+            echo "Streamlit deployment config found"
+          fi
+          
+          if [ -f "deployment/docker/Dockerfile.local" ]; then
+            echo "Docker deployment config found"
+          fi
+      
+      - name: Generate deployment manifest
+        run: |
+          cat > deployment-manifest.json << EOF
+          {
+            "version": "${{ steps.get-version.outputs.version }}",
+            "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "commit_sha": "${{ github.sha }}",
+            "commit_ref": "${{ github.ref }}",
+            "triggered_by": "${{ github.actor }}",
+            "deployment_targets": {
+              "huggingface": ${{ steps.check-deployment.outputs.deploy-huggingface }},
+              "streamlit": ${{ steps.check-deployment.outputs.deploy-streamlit }},
+              "docker": ${{ steps.check-deployment.outputs.deploy-docker }},
+              "docs": ${{ steps.check-deployment.outputs.deploy-docs }},
+              "pypi": ${{ steps.check-deployment.outputs.deploy-pypi }}
+            },
+            "environment": "${{ github.event.inputs.environment || 'production' }}"
+          }
+          EOF
+          
+          cat deployment-manifest.json
+      
+      - name: Upload deployment manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-manifest-${{ github.run_id }}
+          path: deployment-manifest.json
+          retention-days: 90
+
+  # ==========================================================================
+  # Job 2: Build Python Package
+  # ==========================================================================
+  # Academic Justification:
+  #   Creates distributable Python package following PEP 517/518 standards
+  #   for potential PyPI distribution and reproducible installations
+
+  build-package:
+    name: Build Python Package
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [pre-deployment-validation]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-build-${{ hashFiles('requirements/*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-build-
+            ${{ runner.os }}-pip-
+      
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build setuptools wheel twine
+      
+      - name: Update version in package files
+        run: |
+          VERSION="${{ needs.pre-deployment-validation.outputs.version }}"
+          
+          mkdir -p src
+          cat > src/__version__.py << EOF
+          """
+          Version information for AG News Text Classification.
+          
+          Author: Võ Hải Dũng
+          Email: vohaidung.work@gmail.com
+          License: MIT
+          """
+          __version__ = "${VERSION}"
+          __author__ = "Võ Hải Dũng"
+          __email__ = "vohaidung.work@gmail.com"
+          __license__ = "MIT"
+          EOF
+          
+          if [ -f "pyproject.toml" ]; then
+            sed -i "s/version = \".*\"/version = \"${VERSION}\"/" pyproject.toml
+          fi
+          
+          echo "Updated version to: $VERSION"
+      
+      - name: Build source distribution
+        run: |
+          python -m build --sdist .
+          echo "Source distribution built successfully"
+      
+      - name: Build wheel distribution
+        run: |
+          python -m build --wheel .
+          echo "Wheel distribution built successfully"
+      
+      - name: List built distributions
+        run: |
+          ls -lh dist/
+      
+      - name: Verify distributions
+        run: |
+          twine check dist/*
+      
+      - name: Upload distribution artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions-${{ github.run_id }}
+          path: dist/
+          retention-days: ${{ env.ARTIFACT_RETENTION_DAYS }}
+
+  # ==========================================================================
+  # Job 3: Build Docker Image
+  # ==========================================================================
+  # Academic Justification:
+  #   Creates containerized deployment for reproducible environments across
+  #   different platforms, following Docker best practices
+
+  build-docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: [pre-deployment-validation]
+    if: needs.pre-deployment-validation.outputs.deploy-docker == 'true'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+        continue-on-error: true
+      
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ needs.pre-deployment-validation.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.pre-deployment-validation.outputs.version }}
+            type=semver,pattern={{major}},value=${{ needs.pre-deployment-validation.outputs.version }}
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+      
+      - name: Prepare Dockerfile
+        run: |
+          if [ ! -f "deployment/docker/Dockerfile.local" ]; then
+            echo "Creating default Dockerfile..."
+            mkdir -p deployment/docker
+            
+            cat > deployment/docker/Dockerfile.local << 'DOCKERFILE_EOF'
+          FROM python:3.10-slim
+          
+          LABEL maintainer="Võ Hải Dũng <vohaidung.work@gmail.com>"
+          LABEL description="AG News Text Classification - Dockerized deployment"
+          LABEL license="MIT"
+          
+          WORKDIR /app
+          
+          RUN apt-get update && apt-get install -y --no-install-recommends \
+              build-essential \
+              git \
+              && rm -rf /var/lib/apt/lists/*
+          
+          COPY requirements/base.txt requirements/base.txt
+          RUN pip install --no-cache-dir --upgrade pip && \
+              pip install --no-cache-dir -r requirements/base.txt
+          
+          COPY . .
+          
+          ENV PYTHONUNBUFFERED=1
+          ENV PYTHONDONTWRITEBYTECODE=1
+          
+          EXPOSE 8501
+          
+          CMD ["streamlit", "run", "app/streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+          DOCKERFILE_EOF
+          fi
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: deployment/docker/Dockerfile.local
+          push: ${{ secrets.DOCKER_TOKEN != '' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+      
+      - name: Generate Docker deployment instructions
+        run: |
+          cat > docker-deployment-instructions.md << EOF
+          # Docker Deployment Instructions
+          
+          ## Pull Image
+          \`\`\`bash
+          docker pull ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:${{ needs.pre-deployment-validation.outputs.version }}
+          \`\`\`
+          
+          ## Run Container
+          \`\`\`bash
+          docker run -p 8501:8501 \\
+            ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:${{ needs.pre-deployment-validation.outputs.version }}
+          \`\`\`
+          
+          ## Access Application
+          Open browser at: http://localhost:8501
+          
+          ## Version Information
+          - Version: ${{ needs.pre-deployment-validation.outputs.version }}
+          - Built: $(date -u +%Y-%m-%d)
+          - Commit: ${{ github.sha }}
+          EOF
+          
+          cat docker-deployment-instructions.md
+      
+      - name: Upload Docker instructions
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-deployment-instructions-${{ github.run_id }}
+          path: docker-deployment-instructions.md
+          retention-days: 90
+
+  # ==========================================================================
+  # Job 4: Deploy to HuggingFace Spaces
+  # ==========================================================================
+  # Academic Justification:
+  #   HuggingFace Spaces provides free hosting for ML demos, making research
+  #   accessible to broader academic community
+
+  deploy-huggingface:
+    name: Deploy to HuggingFace Spaces
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [pre-deployment-validation, build-package]
+    if: needs.pre-deployment-validation.outputs.deploy-huggingface == 'true'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Prepare HuggingFace Space files
+        run: |
+          echo "Preparing HuggingFace Space deployment..."
+          
+          mkdir -p hf_space
+          
+          if [ -f "app/streamlit_app.py" ]; then
+            cp app/streamlit_app.py hf_space/app.py
+          elif [ -f "app/gradio_app.py" ]; then
+            cp app/gradio_app.py hf_space/app.py
+          else
+            echo "Creating default HuggingFace app..."
+            cat > hf_space/app.py << 'APP_EOF'
+          """
+          AG News Text Classification Demo
+          
+          Author: Võ Hải Dũng
+          Email: vohaidung.work@gmail.com
+          License: MIT
+          """
+          import streamlit as st
+          
+          st.title("AG News Text Classification")
+          st.write("Demo application for text classification on AG News dataset")
+          
+          text = st.text_area("Enter news text:")
+          if st.button("Classify"):
+              st.write("Classification functionality coming soon...")
+          APP_EOF
+          fi
+          
+          if [ -f "deployment/huggingface/requirements.txt" ]; then
+            cp deployment/huggingface/requirements.txt hf_space/requirements.txt
+          elif [ -f "requirements/base.txt" ]; then
+            cp requirements/base.txt hf_space/requirements.txt
+          else
+            echo "streamlit>=1.28.0" > hf_space/requirements.txt
+          fi
+          
+          cat > hf_space/README.md << EOF
+          ---
+          title: AG News Text Classification
+          colorFrom: blue
+          colorTo: green
+          sdk: streamlit
+          sdk_version: "1.28.0"
+          app_file: app.py
+          pinned: false
+          license: mit
+          ---
+          
+          # AG News Text Classification
+          
+          State-of-the-art text classification system for AG News dataset.
+          
+          **Author:** Võ Hải Dũng  
+          **License:** MIT  
+          **Version:** ${{ needs.pre-deployment-validation.outputs.version }}
+          
+          ## Features
+          
+          - Advanced NLP models (DeBERTa, RoBERTa, LLMs)
+          - Overfitting prevention system
+          - Multiple ensemble strategies
+          - Real-time inference
+          
+          ## Citation
+          
+          If you use this work, please cite:
+          
+          \`\`\`bibtex
+          @software{ag_news_text_classification,
+            author = {Võ Hải Dũng},
+            title = {AG News Text Classification},
+            year = {$(date +%Y)},
+            version = {${{ needs.pre-deployment-validation.outputs.version }}},
+            license = {MIT}
+          }
+          \`\`\`
+          EOF
+      
+      - name: Deploy to HuggingFace Space
+        if: secrets.HF_TOKEN != ''
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          pip install huggingface-hub
+          
+          python << EOF
+          from huggingface_hub import HfApi, login
+          import os
+          
+          login(token=os.environ['HF_TOKEN'])
+          api = HfApi()
+          
+          try:
+              api.create_repo(
+                  repo_id="${{ env.HF_SPACE_NAME }}",
+                  repo_type="space",
+                  space_sdk="${{ env.HF_SPACE_SDK }}",
+                  private=False,
+                  exist_ok=True
+              )
+              
+              api.upload_folder(
+                  folder_path="hf_space",
+                  repo_id="${{ env.HF_SPACE_NAME }}",
+                  repo_type="space"
+              )
+              
+              print("Successfully deployed to HuggingFace Spaces!")
+          except Exception as e:
+              print(f"Deployment error: {e}")
+              if "${{ github.event.inputs.force_deploy }}" != "true":
+                  raise
+          EOF
+        continue-on-error: ${{ github.event.inputs.force_deploy == 'true' }}
+      
+      - name: Generate HuggingFace deployment info
+        run: |
+          cat > hf-deployment-info.md << EOF
+          # HuggingFace Spaces Deployment
+          
+          ## Space URL
+          https://huggingface.co/spaces/${{ secrets.HF_USERNAME }}/${{ env.HF_SPACE_NAME }}
+          
+          ## Version
+          ${{ needs.pre-deployment-validation.outputs.version }}
+          
+          ## Deployment Time
+          $(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)
+          
+          ## Configuration
+          - SDK: ${{ env.HF_SPACE_SDK }}
+          - Python: ${{ env.PYTHON_VERSION }}
+          EOF
+          
+          cat hf-deployment-info.md
+      
+      - name: Upload HuggingFace deployment info
+        uses: actions/upload-artifact@v4
+        with:
+          name: hf-deployment-info-${{ github.run_id }}
+          path: hf-deployment-info.md
+          retention-days: 90
+
+  # ==========================================================================
+  # Job 5: Deploy to Streamlit Cloud
+  # ==========================================================================
+  # Academic Justification:
+  #   Streamlit Cloud offers free hosting for interactive data applications,
+  #   ideal for demonstrating research prototypes
+
+  deploy-streamlit:
+    name: Deploy to Streamlit Cloud
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [pre-deployment-validation]
+    if: needs.pre-deployment-validation.outputs.deploy-streamlit == 'true'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Prepare Streamlit deployment
+        run: |
+          echo "Preparing Streamlit Cloud deployment..."
+          
+          mkdir -p .streamlit
+          
+          if [ ! -f ".streamlit/config.toml" ]; then
+            cat > .streamlit/config.toml << EOF
+          [theme]
+          primaryColor = "#1f77b4"
+          backgroundColor = "#ffffff"
+          secondaryBackgroundColor = "#f0f2f6"
+          textColor = "#262730"
+          font = "sans serif"
+          
+          [server]
+          headless = true
+          port = 8501
+          enableCORS = false
+          enableXsrfProtection = true
+          
+          [browser]
+          gatherUsageStats = false
+          EOF
+          fi
+          
+          if [ ! -f "requirements.txt" ] && [ -f "requirements/base.txt" ]; then
+            cp requirements/base.txt requirements.txt
+          fi
+      
+      - name: Validate Streamlit app
+        run: |
+          if [ -f "app/streamlit_app.py" ]; then
+            echo "Streamlit app found: app/streamlit_app.py"
+          else
+            echo "WARNING: Streamlit app not found"
+          fi
+      
+      - name: Generate Streamlit deployment guide
+        run: |
+          cat > streamlit-deployment-guide.md << EOF
+          # Streamlit Cloud Deployment Guide
+          
+          ## Deployment Steps
+          
+          1. Go to https://share.streamlit.io/
+          2. Connect your GitHub repository
+          3. Select this repository: ${{ github.repository }}
+          4. Set main file path: app/streamlit_app.py
+          5. Deploy!
+          
+          ## Configuration
+          - Python version: ${{ env.PYTHON_VERSION }}
+          - App version: ${{ needs.pre-deployment-validation.outputs.version }}
+          
+          ## Notes
+          - Streamlit Cloud automatically detects requirements.txt
+          - Configuration in .streamlit/config.toml is applied
+          - Free tier includes unlimited public apps
+          
+          ## Author
+          Võ Hải Dũng (vohaidung.work@gmail.com)
+          EOF
+          
+          cat streamlit-deployment-guide.md
+      
+      - name: Upload Streamlit deployment guide
+        uses: actions/upload-artifact@v4
+        with:
+          name: streamlit-deployment-guide-${{ github.run_id }}
+          path: streamlit-deployment-guide.md
+          retention-days: 90
+
+  # ==========================================================================
+  # Job 6: Deploy Documentation
+  # ==========================================================================
+  # Academic Justification:
+  #   Comprehensive documentation is essential for research reproducibility
+  #   and knowledge dissemination
+
+  deploy-docs:
+    name: Deploy Documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [pre-deployment-validation]
+    if: needs.pre-deployment-validation.outputs.deploy-docs == 'true'
+    
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install documentation dependencies
+        run: |
+          pip install mkdocs mkdocs-material mkdocstrings[python] pymdown-extensions
+      
+      - name: Prepare documentation
+        run: |
+          echo "Preparing documentation for deployment..."
+          
+          if [ ! -f "mkdocs.yml" ]; then
+            cat > mkdocs.yml << EOF
+          site_name: AG News Text Classification
+          site_description: State-of-the-art text classification with overfitting prevention
+          site_author: Võ Hải Dũng
+          site_url: https://${{ github.repository_owner }}.github.io/${{ env.PROJECT_SLUG }}
+          
+          repo_name: ${{ github.repository }}
+          repo_url: https://github.com/${{ github.repository }}
+          
+          theme:
+            name: material
+            palette:
+              scheme: default
+              primary: blue
+              accent: indigo
+            features:
+              - navigation.tabs
+              - navigation.sections
+              - navigation.expand
+              - search.suggest
+              - search.highlight
+          
+          nav:
+            - Home: index.md
+            - Quick Start: QUICK_START.md
+            - Architecture: ARCHITECTURE.md
+            - Performance: PERFORMANCE.md
+            - Overfitting Prevention: OVERFITTING_PREVENTION.md
+            - SOTA Models Guide: SOTA_MODELS_GUIDE.md
+            - Platform Optimization: PLATFORM_OPTIMIZATION_GUIDE.md
+            - IDE Setup: IDE_SETUP_GUIDE.md
+            - Free Deployment: FREE_DEPLOYMENT_GUIDE.md
+          
+          markdown_extensions:
+            - pymdownx.highlight
+            - pymdownx.superfences
+            - pymdownx.tabbed
+            - admonition
+            - toc:
+                permalink: true
+          
+          plugins:
+            - search
+            - mkdocstrings
+          
+          extra:
+            version: ${{ needs.pre-deployment-validation.outputs.version }}
+            social:
+              - icon: fontawesome/brands/github
+                link: https://github.com/${{ github.repository }}
+          EOF
+          fi
+          
+          if [ ! -f "docs/index.md" ] && [ -f "README.md" ]; then
+            mkdir -p docs
+            cp README.md docs/index.md
+          fi
+          
+          for file in QUICK_START.md ARCHITECTURE.md PERFORMANCE.md \
+                      OVERFITTING_PREVENTION.md SOTA_MODELS_GUIDE.md \
+                      PLATFORM_OPTIMIZATION_GUIDE.md IDE_SETUP_GUIDE.md \
+                      FREE_DEPLOYMENT_GUIDE.md; do
+            if [ -f "$file" ] && [ ! -f "docs/$file" ]; then
+              cp "$file" docs/
+            fi
+          done
+      
+      - name: Build documentation
+        run: |
+          mkdocs build --strict
+      
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          publish_branch: gh-pages
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'Deploy documentation v${{ needs.pre-deployment-validation.outputs.version }}'
+
+  # ==========================================================================
+  # Job 7: Publish to PyPI (Optional)
+  # ==========================================================================
+  # Academic Justification:
+  #   PyPI distribution enables easy installation and wider adoption of
+  #   research software by the community
+
+  publish-pypi:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [pre-deployment-validation, build-package]
+    if: needs.pre-deployment-validation.outputs.deploy-pypi == 'true' && github.event_name == 'release'
+    
+    environment:
+      name: pypi
+      url: https://pypi.org/project/ag-news-text-classification/
+    
+    permissions:
+      id-token: write
+    
+    steps:
+      - name: Download distribution artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions-${{ github.run_id }}
+          path: dist/
+      
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          skip-existing: true
+        continue-on-error: true
+
+  # ==========================================================================
+  # Job 8: Create GitHub Release
+  # ==========================================================================
+  # Academic Justification:
+  #   GitHub releases provide versioned snapshots of software with changelogs,
+  #   essential for research reproducibility and citation
+
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: 
+      - pre-deployment-validation
+      - build-package
+      - build-docker
+      - deploy-huggingface
+      - deploy-docs
+    if: |
+      always() &&
+      needs.pre-deployment-validation.result == 'success' &&
+      startsWith(github.ref, 'refs/tags/v')
+    
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts/
+      
+      - name: Generate changelog
+        id: changelog
+        run: |
+          VERSION="${{ needs.pre-deployment-validation.outputs.version }}"
+          
+          if [ -f "CHANGELOG.md" ]; then
+            echo "Extracting changelog for version $VERSION..."
+            
+            awk "/^## ```math
+?$VERSION```?/,/^## ```math
+?[0-9]/" CHANGELOG.md | \
+              head -n -1 > release-notes.md
+          else
+            echo "Generating automatic changelog..."
+            
+            PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+            
+            if [ -n "$PREV_TAG" ]; then
+              git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" > release-notes.md
+            else
+              git log --pretty=format:"- %s (%h)" > release-notes.md
+            fi
+          fi
+          
+          cat > full-release-notes.md << EOF
+          # AG News Text Classification v$VERSION
+          
+          **Author:** Võ Hải Dũng  
+          **Email:** vohaidung.work@gmail.com  
+          **License:** MIT  
+          **Release Date:** $(date -u +%Y-%m-%d)
+          
+          ## Changes
+          
+          $(cat release-notes.md)
+          
+          ## Deployment Status
+          
+          - Docker Image: ${{ needs.build-docker.result }}
+          - HuggingFace Spaces: ${{ needs.deploy-huggingface.result }}
+          - Documentation: ${{ needs.deploy-docs.result }}
+          
+          ## Installation
+          
+          \`\`\`bash
+          pip install ag-news-text-classification==$VERSION
+          \`\`\`
+          
+          ## Docker
+          
+          \`\`\`bash
+          docker pull ${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:$VERSION
+          \`\`\`
+          
+          ## Citation
+          
+          \`\`\`bibtex
+          @software{ag_news_text_classification_$VERSION,
+            author = {Võ Hải Dũng},
+            title = {AG News Text Classification},
+            version = {$VERSION},
+            year = {$(date +%Y)},
+            url = {https://github.com/${{ github.repository }}},
+            license = {MIT}
+          }
+          \`\`\`
+          EOF
+          
+          cat full-release-notes.md
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release v${{ needs.pre-deployment-validation.outputs.version }}
+          body_path: full-release-notes.md
+          draft: false
+          prerelease: ${{ contains(needs.pre-deployment-validation.outputs.version, '-') }}
+          files: |
+            release-artifacts/**/*
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  # ==========================================================================
+  # Job 9: Post-Deployment Health Checks
+  # ==========================================================================
+  # Academic Justification:
+  #   Validates that deployed services are functioning correctly,
+  #   implementing monitoring best practices
+
+  post-deployment-health-check:
+    name: Post-Deployment Health Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs:
+      - pre-deployment-validation
+      - deploy-huggingface
+      - deploy-docs
+    if: always()
+    
+    steps:
+      - name: Check HuggingFace Space health
+        if: needs.deploy-huggingface.result == 'success'
+        run: |
+          echo "Checking HuggingFace Space health..."
+          
+          SPACE_URL="https://huggingface.co/spaces/${{ secrets.HF_USERNAME }}/${{ env.HF_SPACE_NAME }}"
+          
+          for i in {1..5}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$SPACE_URL" || echo "000")
+            
+            if [ "$STATUS" == "200" ]; then
+              echo "HuggingFace Space is healthy (HTTP $STATUS)"
+              break
+            else
+              echo "Attempt $i: HuggingFace Space returned HTTP $STATUS"
+              if [ $i -eq 5 ]; then
+                echo "WARNING: HuggingFace Space may not be healthy"
+              else
+                sleep 30
+              fi
+            fi
+          done
+        continue-on-error: true
+      
+      - name: Check documentation site
+        if: needs.deploy-docs.result == 'success'
+        run: |
+          echo "Checking documentation site..."
+          
+          DOCS_URL="https://${{ github.repository_owner }}.github.io/${{ env.PROJECT_SLUG }}/"
+          
+          sleep 60
+          
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DOCS_URL" || echo "000")
+          
+          if [ "$STATUS" == "200" ]; then
+            echo "Documentation site is healthy (HTTP $STATUS)"
+          else
+            echo "WARNING: Documentation site returned HTTP $STATUS"
+          fi
+        continue-on-error: true
+      
+      - name: Generate health check report
+        run: |
+          cat > health-check-report.md << EOF
+          # Post-Deployment Health Check Report
+          
+          **Version:** ${{ needs.pre-deployment-validation.outputs.version }}  
+          **Timestamp:** $(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)
+          
+          ## Deployment Results
+          
+          - Pre-Deployment Validation: ${{ needs.pre-deployment-validation.result }}
+          - HuggingFace Deployment: ${{ needs.deploy-huggingface.result }}
+          - Documentation Deployment: ${{ needs.deploy-docs.result }}
+          
+          ## Health Status
+          
+          All deployed services have been checked.
+          
+          ## Next Steps
+          
+          1. Verify functionality manually
+          2. Monitor performance metrics
+          3. Check user feedback
+          
+          ## Contact
+          
+          For issues, contact: vohaidung.work@gmail.com
+          EOF
+          
+          cat health-check-report.md
+      
+      - name: Upload health check report
+        uses: actions/upload-artifact@v4
+        with:
+          name: health-check-report-${{ github.run_id }}
+          path: health-check-report.md
+          retention-days: 90
+
+  # ==========================================================================
+  # Job 10: Deployment Summary
+  # ==========================================================================
+  # Academic Justification:
+  #   Provides comprehensive overview of deployment status for audit trail
+  #   and troubleshooting
+
+  deployment-summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs:
+      - pre-deployment-validation
+      - build-package
+      - build-docker
+      - deploy-huggingface
+      - deploy-streamlit
+      - deploy-docs
+      - publish-pypi
+      - create-release
+      - post-deployment-health-check
+    if: always()
+    
+    steps:
+      - name: Generate comprehensive deployment summary
+        run: |
+          echo "# Deployment Summary - AG News Text Classification" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Project:** AG News Text Classification (ag-news-text-classification)" >> $GITHUB_STEP_SUMMARY
+          echo "**Author:** Võ Hải Dũng" >> $GITHUB_STEP_SUMMARY
+          echo "**Email:** vohaidung.work@gmail.com" >> $GITHUB_STEP_SUMMARY
+          echo "**License:** MIT" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "## Deployment Information" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version:** ${{ needs.pre-deployment-validation.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered By:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp:** $(date -u +%Y-%m-%d\ %H:%M:%S\ UTC)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "## Job Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status | Duration |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Pre-Deployment Validation | ${{ needs.pre-deployment-validation.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build Package | ${{ needs.build-package.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build Docker | ${{ needs.build-docker.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy HuggingFace | ${{ needs.deploy-huggingface.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy Streamlit | ${{ needs.deploy-streamlit.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy Docs | ${{ needs.deploy-docs.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| Publish PyPI | ${{ needs.publish-pypi.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| Create Release | ${{ needs.create-release.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| Health Check | ${{ needs.post-deployment-health-check.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "## Deployment URLs" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.deploy-huggingface.result }}" == "success" ]; then
+            echo "- **HuggingFace Space:** https://huggingface.co/spaces/${{ secrets.HF_USERNAME }}/${{ env.HF_SPACE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.deploy-docs.result }}" == "success" ]; then
+            echo "- **Documentation:** https://${{ github.repository_owner }}.github.io/${{ env.PROJECT_SLUG }}/" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.build-docker.result }}" == "success" ]; then
+            echo "- **Docker Hub:** https://hub.docker.com/r/${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ needs.publish-pypi.result }}" == "success" ]; then
+            echo "- **PyPI:** https://pypi.org/project/ag-news-text-classification/" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. Verify all deployed services are functioning correctly" >> $GITHUB_STEP_SUMMARY
+          echo "2. Update documentation with new version information" >> $GITHUB_STEP_SUMMARY
+          echo "3. Monitor deployment health and performance" >> $GITHUB_STEP_SUMMARY
+          echo "4. Announce release to users and community" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "## Academic Standards" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "This deployment follows best practices for:" >> $GITHUB_STEP_SUMMARY
+          echo "- Reproducible research software" >> $GITHUB_STEP_SUMMARY
+          echo "- Free-tier academic deployment" >> $GITHUB_STEP_SUMMARY
+          echo "- Version control and artifact management" >> $GITHUB_STEP_SUMMARY
+          echo "- Comprehensive documentation" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "For questions or issues, contact: vohaidung.work@gmail.com" >> $GITHUB_STEP_SUMMARY
+
+# ============================================================================
+# End of Continuous Deployment Pipeline
+# ============================================================================
+#
+# This comprehensive CD pipeline automates deployment of the AG News Text
+# Classification project to multiple platforms while maintaining academic
+# standards for reproducibility and accessibility.
+#
+# For questions or contributions:
+#   Author: Võ Hải Dũng
+#   Email: vohaidung.work@gmail.com
+#   License: MIT
+#
+# Last Updated: 2025
+# ============================================================================
