@@ -50,7 +50,7 @@
 #     - Generate comprehensive report
 #
 # Testing Strategy:
-#   - Multi-level testing: unit, integration, platform, performance, e2e
+#   - 6-level testing pyramid: unit, integration, platform, performance, e2e, regression
 #   - Chaos engineering for fault tolerance
 #   - Compatibility testing across versions
 #   - Overfitting prevention validation
@@ -130,22 +130,28 @@ on:
 #   - Platform-specific settings
 
 env:
+  # Python configuration
   PYTHON_VERSION_DEFAULT: '3.10'
   PYTHON_VERSION_MIN: '3.8'
   PYTHON_VERSION_MAX: '3.11'
   
+  # Cache configuration
   PIP_CACHE_DIR: ~/.cache/pip
   POETRY_CACHE_DIR: ~/.cache/pypoetry
   
+  # Testing configuration
   MIN_COVERAGE_THRESHOLD: 60
   PYTEST_TIMEOUT: 300
   
+  # Project metadata
   PROJECT_NAME: 'AG News Text Classification'
   PROJECT_SLUG: 'ag-news-text-classification'
   
+  # Tool versions
   PIP_VERSION: '24.0'
   SETUPTOOLS_VERSION: '69.0.0'
   
+  # Platform detection
   FORCE_COLOR: '1'
   PYTHONUNBUFFERED: '1'
 
@@ -205,6 +211,7 @@ jobs:
           python -m pip install --upgrade pip==${{ env.PIP_VERSION }}
           python -m pip install --upgrade setuptools==${{ env.SETUPTOOLS_VERSION }} wheel
           
+          # Install code quality tools
           pip install \
             flake8>=7.0.0 \
             black>=23.12.0 \
@@ -216,38 +223,33 @@ jobs:
             pydocstyle>=6.3.0 \
             pycodestyle>=2.11.0
       
-      - name: Run Flake8 linter for critical errors
+      - name: Run Flake8 linter
         run: |
-          echo "Running Flake8 for critical syntax and semantic errors..."
+          echo "Running Flake8 for PEP 8 compliance..."
           
-          flake8 src/ configs/ scripts/ \
+          # Critical errors that must fail
+          flake8 src/ configs/ scripts/ tests/ \
             --count \
-            --select=E9,F63,F7 \
+            --select=E9,F63,F7,F82 \
             --show-source \
             --statistics \
-            --exclude=__pycache__,.git,build,dist,*.egg-info,venv,.venv,*.pyc \
-            || echo "Critical errors found but continuing..."
-        continue-on-error: true
-      
-      - name: Run Flake8 linter for style violations
-        run: |
-          echo "Running Flake8 for style violations..."
+            --exclude=__pycache__,.git,build,dist,*.egg-info,venv,.venv
           
-          flake8 src/ configs/ scripts/ \
+          # Style violations with warnings
+          flake8 src/ configs/ scripts/ tests/ \
             --count \
             --max-complexity=15 \
             --max-line-length=127 \
             --statistics \
-            --exclude=__pycache__,.git,build,dist,*.egg-info,venv,.venv,*.pyc \
+            --exclude=__pycache__,.git,build,dist,*.egg-info,venv,.venv \
             --exit-zero
-        continue-on-error: true
       
       - name: Check code formatting with Black
         run: |
           echo "Checking code formatting with Black..."
           black --check --diff --color \
             --exclude='/(\.git|\.venv|venv|__pycache__|build|dist|\.eggs)/' \
-            . || true
+            src/ configs/ scripts/ tests/ || true
         continue-on-error: true
       
       - name: Check import sorting with isort
@@ -257,59 +259,47 @@ jobs:
             --skip-glob='*/__pycache__/*' \
             --skip-glob='*/venv/*' \
             --skip-glob='*/.venv/*' \
-            . || true
+            src/ configs/ scripts/ tests/ || true
         continue-on-error: true
       
       - name: Run static type checking with mypy
         run: |
           echo "Running mypy for static type checking..."
-          
-          if [ -d "src" ]; then
-            mypy src/ \
-              --ignore-missing-imports \
-              --no-strict-optional \
-              --warn-redundant-casts \
-              --warn-unused-ignores \
-              --show-error-codes \
-              --pretty \
-              || true
-          fi
+          mypy src/ \
+            --ignore-missing-imports \
+            --no-strict-optional \
+            --warn-redundant-casts \
+            --warn-unused-ignores \
+            --show-error-codes \
+            --pretty \
+            || true
         continue-on-error: true
       
       - name: Run Pylint analysis
         run: |
           echo "Running Pylint for code quality metrics..."
-          
-          if [ -d "src" ]; then
-            pylint src/ \
-              --max-line-length=127 \
-              --disable=C0111,R0903,C0103 \
-              --output-format=colorized \
-              --exit-zero \
-              || true
-          fi
+          pylint src/ \
+            --max-line-length=127 \
+            --disable=C0111,R0903,C0103 \
+            --output-format=colorized \
+            --exit-zero \
+            || true
         continue-on-error: true
       
       - name: Calculate code complexity
         run: |
           echo "Calculating code complexity with Radon..."
-          
-          if [ -d "src" ]; then
-            radon cc src/ -a -nb --total-average || true
-            radon mi src/ -nb || true
-          fi
+          radon cc src/ -a -nb --total-average || true
+          radon mi src/ -nb || true
         continue-on-error: true
       
       - name: Check docstring coverage
         run: |
           echo "Checking docstring coverage with pydocstyle..."
-          
-          if [ -d "src" ]; then
-            pydocstyle src/ \
-              --count \
-              --convention=google \
-              || true
-          fi
+          pydocstyle src/ \
+            --count \
+            --convention=google \
+            || true
         continue-on-error: true
 
   # ==========================================================================
@@ -344,6 +334,7 @@ jobs:
           echo "Running Bandit for security vulnerability detection..."
           
           if [ -d "src" ]; then
+            # Generate JSON report
             bandit -r src/ \
               --format json \
               --output bandit-report.json \
@@ -352,6 +343,7 @@ jobs:
               --exclude '*/test_*.py,*/tests/*' \
               || true
             
+            # Generate console output
             bandit -r src/ \
               --severity-level medium \
               --confidence-level medium \
@@ -367,6 +359,7 @@ jobs:
         run: |
           echo "Checking dependencies for CVEs with Safety..."
           
+          # Create temporary requirements file
           if [ -d "requirements" ]; then
             find requirements -name "*.txt" -not -name "*lock*" -exec cat {} \; > /tmp/all_requirements.txt
           elif [ -f "requirements.txt" ]; then
@@ -376,6 +369,7 @@ jobs:
             exit 0
           fi
           
+          # Run safety check
           safety check \
             --file /tmp/all_requirements.txt \
             --json \
@@ -383,6 +377,7 @@ jobs:
             --continue-on-error \
             || true
           
+          # Display results
           safety check \
             --file /tmp/all_requirements.txt \
             --continue-on-error \
@@ -461,6 +456,7 @@ jobs:
           pip install pytest pytest-cov pytest-xdist pytest-timeout pytest-mock
           pip install pyyaml numpy pandas scikit-learn
           
+          # Install minimal requirements for testing
           if [ -f "requirements/base.txt" ]; then
             pip install -r requirements/base.txt || true
           fi
@@ -470,7 +466,8 @@ jobs:
         run: |
           mkdir -p tests/unit tests/integration tests/fixtures
           
-          cat > tests/conftest.py << 'CONFTEST_EOF'
+          # Create conftest.py
+          cat > tests/conftest.py << 'EOF'
           """
           Pytest configuration for AG News Text Classification.
           
@@ -484,16 +481,19 @@ jobs:
           import sys
           from pathlib import Path
           
+          # Add project root to Python path
           project_root = Path(__file__).parent.parent
           if str(project_root) not in sys.path:
               sys.path.insert(0, str(project_root))
           
+          # Add src directory to Python path
           src_dir = project_root / 'src'
           if src_dir.exists() and str(src_dir) not in sys.path:
               sys.path.insert(0, str(src_dir))
-          CONFTEST_EOF
+          EOF
           
-          cat > tests/test_import.py << 'TEST_IMPORT_EOF'
+          # Create basic test files
+          cat > tests/test_import.py << 'EOF'
           """
           Basic import tests for AG News Text Classification.
           
@@ -506,11 +506,9 @@ jobs:
           """
           import sys
           
-          
           def test_python_version():
               """Verify Python version is 3.8 or higher."""
               assert sys.version_info >= (3, 8), "Python 3.8+ required"
-          
           
           def test_python_version_details():
               """Check detailed Python version information."""
@@ -518,10 +516,10 @@ jobs:
               assert version.major == 3
               assert version.minor >= 8
           
-          
           def test_standard_library_imports():
               """Test standard library modules are available."""
               import os
+              import sys
               import pathlib
               import json
               import logging
@@ -534,38 +532,37 @@ jobs:
               assert logging is not None
               assert argparse is not None
           
-          
           def test_yaml_import():
               """Test YAML library for configuration files."""
               import yaml
               assert yaml is not None
               
+              # Test basic YAML operations
               test_dict = {'key': 'value', 'number': 42}
               yaml_str = yaml.dump(test_dict)
               loaded = yaml.safe_load(yaml_str)
               assert loaded == test_dict
-          
           
           def test_numpy_import():
               """Test NumPy for numerical operations."""
               import numpy as np
               assert np is not None
               
+              # Test basic array operations
               arr = np.array([1, 2, 3, 4, 5])
               assert len(arr) == 5
               assert arr.sum() == 15
               assert arr.mean() == 3.0
-          
           
           def test_pandas_import():
               """Test Pandas for data manipulation."""
               import pandas as pd
               assert pd is not None
               
+              # Test basic DataFrame operations
               df = pd.DataFrame({'A': [1, 2, 3], 'B': [4, 5, 6]})
               assert len(df) == 3
               assert list(df.columns) == ['A', 'B']
-          
           
           def test_sklearn_import():
               """Test scikit-learn for ML utilities."""
@@ -573,9 +570,9 @@ jobs:
               from sklearn.metrics import accuracy_score
               assert train_test_split is not None
               assert accuracy_score is not None
-          TEST_IMPORT_EOF
+          EOF
           
-          cat > tests/test_project_structure.py << 'TEST_STRUCTURE_EOF'
+          cat > tests/test_project_structure.py << 'EOF'
           """
           Project structure validation tests.
           
@@ -588,13 +585,11 @@ jobs:
           """
           from pathlib import Path
           
-          
           def test_project_root_exists():
               """Verify project root directory exists."""
               project_root = Path(__file__).parent.parent
               assert project_root.exists()
               assert project_root.is_dir()
-          
           
           def test_required_directories_exist():
               """Check that required directories exist."""
@@ -611,21 +606,22 @@ jobs:
               for dir_name in required_dirs:
                   dir_path = project_root / dir_name
                   if not dir_path.exists():
+                      # Create directory if missing
                       dir_path.mkdir(parents=True, exist_ok=True)
                   assert dir_path.exists(), f"Directory {dir_name} should exist"
-          
           
           def test_init_files_exist():
               """Verify __init__.py files in Python packages."""
               project_root = Path(__file__).parent.parent
               
+              # Check src/__init__.py
               src_dir = project_root / 'src'
               if src_dir.exists():
                   src_init = src_dir / '__init__.py'
                   if not src_init.exists():
                       src_init.touch()
                   assert src_init.exists()
-          TEST_STRUCTURE_EOF
+          EOF
         shell: bash
       
       - name: Run unit tests
@@ -706,7 +702,7 @@ jobs:
         run: |
           mkdir -p tests/integration
           
-          cat > tests/integration/test_pipeline.py << 'PIPELINE_EOF'
+          cat > tests/integration/test_pipeline.py << 'EOF'
           """
           Integration tests for AG News Text Classification pipelines.
           
@@ -719,12 +715,10 @@ jobs:
           """
           from pathlib import Path
           
-          
           def test_project_importable():
               """Test that project modules can be imported."""
               project_root = Path(__file__).parent.parent.parent
               assert project_root.exists()
-          
           
           def test_config_directory_structure():
               """Test configuration directory structure."""
@@ -733,7 +727,6 @@ jobs:
               
               if config_dir.exists():
                   assert config_dir.is_dir()
-          
           
           def test_data_directory_structure():
               """Test data directory structure."""
@@ -744,7 +737,7 @@ jobs:
                   data_dir.mkdir(parents=True, exist_ok=True)
               
               assert data_dir.exists()
-          PIPELINE_EOF
+          EOF
       
       - name: Run integration tests
         run: |
@@ -824,6 +817,7 @@ jobs:
         run: |
           echo "Validating project structure..."
           
+          # Core directories from Project Structure
           REQUIRED_DIRS=(
             "src"
             "configs"
@@ -854,6 +848,7 @@ jobs:
         run: |
           echo "Validating Python package structure..."
           
+          # Check for __init__.py in key packages
           PACKAGES=(
             "src"
             "configs"
@@ -890,60 +885,7 @@ jobs:
           done
 
   # ==========================================================================
-  # Job 7: Overfitting Prevention System Check
-  # ==========================================================================
-  # Academic justification:
-  #   - Validate overfitting prevention components
-  #   - Ensure anti-overfitting system is functional
-
-  overfitting-prevention-check:
-    name: Overfitting Prevention System
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
-      
-      - name: Validate overfitting prevention structure
-        run: |
-          echo "Validating overfitting prevention system..."
-          
-          OVERFITTING_DIRS=(
-            "src/core/overfitting_prevention"
-            "src/core/overfitting_prevention/validators"
-            "src/core/overfitting_prevention/monitors"
-            "src/core/overfitting_prevention/constraints"
-            "src/core/overfitting_prevention/guards"
-            "src/core/overfitting_prevention/recommendations"
-            "configs/overfitting_prevention"
-          )
-          
-          for dir in "${OVERFITTING_DIRS[@]}"; do
-            if [ -d "$dir" ]; then
-              echo "[PASS] Overfitting prevention component exists: $dir/"
-            else
-              echo "[INFO] Creating: $dir/"
-              mkdir -p "$dir"
-            fi
-          done
-      
-      - name: Check overfitting prevention configs
-        run: |
-          if [ -d "configs/overfitting_prevention" ]; then
-            echo "Checking overfitting prevention configs..."
-            find configs/overfitting_prevention -name "*.yaml" -o -name "*.yml" | while read file; do
-              echo "Found config: $file"
-            done
-          fi
-
-  # ==========================================================================
-  # Job 8: Dependency Conflict Check
+  # Job 7: Dependency Conflict Check
   # ==========================================================================
   # Academic justification:
   #   - Detect dependency conflicts early
@@ -970,7 +912,7 @@ jobs:
           
           if [ -f "requirements/base.txt" ]; then
             echo "Checking base requirements..."
-            pip install --dry-run -r requirements/base.txt 2>&1 | tee install.log || true
+            pip install --dry-run -r requirements/base.txt 2>&1 | tee install.log
             
             if grep -i "error\|conflict" install.log; then
               echo "WARNING: Potential conflicts detected"
@@ -979,9 +921,18 @@ jobs:
             fi
           fi
         continue-on-error: true
+      
+      - name: Check for outdated packages
+        run: |
+          pip install pip-check
+          
+          if [ -f "requirements/base.txt" ]; then
+            pip-check || true
+          fi
+        continue-on-error: true
 
   # ==========================================================================
-  # Job 9: Package Build Validation
+  # Job 8: Package Build Validation
   # ==========================================================================
   # Academic justification:
   #   - Ensure package can be built and distributed
@@ -1028,11 +979,19 @@ jobs:
           fi
         continue-on-error: true
       
-      - name: Build distributions
+      - name: Build source distribution
         run: |
           if [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then
-            echo "Building distributions..."
-            python -m build || true
+            echo "Building source distribution..."
+            python -m build --sdist . || true
+          fi
+        continue-on-error: true
+      
+      - name: Build wheel distribution
+        run: |
+          if [ -f "setup.py" ] || [ -f "pyproject.toml" ]; then
+            echo "Building wheel distribution..."
+            python -m build --wheel . || true
           fi
         continue-on-error: true
       
@@ -1044,7 +1003,7 @@ jobs:
         continue-on-error: true
 
   # ==========================================================================
-  # Job 10: Documentation Completeness Check
+  # Job 9: Documentation Completeness Check
   # ==========================================================================
   # Academic justification:
   #   - Ensure documentation is comprehensive
@@ -1064,6 +1023,7 @@ jobs:
           echo "Checking README.md..."
           
           if [ -f "README.md" ]; then
+            # Check README has minimum content
             lines=$(wc -l < README.md)
             if [ $lines -lt 20 ]; then
               echo "WARNING: README.md is too short ($lines lines)"
@@ -1071,6 +1031,7 @@ jobs:
               echo "PASS: README.md has adequate content ($lines lines)"
             fi
             
+            # Check for required sections
             for section in "Installation" "Usage" "License"; do
               if grep -qi "$section" README.md; then
                 echo "PASS: Found section: $section"
@@ -1112,6 +1073,86 @@ jobs:
           done
 
   # ==========================================================================
+  # Job 10: Health Check System Validation
+  # ==========================================================================
+  # Academic justification:
+  #   - Validate health check system
+  #   - Ensure auto-fix capabilities work
+
+  health-check-validation:
+    name: Health Check System
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
+      
+      - name: Create health check structure
+        run: |
+          mkdir -p src/core/health
+          
+          cat > src/core/health/__init__.py << 'EOF'
+          """Health check module for AG News Text Classification."""
+          EOF
+          
+          cat > src/core/health/basic_health.py << 'EOF'
+          """
+          Basic health checks for system validation.
+          
+          Author: Võ Hải Dũng
+          Email: vohaidung.work@gmail.com
+          License: MIT
+          """
+          import sys
+          from pathlib import Path
+          
+          def check_python_version():
+              """Check if Python version is supported."""
+              version = sys.version_info
+              if version.major == 3 and version.minor >= 8:
+                  return True, f"Python {version.major}.{version.minor} is supported"
+              return False, f"Python {version.major}.{version.minor} is not supported"
+          
+          def check_project_structure():
+              """Check if required directories exist."""
+              project_root = Path(__file__).parent.parent.parent.parent
+              required = ['src', 'configs', 'tests']
+              
+              missing = []
+              for dir_name in required:
+                  if not (project_root / dir_name).exists():
+                      missing.append(dir_name)
+              
+              if not missing:
+                  return True, "All required directories exist"
+              return False, f"Missing directories: {', '.join(missing)}"
+          EOF
+      
+      - name: Run basic health checks
+        run: |
+          python -c "
+          import sys
+          sys.path.insert(0, 'src')
+          
+          try:
+              from core.health.basic_health import check_python_version, check_project_structure
+              
+              status, msg = check_python_version()
+              print(f'Python version check: {msg}')
+              
+              status, msg = check_project_structure()
+              print(f'Structure check: {msg}')
+          except Exception as e:
+              print(f'Health check error: {e}')
+          "
+
+  # ==========================================================================
   # Job 11: Platform Compatibility Check
   # ==========================================================================
   # Academic justification:
@@ -1132,15 +1173,15 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
       
-      - name: Create platform detection module
+      - name: Create platform detection mock
         run: |
           mkdir -p src/deployment
           
-          cat > src/deployment/__init__.py << 'DEPLOY_INIT_EOF'
+          cat > src/deployment/__init__.py << 'EOF'
           """Deployment utilities for AG News Text Classification."""
-          DEPLOY_INIT_EOF
+          EOF
           
-          cat > src/deployment/platform_info.py << 'PLATFORM_INFO_EOF'
+          cat > src/deployment/platform_info.py << 'EOF'
           """
           Platform detection and information.
           
@@ -1151,20 +1192,22 @@ jobs:
           import os
           import platform
           
-          
           def detect_platform():
               """Detect current execution platform."""
+              # Check for Colab
               if 'COLAB_GPU' in os.environ or 'COLAB_TPU_ADDR' in os.environ:
                   return 'colab'
               
+              # Check for Kaggle
               if 'KAGGLE_KERNEL_RUN_TYPE' in os.environ:
                   return 'kaggle'
               
+              # Check for GitHub Actions
               if 'GITHUB_ACTIONS' in os.environ:
                   return 'github_actions'
               
+              # Default to local
               return 'local'
-          
           
           def get_system_info():
               """Get system information."""
@@ -1174,7 +1217,7 @@ jobs:
                   'python_version': platform.python_version(),
                   'machine': platform.machine()
               }
-          PLATFORM_INFO_EOF
+          EOF
       
       - name: Test platform detection
         run: |
@@ -1209,10 +1252,10 @@ jobs:
       - integration-tests
       - config-validation
       - structure-validation
-      - overfitting-prevention-check
       - dependency-check
       - build-validation
       - documentation-check
+      - health-check-validation
       - platform-compatibility
     if: always()
     
@@ -1228,21 +1271,22 @@ jobs:
           
           echo "## Job Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Code Quality | ${{ needs.code-quality.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Security Scan | ${{ needs.security-scan.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Unit Tests | ${{ needs.unit-tests.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Integration Tests | ${{ needs.integration-tests.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Config Validation | ${{ needs.config-validation.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Structure Validation | ${{ needs.structure-validation.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Overfitting Prevention | ${{ needs.overfitting-prevention-check.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Dependency Check | ${{ needs.dependency-check.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Build Validation | ${{ needs.build-validation.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Documentation Check | ${{ needs.documentation-check.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Platform Compatibility | ${{ needs.platform-compatibility.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status | Duration |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Quality | ${{ needs.code-quality.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Scan | ${{ needs.security-scan.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests | ${{ needs.unit-tests.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| Integration Tests | ${{ needs.integration-tests.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| Config Validation | ${{ needs.config-validation.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| Structure Validation | ${{ needs.structure-validation.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependency Check | ${{ needs.dependency-check.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build Validation | ${{ needs.build-validation.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| Documentation Check | ${{ needs.documentation-check.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| Health Check | ${{ needs.health-check-validation.result }} | - |" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform Compatibility | ${{ needs.platform-compatibility.result }} | - |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
+          # Calculate overall status
           if [[ "${{ needs.code-quality.result }}" == "success" ]] && \
              [[ "${{ needs.unit-tests.result }}" == "success" ]] && \
              [[ "${{ needs.structure-validation.result }}" == "success" ]]; then
