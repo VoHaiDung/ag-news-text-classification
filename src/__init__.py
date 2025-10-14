@@ -231,7 +231,7 @@ Citation:
         author = {Võ Hải Dũng},
         title = {AG News Text Classification: A State-of-the-Art Framework
                  for News Article Classification},
-        year = {2024},
+        year = {2025},
         version = {1.0.0},
         url = {https://github.com/VoHaiDung/ag-news-text-classification},
         license = {MIT}
@@ -272,7 +272,7 @@ from src.__version__ import (
 __author__ = "Võ Hải Dũng"
 __email__ = "vohaidung.work@gmail.com"
 __license__ = "MIT"
-__copyright__ = "Copyright 2024, Võ Hải Dũng"
+__copyright__ = "Copyright 2025, Võ Hải Dũng"
 __status__ = "Production"
 __url__ = "https://github.com/VoHaiDung/ag-news-text-classification"
 __title__ = "AG News Text Classification"
