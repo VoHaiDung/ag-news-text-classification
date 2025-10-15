@@ -1016,8 +1016,7 @@ jobs:
                   missing_images=$((missing_images + 1))
                 fi
               fi
-            done < <(grep -o '!```math
-.*```(.*)" "$file" 2>/dev/null || true)
+            done < <(grep -o '!```math.*```(.*)" "$file" 2>/dev/null || true)
           done < <(find . -name "*.md" -not -path "./node_modules/*" -not -path "./.venv/*" 2>/dev/null || true)
           
           echo ""
@@ -1686,8 +1685,7 @@ jobs:
           window.MathJax = {
             tex: {
               inlineMath: [["\KATEX_INLINE_OPEN", "\KATEX_INLINE_CLOSE"], ["$", "$"]],
-              displayMath: [["\```math
-", "\```"], ["$$", "$$"]],
+              displayMath: [["\```math", "\```"], ["$$", "$$"]],
               processEscapes: true,
               processEnvironments: true
             },
