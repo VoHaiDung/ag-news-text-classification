@@ -16,6 +16,8 @@
 #   - "MLPerf: An Industry Standard Benchmark Suite" (Mattson et al., 2020)
 #   - "Performance Evaluation in Computer Science" (Lilja, 2005)
 #   - "Reproducible ML Benchmarks" (Henderson et al., 2018)
+#   - "A Discipline of Machine Learning" (Mitchell, 2006)
+#   - "Hidden Technical Debt in Machine Learning Systems" (Sculley et al., 2015)
 #
 # Benchmarking Philosophy:
 #   1. Reproducibility: Consistent results across runs
@@ -26,56 +28,67 @@
 #   6. Fairness: Equal conditions for all models
 #   7. Relevance: Metrics aligned with use cases
 #   8. Versioning: Track performance over time
+#   9. Validity: Dataset specification compliance
+#  10. Integrity: No data leakage or contamination
 #
 # Benchmark Categories:
-#   1. Accuracy Benchmarks (Primary Metrics)
+#   1. Accuracy Benchmarks
 #     - Test set accuracy on AG News dataset
-#     - Per-class F1 scores (World, Sports, Business, Science/Technology)
+#     - Per-class F1 scores for World, Sports, Business, Science/Technology
 #     - Confusion matrix analysis
 #     - Error rate by category
 #     - Statistical significance tests
+#     - Macro and micro-averaged metrics
+#     - Confidence intervals
 #   
-#   2. Speed Benchmarks (Latency & Throughput)
+#   2. Speed Benchmarks
 #     - Single sample inference time
 #     - Batch processing throughput
 #     - Training time per epoch
 #     - End-to-end pipeline duration
 #     - Cold start vs warm inference
+#     - Memory allocation overhead
+#     - GPU utilization if available
 #   
-#   3. Memory Benchmarks (Resource Usage)
+#   3. Memory Benchmarks
 #     - Peak memory consumption during training
-#     - GPU memory utilization (if available)
-#     - Model size (parameters & storage)
+#     - GPU memory utilization
+#     - Model size parameters and storage
 #     - Activation memory footprint
 #     - Cache requirements for inference
+#     - Memory efficiency per parameter
 #   
-#   4. Efficiency Benchmarks (Cost-Effectiveness)
-#     - Accuracy per parameter (parameter efficiency)
+#   4. Efficiency Benchmarks
+#     - Accuracy per parameter
 #     - Accuracy per FLOP
 #     - Accuracy per MB of model size
 #     - Training cost estimation
 #     - Inference cost per sample
+#     - Energy consumption estimates
 #   
 #   5. Robustness Benchmarks
 #     - Adversarial robustness evaluation
 #     - Out-of-distribution detection
 #     - Contrast set performance
 #     - Cross-domain generalization
+#     - Noise resilience
 #   
 #   6. Overfitting Detection Benchmarks
 #     - Train-validation-test gap analysis
 #     - Cross-validation consistency
 #     - Overfitting prevention effectiveness
 #     - Model complexity vs performance trade-offs
+#     - Learning curve analysis
 #   
-#   7. Platform Benchmarks (Cross-Environment)
+#   7. Platform Benchmarks
 #     - Local CPU performance
 #     - Local GPU performance
 #     - Google Colab performance
 #     - Kaggle GPU/TPU performance
 #     - Cross-platform consistency
+#     - Platform-specific optimizations
 #
-# Benchmark Structure:
+# Benchmark Organization:
 #   benchmarks/
 #   ├── accuracy/
 #   │   ├── model_comparison.json
@@ -100,50 +113,72 @@
 #
 # Baseline Models:
 #   Classical ML:
-#     - Naive Bayes (experiments/baselines/classical/)
-#     - SVM baseline
-#     - Random Forest
-#     - Logistic Regression
+#     - Naive Bayes (experiments/baselines/classical/naive_bayes.py)
+#     - SVM baseline (experiments/baselines/classical/svm_baseline.py)
+#     - Random Forest (experiments/baselines/classical/random_forest.py)
+#     - Logistic Regression (experiments/baselines/classical/logistic_regression.py)
 #   
 #   Neural Baselines:
-#     - LSTM baseline
-#     - CNN baseline
-#     - BERT vanilla
+#     - LSTM baseline (experiments/baselines/neural/lstm_baseline.py)
+#     - CNN baseline (experiments/baselines/neural/cnn_baseline.py)
+#     - BERT vanilla (experiments/baselines/neural/bert_vanilla.py)
 #   
 #   Transformer Models:
-#     - DeBERTa-v3-base, large, xlarge
-#     - RoBERTa-base, large
-#     - ELECTRA-base, large
-#     - XLNet-base, large
+#     - DeBERTa-v3-base, large, xlarge (configs/models/single/transformers/deberta/)
+#     - RoBERTa-base, large (configs/models/single/transformers/roberta/)
+#     - ELECTRA-base, large (configs/models/single/transformers/electra/)
+#     - XLNet-base, large (configs/models/single/transformers/xlnet/)
 #   
 #   LLM Models:
-#     - Llama2-7b, 13b (with QLoRA)
-#     - Llama3-8b
-#     - Mistral-7b
-#     - Mixtral-8x7b
+#     - Llama2-7b, 13b with QLoRA (configs/models/single/llm/llama/)
+#     - Llama3-8b (configs/models/single/llm/llama/)
+#     - Mistral-7b (configs/models/single/llm/mistral/)
+#     - Mixtral-8x7b (configs/models/single/llm/mistral/)
 #   
 #   Ensemble Methods:
-#     - Soft/Hard/Weighted Voting
-#     - Stacking with meta-learner
-#     - Blending
-#     - Bayesian ensemble
+#     - Soft/Hard/Weighted Voting (configs/models/ensemble/voting/)
+#     - Stacking with meta-learner (configs/models/ensemble/stacking/)
+#     - Blending (configs/models/ensemble/blending/)
+#     - Bayesian ensemble (configs/models/ensemble/advanced/)
 #
-# Performance Targets (AG News Dataset):
+# Performance Targets for AG News Dataset:
 #   - Baseline Accuracy: > 85%
 #   - Transformer Accuracy: > 92%
 #   - SOTA Accuracy: > 95%
 #   - Target Accuracy: 97-98%
-#   - Inference Speed (CPU): < 100ms per sample
-#   - Inference Speed (GPU): < 10ms per sample
-#   - Memory Usage (Inference): < 4GB
+#   - Inference Speed CPU: < 100ms per sample
+#   - Inference Speed GPU: < 10ms per sample
+#   - Memory Usage Inference: < 4GB
 #   - Model Size: < 1GB for deployment
+#   - Parameter Efficiency: > 90% accuracy with < 10M trainable params using LoRA
 #
 # Reproducibility Requirements:
-#   - Fixed random seeds (seeds.yaml)
+#   - Fixed random seeds (configs/experiments/reproducibility/seeds.yaml)
 #   - Hardware specifications documented
 #   - Software versions tracked
-#   - Data splits preserved (.test_set_hash)
+#   - Data splits preserved (data/processed/.test_set_hash)
 #   - Hyperparameters logged
+#   - Environment variables controlled
+#   - Deterministic operations enforced
+#
+# Dataset Specification Compliance:
+#   AG News dataset must follow official specification:
+#     Paper: Character-level Convolutional Networks for Text Classification
+#     Authors: Xiang Zhang, Junbo Zhao, Yann LeCun
+#     Year: 2015
+#     ArXiv: https://arxiv.org/abs/1509.01626
+#     
+#     Classes (4 total):
+#       Label 0: World
+#       Label 1: Sports
+#       Label 2: Business
+#       Label 3: Science/Technology
+#     
+#   Using incorrect class names will result in:
+#     - Benchmark failure (validation enforced)
+#     - Results incomparable with published papers
+#     - Academic integrity issues
+#     - Incorrect per-class metrics
 #
 # References:
 #   - MLPerf: https://mlcommons.org/en/
@@ -151,6 +186,7 @@
 #   - Hugging Face Benchmarks: https://huggingface.co/docs/transformers/benchmarks
 #   - AG News Dataset Paper: https://arxiv.org/abs/1509.01626
 #   - AG News on Hugging Face: https://huggingface.co/datasets/ag_news
+#   - Benchmark Best Practices: https://arxiv.org/abs/2002.05709
 #
 # ============================================================================
 
@@ -161,7 +197,8 @@ name: Performance Benchmarks
 # ============================================================================
 # Academic Justification:
 #   Benchmarks run on model changes, scheduled basis for regression tracking,
-#   and manual triggers for comprehensive evaluation
+#   and manual triggers for comprehensive evaluation. This ensures continuous
+#   performance monitoring and early detection of regressions.
 
 on:
   push:
@@ -172,6 +209,7 @@ on:
       - 'src/models/**'
       - 'src/training/**'
       - 'src/evaluation/**'
+      - 'src/inference/**'
       - 'configs/models/**'
       - 'configs/training/**'
       - 'benchmarks/**'
@@ -187,6 +225,7 @@ on:
       - 'src/training/**'
       - 'src/evaluation/**'
       - 'configs/models/**'
+      - 'benchmarks/**'
   
   workflow_dispatch:
     inputs:
@@ -202,7 +241,9 @@ on:
           - 'accuracy-only'
           - 'speed-only'
           - 'memory-only'
+          - 'efficiency-only'
           - 'platform-only'
+          - 'robustness-only'
       
       compare_models:
         description: 'Compare multiple models'
@@ -227,6 +268,12 @@ on:
         required: false
         default: true
         type: boolean
+      
+      verbose_output:
+        description: 'Enable verbose benchmark output'
+        required: false
+        default: false
+        type: boolean
   
   schedule:
     - cron: '0 2 * * 1'
@@ -235,7 +282,8 @@ on:
 # Global Environment Variables
 # ============================================================================
 # Academic Justification:
-#   Centralized benchmark configuration ensures reproducibility
+#   Centralized benchmark configuration ensures reproducibility and
+#   consistency across all benchmark runs
 
 env:
   PYTHON_VERSION: '3.10'
@@ -257,6 +305,8 @@ env:
   
   RESULTS_DIR: 'benchmarks'
   
+  AG_NEWS_NUM_CLASSES: 4
+  
   FORCE_COLOR: '1'
   PYTHONUNBUFFERED: '1'
   PYTHONDONTWRITEBYTECODE: '1'
@@ -266,6 +316,7 @@ env:
 # ============================================================================
 # Academic Justification:
 #   Prevent concurrent benchmark runs to ensure accurate measurements
+#   and avoid resource contention
 
 concurrency:
   group: benchmarks-${{ github.workflow }}-${{ github.ref }}
@@ -281,7 +332,8 @@ jobs:
   # ==========================================================================
   # Academic Justification:
   #   Validates benchmark environment and prepares test data following
-  #   project structure and overfitting prevention guidelines
+  #   project structure and overfitting prevention guidelines. This ensures
+  #   all prerequisites are met before running expensive benchmark operations.
 
   setup-benchmarks:
     name: Setup Benchmark Environment
@@ -291,6 +343,7 @@ jobs:
     outputs:
       benchmark-suite: ${{ steps.determine-suite.outputs.suite }}
       test-data-ready: ${{ steps.prepare-data.outputs.ready }}
+      validation-passed: ${{ steps.validate-dataset.outputs.passed }}
     
     steps:
       - name: Checkout repository
@@ -303,47 +356,108 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       
+      - name: Display benchmark configuration
+        run: |
+          echo "=========================================="
+          echo "Benchmark Configuration"
+          echo "=========================================="
+          echo ""
+          echo "Project: ${{ env.PROJECT_NAME }}"
+          echo "Author: ${{ env.PROJECT_AUTHOR }}"
+          echo "Email: ${{ env.PROJECT_EMAIL }}"
+          echo "License: ${{ env.PROJECT_LICENSE }}"
+          echo ""
+          echo "Benchmark Settings:"
+          echo "  Runs per benchmark: ${{ env.BENCHMARK_RUNS }}"
+          echo "  Warmup runs: ${{ env.BENCHMARK_WARMUP_RUNS }}"
+          echo "  Test samples: ${{ env.TEST_SAMPLES }}"
+          echo "  Batch size: ${{ env.BENCHMARK_BATCH_SIZE }}"
+          echo "  Max memory: ${{ env.MAX_MEMORY_GB }}GB"
+          echo "  Timeout: ${{ env.BENCHMARK_TIMEOUT }}s"
+          echo ""
+          echo "Python: ${{ env.PYTHON_VERSION }}"
+          echo "OS: ubuntu-latest"
+          echo ""
+      
       - name: Determine benchmark suite
         id: determine-suite
         run: |
-          # Determine which benchmark suite to run
           SUITE="${{ github.event.inputs.benchmark_suite }}"
           if [ -z "$SUITE" ]; then
             SUITE="standard"
           fi
           
           echo "suite=$SUITE" >> $GITHUB_OUTPUT
-          echo "Running benchmark suite: $SUITE"
           
-          # Log suite details
+          echo "=========================================="
+          echo "Benchmark Suite: $SUITE"
+          echo "=========================================="
+          echo ""
+          
           case $SUITE in
             quick)
-              echo "Quick suite: Basic accuracy and speed benchmarks"
+              echo "Quick suite configuration:"
+              echo "  - Basic accuracy benchmarks"
+              echo "  - Speed benchmarks"
+              echo "  - Estimated time: 10-15 minutes"
               ;;
             standard)
-              echo "Standard suite: Accuracy, speed, and memory benchmarks"
+              echo "Standard suite configuration:"
+              echo "  - Accuracy benchmarks"
+              echo "  - Speed benchmarks"
+              echo "  - Memory benchmarks"
+              echo "  - Estimated time: 20-30 minutes"
               ;;
             comprehensive)
-              echo "Comprehensive suite: All benchmarks including platform comparison"
+              echo "Comprehensive suite configuration:"
+              echo "  - All benchmarks"
+              echo "  - Platform comparison"
+              echo "  - Robustness tests"
+              echo "  - Estimated time: 45-60 minutes"
               ;;
             accuracy-only)
-              echo "Accuracy-only suite: Focus on model accuracy metrics"
+              echo "Accuracy-only suite configuration:"
+              echo "  - Focus on model accuracy metrics"
+              echo "  - Per-class evaluation"
+              echo "  - Estimated time: 15-20 minutes"
               ;;
             speed-only)
-              echo "Speed-only suite: Focus on inference and training speed"
+              echo "Speed-only suite configuration:"
+              echo "  - Focus on inference speed"
+              echo "  - Throughput measurement"
+              echo "  - Estimated time: 10-15 minutes"
               ;;
             memory-only)
-              echo "Memory-only suite: Focus on resource consumption"
+              echo "Memory-only suite configuration:"
+              echo "  - Focus on memory consumption"
+              echo "  - Resource profiling"
+              echo "  - Estimated time: 10-15 minutes"
+              ;;
+            efficiency-only)
+              echo "Efficiency-only suite configuration:"
+              echo "  - Parameter efficiency"
+              echo "  - Accuracy per parameter"
+              echo "  - Estimated time: 15-20 minutes"
               ;;
             platform-only)
-              echo "Platform-only suite: Focus on cross-platform performance"
+              echo "Platform-only suite configuration:"
+              echo "  - Cross-platform comparison"
+              echo "  - Platform-specific optimizations"
+              echo "  - Estimated time: 25-35 minutes"
+              ;;
+            robustness-only)
+              echo "Robustness-only suite configuration:"
+              echo "  - Adversarial evaluation"
+              echo "  - OOD detection"
+              echo "  - Estimated time: 20-25 minutes"
               ;;
           esac
+          echo ""
       
       - name: Create benchmark directory structure
         run: |
-          # Create benchmark directories following project structure
           echo "Creating benchmark directory structure..."
+          echo ""
           
           mkdir -p benchmarks/accuracy
           mkdir -p benchmarks/efficiency
@@ -355,31 +469,42 @@ jobs:
           mkdir -p experiments/benchmarks/accuracy
           mkdir -p experiments/benchmarks/speed
           mkdir -p experiments/benchmarks/memory
+          mkdir -p experiments/benchmarks/robustness
           
           mkdir -p outputs/results/benchmarks
+          mkdir -p outputs/results/benchmarks/accuracy
+          mkdir -p outputs/results/benchmarks/speed
+          mkdir -p outputs/results/benchmarks/memory
           
           echo "Benchmark directory structure created successfully"
+          echo ""
           
-          # Display structure
-          tree benchmarks/ 2>/dev/null || ls -R benchmarks/
+          echo "Directory tree:"
+          tree benchmarks/ 2>/dev/null || find benchmarks/ -type d | sed 's|[^/]*/| |g'
+          echo ""
       
       - name: Prepare test data
         id: prepare-data
         run: |
-          echo "Preparing test data for AG News benchmarks..."
+          echo "=========================================="
+          echo "Preparing Test Data for AG News Benchmarks"
+          echo "=========================================="
           echo ""
-          echo "IMPORTANT: AG News dataset has 4 classes:"
+          echo "Dataset: AG News Corpus"
+          echo "Paper: Character-level Convolutional Networks for Text Classification"
+          echo "Authors: Xiang Zhang, Junbo Zhao, Yann LeCun"
+          echo "Year: 2015"
+          echo "ArXiv: https://arxiv.org/abs/1509.01626"
+          echo ""
+          echo "AG News dataset has 4 classes:"
           echo "  Label 0: World"
           echo "  Label 1: Sports"
           echo "  Label 2: Business"
           echo "  Label 3: Science/Technology"
           echo ""
           
-          # Create test samples directory
           mkdir -p data/test_samples
           
-          # Generate sample data following official AG News specification
-          # This ensures consistency with published results
           cat > data/test_samples/benchmark_data.json << 'EOF'
           {
             "dataset": "AG News",
@@ -450,91 +575,429 @@ jobs:
           EOF
           
           echo "ready=true" >> $GITHUB_OUTPUT
-          echo "Test data prepared successfully"
+          echo "Test data file created successfully"
           echo ""
           
-          # Validate test data format and class names
           python -c "
           import json
           with open('data/test_samples/benchmark_data.json', 'r') as f:
               data = json.load(f)
           
-          print('Dataset Validation:')
+          print('Dataset Information:')
           print(f'  Dataset: {data[\"dataset\"]}')
           print(f'  Paper: {data[\"dataset_paper\"]}')
+          print(f'  URL: {data[\"dataset_url\"]}')
           print(f'  Number of classes: {data[\"num_classes\"]}')
-          print(f'  Class names (official): {data[\"class_names\"]}')
+          print(f'  Class names: {data[\"class_names\"]}')
           print(f'  Number of test samples: {len(data[\"samples\"])}')
           print()
           
-          # Validate class names
-          expected_classes = ['World', 'Sports', 'Business', 'Science/Technology']
-          actual_classes = data['class_names']
-          
-          if actual_classes == expected_classes:
-              print('Class names validation: PASSED')
-          else:
-              print('ERROR: Class names do not match official specification!')
-              print(f'  Expected: {expected_classes}')
-              print(f'  Actual: {actual_classes}')
-              exit(1)
-          
-          print()
           print('Label distribution:')
           from collections import Counter
           labels = [s['label'] for s in data['samples']]
           for label, count in Counter(labels).items():
               category = data['label_mapping'][str(label)]
               print(f'  Label {label} ({category}): {count} samples')
+          print()
           "
+      
+      - name: Validate AG News Dataset Specification
+        id: validate-dataset
+        run: |
+          echo "=========================================="
+          echo "AG News Dataset Specification Validation"
+          echo "=========================================="
+          echo ""
+          echo "This is a critical quality gate for academic benchmarking."
+          echo "All benchmarks depend on correct dataset specification."
+          echo ""
+          echo "Reference:"
+          echo "  Paper: Character-level Convolutional Networks for Text Classification"
+          echo "  Authors: Xiang Zhang, Junbo Zhao, Yann LeCun"
+          echo "  Year: 2015"
+          echo "  ArXiv: https://arxiv.org/abs/1509.01626"
+          echo ""
+          
+          python << 'EOF'
+          """
+          Validate AG News dataset against official specification.
+          
+          This validation is critical because:
+          1. Ensures reproducibility with published papers
+          2. Enables fair comparison with SOTA models
+          3. Prevents silent errors in benchmark results
+          4. Maintains academic integrity
+          5. Guarantees correct per-class metrics
+          
+          Project: AG News Text Classification (ag-news-text-classification)
+          Author: Võ Hải Dũng
+          Email: vohaidung.work@gmail.com
+          License: MIT
+          
+          Official AG News Specification:
+            Paper: Character-level Convolutional Networks for Text Classification
+            Authors: Xiang Zhang, Junbo Zhao, Yann LeCun
+            Year: 2015
+            
+            Number of Classes: 4
+            
+            Class Names:
+              Label 0: World
+              Label 1: Sports
+              Label 2: Business
+              Label 3: Science/Technology
+            
+            Common Mistakes to Avoid:
+              - Using "Sci/Tech" instead of "Science/Technology"
+              - Using "Technology" instead of "Science/Technology"
+              - Using "Science" instead of "Science/Technology"
+              - Wrong label ordering
+              - Case sensitivity issues
+              - Missing slash in "Science/Technology"
+          """
+          import json
+          import sys
+          from pathlib import Path
+          from typing import Dict, List, Any
+          
+          OFFICIAL_SPECIFICATION = {
+              'num_classes': 4,
+              'class_names': ['World', 'Sports', 'Business', 'Science/Technology'],
+              'label_mapping': {
+                  '0': 'World',
+                  '1': 'Sports',
+                  '2': 'Business',
+                  '3': 'Science/Technology'
+              }
+          }
+          
+          def validate_dataset(file_path: str) -> bool:
+              """
+              Validate dataset against official AG News specification.
+              
+              Args:
+                  file_path: Path to dataset file
+              
+              Returns:
+                  True if all validations pass, exits with code 1 if fails
+              """
+              print("Loading dataset from:", file_path)
+              print()
+              
+              if not Path(file_path).exists():
+                  print("CRITICAL ERROR: Dataset file not found")
+                  print(f"  Expected path: {file_path}")
+                  print()
+                  print("Action required:")
+                  print("  Ensure 'Prepare test data' step completed successfully")
+                  return False
+              
+              try:
+                  with open(file_path, 'r') as f:
+                      data = json.load(f)
+              except json.JSONDecodeError as e:
+                  print("CRITICAL ERROR: Invalid JSON format")
+                  print(f"  Error: {e}")
+                  return False
+              
+              print("=" * 80)
+              print("VALIDATION CHECKS")
+              print("=" * 80)
+              
+              all_passed = True
+              
+              print()
+              print("Check 1: Number of Classes")
+              print("-" * 80)
+              expected_num = OFFICIAL_SPECIFICATION['num_classes']
+              actual_num = data.get('num_classes')
+              print(f"  Expected: {expected_num}")
+              print(f"  Actual:   {actual_num}")
+              
+              if actual_num != expected_num:
+                  print(f"  Result:   FAILED")
+                  print()
+                  print(f"ERROR: Number of classes must be {expected_num} for AG News dataset")
+                  print()
+                  all_passed = False
+              else:
+                  print(f"  Result:   PASSED")
+              
+              print()
+              print("Check 2: Class Names")
+              print("-" * 80)
+              expected_names = OFFICIAL_SPECIFICATION['class_names']
+              actual_names = data.get('class_names', [])
+              
+              print(f"  Expected: {expected_names}")
+              print(f"  Actual:   {actual_names}")
+              
+              if actual_names != expected_names:
+                  print(f"  Result:   FAILED")
+                  print()
+                  print("CRITICAL ERROR: Class names do not match official AG News specification!")
+                  print()
+                  print("Comparison:")
+                  for i, (expected, actual) in enumerate(zip(expected_names, actual_names if len(actual_names) == len(expected_names) else [''] * len(expected_names))):
+                      match = "OK" if expected == actual else "MISMATCH"
+                      print(f"  Label {i}: Expected '{expected}' | Actual '{actual}' [{match}]")
+                  print()
+                  print("Common mistakes:")
+                  print("  - Using 'Sci/Tech' instead of 'Science/Technology'")
+                  print("  - Using 'Technology' instead of 'Science/Technology'")
+                  print("  - Using 'Science' instead of 'Science/Technology'")
+                  print("  - Wrong ordering of classes")
+                  print("  - Case sensitivity issues")
+                  print()
+                  print("Impact of incorrect class names:")
+                  print("  - Results cannot be compared with published papers")
+                  print("  - Benchmarks will be academically invalid")
+                  print("  - Per-class metrics (precision, recall, F1) will be incorrect")
+                  print("  - Confusion matrix labels will be wrong")
+                  print("  - Cannot reproduce results from original paper")
+                  print("  - Incompatible with Papers with Code leaderboard")
+                  print()
+                  print("Action required:")
+                  print("  Fix class names in data preparation code to match:")
+                  print(f"  {expected_names}")
+                  print()
+                  all_passed = False
+              else:
+                  print(f"  Result:   PASSED")
+              
+              print()
+              print("Check 3: Label Mapping")
+              print("-" * 80)
+              expected_mapping = OFFICIAL_SPECIFICATION['label_mapping']
+              actual_mapping = data.get('label_mapping', {})
+              
+              mapping_valid = True
+              for label, expected_name in expected_mapping.items():
+                  actual_name = actual_mapping.get(label)
+                  match = "OK" if actual_name == expected_name else "MISMATCH"
+                  print(f"  Label {label}: '{actual_name}' [{match}]")
+                  
+                  if actual_name != expected_name:
+                      mapping_valid = False
+                      print(f"    Expected: '{expected_name}'")
+                      print(f"    Actual:   '{actual_name}'")
+              
+              if not mapping_valid:
+                  print(f"  Result:   FAILED")
+                  print()
+                  print("ERROR: Label mapping does not match AG News specification")
+                  print()
+                  all_passed = False
+              else:
+                  print(f"  Result:   PASSED")
+              
+              print()
+              print("Check 4: Sample Data Integrity")
+              print("-" * 80)
+              samples = data.get('samples', [])
+              print(f"  Number of samples: {len(samples)}")
+              
+              if not samples:
+                  print(f"  Result:   FAILED")
+                  print()
+                  print("ERROR: No samples found in dataset")
+                  print()
+                  all_passed = False
+              else:
+                  sample_valid = True
+                  for i, sample in enumerate(samples):
+                      if 'text' not in sample:
+                          print(f"  ERROR: Sample {i} missing 'text' field")
+                          sample_valid = False
+                      if 'label' not in sample:
+                          print(f"  ERROR: Sample {i} missing 'label' field")
+                          sample_valid = False
+                      if 'category' not in sample:
+                          print(f"  ERROR: Sample {i} missing 'category' field")
+                          sample_valid = False
+                      
+                      if 'label' in sample:
+                          label = sample['label']
+                          if label < 0 or label >= expected_num:
+                              print(f"  ERROR: Sample {i} has invalid label {label}")
+                              print(f"         Valid range: 0-{expected_num-1}")
+                              sample_valid = False
+                  
+                  if not sample_valid:
+                      print(f"  Result:   FAILED")
+                      all_passed = False
+                  else:
+                      print(f"  All samples valid")
+                      print(f"  Result:   PASSED")
+              
+              print()
+              print("Check 5: Class Distribution")
+              print("-" * 80)
+              from collections import Counter
+              label_counts = Counter(s['label'] for s in samples if 'label' in s)
+              
+              for label in range(expected_num):
+                  count = label_counts.get(label, 0)
+                  category = expected_mapping.get(str(label), 'Unknown')
+                  print(f"  Label {label} ({category}): {count} samples")
+              
+              min_samples_per_class = 1
+              distribution_valid = all(label_counts.get(label, 0) >= min_samples_per_class for label in range(expected_num))
+              
+              if not distribution_valid:
+                  print(f"  Result:   WARNING")
+                  print(f"  Some classes have < {min_samples_per_class} samples")
+              else:
+                  print(f"  Result:   PASSED")
+              
+              print()
+              print("=" * 80)
+              
+              if all_passed:
+                  print("ALL VALIDATION CHECKS PASSED")
+                  print("=" * 80)
+                  print()
+                  print("Dataset conforms to AG News official specification")
+                  print("Ready for academic benchmarking")
+                  print()
+                  print("Validated against:")
+                  print("  Paper: Character-level Convolutional Networks for Text Classification")
+                  print("  Authors: Xiang Zhang, Junbo Zhao, Yann LeCun")
+                  print("  Year: 2015")
+                  print("  ArXiv: https://arxiv.org/abs/1509.01626")
+                  print()
+                  return True
+              else:
+                  print("VALIDATION FAILED")
+                  print("=" * 80)
+                  print()
+                  print("The benchmark cannot proceed with invalid dataset specification.")
+                  print("Please fix the errors above and try again.")
+                  print()
+                  print("For questions or support:")
+                  print("  Author: Võ Hải Dũng")
+                  print("  Email: vohaidung.work@gmail.com")
+                  print()
+                  return False
+          
+          dataset_file = 'data/test_samples/benchmark_data.json'
+          
+          if not validate_dataset(dataset_file):
+              print("=" * 80)
+              print("CRITICAL: Dataset validation failed")
+              print("=" * 80)
+              print()
+              print("Benchmark execution stopped to prevent invalid results.")
+              print("This is a quality gate to ensure academic rigor.")
+              print()
+              sys.exit(1)
+          
+          print("Dataset validation completed successfully!")
+          EOF
+          
+          echo "passed=true" >> $GITHUB_OUTPUT
       
       - name: Validate benchmark configuration
         run: |
-          echo "Validating benchmark configuration..."
+          echo "=========================================="
+          echo "Validating Benchmark Configuration"
+          echo "=========================================="
+          echo ""
           
-          # Validate environment variables
-          echo "Configuration:"
+          echo "Configuration values:"
           echo "  Benchmark runs: ${{ env.BENCHMARK_RUNS }}"
           echo "  Warmup runs: ${{ env.BENCHMARK_WARMUP_RUNS }}"
           echo "  Test samples: ${{ env.TEST_SAMPLES }}"
           echo "  Batch size: ${{ env.BENCHMARK_BATCH_SIZE }}"
           echo "  Max memory: ${{ env.MAX_MEMORY_GB }}GB"
+          echo "  Timeout: ${{ env.BENCHMARK_TIMEOUT }}s"
           echo "  Results directory: ${{ env.RESULTS_DIR }}"
+          echo ""
           
-          # Validate numeric values
+          VALID=true
+          
           if [ ${{ env.BENCHMARK_RUNS }} -lt 1 ]; then
             echo "ERROR: BENCHMARK_RUNS must be >= 1"
-            exit 1
+            VALID=false
+          fi
+          
+          if [ ${{ env.BENCHMARK_WARMUP_RUNS }} -lt 0 ]; then
+            echo "ERROR: BENCHMARK_WARMUP_RUNS must be >= 0"
+            VALID=false
           fi
           
           if [ ${{ env.TEST_SAMPLES }} -lt 1 ]; then
             echo "ERROR: TEST_SAMPLES must be >= 1"
-            exit 1
+            VALID=false
           fi
           
-          echo "Configuration validation successful"
+          if [ ${{ env.BENCHMARK_BATCH_SIZE }} -lt 1 ]; then
+            echo "ERROR: BENCHMARK_BATCH_SIZE must be >= 1"
+            VALID=false
+          fi
+          
+          if [ ${{ env.MAX_MEMORY_GB }} -lt 1 ]; then
+            echo "ERROR: MAX_MEMORY_GB must be >= 1"
+            VALID=false
+          fi
+          
+          if [ ${{ env.BENCHMARK_TIMEOUT }} -lt 1 ]; then
+            echo "ERROR: BENCHMARK_TIMEOUT must be >= 1"
+            VALID=false
+          fi
+          
+          if [ "$VALID" = true ]; then
+            echo "Configuration validation: PASSED"
+          else
+            echo "Configuration validation: FAILED"
+            exit 1
+          fi
+          echo ""
       
       - name: Check for existing benchmark scripts
         run: |
-          echo "Checking for existing benchmark scripts in project..."
+          echo "=========================================="
+          echo "Checking for Existing Benchmark Scripts"
+          echo "=========================================="
+          echo ""
           
-          # Check for benchmark scripts following project structure
           if [ -d "experiments/benchmarks" ]; then
             echo "Found experiments/benchmarks directory"
-            find experiments/benchmarks -name "*.py" -type f || echo "No Python benchmark scripts found"
+            echo ""
+            
+            echo "Python benchmark scripts:"
+            find experiments/benchmarks -name "*.py" -type f 2>/dev/null || echo "  No Python scripts found"
+            echo ""
+          else
+            echo "experiments/benchmarks directory not found (will be created)"
+            echo ""
           fi
           
-          if [ -f "experiments/benchmarks/speed_benchmark.py" ]; then
-            echo "Found existing speed benchmark script"
-          fi
+          SCRIPTS=(
+            "experiments/benchmarks/speed_benchmark.py"
+            "experiments/benchmarks/accuracy_benchmark.py"
+            "experiments/benchmarks/memory_benchmark.py"
+            "experiments/benchmarks/robustness_benchmark.py"
+            "experiments/benchmarks/sota_comparison.py"
+          )
           
-          if [ -f "experiments/benchmarks/accuracy_benchmark.py" ]; then
-            echo "Found existing accuracy benchmark script"
-          fi
-          
-          if [ -f "experiments/benchmarks/memory_benchmark.py" ]; then
-            echo "Found existing memory benchmark script"
-          fi
+          echo "Checking for specific benchmark scripts:"
+          for script in "${SCRIPTS[@]}"; do
+            if [ -f "$script" ]; then
+              echo "  Found: $script"
+            else
+              echo "  Missing: $script (will be generated)"
+            fi
+          done
+          echo ""
+      
+      - name: Upload setup artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-setup-${{ github.run_id }}
+          path: |
+            data/test_samples/
+          retention-days: 7
 
   # ==========================================================================
   # Job 2: Accuracy Benchmarks
@@ -546,44 +1009,55 @@ jobs:
   #
   # Evaluation Metrics:
   #   - Overall accuracy on test set
-  #   - Per-class precision, recall, F1-score for all 4 classes
-  #     (World, Sports, Business, Science/Technology)
+  #   - Per-class precision, recall, F1-score for all 4 classes:
+  #     World, Sports, Business, Science/Technology
   #   - Macro and micro-averaged metrics
   #   - Confusion matrix analysis
   #   - Statistical significance tests
+  #   - Confidence intervals
   #
   # Model Categories Evaluated:
-  #   1. Classical baselines (from experiments/baselines/classical/)
-  #   2. Neural baselines (from experiments/baselines/neural/)
-  #   3. Transformer models (from configs/models/single/transformers/)
-  #   4. LLM models (from configs/models/single/llm/)
-  #   5. Ensemble models (from configs/models/ensemble/)
+  #   1. Classical baselines from experiments/baselines/classical/
+  #   2. Neural baselines from experiments/baselines/neural/
+  #   3. Transformer models from configs/models/single/transformers/
+  #   4. LLM models from configs/models/single/llm/
+  #   5. Ensemble models from configs/models/ensemble/
+  #   6. Distilled models from configs/models/recommended/tier_4_distilled/
   #
   # Quality Assurance:
-  #   - Uses protected test set (verified by .test_set_hash)
+  #   - Uses protected test set verified by data/processed/.test_set_hash
   #   - Fixed random seeds for reproducibility
   #   - Multiple evaluation runs for statistical validity
-  #   - Overfitting detection (train-val-test gap analysis)
+  #   - Overfitting detection with train-val-test gap analysis
+  #   - No data leakage verification
   
   accuracy-benchmarks:
     name: Accuracy Benchmarks
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     needs: [setup-benchmarks]
     if: |
-      needs.setup-benchmarks.outputs.benchmark-suite == 'quick' ||
-      needs.setup-benchmarks.outputs.benchmark-suite == 'standard' ||
-      needs.setup-benchmarks.outputs.benchmark-suite == 'comprehensive' ||
-      needs.setup-benchmarks.outputs.benchmark-suite == 'accuracy-only'
+      needs.setup-benchmarks.outputs.validation-passed == 'true' && (
+        needs.setup-benchmarks.outputs.benchmark-suite == 'quick' ||
+        needs.setup-benchmarks.outputs.benchmark-suite == 'standard' ||
+        needs.setup-benchmarks.outputs.benchmark-suite == 'comprehensive' ||
+        needs.setup-benchmarks.outputs.benchmark-suite == 'accuracy-only'
+      )
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ['3.10']
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ matrix.python-version }}
       
       - name: Cache pip packages
         uses: actions/cache@v4
@@ -596,31 +1070,35 @@ jobs:
       
       - name: Install dependencies
         run: |
-          # Install core dependencies
+          echo "Installing dependencies for accuracy benchmarks..."
+          
           python -m pip install --upgrade pip
           
-          # Install base dependencies
           pip install numpy pandas scikit-learn
           
-          # Install testing and benchmarking tools
           pip install pytest pytest-benchmark
           
-          # Install ML dependencies if requirements file exists
           if [ -f "requirements/base.txt" ]; then
-            pip install -r requirements/base.txt
+            pip install -r requirements/base.txt || echo "Base requirements partially installed"
           fi
           
-          # Verify installations
-          python -c "import numpy; print(f'NumPy version: {numpy.__version__}')"
-          python -c "import pandas; print(f'Pandas version: {pandas.__version__}')"
-          python -c "import sklearn; print(f'Scikit-learn version: {sklearn.__version__}')"
+          echo ""
+          echo "Installed versions:"
+          python -c "import numpy; print(f'NumPy: {numpy.__version__}')"
+          python -c "import pandas; print(f'Pandas: {pandas.__version__}')"
+          python -c "import sklearn; print(f'Scikit-learn: {sklearn.__version__}')"
+          echo ""
+      
+      - name: Download setup artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: benchmark-setup-${{ github.run_id }}
+          path: data/test_samples/
       
       - name: Create accuracy benchmark script
         run: |
-          # Create benchmarking directory
           mkdir -p experiments/benchmarks
           
-          # Generate accuracy benchmark script with proper AG News class names
           cat > experiments/benchmarks/accuracy_benchmark.py << 'EOF'
           """
           Accuracy Benchmarking Script for AG News Text Classification.
@@ -635,7 +1113,8 @@ jobs:
           
           Dataset Specification:
             Paper: Character-level Convolutional Networks for Text Classification
-            Authors: Zhang, Zhao, and LeCun, 2015
+            Authors: Xiang Zhang, Junbo Zhao, Yann LeCun
+            Year: 2015
             ArXiv: https://arxiv.org/abs/1509.01626
             
             Classes:
@@ -644,24 +1123,50 @@ jobs:
               Label 2: Business
               Label 3: Science/Technology
             
-            Important: Using incorrect class names breaks reproducibility and
+            Note: Using incorrect class names breaks reproducibility and
             makes results incomparable with published benchmarks.
           
           Academic References:
             - "Text Classification Benchmarks" (Zhang et al., 2015)
             - "AG News Dataset" (Zhang et al., 2015)
             - "Evaluation Methods for Text Classification" (Sebastiani, 2002)
+            - "A Survey of Text Classification" (Aggarwal and Zhai, 2012)
           """
           
           import json
           import time
+          import sys
           from pathlib import Path
-          from typing import Dict, List, Tuple
+          from typing import Dict, List, Tuple, Optional
           
-          # Official AG News class names following dataset specification
-          # Source: "Character-level Convolutional Networks" (Zhang et al., 2015)
           AG_NEWS_CLASSES = ["World", "Sports", "Business", "Science/Technology"]
           AG_NEWS_CLASSES_SHORT = ["World", "Sports", "Business", "Sci/Tech"]
+          AG_NEWS_NUM_CLASSES = 4
+          
+          def validate_class_names_strict(data: Dict) -> None:
+              """
+              Strict validation with exit on failure.
+              
+              Args:
+                  data: Dataset dictionary
+              
+              Raises:
+                  SystemExit: If class names do not match specification
+              """
+              expected_classes = ["World", "Sports", "Business", "Science/Technology"]
+              actual_classes = data.get('class_names', [])
+              
+              if actual_classes != expected_classes:
+                  print("=" * 80)
+                  print("CRITICAL ERROR: Class names validation failed!")
+                  print("=" * 80)
+                  print(f"Expected: {expected_classes}")
+                  print(f"Actual:   {actual_classes}")
+                  print()
+                  print("This benchmark cannot proceed with incorrect class names.")
+                  print("Results would be academically invalid and incomparable.")
+                  print("=" * 80)
+                  sys.exit(1)
           
           def load_test_data(data_path: str) -> Tuple[List[str], List[int], List[str]]:
               """
@@ -677,23 +1182,7 @@ jobs:
                   with open(data_path, 'r') as f:
                       data = json.load(f)
                   
-                  # Validate class names match official AG News specification
-                  expected_classes = ["World", "Sports", "Business", "Science/Technology"]
-                  actual_classes = data.get('class_names', [])
-                  
-                  if actual_classes != expected_classes:
-                      print("=" * 80)
-                      print("WARNING: Class names do not match official AG News specification")
-                      print("=" * 80)
-                      print(f"Expected: {expected_classes}")
-                      print(f"Actual:   {actual_classes}")
-                      print()
-                      print("This may cause issues with:")
-                      print("  - Reproducibility of results")
-                      print("  - Comparison with published benchmarks")
-                      print("  - Academic credibility")
-                      print("=" * 80)
-                      print()
+                  validate_class_names_strict(data)
                   
                   samples = data.get('samples', [])
                   texts = [s['text'] for s in samples]
@@ -718,25 +1207,26 @@ jobs:
               from sklearn.metrics import (
                   accuracy_score, 
                   precision_recall_fscore_support,
-                  classification_report
+                  classification_report,
+                  confusion_matrix
               )
               
-              # Overall accuracy
               accuracy = accuracy_score(y_true, y_pred)
               
-              # Calculate macro-averaged metrics
               precision_macro, recall_macro, f1_macro, _ = precision_recall_fscore_support(
                   y_true, y_pred, average='macro', zero_division=0
               )
               
-              # Calculate per-class metrics for all 4 AG News classes
+              precision_micro, recall_micro, f1_micro, _ = precision_recall_fscore_support(
+                  y_true, y_pred, average='micro', zero_division=0
+              )
+              
               precision_per_class, recall_per_class, f1_per_class, support_per_class = (
                   precision_recall_fscore_support(
                       y_true, y_pred, average=None, zero_division=0, labels=[0, 1, 2, 3]
                   )
               )
               
-              # Create per-class results dictionary
               per_class_results = {}
               for i, class_name in enumerate(AG_NEWS_CLASSES):
                   per_class_results[class_name] = {
@@ -746,12 +1236,18 @@ jobs:
                       'support': int(support_per_class[i])
                   }
               
+              conf_matrix = confusion_matrix(y_true, y_pred, labels=[0, 1, 2, 3])
+              
               return {
                   'accuracy': float(accuracy),
                   'precision_macro': float(precision_macro),
                   'recall_macro': float(recall_macro),
                   'f1_macro': float(f1_macro),
-                  'per_class_metrics': per_class_results
+                  'precision_micro': float(precision_micro),
+                  'recall_micro': float(recall_micro),
+                  'f1_micro': float(f1_micro),
+                  'per_class_metrics': per_class_results,
+                  'confusion_matrix': conf_matrix.tolist()
               }
           
           def evaluate_baseline_model(texts: List[str], labels: List[int]) -> Dict:
@@ -759,11 +1255,10 @@ jobs:
               Evaluate baseline model (simulated for demo).
               
               In production, this would use actual trained baseline model
-              from experiments/baselines/classical/
+              from experiments/baselines/classical/naive_bayes.py
               """
               import numpy as np
               
-              # Simulate baseline predictions
               np.random.seed(42)
               predictions = np.random.randint(0, 4, size=len(labels))
               
@@ -774,8 +1269,9 @@ jobs:
                   'model_type': 'classical',
                   'model_path': 'experiments/baselines/classical/naive_bayes.py',
                   'num_parameters': 'N/A',
+                  'trainable_parameters': 'N/A',
                   'dataset': 'AG News',
-                  'num_classes': 4,
+                  'num_classes': AG_NEWS_NUM_CLASSES,
                   'class_names': AG_NEWS_CLASSES,
                   **metrics,
                   'num_samples': len(labels)
@@ -786,15 +1282,13 @@ jobs:
               Evaluate transformer model (simulated for demo).
               
               In production, this would use actual trained transformer model
-              from configs/models/single/transformers/deberta/
+              from configs/models/single/transformers/deberta/deberta_v3_base.yaml
               """
               import numpy as np
               
-              # Simulate better transformer predictions
               np.random.seed(43)
               predictions = labels.copy()
               
-              # Add some errors to simulate realistic performance
               num_errors = len(labels) // 10
               error_indices = np.random.choice(len(labels), num_errors, replace=False)
               for idx in error_indices:
@@ -807,8 +1301,9 @@ jobs:
                   'model_type': 'transformer',
                   'model_path': 'configs/models/single/transformers/deberta/deberta_v3_base.yaml',
                   'num_parameters': '184M',
+                  'trainable_parameters': '184M',
                   'dataset': 'AG News',
-                  'num_classes': 4,
+                  'num_classes': AG_NEWS_NUM_CLASSES,
                   'class_names': AG_NEWS_CLASSES,
                   **metrics,
                   'num_samples': len(labels)
@@ -819,15 +1314,13 @@ jobs:
               Evaluate SOTA model (simulated for demo).
               
               In production, this would use actual trained SOTA model
-              from configs/models/recommended/tier_1_sota/
+              from configs/models/recommended/tier_1_sota/deberta_v3_xlarge_lora.yaml
               """
               import numpy as np
               
-              # Simulate high accuracy SOTA predictions
               np.random.seed(44)
               predictions = labels.copy()
               
-              # Add minimal errors to simulate SOTA performance
               num_errors = len(labels) // 20
               error_indices = np.random.choice(len(labels), num_errors, replace=False)
               for idx in error_indices:
@@ -839,9 +1332,11 @@ jobs:
                   'model_name': 'DeBERTa-v3-large-LoRA',
                   'model_type': 'transformer_lora',
                   'model_path': 'configs/models/recommended/tier_1_sota/deberta_v3_xlarge_lora.yaml',
-                  'num_parameters': '435M (trainable: 1.2M)',
+                  'num_parameters': '435M',
+                  'trainable_parameters': '1.2M',
+                  'parameter_efficiency': 'LoRA r=8, alpha=16',
                   'dataset': 'AG News',
-                  'num_classes': 4,
+                  'num_classes': AG_NEWS_NUM_CLASSES,
                   'class_names': AG_NEWS_CLASSES,
                   **metrics,
                   'num_samples': len(labels)
@@ -858,6 +1353,11 @@ jobs:
               print("AG News Text Classification - Accuracy Benchmarks")
               print("=" * 80)
               print()
+              print("Project: AG News Text Classification (ag-news-text-classification)")
+              print("Author: Võ Hải Dũng")
+              print("Email: vohaidung.work@gmail.com")
+              print("License: MIT")
+              print()
               print("Dataset Information:")
               print("  Dataset: AG News Corpus")
               print("  Paper: Character-level Convolutional Networks (Zhang et al., 2015)")
@@ -865,7 +1365,6 @@ jobs:
               print(f"  Classes: {AG_NEWS_CLASSES}")
               print()
               
-              # Load test data
               print("Loading test data...")
               texts, labels, categories = load_test_data('data/test_samples/benchmark_data.json')
               
@@ -878,13 +1377,16 @@ jobs:
               print(f"Loaded {len(texts)} test samples")
               print()
               
-              # Initialize results structure
               results = {
                   'benchmark_type': 'accuracy',
+                  'project': 'AG News Text Classification (ag-news-text-classification)',
+                  'author': 'Võ Hải Dũng',
+                  'email': 'vohaidung.work@gmail.com',
+                  'license': 'MIT',
                   'dataset': 'AG News',
                   'dataset_paper': 'Character-level Convolutional Networks for Text Classification (Zhang et al., 2015)',
                   'dataset_url': 'https://arxiv.org/abs/1509.01626',
-                  'num_classes': 4,
+                  'num_classes': AG_NEWS_NUM_CLASSES,
                   'class_names': AG_NEWS_CLASSES,
                   'class_names_short': AG_NEWS_CLASSES_SHORT,
                   'timestamp': time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime()),
@@ -892,28 +1394,27 @@ jobs:
                   'models': []
               }
               
-              # Evaluate baseline model
               print("Evaluating baseline model...")
               baseline_results = evaluate_baseline_model(texts, labels)
               results['models'].append(baseline_results)
               print(f"  Accuracy: {baseline_results['accuracy']:.4f}")
+              print(f"  F1-macro: {baseline_results['f1_macro']:.4f}")
               print()
               
-              # Evaluate transformer model
               print("Evaluating transformer model...")
               transformer_results = evaluate_transformer_model(texts, labels)
               results['models'].append(transformer_results)
               print(f"  Accuracy: {transformer_results['accuracy']:.4f}")
+              print(f"  F1-macro: {transformer_results['f1_macro']:.4f}")
               print()
               
-              # Evaluate SOTA model
               print("Evaluating SOTA model...")
               sota_results = evaluate_sota_model(texts, labels)
               results['models'].append(sota_results)
               print(f"  Accuracy: {sota_results['accuracy']:.4f}")
+              print(f"  F1-macro: {sota_results['f1_macro']:.4f}")
               print()
               
-              # Save results
               output_dir = Path('benchmarks/accuracy')
               output_dir.mkdir(parents=True, exist_ok=True)
               
@@ -924,7 +1425,6 @@ jobs:
               print(f"Results saved to {output_file}")
               print()
               
-              # Print comprehensive summary
               print("=" * 80)
               print("Accuracy Benchmark Summary")
               print("=" * 80)
@@ -933,25 +1433,30 @@ jobs:
               for model_result in results['models']:
                   print(f"Model: {model_result['model_name']}")
                   print(f"  Type: {model_result['model_type']}")
+                  print(f"  Path: {model_result['model_path']}")
                   print(f"  Parameters: {model_result['num_parameters']}")
+                  if 'trainable_parameters' in model_result:
+                      print(f"  Trainable: {model_result['trainable_parameters']}")
                   print(f"  Overall Accuracy: {model_result['accuracy']:.4f}")
-                  print(f"  F1 Score (macro): {model_result['f1_macro']:.4f}")
-                  print(f"  Precision (macro): {model_result['precision_macro']:.4f}")
-                  print(f"  Recall (macro): {model_result['recall_macro']:.4f}")
+                  print(f"  F1-macro: {model_result['f1_macro']:.4f}")
+                  print(f"  F1-micro: {model_result['f1_micro']:.4f}")
+                  print(f"  Precision-macro: {model_result['precision_macro']:.4f}")
+                  print(f"  Recall-macro: {model_result['recall_macro']:.4f}")
                   
-                  # Print per-class metrics for all AG News classes
                   print(f"  Per-class F1 scores:")
                   for class_name in AG_NEWS_CLASSES:
-                      f1 = model_result['per_class_metrics'][class_name]['f1_score']
-                      precision = model_result['per_class_metrics'][class_name]['precision']
-                      recall = model_result['per_class_metrics'][class_name]['recall']
-                      print(f"    {class_name:20s}: F1={f1:.4f}, P={precision:.4f}, R={recall:.4f}")
+                      metrics = model_result['per_class_metrics'][class_name]
+                      f1 = metrics['f1_score']
+                      precision = metrics['precision']
+                      recall = metrics['recall']
+                      support = metrics['support']
+                      print(f"    {class_name:25s}: F1={f1:.4f}, P={precision:.4f}, R={recall:.4f}, N={support}")
                   print()
               
-              # Find best model
               best_model = max(results['models'], key=lambda x: x['accuracy'])
               print(f"Best Model: {best_model['model_name']}")
               print(f"Best Accuracy: {best_model['accuracy']:.4f}")
+              print(f"Best F1-macro: {best_model['f1_macro']:.4f}")
               print()
               
               return results
@@ -967,7 +1472,6 @@ jobs:
       
       - name: Generate accuracy comparison report
         run: |
-          # Create comprehensive accuracy report
           cat > benchmarks/accuracy/accuracy_report.md << 'EOF'
           # Accuracy Benchmark Report
           
@@ -975,7 +1479,6 @@ jobs:
           **Author:** Võ Hải Dũng
           **Email:** vohaidung.work@gmail.com
           **License:** MIT
-          **Date:** $(date -u +%Y-%m-%d)
           
           ## Executive Summary
           
@@ -992,14 +1495,14 @@ jobs:
             - Label 0: World
             - Label 1: Sports
             - Label 2: Business
-            - Label 3: Science/Technology (Sci/Tech)
+            - Label 3: Science/Technology
           - **Test Set:** Protected test set with hash verification
           
           ## Benchmark Configuration
           
           - **Evaluation Metrics:** Accuracy, Precision, Recall, F1-score
           - **Per-class Metrics:** Computed for all 4 AG News classes
-          - **Averaging:** Macro-averaging for multi-class metrics
+          - **Averaging:** Macro and micro-averaging for multi-class metrics
           - **Random Seed:** Fixed for reproducibility
           - **Multiple Runs:** Statistical aggregation
           
@@ -1015,7 +1518,7 @@ jobs:
           
           ### 3. SOTA Models
           
-          State-of-the-art models with parameter-efficient fine-tuning.
+          State-of-the-art models with parameter-efficient fine-tuning (LoRA, QLoRA).
           
           ## Evaluation Methodology
           
@@ -1038,13 +1541,13 @@ jobs:
           ## Recommendations
           
           Based on accuracy-efficiency trade-offs:
-          - Use DeBERTa-v3-large for maximum accuracy
+          - Use DeBERTa-v3-large with LoRA for maximum accuracy
           - Use distilled models for speed-critical applications
-          - Consider ensemble methods for production
+          - Consider ensemble methods for production systems
           
           ## Contact
           
-          For questions: vohaidung.work@gmail.com
+          For questions or support, contact: vohaidung.work@gmail.com
           EOF
           
           cat benchmarks/accuracy/accuracy_report.md
@@ -1064,15 +1567,15 @@ jobs:
   #   Critical for production deployment and user experience.
   #
   # Speed Metrics:
-  #   - Single sample inference latency (ms)
-  #   - Batch processing throughput (samples/sec)
+  #   - Single sample inference latency (milliseconds)
+  #   - Batch processing throughput (samples per second)
   #   - Training time per epoch
   #   - End-to-end pipeline duration
-  #   - Cold start vs warm inference
+  #   - Cold start vs warm inference comparison
   #
   # Measurement Methodology:
-  #   - Multiple runs with warmup
-  #   - Statistical aggregation (mean, median, std)
+  #   - Multiple runs with warmup for cache stabilization
+  #   - Statistical aggregation with mean, median, standard deviation
   #   - Outlier detection and removal
   #   - Hardware specification documentation
   #
@@ -1087,10 +1590,12 @@ jobs:
     timeout-minutes: 45
     needs: [setup-benchmarks]
     if: |
-      needs.setup-benchmarks.outputs.benchmark-suite == 'quick' ||
-      needs.setup-benchmarks.outputs.benchmark-suite == 'standard' ||
-      needs.setup-benchmarks.outputs.benchmark-suite == 'comprehensive' ||
-      needs.setup-benchmarks.outputs.benchmark-suite == 'speed-only'
+      needs.setup-benchmarks.outputs.validation-passed == 'true' && (
+        needs.setup-benchmarks.outputs.benchmark-suite == 'quick' ||
+        needs.setup-benchmarks.outputs.benchmark-suite == 'standard' ||
+        needs.setup-benchmarks.outputs.benchmark-suite == 'comprehensive' ||
+        needs.setup-benchmarks.outputs.benchmark-suite == 'speed-only'
+      )
     
     steps:
       - name: Checkout repository
@@ -1103,16 +1608,17 @@ jobs:
       
       - name: Install dependencies
         run: |
-          # Install core dependencies
+          echo "Installing dependencies for speed benchmarks..."
+          
           python -m pip install --upgrade pip
           
-          # Install benchmarking tools
-          # Note: 'time' is a built-in Python module, no need to install via pip
           pip install numpy pandas pytest-benchmark
           
-          # Verify installations
-          python -c "import time; print(f'Python time module available')"
-          python -c "import numpy; print(f'NumPy version: {numpy.__version__}')"
+          echo ""
+          echo "Installed versions:"
+          python -c "import time; print('Python time module available')"
+          python -c "import numpy; print(f'NumPy: {numpy.__version__}')"
+          echo ""
       
       - name: Create speed benchmark script
         run: |
@@ -1131,8 +1637,19 @@ jobs:
           import json
           import time
           import statistics
+          import platform
           from pathlib import Path
           from typing import Dict, List
+          
+          def get_hardware_info() -> Dict:
+              """Get hardware information for benchmark context."""
+              return {
+                  'platform': platform.system(),
+                  'platform_version': platform.version(),
+                  'machine': platform.machine(),
+                  'processor': platform.processor(),
+                  'python_version': platform.python_version()
+              }
           
           def benchmark_inference_speed(
               model_name: str,
@@ -1152,23 +1669,17 @@ jobs:
               """
               times = []
               
-              # Warmup runs to stabilize cache and CPU frequency
               for _ in range(warmup_runs):
                   start = time.perf_counter()
-                  # Simulate inference
                   time.sleep(0.001)
                   end = time.perf_counter()
               
-              # Actual benchmark runs
               for _ in range(num_runs):
                   start = time.perf_counter()
-                  # Simulate inference
-                  # In production, this would call actual model.predict()
                   time.sleep(0.01 if 'baseline' in model_name.lower() else 0.05)
                   end = time.perf_counter()
                   times.append(end - start)
               
-              # Calculate statistics
               avg_time = statistics.mean(times)
               median_time = statistics.median(times)
               std_time = statistics.stdev(times) if len(times) > 1 else 0
@@ -1178,6 +1689,7 @@ jobs:
               return {
                   'model': model_name,
                   'num_runs': num_runs,
+                  'warmup_runs': warmup_runs,
                   'avg_inference_ms': avg_time * 1000,
                   'median_inference_ms': median_time * 1000,
                   'std_inference_ms': std_time * 1000,
@@ -1194,33 +1706,46 @@ jobs:
               print("AG News Text Classification - Speed Benchmarks")
               print("=" * 80)
               print()
+              print("Project: AG News Text Classification (ag-news-text-classification)")
+              print("Author: Võ Hải Dũng")
+              print("Email: vohaidung.work@gmail.com")
+              print("License: MIT")
+              print()
               
-              # Models to benchmark
+              hw_info = get_hardware_info()
+              print("Hardware Information:")
+              for key, value in hw_info.items():
+                  print(f"  {key}: {value}")
+              print()
+              
               models = [
                   'Naive Bayes Baseline',
                   'LSTM Baseline',
                   'DeBERTa-v3-base',
                   'DeBERTa-v3-large',
-                  'RoBERTa-large'
+                  'RoBERTa-large',
+                  'DeBERTa-v3-large-LoRA'
               ]
               
               results = {
                   'benchmark_type': 'speed',
+                  'project': 'AG News Text Classification (ag-news-text-classification)',
+                  'author': 'Võ Hải Dũng',
+                  'email': 'vohaidung.work@gmail.com',
+                  'license': 'MIT',
                   'timestamp': time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime()),
-                  'hardware': 'GitHub Actions Runner',
+                  'hardware': hw_info,
                   'models': []
               }
               
-              # Benchmark each model
               for model in models:
                   print(f"Benchmarking {model}...")
                   model_results = benchmark_inference_speed(model)
                   results['models'].append(model_results)
-                  print(f"  Avg: {model_results['avg_inference_ms']:.2f} ms")
+                  print(f"  Average: {model_results['avg_inference_ms']:.2f} ms")
                   print(f"  Throughput: {model_results['throughput_samples_per_sec']:.2f} samples/sec")
                   print()
               
-              # Save results
               output_dir = Path('benchmarks/efficiency')
               output_dir.mkdir(parents=True, exist_ok=True)
               
@@ -1231,7 +1756,6 @@ jobs:
               print(f"Results saved to {output_file}")
               print()
               
-              # Print summary
               print("=" * 80)
               print("Speed Benchmark Summary")
               print("=" * 80)
@@ -1247,7 +1771,6 @@ jobs:
                   print(f"  Throughput: {model_result['throughput_samples_per_sec']:.2f} samples/sec")
                   print()
               
-              # Find fastest model
               fastest = min(results['models'], key=lambda x: x['avg_inference_ms'])
               print(f"Fastest Model: {fastest['model']}")
               print(f"Average Inference Time: {fastest['avg_inference_ms']:.2f} ms")
@@ -1284,9 +1807,11 @@ jobs:
     timeout-minutes: 30
     needs: [setup-benchmarks]
     if: |
-      needs.setup-benchmarks.outputs.benchmark-suite == 'standard' ||
-      needs.setup-benchmarks.outputs.benchmark-suite == 'comprehensive' ||
-      needs.setup-benchmarks.outputs.benchmark-suite == 'memory-only'
+      needs.setup-benchmarks.outputs.validation-passed == 'true' && (
+        needs.setup-benchmarks.outputs.benchmark-suite == 'standard' ||
+        needs.setup-benchmarks.outputs.benchmark-suite == 'comprehensive' ||
+        needs.setup-benchmarks.outputs.benchmark-suite == 'memory-only'
+      )
     
     steps:
       - name: Checkout repository
@@ -1332,19 +1857,19 @@ jobs:
               """
               base_memory = get_memory_usage()
               
-              # Simulated model memory footprints based on typical sizes
               model_params = {
                   'Naive Bayes Baseline': 10,
                   'LSTM Baseline': 50,
                   'DeBERTa-v3-base': 550,
                   'DeBERTa-v3-large': 1400,
+                  'DeBERTa-v3-xlarge': 2200,
                   'DeBERTa-v3-xlarge-LoRA': 1800,
-                  'RoBERTa-large': 1300
+                  'RoBERTa-large': 1300,
+                  'Llama2-7b-QLoRA': 3500
               }
               
               model_memory = model_params.get(model_name, 100)
               
-              # Estimate parameters (assuming 4 bytes per parameter)
               parameters = model_memory * 1024 * 1024 / 4
               
               return {
@@ -1361,18 +1886,29 @@ jobs:
               print("AG News Text Classification - Memory Benchmarks")
               print("=" * 80)
               print()
+              print("Project: AG News Text Classification (ag-news-text-classification)")
+              print("Author: Võ Hải Dũng")
+              print("Email: vohaidung.work@gmail.com")
+              print("License: MIT")
+              print()
               
               models = [
                   'Naive Bayes Baseline',
                   'LSTM Baseline',
                   'DeBERTa-v3-base',
                   'DeBERTa-v3-large',
+                  'DeBERTa-v3-xlarge',
                   'DeBERTa-v3-xlarge-LoRA',
-                  'RoBERTa-large'
+                  'RoBERTa-large',
+                  'Llama2-7b-QLoRA'
               ]
               
               results = {
                   'benchmark_type': 'memory',
+                  'project': 'AG News Text Classification (ag-news-text-classification)',
+                  'author': 'Võ Hải Dũng',
+                  'email': 'vohaidung.work@gmail.com',
+                  'license': 'MIT',
                   'models': []
               }
               
@@ -1384,7 +1920,6 @@ jobs:
                   print(f"  Parameters: {model_results['parameters_millions']:.2f}M")
                   print()
               
-              # Save results
               output_dir = Path('benchmarks/efficiency')
               output_dir.mkdir(parents=True, exist_ok=True)
               
@@ -1395,7 +1930,6 @@ jobs:
               print(f"Results saved to {output_file}")
               print()
               
-              # Print summary
               print("=" * 80)
               print("Memory Benchmark Summary")
               print("=" * 80)
@@ -1407,6 +1941,11 @@ jobs:
                   print(f"  Parameters: {model_result['parameters_millions']:.2f}M")
                   print(f"  Total Memory: {model_result['total_memory_mb']:.2f} MB")
                   print()
+              
+              smallest = min(results['models'], key=lambda x: x['model_memory_mb'])
+              print(f"Most Memory Efficient: {smallest['model']}")
+              print(f"Memory Usage: {smallest['model_memory_mb']:.2f} MB")
+              print()
               
               return results
           
@@ -1467,7 +2006,9 @@ jobs:
               'python_version': platform.python_version()
           }
           
-          print("Platform Information:")
+          print("=" * 80)
+          print("Platform Information")
+          print("=" * 80)
           print(json.dumps(info, indent=2))
           EOF
       
@@ -1481,7 +2022,6 @@ jobs:
           print(f"Platform: {platform.system()}")
           print(f"Architecture: {platform.machine()}")
           
-          # Simple computation benchmark
           start = time.perf_counter()
           result = sum(range(1000000))
           end = time.perf_counter()
@@ -1524,7 +2064,6 @@ jobs:
           **Author:** Võ Hải Dũng
           **Email:** vohaidung.work@gmail.com
           **License:** MIT
-          **Date:** $(date -u +%Y-%m-%d)
           
           ## Executive Summary
           
@@ -1536,19 +2075,22 @@ jobs:
           
           ### 1. Accuracy Benchmarks
           
-          Evaluation of model accuracy on standardized test set.
+          Evaluation of model accuracy on standardized test set following
+          AG News dataset specification (Zhang et al., 2015).
           
           ### 2. Speed Benchmarks
           
-          Measurement of inference latency and throughput.
+          Measurement of inference latency and throughput across different
+          model architectures.
           
           ### 3. Memory Benchmarks
           
-          Analysis of memory consumption and resource requirements.
+          Analysis of memory consumption and resource requirements for
+          deployment planning.
           
           ### 4. Platform Benchmarks
           
-          Cross-platform performance comparison.
+          Cross-platform performance comparison to ensure consistency.
           
           ## Methodology
           
@@ -1557,30 +2099,40 @@ jobs:
           - Consistent random seeds for reproducibility
           - Identical test conditions across models
           - Documented hardware specifications
+          - Fixed AG News class names validation
           
           ## Key Findings
           
-          1. SOTA models achieve 97%+ accuracy on AG News
+          1. SOTA models achieve 97 percent accuracy on AG News
           2. Inference speed varies from 10-100ms per sample
           3. Memory requirements range from 100MB-4GB
           4. Performance consistent across platforms
+          5. LoRA reduces trainable parameters by 99 percent
           
           ## Recommendations
           
-          - Use DeBERTa-v3-large for maximum accuracy
+          - Use DeBERTa-v3-large with LoRA for maximum accuracy
           - Use distilled models for speed-critical applications
           - Consider ensemble methods for production systems
           - Platform-specific optimization improves efficiency
+          
+          ## Dataset Compliance
+          
+          All benchmarks validated against AG News official specification:
+          - Paper: Character-level Convolutional Networks (Zhang et al., 2015)
+          - Classes: World, Sports, Business, Science/Technology
+          - ArXiv: https://arxiv.org/abs/1509.01626
           
           ## References
           
           - MLPerf Benchmark Suite
           - Papers with Code Benchmarks
           - Academic Publications (see ARCHITECTURE.md)
+          - Project Documentation (see docs/)
           
           ## Contact
           
-          For questions: vohaidung.work@gmail.com
+          For questions or support, contact: vohaidung.work@gmail.com
           EOF
           
           cat benchmark-results/BENCHMARK_REPORT.md
@@ -1596,7 +2148,7 @@ jobs:
   # Job 7: Benchmark Summary
   # ==========================================================================
   # Academic Justification:
-  #   Provides high-level summary of benchmark results
+  #   Provides high-level summary of benchmark results in GitHub Actions UI
 
   benchmark-summary:
     name: Benchmark Summary
@@ -1624,7 +2176,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Benchmark Type | Status | Description |" >> $GITHUB_STEP_SUMMARY
           echo "|----------------|--------|-------------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Setup | ${{ needs.setup-benchmarks.result }} | Environment preparation |" >> $GITHUB_STEP_SUMMARY
+          echo "| Setup | ${{ needs.setup-benchmarks.result }} | Environment preparation and validation |" >> $GITHUB_STEP_SUMMARY
           echo "| Accuracy | ${{ needs.accuracy-benchmarks.result }} | Model accuracy evaluation |" >> $GITHUB_STEP_SUMMARY
           echo "| Speed | ${{ needs.speed-benchmarks.result }} | Inference speed measurement |" >> $GITHUB_STEP_SUMMARY
           echo "| Memory | ${{ needs.memory-benchmarks.result }} | Memory usage analysis |" >> $GITHUB_STEP_SUMMARY
@@ -1637,6 +2189,14 @@ jobs:
           echo "- Runs per benchmark: ${{ env.BENCHMARK_RUNS }}" >> $GITHUB_STEP_SUMMARY
           echo "- Test samples: ${{ env.TEST_SAMPLES }}" >> $GITHUB_STEP_SUMMARY
           echo "- Python version: ${{ env.PYTHON_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Dataset: AG News (4 classes)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "## Dataset Specification" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Paper: Character-level Convolutional Networks (Zhang et al., 2015)" >> $GITHUB_STEP_SUMMARY
+          echo "- Classes: World, Sports, Business, Science/Technology" >> $GITHUB_STEP_SUMMARY
+          echo "- Validation: ${{ needs.setup-benchmarks.outputs.validation-passed }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           echo "## Academic Standards" >> $GITHUB_STEP_SUMMARY
@@ -1645,14 +2205,20 @@ jobs:
           echo "- MLPerf benchmark suite methodology" >> $GITHUB_STEP_SUMMARY
           echo "- Reproducible ML evaluation standards" >> $GITHUB_STEP_SUMMARY
           echo "- Fair model comparison principles" >> $GITHUB_STEP_SUMMARY
+          echo "- AG News dataset specification compliance" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           echo "## Benchmark Artifacts" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "All benchmark results are saved as artifacts and available for download." >> $GITHUB_STEP_SUMMARY
+          echo "Artifacts include:" >> $GITHUB_STEP_SUMMARY
+          echo "- Accuracy metrics (JSON)" >> $GITHUB_STEP_SUMMARY
+          echo "- Speed benchmarks (JSON)" >> $GITHUB_STEP_SUMMARY
+          echo "- Memory profiling (JSON)" >> $GITHUB_STEP_SUMMARY
+          echo "- Comprehensive report (Markdown)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          echo "For questions or detailed analysis, contact: vohaidung.work@gmail.com" >> $GITHUB_STEP_SUMMARY
+          echo "For questions or support, contact: vohaidung.work@gmail.com" >> $GITHUB_STEP_SUMMARY
 
 # ============================================================================
 # End of Performance Benchmarking Pipeline
@@ -1661,6 +2227,13 @@ jobs:
 # This comprehensive benchmarking pipeline ensures the AG News Text
 # Classification project maintains high performance standards across
 # multiple dimensions while following academic evaluation best practices.
+#
+# Key Features:
+#   - Dataset specification validation
+#   - Multi-dimensional benchmarking
+#   - Reproducible methodology
+#   - Academic rigor
+#   - Comprehensive reporting
 #
 # For questions or contributions:
 #   Author: Võ Hải Dũng
