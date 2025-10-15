@@ -2224,16 +2224,20 @@ jobs:
 # End of Performance Benchmarking Pipeline
 # ============================================================================
 #
-# This comprehensive benchmarking pipeline ensures the AG News Text
-# Classification project maintains high performance standards across
-# multiple dimensions while following academic evaluation best practices.
+# This benchmarking pipeline ensures the AG News Text Classification project
+# maintains high performance standards through comprehensive multi-dimensional
+# evaluation following academic benchmarking best practices and MLPerf standards.
 #
-# Key Features:
-#   - Dataset specification validation
-#   - Multi-dimensional benchmarking
-#   - Reproducible methodology
-#   - Academic rigor
-#   - Comprehensive reporting
+# The pipeline evaluates:
+#   - Accuracy benchmarks: Model performance on AG News test set
+#   - Speed benchmarks: Inference latency and throughput measurement
+#   - Memory benchmarks: Resource consumption and efficiency
+#   - Platform benchmarks: Cross-platform performance consistency
+#   - Efficiency benchmarks: Parameter efficiency and cost-effectiveness
+#   - Overfitting detection: Train-validation-test gap analysis
+#
+# All benchmarks follow academic standards for reproducibility, fairness,
+# and transparency, ensuring research quality and production readiness.
 #
 # For questions or contributions:
 #   Author: Võ Hải Dũng
