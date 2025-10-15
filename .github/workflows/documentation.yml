@@ -922,9 +922,8 @@ jobs:
           cat > docs/javascripts/mathjax.js << 'EOF'
           window.MathJax = {
             tex: {
-              inlineMath: [["\KATEX_INLINE_OPEN", "\KATEX_INLINE_CLOSE"]],
-              displayMath: [["\```math
-", "\```"]],
+              inlineMath: [["$", "$"]],
+              displayMath: [["$$", "$$"]],
               processEscapes: true,
               processEnvironments: true
             },
@@ -1492,7 +1491,7 @@ jobs:
           
           echo "---" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "For questions or contributions: vohaidung.work@gmail.com" >> $GITHUB_STEP_SUMMARY
+          echo "For questions or contributions, contact: vohaidung.work@gmail.com" >> $GITHUB_STEP_SUMMARY
 
 # ============================================================================
 # End of Documentation Pipeline
