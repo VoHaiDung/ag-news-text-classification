@@ -16,6 +16,7 @@
 #   - "Literate Programming" (Knuth, 1984)
 #   - "Software Documentation Best Practices" (IEEE Std 1063-2001)
 #   - "Technical Writing for Software Documentation" (Kaplan, 2013)
+#   - "Managing Technical Debt in Documentation" (Parnas, 2011)
 #
 # Documentation Synchronization Philosophy:
 #   1. Single Source of Truth: Avoid documentation duplication
@@ -29,7 +30,7 @@
 #
 # Documentation Architecture for AG News Text Classification:
 #   
-#   Root-Level Documentation (Single Source of Truth):
+#   Root-Level Documentation:
 #     - README.md: Project overview and quick start
 #     - QUICK_START.md: Getting started guide
 #     - ARCHITECTURE.md: System design and architecture
@@ -46,7 +47,7 @@
 #     - ROADMAP.md: Project roadmap
 #     - CHANGELOG.md: Version history
 #   
-#   docs/ Directory (Structured Documentation):
+#   docs/ Directory:
 #     - getting_started/: Installation and setup guides
 #     - level_1_beginner/: Beginner-friendly tutorials
 #     - level_2_intermediate/: Intermediate topics
@@ -78,12 +79,12 @@
 # Synchronization Challenges:
 #   1. Documentation Drift: Docs become outdated as code evolves
 #   2. Cross-Reference Rot: Internal links break as files move
-#   3. Example Obsolescence: Code examples don't match current API
+#   3. Example Obsolescence: Code examples do not match current API
 #   4. Version Mismatches: Different docs reference different versions
 #   5. Platform Inconsistency: Platform guides diverge over time
 #   6. IDE Config Drift: IDE setups become inconsistent
 #   7. Duplicate Information: Same info in multiple places
-#   8. Config-Docs Gap: Configurations don't match documentation
+#   8. Config-Docs Gap: Configurations do not match documentation
 #
 # Synchronization Checks:
 #   1. Structural Consistency
@@ -290,6 +291,23 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       
+      - name: Display documentation sync configuration
+        run: |
+          echo "=========================================="
+          echo "Documentation Synchronization Configuration"
+          echo "=========================================="
+          echo ""
+          echo "Project: ${{ env.PROJECT_NAME }}"
+          echo "Author: ${{ env.PROJECT_AUTHOR }}"
+          echo "Email: ${{ env.PROJECT_EMAIL }}"
+          echo "License: ${{ env.PROJECT_LICENSE }}"
+          echo ""
+          echo "Configuration:"
+          echo "  Check level: ${{ github.event.inputs.check_level || 'standard' }}"
+          echo "  Min doc coverage: ${{ env.MIN_DOC_COVERAGE }}%"
+          echo "  Max broken links: ${{ env.MAX_BROKEN_LINKS }}"
+          echo ""
+      
       - name: Determine check level
         id: determine-level
         run: |
@@ -475,7 +493,7 @@ jobs:
           for dir in "${NOTEBOOK_DIRS[@]}"; do
             if [ -d "$dir" ]; then
               echo "FOUND: $dir"
-              count=$(find "$dir" -name "*.ipynb" | wc -l)
+              count=$(find "$dir" -name "*.ipynb" 2>/dev/null | wc -l)
               echo "  Notebooks: $count"
               notebook_count=$((notebook_count + count))
             fi
@@ -640,13 +658,13 @@ jobs:
           
           echo "Checking README.md references..."
           if [ -f "README.md" ]; then
-            grep -o '```math.*```(.*.md)' README.md | head -10 || echo "No markdown links found"
+            grep -o '```math.*```(.*\.md)' README.md | head -10 || echo "No markdown links found"
           fi
           
           echo ""
           echo "Checking ARCHITECTURE.md references..."
           if [ -f "ARCHITECTURE.md" ]; then
-            grep -o '```math.*```(.*.md)' ARCHITECTURE.md | head -10 || echo "No markdown links found"
+            grep -o '```math.*```(.*\.md)' ARCHITECTURE.md | head -10 || echo "No markdown links found"
           fi
       
       - name: Validate documentation index
@@ -882,7 +900,7 @@ jobs:
           echo ""
           
           if [ -d "configs/templates" ]; then
-            template_count=$(find configs/templates -name "*.j2" | wc -l)
+            template_count=$(find configs/templates -name "*.j2" 2>/dev/null | wc -l)
             echo "Found $template_count Jinja2 templates"
             
             if [ -f "configs/templates/README.md" ]; then
@@ -1005,7 +1023,7 @@ jobs:
           if [ -d ".ide/pycharm/.idea" ]; then
             echo "PyCharm .idea directory found"
             
-            config_count=$(find .ide/pycharm/.idea -name "*.xml" | wc -l)
+            config_count=$(find .ide/pycharm/.idea -name "*.xml" 2>/dev/null | wc -l)
             echo "Configuration files: $config_count"
           else
             echo "WARNING: PyCharm configuration not found"
@@ -1355,7 +1373,7 @@ jobs:
           
           ## Contact
           
-          For questions: vohaidung.work@gmail.com
+          For questions or support, contact: vohaidung.work@gmail.com
           REPORTEOF
           
           cat outputs/results/docs_sync/sync_report.md
@@ -1400,21 +1418,21 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Check | Status | Description |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|-------------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Structure | ${{ needs.validate-structure.result }} | Documentation structure |" >> $GITHUB_STEP_SUMMARY
-          echo "| Cross-References | ${{ needs.validate-cross-references.result }} | Internal links |" >> $GITHUB_STEP_SUMMARY
-          echo "| Code Examples | ${{ needs.validate-code-examples.result }} | Example validation |" >> $GITHUB_STEP_SUMMARY
-          echo "| Config Sync | ${{ needs.validate-config-docs-sync.result }} | Configuration docs |" >> $GITHUB_STEP_SUMMARY
-          echo "| IDE Sync | ${{ needs.validate-ide-sync.result }} | IDE configurations |" >> $GITHUB_STEP_SUMMARY
-          echo "| Platform Docs | ${{ needs.validate-platform-docs.result }} | Platform guides |" >> $GITHUB_STEP_SUMMARY
-          echo "| Version Consistency | ${{ needs.validate-version-consistency.result }} | Version references |" >> $GITHUB_STEP_SUMMARY
-          echo "| Report | ${{ needs.generate-sync-report.result }} | Report generation |" >> $GITHUB_STEP_SUMMARY
+          echo "| Structure | ${{ needs.validate-structure.result }} | Documentation structure validation |" >> $GITHUB_STEP_SUMMARY
+          echo "| Cross-References | ${{ needs.validate-cross-references.result }} | Internal link validation |" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Examples | ${{ needs.validate-code-examples.result }} | Code example syntax validation |" >> $GITHUB_STEP_SUMMARY
+          echo "| Config Sync | ${{ needs.validate-config-docs-sync.result }} | Configuration documentation sync |" >> $GITHUB_STEP_SUMMARY
+          echo "| IDE Sync | ${{ needs.validate-ide-sync.result }} | IDE configuration synchronization |" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform Docs | ${{ needs.validate-platform-docs.result }} | Platform guide validation |" >> $GITHUB_STEP_SUMMARY
+          echo "| Version Consistency | ${{ needs.validate-version-consistency.result }} | Version reference validation |" >> $GITHUB_STEP_SUMMARY
+          echo "| Report | ${{ needs.generate-sync-report.result }} | Comprehensive report generation |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           echo "## Documentation Architecture" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- Root-level guides: 15+ comprehensive documentation files" >> $GITHUB_STEP_SUMMARY
+          echo "- Root-level guides: Comprehensive documentation files" >> $GITHUB_STEP_SUMMARY
           echo "- docs/ directory: Structured documentation by topic" >> $GITHUB_STEP_SUMMARY
-          echo "- IDE configs: 6+ IDEs with synchronized configurations" >> $GITHUB_STEP_SUMMARY
+          echo "- IDE configs: Multiple IDE configurations synchronized" >> $GITHUB_STEP_SUMMARY
           echo "- Platform guides: Colab, Kaggle, Local setup instructions" >> $GITHUB_STEP_SUMMARY
           echo "- Configuration docs: Model, training, overfitting prevention" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -1437,7 +1455,7 @@ jobs:
           echo "5. Validate platform-specific guides" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          echo "For questions or contributions, contact: vohaidung.work@gmail.com" >> $GITHUB_STEP_SUMMARY
+          echo "For questions or support, contact: vohaidung.work@gmail.com" >> $GITHUB_STEP_SUMMARY
 
 # ============================================================================
 # End of Documentation Synchronization Pipeline
@@ -1445,7 +1463,21 @@ jobs:
 #
 # This comprehensive synchronization pipeline ensures the AG News Text
 # Classification project maintains consistent, accurate, and well-synchronized
-# documentation across all platforms, IDEs, and configurations.
+# documentation across all platforms, IDEs, and configurations following
+# academic documentation standards and industry best practices.
+#
+# The pipeline validates:
+#   - Documentation structure: File organization and completeness
+#   - Cross-references: Internal link integrity and navigation
+#   - Code examples: Syntax correctness and API alignment
+#   - Configuration sync: Config-documentation consistency
+#   - IDE synchronization: Multi-IDE setup consistency
+#   - Platform documentation: Cross-platform guide accuracy
+#   - Version consistency: Uniform version references
+#
+# All checks follow academic standards for documentation quality, ensuring
+# completeness, correctness, consistency, and clarity as specified in
+# IEEE 1063 standard for software user documentation.
 #
 # For questions or contributions:
 #   Author: Võ Hải Dũng
