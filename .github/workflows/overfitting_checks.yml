@@ -1261,7 +1261,7 @@ jobs:
           echo "- Apply proper regularization" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          echo "For detailed analysis: vohaidung.work@gmail.com" >> $GITHUB_STEP_SUMMARY
+          echo "For questions or contributions, contact: vohaidung.work@gmail.com" >> $GITHUB_STEP_SUMMARY
 
 # ============================================================================
 # End of Overfitting Prevention Pipeline
