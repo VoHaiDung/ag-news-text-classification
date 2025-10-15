@@ -952,7 +952,7 @@ jobs:
             echo "Creating placeholder..."
             
             mkdir -p .ide
-            cat > .ide/SOURCE_OF_TRUTH.yaml << 'EOF'
+            cat > .ide/SOURCE_OF_TRUTH.yaml << 'IDECONFIGEOF'
           # IDE Configuration Source of Truth
           # Project: AG News Text Classification (ag-news-text-classification)
           # Author: Võ Hải Dũng
@@ -969,7 +969,7 @@ jobs:
             src: "src"
             tests: "tests"
             configs: "configs"
-          EOF
+          IDECONFIGEOF
           fi
       
       - name: Validate VS Code configuration
@@ -1277,14 +1277,13 @@ jobs:
         run: |
           mkdir -p outputs/results/docs_sync
           
-          cat > outputs/results/docs_sync/sync_report.md << 'EOF'
+          cat > outputs/results/docs_sync/sync_report.md << 'REPORTEOF'
           # Documentation Synchronization Report
           
           **Project:** AG News Text Classification (ag-news-text-classification)
           **Author:** Võ Hải Dũng
           **Email:** vohaidung.work@gmail.com
           **License:** MIT
-          **Date:** $(date -u +%Y-%m-%d)
           
           ## Executive Summary
           
@@ -1360,7 +1359,7 @@ jobs:
           ## Contact
           
           For questions: vohaidung.work@gmail.com
-          EOF
+          REPORTEOF
           
           cat outputs/results/docs_sync/sync_report.md
       
