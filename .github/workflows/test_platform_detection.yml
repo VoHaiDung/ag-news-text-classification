@@ -312,6 +312,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install \
             pytest>=7.4.0 \
+            pytest-cov>=4.1.0 \
             pytest-mock>=3.12.0 \
             pytest-timeout>=2.2.0 \
             psutil>=5.9.0 \
@@ -506,6 +507,20 @@ jobs:
                   }
                   
                   return configs.get(platform_name, configs['local'])
+          EOF
+        shell: bash
+      
+      - name: Create pytest configuration
+        run: |
+          cat > pytest.ini << 'EOF'
+          [pytest]
+          testpaths = tests
+          python_files = test_*.py
+          python_classes = Test*
+          python_functions = test_*
+          markers =
+              platform: Platform-specific tests
+          addopts = -v --tb=short
           EOF
         shell: bash
       
@@ -720,10 +735,6 @@ jobs:
   # ==========================================================================
   # Job 2: Platform Simulation Tests
   # ==========================================================================
-  # Academic Justification:
-  #   Simulation tests verify platform detection works correctly when
-  #   environment variables and filesystem markers are mocked to simulate
-  #   different platforms. This ensures detection logic is robust.
 
   platform-simulation-tests:
     name: Platform Simulation Tests
@@ -741,7 +752,18 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install pytest pytest-mock psutil pyyaml
+          pip install pytest pytest-cov pytest-mock psutil pyyaml
+      
+      - name: Create pytest configuration
+        run: |
+          cat > pytest.ini << 'EOF'
+          [pytest]
+          testpaths = tests
+          python_files = test_*.py
+          markers =
+              platform: Platform-specific tests
+          addopts = -v --tb=short
+          EOF
       
       - name: Create platform simulation tests
         run: |
@@ -893,9 +915,6 @@ jobs:
   # ==========================================================================
   # Job 3: Resource Detection Tests
   # ==========================================================================
-  # Academic Justification:
-  #   Resource detection tests verify the system correctly identifies available
-  #   computational resources across different hardware configurations.
 
   resource-detection-tests:
     name: Resource Detection Tests
@@ -917,7 +936,19 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install pytest psutil
+          pip install pytest pytest-cov psutil
+        shell: bash
+      
+      - name: Create pytest configuration
+        run: |
+          cat > pytest.ini << 'EOF'
+          [pytest]
+          testpaths = tests
+          python_files = test_*.py
+          markers =
+              platform: Platform-specific tests
+          addopts = -v --tb=short
+          EOF
         shell: bash
       
       - name: Create resource detection tests
@@ -998,9 +1029,6 @@ jobs:
   # ==========================================================================
   # Job 4: Platform Detection Summary
   # ==========================================================================
-  # Academic Justification:
-  #   Summary job aggregates all test results and provides comprehensive
-  #   overview of platform detection testing coverage and quality.
 
   platform-detection-summary:
     name: Platform Detection Summary
