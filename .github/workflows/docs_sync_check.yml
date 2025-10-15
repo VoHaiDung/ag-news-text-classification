@@ -544,8 +544,7 @@ jobs:
               Returns:
                   List of (link_text, link_url) tuples
               """
-              link_pattern = r'```math
-([^```]+)```KATEX_INLINE_OPEN([^KATEX_INLINE_CLOSE]+)KATEX_INLINE_CLOSE'
+              link_pattern = r'```math ([^```]+)```KATEX_INLINE_OPEN([^KATEX_INLINE_CLOSE]+)KATEX_INLINE_CLOSE'
               return re.findall(link_pattern, content)
           
           def is_internal_link(url: str) -> bool:
