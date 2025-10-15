@@ -169,11 +169,25 @@ on:
     branches:
       - main
       - develop
+    paths:
+      - 'docs/**'
+      - '*.md'
+      - 'configs/**'
+      - '.ide/**'
+      - 'notebooks/**'
+      - 'src/**/*.py'
+      - 'requirements/**'
+      - '.github/workflows/docs_sync_check.yml'
   
   pull_request:
     branches:
       - main
       - develop
+    paths:
+      - 'docs/**'
+      - '*.md'
+      - 'configs/**'
+      - '.ide/**'
   
   workflow_dispatch:
     inputs:
@@ -487,6 +501,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: [validate-structure]
+    if: github.event.inputs.check_cross_references != 'false'
     
     steps:
       - name: Checkout repository
@@ -553,6 +568,7 @@ jobs:
               valid_links = 0
               
               for md_file in markdown_files:
+                  # Skip node_modules and venv
                   if 'node_modules' in str(md_file) or 'venv' in str(md_file):
                       continue
                   
@@ -564,9 +580,11 @@ jobs:
                           if is_internal_link(link_url):
                               total_links += 1
                               
+                              # Remove anchor
                               url_without_anchor = link_url.split('#')[0]
                               
                               if url_without_anchor:
+                                  # Resolve relative to file location
                                   target = md_file.parent / url_without_anchor
                                   
                                   if target.exists():
@@ -663,6 +681,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     needs: [validate-structure]
+    if: github.event.inputs.validate_code_examples != 'false'
     
     steps:
       - name: Checkout repository
@@ -803,7 +822,7 @@ jobs:
           grep -r "configs/" docs/ 2>/dev/null | head -5 || echo "No config references found"
 
   # ==========================================================================
-  # Job 4: Configuration-Documentation Synchron
+  # Job 4: Configuration-Documentation Synchronization
   # ==========================================================================
   # Academic Justification:
   #   Ensures configuration files and their documentation stay synchronized
