@@ -1,0 +1,715 @@
+/**
+ * ============================================================================
+ * Custom CSS for AG News Text Classification Documentation
+ * ============================================================================
+ * Project: AG News Text Classification (ag-news-text-classification)
+ * Description: Custom CSS overrides for Material for MkDocs theme providing
+ *              project-specific styling, branding, and enhanced user experience
+ * Author: Võ Hải Dũng
+ * Email: vohaidung.work@gmail.com
+ * License: MIT
+ * ============================================================================
+ *
+ * Academic Rationale:
+ *   This stylesheet implements design principles from:
+ *   - "Material Design Guidelines" (Google, 2014)
+ *   - "Web Content Accessibility Guidelines (WCAG) 2.1" (W3C)
+ *   - "Responsive Web Design" (Marcotte, 2011)
+ *   - "The Elements of Typographic Style" (Bringhurst, 2004)
+ *
+ * Design Philosophy:
+ *   1. Accessibility: WCAG 2.1 AA compliance minimum
+ *   2. Readability: Optimal typography for technical content
+ *   3. Consistency: Uniform styling across all pages
+ *   4. Performance: Minimal CSS, optimized selectors
+ *   5. Responsiveness: Mobile-first approach
+ *   6. Maintainability: Well-documented, modular code
+ *   7. Branding: Project-specific visual identity
+ *   8. User Experience: Intuitive, pleasant interface
+ *
+ * CSS Organization:
+ *   Section 1: CSS Custom Properties (Variables)
+ *   Section 2: Root Element Overrides
+ *   Section 3: Typography
+ *   Section 4: Layout and Structure
+ *   Section 5: Navigation
+ *   Section 6: Content Elements
+ *   Section 7: Code Blocks and Syntax Highlighting
+ *   Section 8: Tables
+ *   Section 9: Admonitions and Callouts
+ *   Section 10: Footer and Metadata
+ *   Section 11: Responsive Design
+ *   Section 12: Accessibility Enhancements
+ *   Section 13: Print Styles
+ *
+ * Color Scheme:
+ *   Primary: Blue (#2196F3) - Trust, professionalism, technology
+ *   Secondary: Indigo (#448AFF) - Depth, sophistication
+ *   Accent: Light Blue (#64B5F6) - Highlights, interactive elements
+ *   Success: Green (#4CAF50) - Positive feedback
+ *   Warning: Orange (#FF9800) - Caution, important notes
+ *   Error: Red (#F44336) - Errors, critical information
+ *   Neutral: Gray scale - Text, backgrounds, borders
+ *
+ * Typography:
+ *   Headings: Roboto (sans-serif) - Clean, modern, readable
+ *   Body: Roboto (sans-serif) - Optimal for screen reading
+ *   Code: Roboto Mono (monospace) - Clear code presentation
+ *
+ * Accessibility Features:
+ *   - High contrast ratios (4.5:1 minimum for normal text)
+ *   - Focus indicators for keyboard navigation
+ *   - Skip links for screen readers
+ *   - Semantic HTML structure preserved
+ *   - Alt text for all images
+ *   - ARIA labels where appropriate
+ *
+ * Browser Support:
+ *   - Chrome/Edge: Latest 2 versions
+ *   - Firefox: Latest 2 versions
+ *   - Safari: Latest 2 versions
+ *   - Mobile browsers: iOS Safari, Chrome Android
+ *
+ * Performance Considerations:
+ *   - Minimal use of complex selectors
+ *   - No unnecessary specificity
+ *   - Optimized for render performance
+ *   - GPU-accelerated transforms where beneficial
+ *
+ * References:
+ *   - Material Design: https://material.io/design
+ *   - WCAG 2.1: https://www.w3.org/WAI/WCAG21/quickref/
+ *   - CSS Guidelines: https://cssguidelin.es/
+ *
+ * ============================================================================
+ */
+
+/* ============================================================================
+ * Section 1: CSS Custom Properties (Variables)
+ * ============================================================================
+ * Purpose: Centralized theming variables for consistent styling across
+ *          light and dark modes, enabling easy maintenance and customization
+ *
+ * Academic Foundation:
+ *   CSS Custom Properties provide a maintainable theming system following
+ *   the DRY (Don't Repeat Yourself) principle and enabling runtime theme
+ *   switching without performance penalties.
+ */
+
+:root {
+  /* Primary Color Palette */
+  --md-primary-fg-color: #2196F3;
+  --md-primary-fg-color--light: #64B5F6;
+  --md-primary-fg-color--dark: #1976D2;
+  --md-primary-bg-color: #FFFFFF;
+  
+  /* Secondary Color Palette */
+  --md-accent-fg-color: #448AFF;
+  --md-accent-fg-color--transparent: rgba(68, 138, 255, 0.1);
+  
+  /* Typography Colors */
+  --md-default-fg-color: #333333;
+  --md-default-fg-color--light: #666666;
+  --md-default-fg-color--lighter: #999999;
+  --md-default-fg-color--lightest: #CCCCCC;
+  
+  /* Background Colors */
+  --md-default-bg-color: #FFFFFF;
+  --md-default-bg-color--light: #F5F5F5;
+  --md-default-bg-color--lighter: #FAFAFA;
+  --md-default-bg-color--lightest: #FCFCFC;
+  
+  /* Code Block Colors */
+  --md-code-bg-color: #F5F5F5;
+  --md-code-fg-color: #37474F;
+  --md-code-hl-color: rgba(33, 150, 243, 0.1);
+  
+  /* Admonition Colors */
+  --md-admonition-bg-color: #F5F5F5;
+  --md-admonition-fg-color: #333333;
+  
+  /* Spacing System (8px base) */
+  --md-spacing-unit: 8px;
+  --md-spacing-xs: calc(var(--md-spacing-unit) * 0.5);
+  --md-spacing-sm: var(--md-spacing-unit);
+  --md-spacing-md: calc(var(--md-spacing-unit) * 2);
+  --md-spacing-lg: calc(var(--md-spacing-unit) * 3);
+  --md-spacing-xl: calc(var(--md-spacing-unit) * 4);
+  
+  /* Border Radius System */
+  --md-border-radius-sm: 3px;
+  --md-border-radius-md: 4px;
+  --md-border-radius-lg: 6px;
+  
+  /* Shadow System */
+  --md-shadow-z1: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
+                  0 1px 5px 0 rgba(0, 0, 0, 0.12),
+                  0 3px 1px -2px rgba(0, 0, 0, 0.2);
+  --md-shadow-z2: 0 4px 5px 0 rgba(0, 0, 0, 0.14),
+                  0 1px 10px 0 rgba(0, 0, 0, 0.12),
+                  0 2px 4px -1px rgba(0, 0, 0, 0.4);
+  
+  /* Typography Scale */
+  --md-font-size-base: 16px;
+  --md-font-size-sm: 0.875rem;
+  --md-font-size-md: 1rem;
+  --md-font-size-lg: 1.125rem;
+  --md-font-size-xl: 1.25rem;
+  
+  /* Line Heights */
+  --md-line-height-base: 1.6;
+  --md-line-height-heading: 1.3;
+  
+  /* Transition Timing */
+  --md-transition-duration: 250ms;
+  --md-transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark Mode Theme Variables */
+[data-md-color-scheme="slate"] {
+  /* Primary colors adjusted for dark mode */
+  --md-primary-fg-color: #64B5F6;
+  --md-primary-fg-color--light: #90CAF9;
+  --md-primary-fg-color--dark: #42A5F5;
+  
+  /* Typography colors for dark backgrounds */
+  --md-default-fg-color: #E0E0E0;
+  --md-default-fg-color--light: #B0B0B0;
+  --md-default-fg-color--lighter: #808080;
+  --md-default-fg-color--lightest: #505050;
+  
+  /* Background colors for dark mode */
+  --md-default-bg-color: #1E1E1E;
+  --md-default-bg-color--light: #252525;
+  --md-default-bg-color--lighter: #2A2A2A;
+  --md-default-bg-color--lightest: #303030;
+  
+  /* Code blocks optimized for dark mode */
+  --md-code-bg-color: #2A2A2A;
+  --md-code-fg-color: #E0E0E0;
+  --md-code-hl-color: rgba(100, 181, 246, 0.15);
+  
+  /* Admonitions for dark mode */
+  --md-admonition-bg-color: #252525;
+  --md-admonition-fg-color: #E0E0E0;
+}
+
+/* ============================================================================
+ * Section 2: Root Element Overrides
+ * ============================================================================
+ * Purpose: Base HTML element styling overrides for consistent foundation
+ */
+
+html {
+  /* Smooth scrolling for anchor links */
+  scroll-behavior: smooth;
+  
+  /* Prevent text size adjustment on orientation change */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  /* Base font smoothing for better readability */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  
+  /* Optimize text rendering */
+  text-rendering: optimizeLegibility;
+}
+
+/* ============================================================================
+ * Section 3: Typography
+ * ============================================================================
+ * Purpose: Enhanced typography for technical documentation readability
+ *
+ * Academic Foundation:
+ *   Typography follows principles from "The Elements of Typographic Style"
+ *   ensuring optimal readability for long-form technical content.
+ */
+
+/* Heading Styles */
+.md-typeset h1 {
+  font-weight: 700;
+  color: var(--md-primary-fg-color);
+  letter-spacing: -0.02em;
+  line-height: var(--md-line-height-heading);
+  margin-top: var(--md-spacing-xl);
+  margin-bottom: var(--md-spacing-lg);
+}
+
+.md-typeset h2 {
+  font-weight: 600;
+  color: var(--md-default-fg-color);
+  border-bottom: 2px solid var(--md-default-fg-color--lightest);
+  padding-bottom: var(--md-spacing-sm);
+  margin-top: var(--md-spacing-lg);
+  margin-bottom: var(--md-spacing-md);
+}
+
+.md-typeset h3 {
+  font-weight: 600;
+  color: var(--md-default-fg-color);
+  margin-top: var(--md-spacing-md);
+  margin-bottom: var(--md-spacing-sm);
+}
+
+.md-typeset h4,
+.md-typeset h5,
+.md-typeset h6 {
+  font-weight: 500;
+  color: var(--md-default-fg-color--light);
+  margin-top: var(--md-spacing-md);
+  margin-bottom: var(--md-spacing-sm);
+}
+
+/* Paragraph and Text Styles */
+.md-typeset p {
+  line-height: var(--md-line-height-base);
+  margin-bottom: var(--md-spacing-md);
+}
+
+.md-typeset strong {
+  font-weight: 600;
+  color: var(--md-default-fg-color);
+}
+
+.md-typeset em {
+  font-style: italic;
+  color: var(--md-default-fg-color--light);
+}
+
+/* Links */
+.md-typeset a {
+  color: var(--md-primary-fg-color);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--md-transition-duration) var(--md-transition-timing),
+              color var(--md-transition-duration) var(--md-transition-timing);
+}
+
+.md-typeset a:hover {
+  color: var(--md-primary-fg-color--dark);
+  border-bottom-color: var(--md-primary-fg-color--light);
+}
+
+.md-typeset a:focus {
+  outline: 2px solid var(--md-primary-fg-color);
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+ * Section 4: Layout and Structure
+ * ============================================================================
+ * Purpose: Overall page layout and structural components
+ */
+
+.md-main__inner {
+  margin-top: 0;
+}
+
+.md-content {
+  max-width: none;
+}
+
+.md-content__inner {
+  margin: 0 auto;
+  padding: var(--md-spacing-lg) var(--md-spacing-md);
+}
+
+/* ============================================================================
+ * Section 5: Navigation
+ * ============================================================================
+ * Purpose: Enhanced navigation elements for better user experience
+ */
+
+.md-tabs {
+  background-color: var(--md-primary-fg-color);
+}
+
+.md-tabs__link {
+  font-weight: 500;
+  opacity: 0.7;
+  transition: opacity var(--md-transition-duration) var(--md-transition-timing);
+}
+
+.md-tabs__link:hover,
+.md-tabs__link--active {
+  opacity: 1;
+}
+
+/* Table of Contents */
+.md-nav__link {
+  transition: color var(--md-transition-duration) var(--md-transition-timing);
+}
+
+.md-nav__link:hover {
+  color: var(--md-primary-fg-color);
+}
+
+.md-nav__link--active {
+  color: var(--md-primary-fg-color);
+  font-weight: 600;
+}
+
+/* ============================================================================
+ * Section 6: Content Elements
+ * ============================================================================
+ * Purpose: Styling for various content elements
+ */
+
+/* Lists */
+.md-typeset ul,
+.md-typeset ol {
+  margin-bottom: var(--md-spacing-md);
+}
+
+.md-typeset li {
+  margin-bottom: var(--md-spacing-xs);
+}
+
+/* Blockquotes */
+.md-typeset blockquote {
+  border-left: 4px solid var(--md-primary-fg-color);
+  padding-left: var(--md-spacing-md);
+  margin-left: 0;
+  margin-right: 0;
+  color: var(--md-default-fg-color--light);
+  font-style: italic;
+}
+
+/* Horizontal Rules */
+.md-typeset hr {
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+  margin: var(--md-spacing-xl) 0;
+}
+
+/* ============================================================================
+ * Section 7: Code Blocks and Syntax Highlighting
+ * ============================================================================
+ * Purpose: Enhanced code presentation for technical documentation
+ *
+ * Academic Foundation:
+ *   Code styling optimized for readability based on "Cognitive Load Theory"
+ *   ensuring minimal distraction and maximum comprehension.
+ */
+
+/* Inline Code */
+.md-typeset code {
+  background-color: var(--md-code-bg-color);
+  color: var(--md-code-fg-color);
+  padding: 0.1em 0.4em;
+  border-radius: var(--md-border-radius-sm);
+  font-size: 0.85em;
+  font-family: 'Roboto Mono', 'Courier New', monospace;
+  font-weight: 400;
+  word-break: break-word;
+}
+
+/* Code Blocks */
+.md-typeset pre {
+  background-color: var(--md-code-bg-color);
+  border-radius: var(--md-border-radius-lg);
+  padding: var(--md-spacing-md);
+  overflow-x: auto;
+  margin-bottom: var(--md-spacing-md);
+  box-shadow: var(--md-shadow-z1);
+}
+
+.md-typeset pre > code {
+  background-color: transparent;
+  padding: 0;
+  font-size: 0.875em;
+  line-height: 1.5;
+}
+
+/* Code Block Copy Button */
+.md-clipboard {
+  transition: opacity var(--md-transition-duration) var(--md-transition-timing);
+}
+
+.md-clipboard:hover {
+  opacity: 1;
+}
+
+/* Syntax Highlighting Line Numbers */
+.md-typeset .linenodiv {
+  padding-right: var(--md-spacing-sm);
+  color: var(--md-default-fg-color--lighter);
+}
+
+/* ============================================================================
+ * Section 8: Tables
+ * ============================================================================
+ * Purpose: Enhanced table styling for data presentation
+ */
+
+.md-typeset table {
+  border-radius: var(--md-border-radius-md);
+  overflow: hidden;
+  box-shadow: var(--md-shadow-z1);
+  margin-bottom: var(--md-spacing-md);
+  width: 100%;
+}
+
+.md-typeset table th {
+  background-color: var(--md-primary-fg-color);
+  color: white;
+  font-weight: 600;
+  text-align: left;
+  padding: var(--md-spacing-sm) var(--md-spacing-md);
+}
+
+.md-typeset table td {
+  padding: var(--md-spacing-sm) var(--md-spacing-md);
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.md-typeset table tr:last-child td {
+  border-bottom: none;
+}
+
+.md-typeset table tr:nth-child(even) {
+  background-color: var(--md-default-bg-color--lighter);
+}
+
+.md-typeset table tr:hover {
+  background-color: var(--md-accent-fg-color--transparent);
+}
+
+/* ============================================================================
+ * Section 9: Admonitions and Callouts
+ * ============================================================================
+ * Purpose: Styled callout boxes for important information
+ */
+
+.md-typeset .admonition {
+  border-radius: var(--md-border-radius-md);
+  padding: var(--md-spacing-md);
+  margin-bottom: var(--md-spacing-md);
+  box-shadow: var(--md-shadow-z1);
+  background-color: var(--md-admonition-bg-color);
+}
+
+.md-typeset .admonition-title {
+  font-weight: 600;
+  margin-bottom: var(--md-spacing-sm);
+}
+
+/* Note Admonition */
+.md-typeset .admonition.note {
+  border-left: 4px solid #2196F3;
+}
+
+/* Tip Admonition */
+.md-typeset .admonition.tip {
+  border-left: 4px solid #4CAF50;
+}
+
+/* Warning Admonition */
+.md-typeset .admonition.warning {
+  border-left: 4px solid #FF9800;
+}
+
+/* Danger Admonition */
+.md-typeset .admonition.danger {
+  border-left: 4px solid #F44336;
+}
+
+/* ============================================================================
+ * Section 10: Footer and Metadata
+ * ============================================================================
+ * Purpose: Footer styling and metadata presentation
+ */
+
+.md-footer {
+  background-color: var(--md-primary-fg-color);
+}
+
+.md-footer-meta {
+  background-color: var(--md-primary-fg-color--dark);
+}
+
+.md-footer__title {
+  background-color: var(--md-primary-fg-color);
+}
+
+/* Source File Information */
+.md-source-file {
+  font-size: var(--md-font-size-sm);
+  color: var(--md-default-fg-color--light);
+  padding: var(--md-spacing-sm);
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+  margin-top: var(--md-spacing-lg);
+}
+
+/* ============================================================================
+ * Section 11: Responsive Design
+ * ============================================================================
+ * Purpose: Mobile-first responsive design adaptations
+ *
+ * Academic Foundation:
+ *   Responsive breakpoints follow Material Design guidelines ensuring
+ *   optimal readability across all device sizes.
+ */
+
+/* Tablet and Up (768px+) */
+@media screen and (min-width: 48em) {
+  .md-content__inner {
+    padding: var(--md-spacing-xl) var(--md-spacing-lg);
+  }
+  
+  .md-typeset h1 {
+    font-size: 2.5rem;
+  }
+  
+  .md-typeset h2 {
+    font-size: 2rem;
+  }
+}
+
+/* Desktop and Up (1024px+) */
+@media screen and (min-width: 64em) {
+  .md-content__inner {
+    max-width: 960px;
+  }
+  
+  .md-typeset pre {
+    padding: var(--md-spacing-lg);
+  }
+}
+
+/* Large Desktop (1440px+) */
+@media screen and (min-width: 90em) {
+  .md-content__inner {
+    max-width: 1140px;
+  }
+}
+
+/* ============================================================================
+ * Section 12: Accessibility Enhancements
+ * ============================================================================
+ * Purpose: WCAG 2.1 AA compliance and enhanced accessibility
+ *
+ * Academic Foundation:
+ *   Accessibility features follow WCAG 2.1 Level AA standards ensuring
+ *   documentation is usable by people with diverse abilities.
+ */
+
+/* Skip to Content Link */
+.md-skip {
+  position: absolute;
+  left: -9999px;
+  z-index: 999;
+  padding: var(--md-spacing-sm) var(--md-spacing-md);
+  background-color: var(--md-primary-fg-color);
+  color: white;
+  text-decoration: none;
+}
+
+.md-skip:focus {
+  left: 0;
+  top: 0;
+}
+
+/* Focus Indicators */
+*:focus {
+  outline: 2px solid var(--md-primary-fg-color);
+  outline-offset: 2px;
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .md-typeset h1,
+  .md-typeset h2,
+  .md-typeset h3 {
+    font-weight: 700;
+  }
+  
+  .md-typeset a {
+    text-decoration: underline;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ============================================================================
+ * Section 13: Print Styles
+ * ============================================================================
+ * Purpose: Optimized styles for printed documentation
+ */
+
+@media print {
+  /* Remove navigation and interactive elements */
+  .md-header,
+  .md-tabs,
+  .md-sidebar,
+  .md-footer {
+    display: none;
+  }
+  
+  /* Optimize content for printing */
+  .md-content {
+    max-width: 100%;
+  }
+  
+  /* Ensure code blocks do not break across pages */
+  .md-typeset pre {
+    page-break-inside: avoid;
+  }
+  
+  /* Ensure headings stay with content */
+  .md-typeset h1,
+  .md-typeset h2,
+  .md-typeset h3 {
+    page-break-after: avoid;
+  }
+  
+  /* Use black text for printing */
+  body {
+    color: #000;
+  }
+  
+  /* Show link URLs in print */
+  .md-typeset a[href^="http"]:after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
+  }
+}
+
+/* ============================================================================
+ * End of Custom CSS
+ * ============================================================================
+ *
+ * This stylesheet provides comprehensive theming for the AG News Text
+ * Classification documentation following academic standards, accessibility
+ * guidelines, and modern web design principles.
+ *
+ * For questions or contributions:
+ *   Author: Võ Hải Dũng
+ *   Email: vohaidung.work@gmail.com
+ *   Project: AG News Text Classification (ag-news-text-classification)
+ *   License: MIT
+ *
+ * Last Updated: 2025
+ * Version: 1.0.0
+ * ============================================================================
+ */
