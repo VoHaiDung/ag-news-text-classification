@@ -1267,9 +1267,22 @@ jobs:
 # End of Overfitting Prevention Pipeline
 # ============================================================================
 #
-# This comprehensive pipeline ensures the AG News Text Classification project
-# maintains rigorous overfitting prevention standards following academic
-# best practices.
+# This overfitting prevention pipeline ensures the AG News Text Classification
+# project maintains rigorous generalization standards through comprehensive
+# multi-layer validation and enforcement mechanisms following academic best
+# practices for overfitting prevention and model evaluation.
+#
+# The pipeline validates:
+#   - Configuration validation: Model and training config compliance
+#   - Data split validation: Leakage detection and stratification verification
+#   - Model size validation: Parameter count constraints for dataset size
+#   - Test set protection: Access control and audit logging enforcement
+#   - Training monitoring: Real-time train-validation gap tracking
+#   - Regularization compliance: Dropout and weight decay requirements
+#   - Recommendation generation: Actionable prevention suggestions
+#
+# All validations follow academic standards for reproducibility, generalization,
+# and integrity, ensuring research quality and production readiness.
 #
 # For questions or contributions:
 #   Author: Võ Hải Dũng
