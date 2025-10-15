@@ -862,7 +862,7 @@ jobs:
               print("  Dataset: AG News Corpus")
               print("  Paper: Character-level Convolutional Networks (Zhang et al., 2015)")
               print("  ArXiv: https://arxiv.org/abs/1509.01626")
-              print(f"  Classes (OFFICIAL): {AG_NEWS_CLASSES}")
+              print(f"  Classes: {AG_NEWS_CLASSES}")
               print()
               
               # Load test data
@@ -988,7 +988,7 @@ jobs:
           - **Paper:** Character-level Convolutional Networks for Text Classification (Zhang et al., 2015)
           - **ArXiv:** https://arxiv.org/abs/1509.01626
           - **Task:** 4-class text classification
-          - **Classes (OFFICIAL):**
+          - **Classes:**
             - Label 0: World
             - Label 1: Sports
             - Label 2: Business
@@ -1023,14 +1023,6 @@ jobs:
           - "A Unified View of Multi-Domain NLP" (Ruder, 2019)
           - "Benchmarking Neural Network Robustness" (Hendrycks et al., 2019)
           - AG News dataset paper (Zhang et al., 2015)
-          
-          ## Class Name Accuracy
-          
-          This benchmark strictly follows the official AG News specification:
-          - Uses exact class names as in original dataset paper
-          - Label 3 is "Science/Technology", NOT just "Technology"
-          - Ensures comparability with published results
-          - Maintains academic credibility and reproducibility
           
           ## Overfitting Prevention
           
