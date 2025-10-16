@@ -1,0 +1,990 @@
+# AG News Text Classification - Google Colab Environment Configuration
+#
+# This configuration file defines settings for the Google Colaboratory environment
+# of the AG News Text Classification project. It is optimized for free-tier GPU
+# training, session management, quota awareness, and Google Drive integration.
+#
+# Google Colab Environment Characteristics:
+#   - Free GPU access (Tesla T4, 16GB VRAM)
+#   - Limited RAM (12GB free tier, 25GB Pro)
+#   - Session timeout (12 hours free, 24 hours Pro)
+#   - Idle timeout (90 minutes)
+#   - Requires Google Drive mounting for persistence
+#   - GPU quota limitations and monitoring
+#   - Automatic disconnect handling
+#   - Checkpoint-based recovery
+#   - Optimized for notebook workflows
+#   - Keep-alive mechanisms
+#   - Free-tier resource optimization
+#
+# Usage:
+#   This configuration is automatically loaded in Google Colab notebooks:
+#     !export ENVIRONMENT=colab
+#     !python train.py
+#
+#   Or in notebook cell:
+#     from configs.config_loader import load_config
+#     config = load_config('colab')
+#
+#   For auto-training in Colab:
+#     !python src/cli_commands/auto_train.py --platform colab
+#
+# Design Principles:
+#   1. Quota Awareness:
+#      - Track GPU usage hours
+#      - Optimize for limited compute time
+#      - Smart checkpoint strategies
+#      - Efficient resource utilization
+#
+#   2. Persistence Management:
+#      - Automatic Google Drive mounting
+#      - Frequent checkpointing
+#      - Session recovery mechanisms
+#      - Cache management on Drive
+#
+#   3. Robustness:
+#      - Handle sudden disconnections
+#      - Auto-resume training
+#      - Graceful degradation
+#      - Keep-alive mechanisms
+#
+#   4. Resource Optimization:
+#      - Memory-efficient settings for 12GB RAM
+#      - GPU utilization maximization
+#      - Batch size auto-tuning
+#      - Mixed precision training
+#
+#   5. User Experience:
+#      - Notebook-friendly outputs
+#      - Progress visualization
+#      - Clear status messages
+#      - Interactive monitoring
+#
+# Colab-Specific Challenges and Solutions:
+#   
+#   Challenge 1: Session Timeout
+#   Solution: Frequent checkpointing, auto-resume, keep-alive scripts
+#   
+#   Challenge 2: Limited RAM (12GB)
+#   Solution: Smaller batch sizes, gradient accumulation, memory-efficient models
+#   
+#   Challenge 3: GPU Quota
+#   Solution: Quota tracking, efficient training, early stopping
+#   
+#   Challenge 4: Idle Disconnect
+#   Solution: Keep-alive mechanisms, progress updates, user interaction
+#   
+#   Challenge 5: No Persistent Storage
+#   Solution: Google Drive integration, automatic backup
+#
+# References:
+#   Google Colab Documentation:
+#     - "Google Colaboratory FAQ". https://research.google.com/colaboratory/faq.html
+#     - Best practices for resource management and session handling
+#
+#   Free-Tier ML Training:
+#     - Carneiro, T., et al. (2018). "Performance Analysis of Google Colaboratory
+#       as a Tool for Accelerating Deep Learning Applications". IEEE Access.
+#     - Discusses optimization strategies for free-tier GPU training
+#
+#   Jupyter Notebook Best Practices:
+#     - Rule, A., et al. (2018). "Exploration and Explanation in Computational
+#       Notebooks". CHI Conference on Human Factors in Computing Systems.
+#     - Pimentel, J. F., et al. (2019). "A Large-Scale Study about Quality and
+#       Reproducibility of Jupyter Notebooks". MSR.
+#
+#   Cloud Resource Management:
+#     - Armbrust, M., et al. (2010). "A View of Cloud Computing".
+#       Communications of the ACM, 53(4), 50-58.
+#     - Principles applicable to managing limited cloud resources
+#
+#   Session Recovery Patterns:
+#     - Zaharia, M., et al. (2012). "Resilient Distributed Datasets: A
+#       Fault-Tolerant Abstraction for In-Memory Cluster Computing". NSDI.
+#     - Checkpoint and recovery strategies
+#
+# Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
+# License: MIT
+# Project: AG News Text Classification (ag-news-text-classification)
+# Repository: https://github.com/VoHaiDung/ag-news-text-classification
+
+# Metadata section
+# Provides information about this configuration file
+metadata:
+  name: "Google Colab Environment Configuration"
+  description: "Configuration for Google Colaboratory environment of AG News Text Classification (ag-news-text-classification)"
+  project_name: "AG News Text Classification (ag-news-text-classification)"
+  project_version: "1.0.0"
+  config_version: "1.0.0"
+  environment: "colab"
+  author: "Võ Hải Dũng"
+  email: "vohaidung.work@gmail.com"
+  license: "MIT"
+  repository: "https://github.com/VoHaiDung/ag-news-text-classification"
+  created_date: "2025-09-19"
+  last_modified: "2025-09-19"
+  
+  # Configuration schema validation
+  schema_version: "1.0"
+  strict_validation: false  # Relaxed for flexibility
+  allow_unknown_fields: true
+  validate_on_load: true
+  
+  # Maintenance information
+  maintainer: "Võ Hải Dũng"
+  support_email: "vohaidung.work@gmail.com"
+  documentation_url: "https://github.com/VoHaiDung/ag-news-text-classification/blob/main/docs/platform_guides/colab_guide.md"
+  
+  # Colab-specific metadata
+  colab_tier: "free"  # Options: free, pro, pro_plus
+  target_gpu: "T4"  # Tesla T4 (most common in free tier)
+  expected_vram_gb: 16
+  expected_ram_gb: 12
+
+# Environment-specific settings
+# Core Colab environment configuration
+environment:
+  name: "google_colab"
+  mode: "cloud_free"
+  debug: false
+  verbose: true  # Helpful in notebooks
+  testing: false
+  
+  # Colab-specific flags
+  auto_reload: false
+  hot_reload_models: false
+  fail_fast: false  # Continue on non-critical errors
+  strict_mode: false
+  
+  # Performance optimization
+  optimize_for: "free_tier_efficiency"  # Maximize free resources
+  enable_profiling: false  # Avoid overhead
+  enable_debugging: false
+  
+  # Data protection
+  protect_test_set: true
+  allow_data_leakage_warnings: true
+  
+  # Reproducibility
+  deterministic: true
+  seed: 42
+  
+  # Cleanup (important for RAM management)
+  auto_cleanup: true
+  cleanup_on_exit: true
+  cleanup_interval_minutes: 30
+  
+  # Session management
+  session_timeout_hours: 12  # Free tier limit
+  idle_timeout_minutes: 90  # Free tier limit
+  keep_alive_enabled: true
+  keep_alive_interval_minutes: 5
+  auto_reconnect: true
+  
+  # Notebook-specific
+  notebook_mode: true
+  interactive_outputs: true
+  display_progress_bars: true
+  clear_output_on_update: false
+
+# Project paths
+# All paths configured for Google Colab + Google Drive
+paths:
+  # Root directories
+  project_root: "/content/ag-news-text-classification"
+  configs_root: "/content/ag-news-text-classification/configs"
+  data_root: "/content/drive/MyDrive/ag_news_data"  # Persistent on Drive
+  src_root: "/content/ag-news-text-classification/src"
+  outputs_root: "/content/drive/MyDrive/ag_news_outputs"  # Persistent on Drive
+  
+  # Google Drive paths
+  drive_root: "/content/drive/MyDrive"
+  drive_project_dir: "/content/drive/MyDrive/ag_news_classification"
+  
+  # Data directories (on Drive for persistence)
+  data:
+    raw: "/content/drive/MyDrive/ag_news_data/raw"
+    processed: "/content/drive/MyDrive/ag_news_data/processed"
+    augmented: "/content/drive/MyDrive/ag_news_data/augmented"
+    cache: "/content/drive/MyDrive/ag_news_data/cache"
+    test_samples: "/content/drive/MyDrive/ag_news_data/test_samples"
+    metadata: "/content/drive/MyDrive/ag_news_data/metadata"
+  
+  # Output directories (on Drive for persistence)
+  outputs:
+    models: "/content/drive/MyDrive/ag_news_outputs/models"
+    checkpoints: "/content/drive/MyDrive/ag_news_outputs/checkpoints"
+    results: "/content/drive/MyDrive/ag_news_outputs/results"
+    logs: "/content/drive/MyDrive/ag_news_outputs/logs"
+    figures: "/content/drive/MyDrive/ag_news_outputs/figures"
+    tensorboard: "/content/drive/MyDrive/ag_news_outputs/tensorboard"
+  
+  # Temporary directories (local for speed)
+  temp:
+    root: "/content/temp"
+    cache: "/content/temp/cache"
+    processing: "/content/temp/processing"
+  
+  # Cache directories (mix of local and Drive)
+  cache:
+    huggingface: "/content/cache/huggingface"  # Local for speed
+    models: "/content/cache/models"
+    datasets: "/content/drive/MyDrive/ag_news_data/cache/datasets"  # Drive for persistence
+  
+  # Colab-specific paths
+  colab:
+    drive_mount: "/content/drive"
+    runtime_dir: "/content"
+    sample_data: "/content/sample_data"
+    
+  # Configuration paths
+  configs:
+    models: "/content/ag-news-text-classification/configs/models"
+    training: "/content/ag-news-text-classification/configs/training"
+    data: "/content/ag-news-text-classification/configs/data"
+
+# Google Drive configuration
+# Essential for persistence in Colab
+google_drive:
+  # Mounting
+  mount_drive: true
+  mount_point: "/content/drive"
+  force_remount: false
+  
+  # Paths
+  project_directory: "/content/drive/MyDrive/ag_news_classification"
+  backup_directory: "/content/drive/MyDrive/ag_news_classification/backups"
+  
+  # Synchronization
+  auto_sync: true
+  sync_interval_minutes: 10
+  sync_on_checkpoint: true
+  
+  # Optimization
+  use_drive_cache: true
+  cache_large_files: false  # Avoid Drive API limits
+  stream_large_files: true
+
+# Model configuration
+# Optimized for Colab T4 GPU (16GB VRAM)
+model:
+  # Colab-optimized model selection
+  name: "microsoft/deberta-v3-large"  # Large model with LoRA fits in 16GB
+  type: "deberta"
+  variant: "large"
+  
+  # Model parameters
+  num_labels: 4
+  max_length: 512  # Full length supported
+  
+  # Model loading
+  pretrained: true
+  use_cache: true
+  cache_dir: "/content/cache/huggingface"
+  trust_remote_code: false
+  force_download: false
+  resume_download: true
+  local_files_only: false
+  
+  # Dropout
+  hidden_dropout_prob: 0.1
+  attention_probs_dropout_prob: 0.1
+  classifier_dropout: 0.1
+  
+  # Colab-specific settings
+  load_in_8bit: false  # T4 has enough VRAM
+  load_in_4bit: false
+  device_map: "auto"
+  low_cpu_mem_usage: true
+  torch_dtype: "auto"
+  
+  # Model head
+  head:
+    type: "classification"
+    num_hidden_layers: 0
+    activation: "gelu"
+    pooling_strategy: "cls"
+  
+  # Alternative models for Colab
+  alternatives:
+    memory_efficient: "microsoft/deberta-v3-base"  # If RAM issues
+    xlarge_with_qlora: "microsoft/deberta-v3-xlarge"  # With QLoRA
+    fastest: "distilbert-base-uncased"
+
+# PEFT (Parameter-Efficient Fine-Tuning) configuration
+# LoRA recommended for Colab to maximize model size
+peft:
+  enabled: true  # Enable LoRA for larger models
+  method: "lora"
+  
+  # LoRA configuration (Colab-optimized)
+  lora:
+    rank: 16  # Good balance for Colab
+    alpha: 32
+    dropout: 0.1
+    target_modules: ["query_proj", "value_proj", "key_proj", "dense"]
+    bias: "none"
+    task_type: "SEQ_CLS"
+    modules_to_save: ["classifier"]
+  
+  # QLoRA option for even larger models
+  qlora:
+    enabled: false  # Can enable if needed
+    bits: 4
+    quant_type: "nf4"
+    double_quant: true
+    compute_dtype: "bfloat16"
+
+# Training configuration
+# Optimized for Colab constraints (12GB RAM, session timeout)
+training:
+  # Training regime (shorter for session limits)
+  num_epochs: 5  # Moderate epochs to fit in session
+  max_steps: -1
+  
+  # Batch configuration (Colab RAM-aware)
+  batch_size: 16  # Safe for 12GB RAM
+  eval_batch_size: 32  # Larger for evaluation
+  gradient_accumulation_steps: 2  # Effective batch size: 32
+  
+  # Optimization
+  optimizer:
+    type: "adamw"
+    lr: 2e-5
+    weight_decay: 0.01
+    betas: [0.9, 0.999]
+    eps: 1e-8
+  
+  # Learning rate scheduling
+  scheduler:
+    type: "cosine"
+    num_warmup_steps: 0
+    warmup_ratio: 0.1
+  
+  # Mixed precision (important for Colab)
+  mixed_precision: "fp16"  # T4 supports FP16
+  fp16: true
+  bf16: false  # T4 doesn't support BF16
+  fp16_opt_level: "O2"
+  fp16_full_eval: true
+  
+  # Gradient control
+  max_grad_norm: 1.0
+  gradient_checkpointing: true  # Save memory
+  
+  # Training strategy
+  evaluation_strategy: "steps"  # More frequent for session limits
+  save_strategy: "steps"
+  logging_strategy: "steps"
+  
+  # Logging (frequent for monitoring)
+  logging_steps: 50
+  logging_first_step: true
+  logging_nan_inf_filter: true
+  
+  # Evaluation (frequent for early stopping)
+  eval_steps: 200
+  eval_delay: 0
+  eval_on_start: false
+  
+  # Checkpointing (CRITICAL for Colab)
+  save_steps: 200  # Frequent saves for session recovery
+  save_total_limit: 3
+  save_on_each_node: false
+  load_best_model_at_end: true
+  save_safetensors: true
+  
+  # Metrics
+  metric_for_best_model: "eval_f1"
+  greater_is_better: true
+  
+  # Early stopping (important for quota management)
+  early_stopping:
+    enabled: true
+    patience: 3
+    min_delta: 0.001
+    monitor: "val_f1"
+    mode: "max"
+    restore_best_weights: true
+  
+  # Regularization
+  regularization:
+    dropout: 0.1
+    attention_dropout: 0.1
+    hidden_dropout: 0.1
+    weight_decay: 0.01
+    label_smoothing: 0.1
+    gradient_clip_norm: 1.0
+  
+  # Data loading (Colab-optimized)
+  dataloader_num_workers: 2  # Limited by RAM
+  dataloader_pin_memory: true
+  dataloader_drop_last: false
+  dataloader_prefetch_factor: 2
+  
+  # Reproducibility
+  seed: 42
+  data_seed: 42
+  deterministic: true
+  
+  # Colab-specific
+  report_to: ["tensorboard"]  # Lightweight reporting
+  run_name: "colab_run"
+  
+  # Session management
+  resume_from_checkpoint: true  # Auto-resume
+  ignore_data_skip: false
+  
+  # Memory optimization
+  gradient_checkpointing_kwargs:
+    use_reentrant: false
+  optim: "adamw_torch"  # More memory efficient
+
+# Data configuration
+# Colab data handling
+data:
+  # Dataset
+  dataset_name: "ag_news"
+  dataset_config: null
+  
+  # Data paths (Drive for persistence)
+  data_dir: "/content/drive/MyDrive/ag_news_data/raw/ag_news"
+  cache_dir: "/content/drive/MyDrive/ag_news_data/cache"
+  
+  # Split configuration
+  train_ratio: 0.8
+  val_ratio: 0.1
+  test_ratio: 0.1
+  
+  # Split strategy
+  stratify: true
+  shuffle: true
+  random_seed: 42
+  
+  # Sampling (optional for quick tests)
+  max_samples:
+    train: null  # Use all data
+    validation: null
+    test: null
+  
+  # Quick test mode (for Colab experiments)
+  quick_test:
+    enabled: false
+    train_samples: 5000
+    val_samples: 1000
+    test_samples: 1000
+  
+  # Preprocessing
+  preprocessing:
+    lowercase: false
+    remove_html: true
+    remove_urls: false
+    remove_special_chars: false
+    normalize_whitespace: true
+    strip: true
+  
+  # Tokenization
+  tokenization:
+    max_length: 512
+    padding: "max_length"
+    truncation: true
+    return_tensors: "pt"
+    return_attention_mask: true
+  
+  # Data augmentation (optional)
+  augmentation:
+    enabled: false
+    methods: []
+  
+  # Data validation
+  validation:
+    check_labels: true
+    check_text_lengths: true
+    check_duplicates: false  # Skip for speed
+    remove_invalid: true
+  
+  # Caching (important for Colab)
+  use_cache: true
+  cache_processed_data: true
+  overwrite_cache: false
+  
+  # Data loading (memory-aware)
+  num_proc: 2
+  keep_in_memory: false  # Don't keep in RAM
+  
+  # Colab-specific
+  download_mode: "reuse_cache_if_exists"
+  streaming: false
+
+# API configuration
+# Not typically used in Colab, but available
+api:
+  enabled: false  # Usually not needed in notebooks
+  host: "127.0.0.1"
+  port: 8000
+  workers: 1
+  reload: false
+  debug: false
+
+# Deployment configuration
+# Colab deployment settings
+deployment:
+  type: "colab"
+  platform: "colab"
+  
+  # Model serving (for local testing)
+  model_serving:
+    framework: "pytorch"
+    optimization: "basic"
+    quantization: false
+
+# Monitoring configuration
+# Colab-friendly monitoring
+monitoring:
+  enabled: true
+  
+  # TensorBoard (works well in Colab)
+  tensorboard:
+    enabled: true
+    log_dir: "/content/drive/MyDrive/ag_news_outputs/tensorboard"
+    update_freq: "batch"
+    profile_batch: 0
+    histogram_freq: 1
+    write_graph: false
+  
+  # MLflow (optional)
+  mlflow:
+    enabled: false
+    tracking_uri: "/content/drive/MyDrive/ag_news_outputs/mlflow"
+  
+  # Weights & Biases (can integrate)
+  wandb:
+    enabled: false  # Can enable with API key
+    project: "ag-news-text-classification"
+    group: "colab"
+    tags: ["colab", "free-tier"]
+  
+  # Local metrics (Drive-backed)
+  local_metrics:
+    enabled: true
+    save_dir: "/content/drive/MyDrive/ag_news_outputs/metrics"
+    save_interval: 100
+    metrics_to_track:
+      - "loss"
+      - "accuracy"
+      - "f1"
+      - "learning_rate"
+      - "gpu_memory"
+  
+  # Performance monitoring
+  performance:
+    track_memory: true
+    track_gpu: true
+    track_time: true
+    track_session_time: true  # Important for Colab
+  
+  # Overfitting monitoring
+  overfitting:
+    track_train_val_gap: true
+    gap_threshold: 0.05
+    alert_on_overfitting: true
+
+# Logging configuration
+# Notebook-friendly logging
+logging:
+  # Log level
+  level: "INFO"
+  
+  # Log format (simple for notebooks)
+  format: "%(asctime)s - %(levelname)s - %(message)s"
+  date_format: "%H:%M:%S"
+  
+  # Console output
+  console:
+    enabled: true
+    level: "INFO"
+    colored: true  # Works in Colab
+  
+  # File logging (to Drive)
+  file:
+    enabled: true
+    level: "INFO"
+    path: "/content/drive/MyDrive/ag_news_outputs/logs/colab.log"
+    max_bytes: 10485760
+    backup_count: 3
+  
+  # Component-specific
+  components:
+    data: "INFO"
+    model: "INFO"
+    training: "INFO"
+    colab: "INFO"
+  
+  # Libraries
+  libraries:
+    transformers: "WARNING"
+    datasets: "WARNING"
+    torch: "WARNING"
+  
+  # Notebook-specific
+  notebook_friendly: true
+  use_tqdm: true
+  display_progress: true
+
+# Quota management
+# Critical for Colab free tier
+quota:
+  # Tracking
+  track_quota: true
+  track_gpu_hours: true
+  track_compute_units: true
+  
+  # Limits (free tier)
+  limits:
+    max_session_hours: 12
+    max_idle_minutes: 90
+    gpu_hours_per_day: null  # Varies
+    gpu_hours_per_week: null  # Varies
+  
+  # Alerts
+  alert_on_quota_warning: true
+  alert_threshold_percent: 80
+  
+  # Management
+  auto_shutdown_on_quota: false
+  save_on_quota_warning: true
+
+# Session management
+# Handle Colab disconnections
+session:
+  # Auto-reconnect
+  auto_reconnect: true
+  reconnect_timeout_seconds: 300
+  max_reconnect_attempts: 3
+  
+  # Keep-alive
+  keep_alive:
+    enabled: true
+    method: "javascript"  # Options: javascript, api_calls, both
+    interval_minutes: 5
+    activity_simulation: true
+  
+  # Checkpointing
+  checkpoint:
+    auto_checkpoint: true
+    checkpoint_interval_minutes: 15
+    checkpoint_on_disconnect: true
+    max_checkpoints: 5
+  
+  # Recovery
+  auto_resume: true
+  resume_from_last_checkpoint: true
+  verify_checkpoint_integrity: true
+  
+  # State management
+  save_state_on_interrupt: true
+  restore_state_on_start: true
+
+# Colab-specific optimizations
+colab:
+  # Environment detection
+  detect_colab: true
+  detect_tier: true  # Detect free vs pro
+  
+  # GPU optimization
+  gpu:
+    optimize_for_t4: true
+    enable_tf32: false  # T4 doesn't support
+    use_cuda_graphs: false
+    persistent_workers: false
+  
+  # Memory optimization
+  memory:
+    aggressive_cleanup: true
+    clear_cache_frequency: 100
+    garbage_collect_frequency: 50
+    use_memory_efficient_attention: true
+  
+  # Drive optimization
+  drive:
+    cache_small_files_locally: true
+    stream_large_files: true
+    batch_drive_operations: true
+    avoid_drive_api_limits: true
+  
+  # Notebook integration
+  notebook:
+    display_widgets: true
+    interactive_plots: true
+    auto_display_metrics: true
+    rich_progress_bars: true
+  
+  # Runtime optimization
+  runtime:
+    use_high_ram: false  # Request if needed
+    use_tpu: false
+    prefer_gpu: true
+  
+  # Installation
+  install:
+    upgrade_pip: false
+    install_dependencies: true
+    requirements_file: "requirements/colab.txt"
+
+# Overfitting prevention
+# Colab-adapted settings
+overfitting_prevention:
+  enabled: true
+  strict_mode: false
+  
+  # Test set protection
+  test_set_protection:
+    enabled: true
+    hash_verification: true
+    access_logging: true
+  
+  # Monitoring
+  monitoring:
+    track_train_val_gap: true
+    gap_threshold: 0.05
+    alert_on_overfitting: true
+  
+  # Constraints
+  constraints:
+    min_validation_size: 0.1
+    required_regularization: true
+
+# Security configuration
+# Basic security for Colab
+security:
+  # Authentication (not needed in Colab)
+  authentication:
+    enabled: false
+  
+  # Data privacy
+  data_privacy:
+    pii_detection: false
+    data_masking: false
+  
+  # Drive access
+  drive_access:
+    request_permissions: true
+    verify_mount: true
+
+# Feature flags
+# Colab-specific features
+features:
+  # Experimental
+  experimental:
+    flash_attention: false  # Not on T4
+    gradient_checkpointing: true
+  
+  # Advanced
+  advanced:
+    ensemble_models: false
+    knowledge_distillation: false
+  
+  # Optimization
+  optimization:
+    mixed_precision: true
+    gradient_accumulation: true
+    dynamic_batching: false
+  
+  # Data
+  data:
+    augmentation: false
+    streaming: false
+  
+  # Platform
+  platform:
+    auto_platform_detection: true
+    platform_optimization: true
+    quota_tracking: true
+  
+  # Colab-specific
+  colab:
+    drive_integration: true
+    keep_alive: true
+    auto_checkpoint: true
+    session_recovery: true
+
+# Platform-specific configuration
+platform:
+  type: "colab"
+  auto_detect: true
+  
+  # Colab configuration
+  colab:
+    tier: "free"  # Options: free, pro, pro_plus
+    gpu_type: "T4"
+    gpu_count: 1
+    
+    # Resource expectations
+    expected_ram_gb: 12
+    expected_vram_gb: 16
+    expected_storage_gb: 100  # Varies
+    
+    # Limits
+    session_timeout_hours: 12
+    idle_timeout_minutes: 90
+  
+  # Optimization
+  optimization:
+    auto_batch_size: true  # Important for varying resources
+    auto_precision: true
+    memory_efficient: true
+
+# Performance configuration
+performance:
+  # Training
+  training:
+    compile_model: false
+    use_better_transformer: false
+    enable_tf32: false  # T4 limitation
+    cudnn_benchmark: true
+  
+  # Inference
+  inference:
+    batch_size: 32
+    use_half_precision: true
+  
+  # Memory
+  memory:
+    gradient_checkpointing: true
+    cpu_offload: false
+    empty_cache_steps: 50
+
+# Backup configuration
+# Important for Colab (Drive-based)
+backup:
+  enabled: true
+  
+  # Backup targets
+  backup_to_drive: true
+  backup_checkpoints: true
+  backup_logs: true
+  backup_results: true
+  
+  # Backup frequency
+  auto_backup: true
+  backup_interval_minutes: 30
+  
+  # Backup location
+  backup_dir: "/content/drive/MyDrive/ag_news_classification/backups"
+
+# Miscellaneous
+misc:
+  # Timezone
+  timezone: "UTC"
+  
+  # Locale
+  locale: "en_US.UTF-8"
+  
+  # Notifications
+  notifications:
+    enabled: false
+    on_completion: false
+    on_error: false
+  
+  # Colab-specific
+  colab_pro_features:
+    use_if_available: true
+    prefer_high_ram: true
+    prefer_v100: false
+
+# Validation
+validation:
+  validate_schema: true
+  strict_schema: false
+  check_required_fields: true
+  fail_on_missing: false
+
+# Documentation
+documentation:
+  description: |
+    Google Colab environment configuration for AG News Text Classification.
+    
+    Optimized for:
+    - Free-tier GPU training (Tesla T4)
+    - 12GB RAM constraints
+    - Session timeout management
+    - Google Drive integration
+    - Quota awareness
+    - Automatic recovery
+    
+    Key features:
+    - Frequent checkpointing
+    - Keep-alive mechanisms
+    - Memory-efficient settings
+    - Drive-backed persistence
+  
+  usage: |
+    In Colab notebook:
+    
+    1. Mount Google Drive:
+       from google.colab import drive
+       drive.mount('/content/drive')
+    
+    2. Clone repository:
+       !git clone https://github.com/VoHaiDung/ag-news-text-classification.git
+       %cd ag-news-text-classification
+    
+    3. Install dependencies:
+       !pip install -r requirements/colab.txt
+    
+    4. Run training:
+       !python train.py --config configs/environments/colab.yaml
+    
+    Or use auto-train:
+       !python src/cli_commands/auto_train.py --platform colab
+  
+  tips: |
+    Colab tips:
+    
+    - Always mount Google Drive for persistence
+    - Use frequent checkpointing (every 15-30 min)
+    - Enable keep-alive to prevent idle disconnect
+    - Monitor GPU quota usage
+    - Save important results to Drive immediately
+    - Use mixed precision (FP16) for faster training
+    - Clear output cells to save RAM
+    - Close unused notebooks to preserve quota
+  
+  troubleshooting: |
+    Common issues:
+    
+    1. Out of Memory:
+       - Reduce batch_size to 8 or 4
+       - Enable gradient_checkpointing
+       - Use smaller model variant
+    
+    2. Session Timeout:
+       - Results saved to Drive automatically
+       - Training auto-resumes from checkpoint
+       - Enable keep-alive script
+    
+    3. GPU Quota Exceeded:
+       - Switch to CPU runtime temporarily
+       - Use Kaggle as alternative
+       - Wait for quota reset
+    
+    4. Drive Mounting Issues:
+       - Remount Drive
+       - Check permissions
+       - Clear browser cache
+  
+  notes: |
+    Important notes:
+    
+    - Free tier GPU access is not guaranteed
+    - Session can disconnect anytime
+    - All important data must be on Google Drive
+    - Quota limits vary and are not publicly disclosed
+    - Keep-alive scripts are allowed but not guaranteed
+    - Pro tier offers better resources and limits
+    - T4 GPU does not support bfloat16
+
+# End of Google Colab environment configuration
+# Last updated: 2025-09-19
+# Maintainer: Võ Hải Dũng (vohaidung.work@gmail.com)
