@@ -56,7 +56,7 @@
 # Provides versioning and descriptive information about this compatibility matrix
 metadata:
   version: "1.0.0"
-  last_updated: "2024-01-15"
+  last_updated: "2025-09-19"
   project_name: "AG News Text Classification (ag-news-text-classification)"
   project_version: "1.0.0"
   author: "Võ Hải Dũng"
