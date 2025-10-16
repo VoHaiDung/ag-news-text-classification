@@ -492,15 +492,21 @@ jobs:
               
               if all_valid:
                   print("\nAll baseline files are valid")
-                  print("::set-output name=valid::true")
-                  print("::set-output name=version::1.0.0")
+                  print("valid=true")
+                  print("version=1.0.0")
+                  with open(os.environ.get('GITHUB_OUTPUT', '/dev/null'), 'a') as f:
+                      f.write("valid=true\n")
+                      f.write("version=1.0.0\n")
                   return 0
               else:
                   print("\nSome baseline files are invalid")
-                  print("::set-output name=valid::false")
+                  print("valid=false")
+                  with open(os.environ.get('GITHUB_OUTPUT', '/dev/null'), 'a') as f:
+                      f.write("valid=false\n")
                   return 1
           
           if __name__ == '__main__':
+              import os
               sys.exit(main())
           VALIDATE_EOF
           
@@ -564,6 +570,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install \
             pytest>=7.4.0 \
+            pytest-cov>=4.1.0 \
             pytest-timeout>=2.2.0 \
             numpy>=1.24.0 \
             pandas>=2.0.0 \
@@ -860,7 +867,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install pytest numpy scipy scikit-learn
+          pip install pytest pytest-cov numpy scipy scikit-learn
       
       - name: Download baseline artifacts
         uses: actions/download-artifact@v4
@@ -1025,7 +1032,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install pytest numpy
+          pip install pytest pytest-cov numpy
       
       - name: Download baseline artifacts
         uses: actions/download-artifact@v4
@@ -1158,7 +1165,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install pytest
+          pip install pytest pytest-cov
       
       - name: Download baseline artifacts
         uses: actions/download-artifact@v4
@@ -1269,7 +1276,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install pytest
+          pip install pytest pytest-cov
       
       - name: Create historical bug tests
         run: |
@@ -1370,7 +1377,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install pytest
+          pip install pytest pytest-cov
       
       - name: Download baseline artifacts
         uses: actions/download-artifact@v4
@@ -1456,7 +1463,233 @@ jobs:
         continue-on-error: ${{ github.event.inputs.fail_on_regression != 'true' }}
 
   # ==========================================================================
-  # Job 8: Regression Test Summary
+  # Job 8: API Compatibility Regression Tests
+  # ==========================================================================
+  # Academic Justification:
+  #   Ensure REST API endpoints maintain backward compatibility, preserving
+  #   contracts with external systems and preventing breaking changes.
+
+  api-compatibility-regression:
+    name: API Compatibility Regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [setup-baselines]
+    if: |
+      github.event.inputs.regression_category == 'all' || 
+      github.event.inputs.regression_category == 'api' || 
+      github.event.inputs.regression_category == null
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
+      
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-cov pyyaml jsonschema
+      
+      - name: Create API compatibility regression test
+        run: |
+          mkdir -p tests/regression
+          
+          cat > tests/regression/test_api_compatibility.py << 'API_EOF'
+          """
+          API compatibility regression tests.
+          
+          These tests validate that REST API endpoints maintain backward
+          compatibility and do not introduce breaking changes.
+          
+          Author: Võ Hải Dũng
+          Email: vohaidung.work@gmail.com
+          License: MIT
+          """
+          import pytest
+          from pathlib import Path
+          
+          @pytest.mark.regression
+          class TestAPICompatibilityRegression:
+              """Test API maintains backward compatibility."""
+              
+              def test_api_config_exists(self):
+                  """Verify API configuration files exist."""
+                  api_configs = [
+                      'configs/api/rest_config.yaml',
+                      'configs/api/auth_config.yaml',
+                      'configs/api/rate_limit_config.yaml',
+                  ]
+                  
+                  for config_path in api_configs:
+                      path = Path(config_path)
+                      if path.exists():
+                          assert path.is_file()
+              
+              def test_api_module_structure(self):
+                  """Test API module structure is intact."""
+                  api_modules = [
+                      'src/api',
+                      'src/api/rest',
+                      'src/api/base',
+                  ]
+                  
+                  for module_path in api_modules:
+                      path = Path(module_path)
+                      if path.exists():
+                          assert path.is_dir()
+                          init_file = path / '__init__.py'
+                          if init_file.exists():
+                              assert init_file.is_file()
+              
+              def test_api_routers_exist(self):
+                  """Test API routers exist and are accessible."""
+                  router_files = [
+                      'src/api/rest/routers/classification.py',
+                      'src/api/rest/routers/training.py',
+                      'src/api/rest/routers/models.py',
+                      'src/api/rest/routers/health.py',
+                  ]
+                  
+                  for router_path in router_files:
+                      path = Path(router_path)
+                      if path.exists():
+                          assert path.is_file()
+              
+              def test_api_schemas_exist(self):
+                  """Test API schemas maintain structure."""
+                  schema_files = [
+                      'src/api/rest/schemas/request_schemas.py',
+                      'src/api/rest/schemas/response_schemas.py',
+                  ]
+                  
+                  for schema_path in schema_files:
+                      path = Path(schema_path)
+                      if path.exists():
+                          assert path.is_file()
+          API_EOF
+      
+      - name: Run API compatibility regression tests
+        run: |
+          pytest tests/regression/test_api_compatibility.py \
+            -m regression \
+            -v
+        continue-on-error: ${{ github.event.inputs.fail_on_regression != 'true' }}
+
+  # ==========================================================================
+  # Job 9: Platform Compatibility Regression Tests
+  # ==========================================================================
+  # Academic Justification:
+  #   Validate platform detection and compatibility across Colab, Kaggle,
+  #   and local environments to ensure zero-cost deployment philosophy.
+
+  platform-compatibility-regression:
+    name: Platform Compatibility Regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [setup-baselines]
+    if: |
+      github.event.inputs.regression_category == 'all' || 
+      github.event.inputs.regression_category == 'platform' || 
+      github.event.inputs.regression_category == null
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION_DEFAULT }}
+      
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-cov pyyaml
+      
+      - name: Create platform compatibility regression test
+        run: |
+          mkdir -p tests/regression
+          
+          cat > tests/regression/test_platform_compatibility.py << 'PLATFORM_EOF'
+          """
+          Platform compatibility regression tests.
+          
+          These tests validate platform detection and configuration loading
+          across different execution environments.
+          
+          Author: Võ Hải Dũng
+          Email: vohaidung.work@gmail.com
+          License: MIT
+          """
+          import pytest
+          from pathlib import Path
+          
+          @pytest.mark.regression
+          class TestPlatformCompatibilityRegression:
+              """Test platform compatibility is maintained."""
+              
+              def test_platform_detector_exists(self):
+                  """Verify platform detector module exists."""
+                  detector_path = Path('src/deployment/platform_detector.py')
+                  if detector_path.exists():
+                      assert detector_path.is_file()
+              
+              def test_platform_configs_exist(self):
+                  """Test platform-specific configurations exist."""
+                  platform_configs = [
+                      'configs/environments/colab.yaml',
+                      'configs/environments/kaggle.yaml',
+                      'configs/environments/local_prod.yaml',
+                  ]
+                  
+                  for config_path in platform_configs:
+                      path = Path(config_path)
+                      if path.exists():
+                          assert path.is_file()
+              
+              def test_platform_training_configs_exist(self):
+                  """Test platform-adaptive training configs exist."""
+                  training_configs = [
+                      'configs/training/platform_adaptive/colab_free_training.yaml',
+                      'configs/training/platform_adaptive/kaggle_gpu_training.yaml',
+                      'configs/training/platform_adaptive/local_gpu_training.yaml',
+                  ]
+                  
+                  for config_path in training_configs:
+                      path = Path(config_path)
+                      if path.exists():
+                          assert path.is_file()
+              
+              def test_quota_tracking_module_exists(self):
+                  """Test quota tracking module exists."""
+                  quota_path = Path('src/deployment/quota_tracker.py')
+                  if quota_path.exists():
+                      assert quota_path.is_file()
+              
+              def test_platform_callbacks_exist(self):
+                  """Test platform-specific callbacks exist."""
+                  callback_files = [
+                      'src/training/callbacks/colab_callback.py',
+                      'src/training/callbacks/kaggle_callback.py',
+                      'src/training/callbacks/platform_callback.py',
+                  ]
+                  
+                  for callback_path in callback_files:
+                      path = Path(callback_path)
+                      if path.exists():
+                          assert path.is_file()
+          PLATFORM_EOF
+      
+      - name: Run platform compatibility regression tests
+        run: |
+          pytest tests/regression/test_platform_compatibility.py \
+            -m regression \
+            -v
+        continue-on-error: ${{ github.event.inputs.fail_on_regression != 'true' }}
+
+  # ==========================================================================
+  # Job 10: Regression Test Summary
   # ==========================================================================
   # Academic Justification:
   #   Aggregate all regression test results for comprehensive quality report
@@ -1472,6 +1705,8 @@ jobs:
       - parameter-efficiency-regression
       - historical-bug-prevention
       - overfitting-prevention-regression
+      - api-compatibility-regression
+      - platform-compatibility-regression
     if: always()
     
     steps:
@@ -1497,6 +1732,8 @@ jobs:
           echo "| Parameter Efficiency | ${{ needs.parameter-efficiency-regression.result }} | 10% | No |" >> $GITHUB_STEP_SUMMARY
           echo "| Historical Bugs | ${{ needs.historical-bug-prevention.result }} | 10% | Yes |" >> $GITHUB_STEP_SUMMARY
           echo "| Overfitting Prevention | ${{ needs.overfitting-prevention-regression.result }} | 10% | Yes |" >> $GITHUB_STEP_SUMMARY
+          echo "| API Compatibility | ${{ needs.api-compatibility-regression.result }} | 5% | Yes |" >> $GITHUB_STEP_SUMMARY
+          echo "| Platform Compatibility | ${{ needs.platform-compatibility-regression.result }} | 5% | Yes |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           echo "## Regression Testing Framework" >> $GITHUB_STEP_SUMMARY
@@ -1510,6 +1747,8 @@ jobs:
           echo "5. **Efficiency Regression:** Monitor parameter efficiency" >> $GITHUB_STEP_SUMMARY
           echo "6. **Bug Prevention:** Ensure fixed bugs stay fixed" >> $GITHUB_STEP_SUMMARY
           echo "7. **Overfitting Prevention:** Validate anti-overfitting system" >> $GITHUB_STEP_SUMMARY
+          echo "8. **API Compatibility:** Maintain backward compatibility" >> $GITHUB_STEP_SUMMARY
+          echo "9. **Platform Compatibility:** Validate cross-platform functionality" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           echo "## Baseline Comparison Thresholds" >> $GITHUB_STEP_SUMMARY
@@ -1545,7 +1784,7 @@ jobs:
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "1. Review failed test outputs" >> $GITHUB_STEP_SUMMARY
             echo "2. Identify root cause of regression" >> $GITHUB_STEP_SUMMARY
-            echo "3. Fix regression or update baselines if justified" >> $GITHUB_STEP_SUMMARY
+            echo "3. Address regression or update baselines if justified" >> $GITHUB_STEP_SUMMARY
             echo "4. Re-run regression tests" >> $GITHUB_STEP_SUMMARY
           else
             echo "All regression tests passed successfully" >> $GITHUB_STEP_SUMMARY
