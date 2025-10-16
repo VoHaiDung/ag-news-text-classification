@@ -1,0 +1,1255 @@
+# AG News Text Classification - Local Production Environment Configuration
+#
+# This configuration file defines settings for the local production environment
+# of the AG News Text Classification project. It is optimized for production-grade
+# performance, accuracy, reliability, and inference speed on local infrastructure
+# without cloud dependencies.
+#
+# Local Production Environment Characteristics:
+#   - Maximum accuracy and performance optimization
+#   - Production-grade reliability and stability
+#   - Comprehensive monitoring and alerting
+#   - Strict validation and error handling
+#   - Security hardening and access control
+#   - Model optimization for inference speed
+#   - Complete overfitting prevention measures
+#   - Professional logging and auditing
+#   - Automated backup and recovery
+#   - Zero cloud costs (fully local deployment)
+#   - Scalable on local hardware
+#   - Production API with rate limiting
+#
+# Usage:
+#   This configuration is used for production deployment on local infrastructure:
+#     export ENVIRONMENT=local_prod
+#     python train.py
+#
+#   Or explicitly specify:
+#     python train.py --config configs/environments/local_prod.yaml
+#
+#   For production API:
+#     python -m uvicorn src.api.rest.app:app --config configs/environments/local_prod.yaml
+#
+#   For production inference:
+#     python scripts/deployment/deploy_to_local.py --env local_prod
+#
+# Design Principles:
+#   1. Production Quality:
+#      - Maximum accuracy and reliability
+#      - Strict validation at all stages
+#      - Comprehensive error handling
+#      - Fail-safe mechanisms
+#      - Production-grade monitoring
+#
+#   2. Performance Optimization:
+#      - Mixed precision training
+#      - Model quantization for inference
+#      - Batch processing optimization
+#      - Multi-GPU support when available
+#      - Efficient memory management
+#
+#   3. Security First:
+#      - API authentication and authorization
+#      - Rate limiting and request validation
+#      - Secure model storage
+#      - Access control and auditing
+#      - Data privacy protection
+#
+#   4. Operational Excellence:
+#      - Automated monitoring and alerting
+#      - Comprehensive logging
+#      - Backup and recovery procedures
+#      - Health checks and readiness probes
+#      - Performance metrics tracking
+#
+#   5. Cost Efficiency:
+#      - Zero cloud costs
+#      - Optimized resource utilization
+#      - Local caching and storage
+#      - Efficient model serving
+#
+# Differences from Development Environment:
+#   - Full dataset training (no sampling)
+#   - Longer training with more epochs
+#   - Strict overfitting prevention
+#   - Production batch sizes
+#   - Mixed precision enabled
+#   - Model optimization (quantization, pruning)
+#   - Security and authentication enabled
+#   - Rate limiting enforced
+#   - Professional logging (INFO level)
+#   - No debugging features
+#   - Automated backups
+#   - Health monitoring
+#
+# References:
+#   Production ML Systems:
+#     - Sculley, D., et al. (2015). "Hidden Technical Debt in Machine Learning
+#       Systems". NIPS.
+#     - Polyzotis, N., et al. (2018). "Data Lifecycle Challenges in Production
+#       Machine Learning: A Survey". SIGMOD Record.
+#     - Baylor, D., et al. (2017). "TFX: A TensorFlow-Based Production-Scale
+#       Machine Learning Platform". KDD.
+#
+#   MLOps Best Practices:
+#     - Makinen, S., et al. (2021). "Who Needs MLOps: What Data Scientists Seek
+#       to Accomplish and How Can MLOps Help?". arXiv:2103.08942.
+#     - Kreuzberger, D., et al. (2022). "Machine Learning Operations (MLOps):
+#       Overview, Definition, and Architecture". arXiv:2205.02302.
+#
+#   Model Deployment:
+#     - Crankshaw, D., et al. (2017). "Clipper: A Low-Latency Online Prediction
+#       Serving System". NSDI.
+#     - Olston, C., et al. (2017). "TensorFlow-Serving: Flexible, High-Performance
+#       ML Serving". NIPS Workshop on ML Systems.
+#
+#   System Reliability:
+#     - Beyer, B., et al. (2016). "Site Reliability Engineering: How Google Runs
+#       Production Systems". O'Reilly Media.
+#     - Kleppmann, M. (2017). "Designing Data-Intensive Applications".
+#       O'Reilly Media.
+#
+# Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
+# License: MIT
+# Project: AG News Text Classification (ag-news-text-classification)
+# Repository: https://github.com/VoHaiDung/ag-news-text-classification
+
+# Metadata section
+# Provides information about this configuration file
+metadata:
+  name: "Local Production Environment Configuration"
+  description: "Configuration for local production environment of AG News Text Classification (ag-news-text-classification)"
+  project_name: "AG News Text Classification (ag-news-text-classification)"
+  project_version: "1.0.0"
+  config_version: "1.0.0"
+  environment: "local_prod"
+  author: "Võ Hải Dũng"
+  email: "vohaidung.work@gmail.com"
+  license: "MIT"
+  repository: "https://github.com/VoHaiDung/ag-news-text-classification"
+  created_date: "2025-09-19"
+  last_modified: "2025-09-19"
+  
+  # Configuration schema validation
+  schema_version: "1.0"
+  strict_validation: true  # Strict validation in production
+  allow_unknown_fields: false
+  validate_on_load: true
+  fail_on_validation_error: true
+  
+  # Maintenance information
+  maintainer: "Võ Hải Dũng"
+  support_email: "vohaidung.work@gmail.com"
+  documentation_url: "https://github.com/VoHaiDung/ag-news-text-classification/blob/main/docs/"
+  
+  # Production metadata
+  deployment_type: "local_production"
+  sla_target: "99.9%"
+  max_downtime_minutes: 43  # 99.9% SLA allows ~43 min/month
+
+# Environment-specific settings
+# Core production environment configuration
+environment:
+  name: "local_production"
+  mode: "production"
+  debug: false  # No debugging in production
+  verbose: false  # Minimal verbosity
+  testing: false
+  
+  # Production flags
+  auto_reload: false  # No auto-reload in production
+  hot_reload_models: false
+  fail_fast: true  # Fail immediately on critical errors
+  strict_mode: true  # Strict validation and checks
+  
+  # Performance optimization
+  optimize_for: "accuracy"  # Options: accuracy, inference_speed, balanced
+  enable_profiling: false  # Profiling disabled in production
+  enable_debugging: false  # No debugging in production
+  
+  # Data protection
+  protect_test_set: true  # Always protect test set
+  allow_data_leakage_warnings: false  # Fail on data leakage
+  
+  # Reproducibility
+  deterministic: true
+  seed: 42
+  
+  # Cleanup
+  auto_cleanup: true  # Clean temporary files
+  cleanup_on_exit: true
+  cleanup_interval_hours: 24
+  
+  # Production stability
+  graceful_shutdown: true
+  shutdown_timeout_seconds: 300
+  health_check_enabled: true
+  health_check_interval_seconds: 60
+
+# Project paths
+# All paths relative to project root
+paths:
+  # Root directories
+  project_root: "."
+  configs_root: "configs"
+  data_root: "data"
+  src_root: "src"
+  outputs_root: "outputs"
+  
+  # Data directories
+  data:
+    raw: "data/raw"
+    processed: "data/processed"
+    augmented: "data/augmented"
+    cache: "data/cache/local_cache"
+    test_samples: "data/test_samples"
+    metadata: "data/metadata"
+  
+  # Output directories
+  outputs:
+    models: "outputs/models"
+    checkpoints: "outputs/models/checkpoints"
+    production_models: "outputs/models/fine_tuned"
+    optimized_models: "outputs/models/optimized"
+    results: "outputs/results"
+    logs: "outputs/logs/training"
+    figures: "outputs/artifacts/figures"
+    tensorboard: "outputs/logs/tensorboard"
+    mlflow: "outputs/logs/mlflow"
+  
+  # Production-specific paths
+  production:
+    models: "outputs/models/production"
+    serving: "outputs/models/production/serving"
+    backups: "backup/models"
+    logs: "outputs/logs/production"
+    metrics: "outputs/results/production/metrics"
+    audits: "outputs/logs/production/audits"
+  
+  # Cache directories
+  cache:
+    huggingface: "data/cache/huggingface_cache"
+    models: "data/cache/model_cache"
+    datasets: "data/cache/local_cache"
+    inference: "data/cache/inference_cache"
+  
+  # Configuration paths
+  configs:
+    models: "configs/models"
+    training: "configs/training"
+    data: "configs/data"
+    deployment: "configs/deployment"
+
+# Model configuration
+# Production-optimized model settings
+model:
+  # Production model (balanced accuracy and speed)
+  name: "microsoft/deberta-v3-large"  # Large model for high accuracy
+  type: "deberta"
+  variant: "large"
+  
+  # Model parameters
+  num_labels: 4  # AG News has 4 classes
+  max_length: 512  # Full sequence length
+  
+  # Model loading
+  pretrained: true
+  use_cache: true
+  cache_dir: "data/cache/huggingface_cache"
+  trust_remote_code: false
+  force_download: false
+  resume_download: true
+  local_files_only: false
+  
+  # Dropout (production-tuned)
+  hidden_dropout_prob: 0.1
+  attention_probs_dropout_prob: 0.1
+  classifier_dropout: 0.1
+  
+  # Production settings
+  load_in_8bit: false  # Full precision for accuracy
+  load_in_4bit: false
+  device_map: "auto"
+  low_cpu_mem_usage: true
+  torch_dtype: "auto"
+  
+  # Model head configuration
+  head:
+    type: "classification"
+    num_hidden_layers: 0
+    activation: "gelu"
+    pooling_strategy: "cls"
+    dropout: 0.1
+  
+  # Production model variants for different use cases
+  variants:
+    accuracy_optimized: "microsoft/deberta-v3-xlarge"
+    speed_optimized: "microsoft/deberta-v3-base"
+    balanced: "microsoft/deberta-v3-large"
+  
+  # Model versioning
+  version: "1.0.0"
+  model_signature: null  # Will be computed on save
+  model_hash: null  # Will be computed on save
+
+# PEFT (Parameter-Efficient Fine-Tuning) configuration
+# LoRA for efficient production training
+peft:
+  enabled: true  # Enable LoRA for production
+  method: "lora"  # LoRA is production-proven
+  
+  # LoRA configuration (production-tuned)
+  lora:
+    rank: 16  # Higher rank for better accuracy
+    alpha: 32
+    dropout: 0.1
+    target_modules: ["query_proj", "value_proj", "key_proj", "dense"]  # More comprehensive
+    bias: "none"
+    task_type: "SEQ_CLS"
+    modules_to_save: ["classifier"]
+    inference_mode: false  # Training mode
+  
+  # Production settings
+  merge_weights: true  # Merge for faster inference
+  save_pretrained_separately: true
+  peft_version: ">=0.6.0"
+
+# Training configuration
+# Production-optimized training settings
+training:
+  # Training regime
+  num_epochs: 10  # Full training epochs
+  max_steps: -1  # No step limit
+  
+  # Batch configuration (optimized for GPU utilization)
+  batch_size: 32  # Larger batch for stability
+  eval_batch_size: 64  # Even larger for evaluation
+  gradient_accumulation_steps: 2  # Effective batch size: 64
+  
+  # Optimization
+  optimizer:
+    type: "adamw"
+    lr: 1e-5  # Lower learning rate for stability
+    weight_decay: 0.01
+    betas: [0.9, 0.999]
+    eps: 1e-8
+    amsgrad: false
+    fused: true  # Fused optimizer for speed
+  
+  # Learning rate scheduling
+  scheduler:
+    type: "cosine"  # Cosine annealing for better convergence
+    num_warmup_steps: 0
+    warmup_ratio: 0.1
+    num_cycles: 1
+  
+  # Mixed precision (production-enabled)
+  mixed_precision: "bf16"  # bfloat16 for Ampere+ GPUs
+  fp16: false
+  bf16: true
+  fp16_opt_level: "O2"
+  fp16_backend: "auto"
+  fp16_full_eval: false
+  
+  # Gradient control
+  max_grad_norm: 1.0
+  gradient_checkpointing: false  # Disabled for speed (use if memory constrained)
+  
+  # Training strategy
+  evaluation_strategy: "epoch"  # Evaluate every epoch
+  save_strategy: "epoch"  # Save every epoch
+  logging_strategy: "steps"
+  
+  # Logging
+  logging_steps: 100  # Less frequent than dev
+  logging_first_step: false
+  logging_nan_inf_filter: true
+  log_level: "info"
+  log_level_replica: "warning"
+  
+  # Evaluation
+  eval_steps: null  # Use evaluation_strategy instead
+  eval_delay: 0
+  eval_on_start: true  # Evaluate before training
+  per_device_eval_batch_size: 64
+  
+  # Checkpointing
+  save_steps: null  # Use save_strategy instead
+  save_total_limit: 5  # Keep more checkpoints in production
+  save_on_each_node: false
+  load_best_model_at_end: true
+  save_safetensors: true
+  
+  # Metrics
+  metric_for_best_model: "eval_f1"  # F1 score for classification
+  greater_is_better: true
+  ignore_data_skip: false
+  
+  # Early stopping (strict in production)
+  early_stopping:
+    enabled: true
+    patience: 3  # Less patience in production
+    min_delta: 0.001
+    monitor: "val_f1"
+    mode: "max"
+    restore_best_weights: true
+    baseline: 0.95  # Expect high baseline
+    verbose: true
+  
+  # Regularization (strict for production)
+  regularization:
+    dropout: 0.1
+    attention_dropout: 0.1
+    hidden_dropout: 0.1
+    weight_decay: 0.01
+    label_smoothing: 0.1  # Enable for production
+    mixup_alpha: 0.0  # Disabled (can enable if needed)
+    cutmix_alpha: 0.0  # Disabled
+    gradient_clip_norm: 1.0
+  
+  # Data loading (optimized for production)
+  dataloader_num_workers: 4  # Multiple workers for speed
+  dataloader_pin_memory: true
+  dataloader_drop_last: false
+  dataloader_prefetch_factor: 2
+  dataloader_persistent_workers: true
+  
+  # Reproducibility
+  seed: 42
+  data_seed: 42
+  deterministic: true
+  full_determinism: false  # May impact performance
+  
+  # Production-specific
+  skip_memory_metrics: false
+  report_to: ["tensorboard", "mlflow"]  # Comprehensive reporting
+  run_name: "production_run"
+  include_inputs_for_metrics: false
+  include_num_input_tokens_seen: true
+  
+  # Distributed training (if multi-GPU available)
+  ddp_backend: "nccl"
+  ddp_find_unused_parameters: false
+  ddp_bucket_cap_mb: 25
+  
+  # Performance optimization
+  tf32: true  # Enable TF32 on Ampere GPUs
+  auto_find_batch_size: false  # Manual control in production
+  gradient_checkpointing_kwargs:
+    use_reentrant: false
+  
+  # Training completion
+  push_to_hub: false  # No hub push in local production
+  hub_model_id: null
+  hub_strategy: "every_save"
+
+# Data configuration
+# Production data settings (full dataset)
+data:
+  # Dataset
+  dataset_name: "ag_news"
+  dataset_config: null
+  
+  # Data paths
+  data_dir: "data/raw/ag_news"
+  cache_dir: "data/cache/local_cache"
+  
+  # Data splits (production uses all data)
+  train_file: null
+  validation_file: null
+  test_file: null
+  
+  # Split ratios
+  train_ratio: 0.8
+  val_ratio: 0.1
+  test_ratio: 0.1
+  
+  # Split strategy
+  stratify: true
+  shuffle: true
+  random_seed: 42
+  
+  # Sampling (no sampling in production)
+  max_samples:
+    train: null  # Use all training data
+    validation: null  # Use all validation data
+    test: null  # Use all test data
+  
+  # Text preprocessing (production settings)
+  preprocessing:
+    lowercase: false
+    remove_html: true
+    remove_urls: false
+    remove_special_chars: false
+    normalize_whitespace: true
+    strip: true
+    remove_duplicates: true
+    min_length: 10
+    max_length: 10000
+  
+  # Tokenization
+  tokenization:
+    max_length: 512  # Full sequence length
+    padding: "max_length"
+    truncation: true
+    return_tensors: "pt"
+    return_attention_mask: true
+    return_token_type_ids: false
+    return_special_tokens_mask: false
+  
+  # Data augmentation (optional in production)
+  augmentation:
+    enabled: false  # Can enable if needed
+    methods: []
+    augmentation_ratio: 0.0
+    augmentation_per_sample: 1
+    safe_augmentation_only: true
+  
+  # Data validation (strict in production)
+  validation:
+    check_labels: true
+    check_text_lengths: true
+    check_duplicates: true
+    check_missing_values: true
+    check_encoding: true
+    remove_invalid: true
+    log_invalid: true
+    fail_on_invalid_ratio: 0.01  # Fail if >1% invalid
+  
+  # Caching
+  use_cache: true
+  cache_processed_data: true
+  overwrite_cache: false
+  verify_cache: true
+  
+  # Data loading
+  num_proc: 4  # Parallel processing
+  keep_in_memory: false
+  streaming: false
+  
+  # Data versioning
+  data_version: "1.0.0"
+  data_hash: null  # Will be computed
+
+# API configuration
+# Production API settings
+api:
+  # Server configuration
+  host: "0.0.0.0"  # Listen on all interfaces
+  port: 8000
+  workers: 4  # Multiple workers for production
+  reload: false  # No auto-reload in production
+  debug: false
+  log_level: "info"
+  access_log: true
+  
+  # CORS (strict in production)
+  cors_enabled: true
+  cors_origins: ["http://localhost:3000", "http://127.0.0.1:3000"]  # Specific origins only
+  cors_methods: ["GET", "POST"]
+  cors_headers: ["Content-Type", "Authorization"]
+  cors_credentials: false
+  cors_max_age: 3600
+  
+  # Rate limiting (enforced in production)
+  rate_limit:
+    enabled: true
+    requests_per_minute: 60
+    requests_per_hour: 1000
+    requests_per_day: 10000
+    burst: 10
+    strategy: "fixed_window"
+  
+  # Authentication (enabled in production)
+  auth:
+    enabled: true
+    type: "token"  # Simple token auth
+    token_expiry_hours: 24
+    require_https: false  # Set true if using HTTPS
+  
+  # Request/Response
+  max_request_size: 1048576  # 1MB limit
+  request_timeout: 60  # 1 minute timeout
+  max_batch_size: 100
+  
+  # API endpoints
+  endpoints:
+    predict: "/api/v1/predict"
+    batch_predict: "/api/v1/batch_predict"
+    health: "/health"
+    ready: "/ready"
+    metrics: "/metrics"
+    docs: "/docs"
+    redoc: "/redoc"
+  
+  # Response format
+  response_format: "json"
+  include_metadata: false  # Minimal response in production
+  include_timing: true
+  include_version: true
+  
+  # Production features
+  enable_playground: false  # Disabled in production
+  enable_api_docs: true
+  enable_metrics: true
+  enable_tracing: false
+  
+  # Circuit breaker
+  circuit_breaker:
+    enabled: true
+    failure_threshold: 5
+    timeout_seconds: 60
+    half_open_max_requests: 3
+
+# Deployment configuration
+# Local production deployment
+deployment:
+  type: "local_production"
+  platform: "local"
+  
+  # Docker (recommended for production)
+  docker:
+    enabled: true
+    image_name: "ag-news-production"
+    image_tag: "1.0.0"
+    dockerfile: "deployment/docker/Dockerfile.local"
+    build_args:
+      PYTHON_VERSION: "3.10"
+      PYTORCH_VERSION: "2.0.1"
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./data:/app/data:ro"
+      - "./outputs:/app/outputs"
+    restart_policy: "unless-stopped"
+  
+  # Model serving
+  model_serving:
+    framework: "pytorch"
+    optimization: "full"  # Full optimization
+    quantization: true
+    quantization_method: "dynamic"
+    pruning: false  # Can enable if needed
+    onnx_export: false  # Can enable for additional speed
+    compile_model: false  # PyTorch 2.0 compile
+  
+  # Resources (adjust based on hardware)
+  resources:
+    cpu_limit: null  # No limit
+    memory_limit: null
+    gpu_limit: null
+    cpu_request: 4
+    memory_request: "16Gi"
+  
+  # Health checks
+  health_check:
+    enabled: true
+    path: "/health"
+    interval_seconds: 30
+    timeout_seconds: 10
+    retries: 3
+    start_period_seconds: 60
+  
+  # Readiness probe
+  readiness:
+    enabled: true
+    path: "/ready"
+    interval_seconds: 10
+    timeout_seconds: 5
+  
+  # Scaling
+  scaling:
+    min_replicas: 1
+    max_replicas: 1  # Single instance for local
+    auto_scaling: false
+
+# Monitoring configuration
+# Comprehensive production monitoring
+monitoring:
+  enabled: true
+  
+  # TensorBoard
+  tensorboard:
+    enabled: true
+    log_dir: "outputs/logs/tensorboard"
+    update_freq: "epoch"
+    profile_batch: 0  # No profiling in production
+    histogram_freq: 0
+    write_graph: false
+    write_images: false
+    embeddings_freq: 0
+  
+  # MLflow
+  mlflow:
+    enabled: true
+    tracking_uri: "outputs/logs/mlflow"
+    experiment_name: "ag_news_production"
+    run_name: null  # Auto-generated
+    log_artifacts: true
+    log_models: true
+    log_params: true
+    log_metrics: true
+    autolog: false  # Manual logging for control
+  
+  # Weights & Biases
+  wandb:
+    enabled: false  # Disabled for local production
+    project: "ag-news-text-classification"
+    entity: null
+    group: "production"
+    tags: ["production", "local"]
+    notes: "Production run on local infrastructure"
+  
+  # Local metrics
+  local_metrics:
+    enabled: true
+    save_dir: "outputs/logs/local"
+    save_interval: 100
+    metrics_to_track:
+      - "loss"
+      - "accuracy"
+      - "f1"
+      - "precision"
+      - "recall"
+      - "learning_rate"
+      - "memory_usage"
+      - "gpu_utilization"
+      - "throughput"
+      - "latency"
+    export_format: ["json", "csv"]
+  
+  # Performance monitoring
+  performance:
+    track_memory: true
+    track_gpu: true
+    track_time: true
+    track_throughput: true
+    track_latency: true
+    profile_training: false
+    profile_inference: true
+  
+  # Overfitting monitoring
+  overfitting:
+    track_train_val_gap: true
+    gap_threshold: 0.02  # Strict threshold
+    alert_on_overfitting: true
+    fail_on_overfitting: true
+    log_train_val_comparison: true
+  
+  # System monitoring
+  system:
+    track_cpu: true
+    track_memory: true
+    track_disk: true
+    track_network: false
+    alert_thresholds:
+      cpu_percent: 90
+      memory_percent: 90
+      disk_percent: 85
+  
+  # Alerts
+  alerts:
+    enabled: true
+    email_enabled: false
+    webhook_enabled: false
+    log_enabled: true
+    alert_on_errors: true
+    alert_on_performance_degradation: true
+
+# Logging configuration
+# Production logging settings
+logging:
+  # Log level (INFO for production)
+  level: "INFO"
+  
+  # Log format
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  date_format: "%Y-%m-%d %H:%M:%S"
+  
+  # Log outputs
+  console:
+    enabled: true
+    level: "INFO"
+    colored: false  # No colors in production logs
+  
+  file:
+    enabled: true
+    level: "INFO"
+    path: "outputs/logs/production/production.log"
+    max_bytes: 104857600  # 100MB
+    backup_count: 10
+    encoding: "utf-8"
+  
+  # Structured logging
+  structured:
+    enabled: true
+    format: "json"
+    include_timestamp: true
+    include_hostname: true
+    include_process_id: true
+  
+  # Component-specific logging
+  components:
+    data: "INFO"
+    model: "INFO"
+    training: "INFO"
+    evaluation: "INFO"
+    api: "INFO"
+    monitoring: "INFO"
+    security: "WARNING"
+  
+  # Third-party library logging
+  libraries:
+    transformers: "WARNING"
+    datasets: "WARNING"
+    torch: "WARNING"
+    uvicorn: "INFO"
+    fastapi: "INFO"
+  
+  # Production features
+  log_gpu_stats: true
+  log_memory_stats: true
+  log_system_stats: true
+  log_hyperparameters: true
+  log_model_summary: false
+  log_predictions: false  # Too verbose for production
+  
+  # Audit logging
+  audit:
+    enabled: true
+    log_file: "outputs/logs/production/audits/audit.log"
+    log_api_calls: true
+    log_model_predictions: false
+    log_data_access: true
+    log_authentication: true
+
+# Debugging configuration
+# Minimal debugging in production
+debugging:
+  enabled: false  # Disabled in production
+  
+  # Error handling
+  verbose_errors: false
+  full_stack_traces: false
+  interactive_debugger: false
+  
+  # Gradient debugging
+  detect_anomaly: false  # Disabled for performance
+  check_gradients: false
+  log_gradient_norms: false
+  
+  # Numerical stability
+  check_numerics: true  # Basic checks only
+  nan_detection: true
+  inf_detection: true
+
+# Testing configuration
+# Production testing settings
+testing:
+  # Test mode
+  enabled: false  # Not in test mode
+  
+  # Production validation
+  validate_before_deploy: true
+  run_integration_tests: true
+  run_performance_tests: true
+  
+  # Smoke tests
+  smoke_tests:
+    enabled: true
+    test_endpoints: true
+    test_model_loading: true
+    test_inference: true
+
+# Overfitting prevention configuration
+# Strict settings for production
+overfitting_prevention:
+  enabled: true
+  strict_mode: true  # Strict in production
+  
+  # Test set protection
+  test_set_protection:
+    enabled: true
+    hash_verification: true
+    access_logging: true
+    max_accesses: 1  # Only final evaluation
+    lock_after_use: true
+  
+  # Monitoring
+  monitoring:
+    track_train_val_gap: true
+    gap_threshold: 0.02  # Very strict
+    alert_on_overfitting: true
+    fail_on_overfitting: true
+    continuous_monitoring: true
+  
+  # Constraints (strict in production)
+  constraints:
+    max_model_complexity: 1000000000  # 1B parameters max
+    min_validation_size: 0.1  # Minimum 10%
+    required_regularization: true
+    max_epochs_without_improvement: 5
+    min_training_samples: 1000
+  
+  # Validation strategy
+  validation:
+    strategy: "k_fold"  # More robust
+    k_folds: 5
+    stratified: true
+    repeat: 1
+  
+  # Recommendations
+  recommendations:
+    enabled: true
+    auto_apply: false
+    suggest_regularization: true
+    suggest_early_stopping: true
+    suggest_data_augmentation: true
+  
+  # Reporting
+  generate_report: true
+  report_format: "html"
+  report_path: "outputs/results/production/overfitting_report.html"
+
+# Security configuration
+# Production security settings
+security:
+  # Authentication
+  authentication:
+    enabled: true
+    type: "token"
+    token_length: 32
+    hash_algorithm: "sha256"
+    store_tokens_encrypted: true
+  
+  # Authorization
+  authorization:
+    enabled: true
+    rbac_enabled: true
+    default_role: "user"
+    admin_role: "admin"
+  
+  # API security
+  api_key_required: true
+  token_required: true
+  validate_origin: true
+  validate_user_agent: false
+  
+  # Request validation
+  validate_input: true
+  sanitize_input: true
+  max_input_length: 10000
+  allowed_content_types: ["application/json", "text/plain"]
+  
+  # Data privacy
+  data_privacy:
+    pii_detection: true
+    data_masking: true
+    anonymize_logs: true
+  
+  # Model security
+  model_security:
+    checksum_verification: true
+    signature_verification: true
+    verify_on_load: true
+  
+  # Network security
+  https_only: false  # Set true if using HTTPS
+  ssl_cert: null
+  ssl_key: null
+  tls_version: "1.3"
+  
+  # Access control
+  ip_whitelist: []  # Empty = allow all
+  ip_blacklist: []
+  
+  # Security headers
+  security_headers:
+    x_content_type_options: "nosniff"
+    x_frame_options: "DENY"
+    x_xss_protection: "1; mode=block"
+    strict_transport_security: "max-age=31536000; includeSubDomains"
+
+# Feature flags
+# Production feature settings
+features:
+  # Experimental features (disabled in production)
+  experimental:
+    flash_attention: false
+    gradient_checkpointing: false
+    model_parallelism: false
+    pipeline_parallelism: false
+  
+  # Advanced features (can be enabled)
+  advanced:
+    ensemble_models: false
+    knowledge_distillation: false
+    multi_task_learning: false
+    curriculum_learning: false
+  
+  # Optimization features (enabled in production)
+  optimization:
+    mixed_precision: true
+    gradient_accumulation: true
+    dynamic_batching: false
+    model_quantization: true
+    model_compilation: false
+  
+  # Data features
+  data:
+    augmentation: false
+    back_translation: false
+    synthetic_generation: false
+  
+  # Platform features
+  platform:
+    auto_platform_detection: false  # Explicitly set to local
+    platform_optimization: true
+    quota_tracking: false
+  
+  # Production features
+  production:
+    model_versioning: true
+    model_registry: true
+    a_b_testing: false
+    canary_deployment: false
+    blue_green_deployment: false
+
+# Platform-specific configuration
+# Local production platform settings
+platform:
+  type: "local"
+  auto_detect: false
+  
+  # Local configuration
+  local:
+    gpu_enabled: true
+    multi_gpu: true  # Use all available GPUs
+    cpu_fallback: true
+    
+    # Resource limits
+    max_memory_gb: null  # Use all available
+    max_gpu_memory_gb: null
+    max_cpus: null
+    
+    # GPU settings
+    cuda_visible_devices: null  # Use all GPUs
+    gpu_memory_fraction: 0.95
+  
+  # Optimization
+  optimization:
+    auto_batch_size: false
+    auto_precision: true
+    memory_efficient: true
+    use_tf32: true
+    use_cudnn_benchmark: true
+
+# Performance configuration
+# Production performance settings
+performance:
+  # Training performance
+  training:
+    compile_model: false  # Can enable for PyTorch 2.0+
+    use_better_transformer: false
+    channels_last: false
+    enable_tf32: true
+    cudnn_benchmark: true
+    cudnn_deterministic: false
+  
+  # Inference performance
+  inference:
+    batch_size: 64
+    num_workers: 4
+    use_half_precision: true
+    dynamic_quantization: true
+    torch_compile: false
+    cache_predictions: true
+    cache_size: 10000
+  
+  # Memory management
+  memory:
+    gradient_checkpointing: false
+    cpu_offload: false
+    empty_cache_steps: 100
+    max_memory_utilization: 0.95
+
+# Backup configuration
+# Automated backup in production
+backup:
+  enabled: true
+  
+  # Backup schedule
+  schedule:
+    frequency: "daily"
+    time: "02:00"  # 2 AM
+    retain_days: 30
+  
+  # Backup targets
+  targets:
+    models: true
+    checkpoints: true
+    logs: true
+    configs: true
+    results: true
+  
+  # Backup location
+  backup_dir: "backup/production"
+  compression: true
+  compression_format: "tar.gz"
+  
+  # Verification
+  verify_backup: true
+  test_restore: false  # Can enable periodically
+
+# Recovery configuration
+# Disaster recovery settings
+recovery:
+  # Checkpoint recovery
+  auto_resume: true
+  resume_from_checkpoint: true
+  checkpoint_recovery_enabled: true
+  
+  # Failure handling
+  retry_on_failure: true
+  max_retries: 3
+  retry_delay_seconds: 60
+  
+  # Rollback
+  enable_rollback: true
+  rollback_on_failure: true
+  keep_previous_version: true
+
+# Miscellaneous settings
+misc:
+  # Timezone
+  timezone: "UTC"
+  
+  # Locale
+  locale: "en_US.UTF-8"
+  
+  # Temporary files
+  temp_dir: "outputs/temp/production"
+  cleanup_temp: true
+  temp_retention_hours: 24
+  
+  # Notifications
+  notifications:
+    enabled: true
+    on_completion: true
+    on_error: true
+    on_performance_degradation: true
+    notification_email: "vohaidung.work@gmail.com"
+  
+  # Version control
+  git:
+    track_changes: true
+    commit_on_checkpoint: false
+    tag_on_release: true
+  
+  # Metadata
+  track_metrics: true
+  track_artifacts: true
+  track_lineage: true
+
+# Validation rules
+# Strict validation in production
+validation:
+  # Schema validation
+  validate_schema: true
+  strict_schema: true
+  
+  # Type checking
+  strict_types: true
+  coerce_types: false
+  
+  # Required fields
+  check_required_fields: true
+  fail_on_missing: true
+  
+  # Value ranges
+  check_ranges: true
+  fail_on_invalid_range: true
+  
+  # Dependencies
+  check_dependencies: true
+  fail_on_missing_dependencies: true
+  
+  # Version compatibility
+  check_version_compatibility: true
+  require_exact_versions: false
+
+# Documentation
+# Inline documentation for this configuration
+documentation:
+  description: |
+    Local production environment configuration for AG News Text Classification.
+    
+    This configuration is optimized for:
+    - Maximum accuracy and reliability
+    - Production-grade performance
+    - Comprehensive monitoring and logging
+    - Security and access control
+    - Zero cloud costs (fully local)
+    - Professional deployment
+    
+    Suitable for:
+    - Production inference serving
+    - Final model training
+    - Performance benchmarking
+    - Local deployment without cloud
+  
+  usage: |
+    To use this configuration:
+    
+    1. Set environment variable:
+       export ENVIRONMENT=local_prod
+    
+    2. Train production model:
+       python train.py --config configs/environments/local_prod.yaml
+    
+    3. Start production API:
+       python -m uvicorn src.api.rest.app:app --config configs/environments/local_prod.yaml
+    
+    4. Deploy with Docker:
+       docker-compose -f deployment/docker/docker-compose.local.yml up
+  
+  best_practices: |
+    Production best practices:
+    
+    - Always validate model before deployment
+    - Monitor overfitting metrics closely
+    - Use authentication for API endpoints
+    - Enable rate limiting
+    - Set up automated backups
+    - Configure health checks
+    - Monitor system resources
+    - Use version control for models
+    - Test disaster recovery procedures
+  
+  performance_tips: |
+    Performance optimization tips:
+    
+    - Use mixed precision training (bf16 on Ampere+)
+    - Enable gradient accumulation for larger effective batch size
+    - Use multiple dataloader workers
+    - Enable model quantization for inference
+    - Cache frequently used predictions
+    - Monitor GPU utilization
+    - Profile bottlenecks
+  
+  notes: |
+    Important production notes:
+    
+    - Test set is strictly protected with single access
+    - All API calls are authenticated and rate-limited
+    - Models are versioned and checksummed
+    - Comprehensive logging for auditing
+    - Automated backups run daily
+    - Health checks ensure service availability
+    - Overfitting prevention is enforced strictly
+    - Zero cloud costs - fully local deployment
+
+# End of local production environment configuration
+# Last updated: 2025-09-19
+# Maintainer: Võ Hải Dũng (vohaidung.work@gmail.com)
