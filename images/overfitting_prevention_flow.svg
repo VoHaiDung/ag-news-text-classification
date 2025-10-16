@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400">
+  <rect width="800" height="400" fill="#f0f0f0"/>
+  <text x="400" y="180" font-size="24" text-anchor="middle" fill="#333">
+    Overfitting Prevention Flow
+  </text>
+  <text x="400" y="220" font-size="18" text-anchor="middle" fill="#666">
+    See OVERFITTING_PREVENTION.md
+  </text>
+</svg>
