@@ -1,0 +1,1959 @@
+# AG News Text Classification - Compatibility Matrix Configuration
+#
+# This file defines comprehensive compatibility matrices for all components
+# in the AG News Text Classification project. It specifies version requirements,
+# platform constraints, hardware requirements, and known compatibility issues
+# across different environments and configurations.
+#
+# The compatibility matrix is used by:
+# - Configuration validation system (config_validator.py)
+# - Platform detection and selection (platform_detector.py, smart_selector.py)
+# - Automatic environment setup (setup scripts)
+# - Dependency resolution (requirements generation)
+# - Health check system (health_checker.py)
+# - IDE configuration synchronization
+#
+# Structure:
+#   metadata: Project and file metadata
+#   core_dependencies: Core Python and system dependencies
+#   ml_frameworks: Machine learning and deep learning frameworks
+#   model_compatibility: Model-specific version requirements
+#   peft_methods: Parameter-efficient fine-tuning method compatibility
+#   platform_compatibility: Platform-specific configurations
+#   hardware_compatibility: Hardware requirements and constraints
+#   ide_compatibility: IDE version and plugin requirements
+#   os_compatibility: Operating system compatibility
+#   known_issues: Known compatibility issues and workarounds
+#   feature_matrix: Feature availability across configurations
+#
+# Version Format:
+#   Semantic Versioning (SemVer) 2.0.0: MAJOR.MINOR.PATCH
+#   Version specifiers follow PEP 440:
+#     - ==: Exact version match
+#     - >=: Greater than or equal
+#     - <=: Less than or equal
+#     - ~=: Compatible release (e.g., ~=1.2.0 matches >=1.2.0, <1.3.0)
+#     - >: Greater than
+#     - <: Less than
+#
+# References:
+#   - PEP 440 -- Version Identification and Dependency Specification
+#     https://www.python.org/dev/peps/pep-0440/
+#   - Semantic Versioning 2.0.0
+#     https://semver.org/
+#   - PyTorch Compatibility Matrix
+#     https://pytorch.org/get-started/previous-versions/
+#   - HuggingFace Transformers Compatibility
+#     https://github.com/huggingface/transformers
+#
+# Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
+# License: MIT
+# Project: AG News Text Classification (ag-news-text-classification)
+# Repository: https://github.com/VoHaiDung/ag-news-text-classification
+
+# Metadata section
+# Provides versioning and descriptive information about this compatibility matrix
+metadata:
+  version: "1.0.0"
+  last_updated: "2024-01-15"
+  project_name: "AG News Text Classification (ag-news-text-classification)"
+  project_version: "1.0.0"
+  author: "Võ Hải Dũng"
+  email: "vohaidung.work@gmail.com"
+  license: "MIT"
+  description: "Comprehensive compatibility matrix for AG News Text Classification project"
+  schema_version: "1.0"
+  
+  # Compatibility matrix validation rules
+  validation:
+    strict_mode: true
+    allow_experimental: false
+    warn_on_deprecated: true
+    fail_on_incompatible: true
+
+# Core dependencies compatibility
+# Defines version requirements for fundamental Python packages and system libraries
+core_dependencies:
+  python:
+    # Python version compatibility
+    # The project supports Python 3.8+ for modern language features and library support
+    minimum: "3.8.0"
+    maximum: "3.11.9"
+    recommended: "3.10.12"
+    tested_versions:
+      - "3.8.0"
+      - "3.9.0"
+      - "3.10.12"
+      - "3.11.0"
+    notes: |
+      Python 3.10 is recommended for best compatibility with all dependencies.
+      Python 3.11 has improved performance but may have compatibility issues with some packages.
+      Python 3.12+ is not yet fully supported by all ML libraries.
+    platform_specific:
+      colab: "3.10.12"  # Google Colab default
+      kaggle: "3.10.12" # Kaggle Notebooks default
+      local: ">=3.8.0,<=3.11.9"
+      gitpod: "3.10.12"
+      codespaces: "3.10.12"
+
+  pip:
+    minimum: "21.0.0"
+    recommended: "23.3.1"
+    notes: "Required for proper dependency resolution and PEP 517 support"
+
+  setuptools:
+    minimum: "50.0.0"
+    recommended: "68.0.0"
+    notes: "Required for package installation and distribution"
+
+  wheel:
+    minimum: "0.37.0"
+    recommended: "0.41.0"
+    notes: "Required for building wheel distributions"
+
+# Machine Learning and Deep Learning frameworks compatibility
+# Specifies version requirements and compatibility constraints for ML/DL frameworks
+ml_frameworks:
+  # PyTorch compatibility matrix
+  # PyTorch is the primary deep learning framework used in this project
+  pytorch:
+    minimum: "2.0.0"
+    maximum: "2.1.2"
+    recommended: "2.0.1"
+    tested_versions:
+      - version: "2.0.0"
+        cuda_versions: ["11.7", "11.8"]
+        python_versions: ["3.8", "3.9", "3.10", "3.11"]
+        stable: true
+      - version: "2.0.1"
+        cuda_versions: ["11.7", "11.8"]
+        python_versions: ["3.8", "3.9", "3.10", "3.11"]
+        stable: true
+        recommended: true
+      - version: "2.1.0"
+        cuda_versions: ["11.8", "12.1"]
+        python_versions: ["3.8", "3.9", "3.10", "3.11"]
+        stable: true
+      - version: "2.1.1"
+        cuda_versions: ["11.8", "12.1"]
+        python_versions: ["3.8", "3.9", "3.10", "3.11"]
+        stable: true
+      - version: "2.1.2"
+        cuda_versions: ["11.8", "12.1"]
+        python_versions: ["3.8", "3.9", "3.10", "3.11"]
+        stable: true
+    
+    # Platform-specific PyTorch configurations
+    platform_specific:
+      colab:
+        version: "2.0.1+cu118"
+        cuda_version: "11.8"
+        install_command: "pip install torch==2.0.1+cu118 torchvision==0.15.2+cu118 --extra-index-url https://download.pytorch.org/whl/cu118"
+      kaggle:
+        version: "2.0.1"
+        cuda_version: "11.8"
+        install_command: "pip install torch==2.0.1 torchvision==0.15.2"
+      local_cuda_11.8:
+        version: "2.0.1+cu118"
+        cuda_version: "11.8"
+        install_command: "pip install torch==2.0.1+cu118 torchvision==0.15.2+cu118 --extra-index-url https://download.pytorch.org/whl/cu118"
+      local_cuda_12.1:
+        version: "2.1.0+cu121"
+        cuda_version: "12.1"
+        install_command: "pip install torch==2.1.0+cu121 torchvision==0.16.0+cu121 --extra-index-url https://download.pytorch.org/whl/cu121"
+      local_cpu:
+        version: "2.0.1"
+        install_command: "pip install torch==2.0.1 torchvision==0.15.2 --extra-index-url https://download.pytorch.org/whl/cpu"
+    
+    notes: |
+      PyTorch 2.0+ includes torch.compile() for optimized inference.
+      CUDA 11.8 is recommended for broadest GPU compatibility.
+      CUDA 12.1 offers better performance on newer GPUs (Ada Lovelace, Hopper).
+
+  # HuggingFace Transformers compatibility
+  # Core library for transformer models
+  transformers:
+    minimum: "4.30.0"
+    maximum: "4.36.2"
+    recommended: "4.35.2"
+    tested_versions:
+      - version: "4.30.0"
+        pytorch_versions: ["2.0.0", "2.0.1"]
+        features: ["basic_transformers", "peft"]
+      - version: "4.33.0"
+        pytorch_versions: ["2.0.0", "2.0.1", "2.1.0"]
+        features: ["basic_transformers", "peft", "flash_attention_2"]
+      - version: "4.35.2"
+        pytorch_versions: ["2.0.0", "2.0.1", "2.1.0", "2.1.1"]
+        features: ["basic_transformers", "peft", "flash_attention_2", "quantization"]
+        recommended: true
+      - version: "4.36.0"
+        pytorch_versions: ["2.0.1", "2.1.0", "2.1.1", "2.1.2"]
+        features: ["basic_transformers", "peft", "flash_attention_2", "quantization", "gemma"]
+      - version: "4.36.2"
+        pytorch_versions: ["2.0.1", "2.1.0", "2.1.1", "2.1.2"]
+        features: ["basic_transformers", "peft", "flash_attention_2", "quantization", "gemma"]
+    
+    # Model-specific version requirements
+    model_requirements:
+      deberta_v3: ">=4.30.0"
+      deberta_v2: ">=4.30.0"
+      roberta: ">=4.30.0"
+      electra: ">=4.30.0"
+      xlnet: ">=4.30.0"
+      longformer: ">=4.30.0"
+      t5: ">=4.30.0"
+      flan_t5: ">=4.30.0"
+      llama2: ">=4.33.0"
+      llama3: ">=4.36.0"
+      mistral: ">=4.34.0"
+      mixtral: ">=4.34.0"
+      falcon: ">=4.31.0"
+      mpt: ">=4.31.0"
+      phi2: ">=4.35.0"
+      phi3: ">=4.36.0"
+    
+    notes: |
+      Transformers 4.35+ includes better quantization support.
+      Transformers 4.36+ includes Gemma and Phi-3 models.
+      Flash Attention 2 requires transformers >=4.33.0.
+
+  # PEFT (Parameter-Efficient Fine-Tuning) library
+  peft:
+    minimum: "0.5.0"
+    maximum: "0.7.1"
+    recommended: "0.6.0"
+    tested_versions:
+      - version: "0.5.0"
+        transformers_versions: ["4.30.0", "4.31.0"]
+        methods: ["lora", "adapter", "prefix_tuning", "prompt_tuning"]
+      - version: "0.6.0"
+        transformers_versions: ["4.33.0", "4.34.0", "4.35.0"]
+        methods: ["lora", "qlora", "adapter", "prefix_tuning", "prompt_tuning", "ia3"]
+        recommended: true
+      - version: "0.7.0"
+        transformers_versions: ["4.35.0", "4.36.0"]
+        methods: ["lora", "qlora", "adapter", "prefix_tuning", "prompt_tuning", "ia3", "vera"]
+      - version: "0.7.1"
+        transformers_versions: ["4.35.2", "4.36.0", "4.36.2"]
+        methods: ["lora", "qlora", "adapter", "prefix_tuning", "prompt_tuning", "ia3", "vera"]
+    
+    notes: |
+      PEFT 0.6+ includes improved QLoRA support.
+      PEFT 0.7+ includes VeRA (Vector-based Random Matrix Adaptation).
+      Use with transformers 4.35+ for best compatibility.
+
+  # Accelerate library for distributed training
+  accelerate:
+    minimum: "0.20.0"
+    maximum: "0.25.0"
+    recommended: "0.24.1"
+    tested_versions:
+      - version: "0.20.0"
+        pytorch_versions: ["2.0.0"]
+      - version: "0.23.0"
+        pytorch_versions: ["2.0.1", "2.1.0"]
+      - version: "0.24.1"
+        pytorch_versions: ["2.0.1", "2.1.0", "2.1.1"]
+        recommended: true
+      - version: "0.25.0"
+        pytorch_versions: ["2.1.0", "2.1.1", "2.1.2"]
+    
+    notes: |
+      Accelerate 0.24+ includes better DeepSpeed integration.
+      Required for multi-GPU training and mixed precision.
+
+  # Bitsandbytes for quantization (QLoRA)
+  bitsandbytes:
+    minimum: "0.40.0"
+    maximum: "0.41.3"
+    recommended: "0.41.1"
+    tested_versions:
+      - version: "0.40.0"
+        cuda_versions: ["11.7", "11.8"]
+        features: ["8bit", "4bit_nf4"]
+      - version: "0.41.0"
+        cuda_versions: ["11.8", "12.1"]
+        features: ["8bit", "4bit_nf4", "4bit_fp4", "double_quant"]
+      - version: "0.41.1"
+        cuda_versions: ["11.8", "12.1"]
+        features: ["8bit", "4bit_nf4", "4bit_fp4", "double_quant"]
+        recommended: true
+      - version: "0.41.3"
+        cuda_versions: ["11.8", "12.1"]
+        features: ["8bit", "4bit_nf4", "4bit_fp4", "double_quant", "bnb_4bit_use_double_quant"]
+    
+    platform_specific:
+      colab:
+        version: "0.41.1"
+        cuda_version: "11.8"
+      kaggle:
+        version: "0.41.1"
+        cuda_version: "11.8"
+      local:
+        version: "0.41.1"
+        cuda_versions: ["11.8", "12.1"]
+      windows:
+        version: "0.41.1"
+        notes: "Requires pre-compiled wheels or WSL2"
+    
+    notes: |
+      Bitsandbytes requires CUDA. CPU-only environments cannot use QLoRA.
+      Windows support is limited; use WSL2 or pre-compiled wheels.
+      Version 0.41+ includes improved 4-bit quantization.
+
+  # TensorBoard for experiment tracking
+  tensorboard:
+    minimum: "2.13.0"
+    recommended: "2.15.1"
+    notes: "Used for local monitoring and visualization"
+
+  # Datasets library from HuggingFace
+  datasets:
+    minimum: "2.12.0"
+    maximum: "2.16.1"
+    recommended: "2.14.6"
+    notes: "Required for AG News dataset loading and preprocessing"
+
+  # Tokenizers (fast tokenization)
+  tokenizers:
+    minimum: "0.13.0"
+    recommended: "0.15.0"
+    notes: "Fast tokenization library, bundled with transformers"
+
+  # SentencePiece (for some tokenizers)
+  sentencepiece:
+    minimum: "0.1.99"
+    recommended: "0.1.99"
+    notes: "Required for some models (T5, XLNet, etc.)"
+
+  # Protobuf (dependency for many libraries)
+  protobuf:
+    minimum: "3.20.0"
+    maximum: "3.20.3"
+    recommended: "3.20.3"
+    notes: |
+      Protobuf 4.x causes compatibility issues with TensorFlow and TensorBoard.
+      Use 3.20.x for stability.
+
+# Model-specific compatibility matrix
+# Defines requirements and constraints for each model architecture
+model_compatibility:
+  # DeBERTa models
+  deberta:
+    deberta_v3_base:
+      model_name: "microsoft/deberta-v3-base"
+      transformers_min: "4.30.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "2.0 GB"
+        fp16: "1.0 GB"
+        int8: "0.5 GB"
+      max_sequence_length: 512
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: true
+        prefix_tuning: true
+        prompt_tuning: true
+      recommended_for:
+        - "baseline_experiments"
+        - "quick_prototyping"
+        - "resource_constrained_environments"
+    
+    deberta_v3_large:
+      model_name: "microsoft/deberta-v3-large"
+      transformers_min: "4.30.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "5.5 GB"
+        fp16: "2.8 GB"
+        int8: "1.4 GB"
+      max_sequence_length: 512
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: true
+        prefix_tuning: true
+        prompt_tuning: true
+      recommended_for:
+        - "high_accuracy_experiments"
+        - "sota_benchmarks"
+        - "production_deployment"
+    
+    deberta_v3_xlarge:
+      model_name: "microsoft/deberta-v3-xlarge"
+      transformers_min: "4.30.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "14.0 GB"
+        fp16: "7.0 GB"
+        int8: "3.5 GB"
+        qlora_4bit: "2.8 GB"
+      max_sequence_length: 512
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: true
+        prefix_tuning: false  # Too large for prefix tuning
+        prompt_tuning: false  # Too large for prompt tuning
+      required_peft: true  # Too large for full fine-tuning on most GPUs
+      recommended_lora_rank: 16
+      recommended_for:
+        - "sota_experiments"
+        - "ensemble_components"
+        - "accuracy_critical_tasks"
+    
+    deberta_v2_xlarge:
+      model_name: "microsoft/deberta-v2-xlarge"
+      transformers_min: "4.30.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "7.0 GB"
+        fp16: "3.5 GB"
+        int8: "1.8 GB"
+        qlora_4bit: "1.4 GB"
+      max_sequence_length: 512
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: true
+        prefix_tuning: true
+        prompt_tuning: true
+      recommended_lora_rank: 16
+    
+    deberta_v2_xxlarge:
+      model_name: "microsoft/deberta-v2-xxlarge"
+      transformers_min: "4.30.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "28.0 GB"
+        fp16: "14.0 GB"
+        int8: "7.0 GB"
+        qlora_4bit: "5.6 GB"
+      max_sequence_length: 512
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: false  # Too large
+        prefix_tuning: false
+        prompt_tuning: false
+      required_peft: true
+      recommended_peft_method: "qlora"
+      recommended_lora_rank: 8
+      recommended_for:
+        - "ultimate_sota_experiments"
+        - "ensemble_teacher_models"
+      platform_compatibility:
+        colab_free: false
+        colab_pro: true
+        kaggle_gpu: false
+        kaggle_tpu: false
+        local_16gb_gpu: false
+        local_24gb_gpu: true
+        local_40gb_gpu: true
+
+  # RoBERTa models
+  roberta:
+    roberta_base:
+      model_name: "roberta-base"
+      transformers_min: "4.30.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "1.8 GB"
+        fp16: "0.9 GB"
+        int8: "0.5 GB"
+      max_sequence_length: 512
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: true
+        prefix_tuning: true
+        prompt_tuning: true
+    
+    roberta_large:
+      model_name: "roberta-large"
+      transformers_min: "4.30.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "5.2 GB"
+        fp16: "2.6 GB"
+        int8: "1.3 GB"
+      max_sequence_length: 512
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: true
+        prefix_tuning: true
+        prompt_tuning: true
+      recommended_for:
+        - "baseline_comparisons"
+        - "ensemble_diversity"
+    
+    xlm_roberta_large:
+      model_name: "xlm-roberta-large"
+      transformers_min: "4.30.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "5.5 GB"
+        fp16: "2.8 GB"
+        int8: "1.4 GB"
+      max_sequence_length: 512
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: true
+        prefix_tuning: true
+        prompt_tuning: true
+
+  # ELECTRA models
+  electra:
+    electra_base:
+      model_name: "google/electra-base-discriminator"
+      transformers_min: "4.30.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "1.8 GB"
+        fp16: "0.9 GB"
+      max_sequence_length: 512
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: true
+        prefix_tuning: true
+        prompt_tuning: true
+    
+    electra_large:
+      model_name: "google/electra-large-discriminator"
+      transformers_min: "4.30.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "5.3 GB"
+        fp16: "2.7 GB"
+        int8: "1.4 GB"
+      max_sequence_length: 512
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: true
+        prefix_tuning: true
+        prompt_tuning: true
+
+  # XLNet models
+  xlnet:
+    xlnet_base:
+      model_name: "xlnet-base-cased"
+      transformers_min: "4.30.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "1.9 GB"
+        fp16: "1.0 GB"
+      max_sequence_length: 512
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: true
+        prefix_tuning: true
+        prompt_tuning: true
+    
+    xlnet_large:
+      model_name: "xlnet-large-cased"
+      transformers_min: "4.30.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "5.8 GB"
+        fp16: "2.9 GB"
+        int8: "1.5 GB"
+      max_sequence_length: 512
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: true
+        prefix_tuning: true
+        prompt_tuning: true
+
+  # T5 models
+  t5:
+    t5_base:
+      model_name: "t5-base"
+      transformers_min: "4.30.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "2.2 GB"
+        fp16: "1.1 GB"
+      max_sequence_length: 512
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: true
+        prefix_tuning: true
+        prompt_tuning: true
+    
+    t5_large:
+      model_name: "t5-large"
+      transformers_min: "4.30.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "6.0 GB"
+        fp16: "3.0 GB"
+        int8: "1.5 GB"
+      max_sequence_length: 512
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: true
+        prefix_tuning: true
+        prompt_tuning: true
+    
+    flan_t5_xl:
+      model_name: "google/flan-t5-xl"
+      transformers_min: "4.30.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "12.0 GB"
+        fp16: "6.0 GB"
+        int8: "3.0 GB"
+        qlora_4bit: "2.4 GB"
+      max_sequence_length: 512
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: false
+        prefix_tuning: false
+        prompt_tuning: true
+      required_peft: true
+
+  # LLaMA models
+  llama:
+    llama2_7b:
+      model_name: "meta-llama/Llama-2-7b-hf"
+      transformers_min: "4.33.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "28.0 GB"
+        fp16: "14.0 GB"
+        int8: "7.0 GB"
+        qlora_4bit: "5.6 GB"
+      max_sequence_length: 4096
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: false
+        prefix_tuning: false
+        prompt_tuning: true
+      required_peft: true
+      recommended_peft_method: "qlora"
+      recommended_lora_rank: 16
+      platform_compatibility:
+        colab_free: false
+        colab_pro: true
+        kaggle_gpu: false
+        local_16gb_gpu: true  # With QLoRA
+        local_24gb_gpu: true
+      notes: "Requires HuggingFace authentication for model access"
+    
+    llama2_13b:
+      model_name: "meta-llama/Llama-2-13b-hf"
+      transformers_min: "4.33.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "52.0 GB"
+        fp16: "26.0 GB"
+        int8: "13.0 GB"
+        qlora_4bit: "10.4 GB"
+      max_sequence_length: 4096
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: false
+        prefix_tuning: false
+        prompt_tuning: false
+      required_peft: true
+      recommended_peft_method: "qlora"
+      recommended_lora_rank: 8
+      platform_compatibility:
+        colab_free: false
+        colab_pro: false
+        kaggle_gpu: false
+        local_16gb_gpu: false
+        local_24gb_gpu: true  # With QLoRA
+        local_40gb_gpu: true
+      notes: "Requires HuggingFace authentication for model access"
+    
+    llama3_8b:
+      model_name: "meta-llama/Meta-Llama-3-8B"
+      transformers_min: "4.36.0"
+      pytorch_min: "2.0.1"
+      memory_requirements:
+        fp32: "32.0 GB"
+        fp16: "16.0 GB"
+        int8: "8.0 GB"
+        qlora_4bit: "6.4 GB"
+      max_sequence_length: 8192
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: false
+        prefix_tuning: false
+        prompt_tuning: true
+      required_peft: true
+      recommended_peft_method: "qlora"
+      recommended_lora_rank: 16
+      platform_compatibility:
+        colab_free: false
+        colab_pro: true
+        kaggle_gpu: false
+        local_16gb_gpu: true  # With QLoRA
+        local_24gb_gpu: true
+      notes: "Requires HuggingFace authentication. LLaMA 3 architecture."
+
+  # Mistral models
+  mistral:
+    mistral_7b:
+      model_name: "mistralai/Mistral-7B-v0.1"
+      transformers_min: "4.34.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "28.0 GB"
+        fp16: "14.0 GB"
+        int8: "7.0 GB"
+        qlora_4bit: "5.6 GB"
+      max_sequence_length: 8192  # Sliding window attention
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: false
+        prefix_tuning: false
+        prompt_tuning: true
+      required_peft: true
+      recommended_peft_method: "qlora"
+      recommended_lora_rank: 16
+      platform_compatibility:
+        colab_free: false
+        colab_pro: true
+        kaggle_gpu: false
+        local_16gb_gpu: true  # With QLoRA
+        local_24gb_gpu: true
+    
+    mistral_7b_instruct:
+      model_name: "mistralai/Mistral-7B-Instruct-v0.2"
+      transformers_min: "4.34.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "28.0 GB"
+        fp16: "14.0 GB"
+        int8: "7.0 GB"
+        qlora_4bit: "5.6 GB"
+      max_sequence_length: 8192
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: false
+        prefix_tuning: false
+        prompt_tuning: true
+      required_peft: true
+      recommended_peft_method: "qlora"
+      recommended_for:
+        - "instruction_tuning"
+        - "prompt_based_classification"
+    
+    mixtral_8x7b:
+      model_name: "mistralai/Mixtral-8x7B-v0.1"
+      transformers_min: "4.34.0"
+      pytorch_min: "2.0.1"
+      memory_requirements:
+        fp32: "180.0 GB"
+        fp16: "90.0 GB"
+        int8: "45.0 GB"
+        qlora_4bit: "36.0 GB"
+      max_sequence_length: 32768
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: false
+        prefix_tuning: false
+        prompt_tuning: false
+      required_peft: true
+      recommended_peft_method: "qlora"
+      recommended_lora_rank: 8
+      platform_compatibility:
+        colab_free: false
+        colab_pro: false
+        kaggle_gpu: false
+        local_16gb_gpu: false
+        local_24gb_gpu: false
+        local_40gb_gpu: true  # With QLoRA, single GPU challenging
+        local_80gb_gpu: true
+        multi_gpu: true
+      notes: "Mixture of Experts model. Very large. Requires significant resources."
+
+  # Falcon models
+  falcon:
+    falcon_7b:
+      model_name: "tiiuae/falcon-7b"
+      transformers_min: "4.31.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "28.0 GB"
+        fp16: "14.0 GB"
+        int8: "7.0 GB"
+        qlora_4bit: "5.6 GB"
+      max_sequence_length: 2048
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: false
+        prefix_tuning: false
+        prompt_tuning: true
+      required_peft: true
+      recommended_peft_method: "qlora"
+      trust_remote_code: true  # Falcon requires trust_remote_code=True
+    
+    falcon_40b:
+      model_name: "tiiuae/falcon-40b"
+      transformers_min: "4.31.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "160.0 GB"
+        fp16: "80.0 GB"
+        int8: "40.0 GB"
+        qlora_4bit: "32.0 GB"
+      max_sequence_length: 2048
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: false
+        prefix_tuning: false
+        prompt_tuning: false
+      required_peft: true
+      recommended_peft_method: "qlora"
+      trust_remote_code: true
+      platform_compatibility:
+        colab_free: false
+        colab_pro: false
+        kaggle_gpu: false
+        local_16gb_gpu: false
+        local_24gb_gpu: false
+        local_40gb_gpu: true  # With QLoRA
+        multi_gpu: true
+
+  # MPT models
+  mpt:
+    mpt_7b:
+      model_name: "mosaicml/mpt-7b"
+      transformers_min: "4.31.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "28.0 GB"
+        fp16: "14.0 GB"
+        int8: "7.0 GB"
+        qlora_4bit: "5.6 GB"
+      max_sequence_length: 2048
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: false
+        prefix_tuning: false
+        prompt_tuning: true
+      required_peft: true
+      recommended_peft_method: "qlora"
+      trust_remote_code: true
+
+  # Phi models
+  phi:
+    phi_2:
+      model_name: "microsoft/phi-2"
+      transformers_min: "4.35.0"
+      pytorch_min: "2.0.0"
+      memory_requirements:
+        fp32: "11.0 GB"
+        fp16: "5.5 GB"
+        int8: "2.8 GB"
+        qlora_4bit: "2.2 GB"
+      max_sequence_length: 2048
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: false
+        prefix_tuning: false
+        prompt_tuning: true
+      recommended_peft_method: "qlora"
+      trust_remote_code: true
+      recommended_for:
+        - "efficient_llm_experiments"
+        - "resource_constrained_llm"
+    
+    phi_3:
+      model_name: "microsoft/Phi-3-mini-4k-instruct"
+      transformers_min: "4.36.0"
+      pytorch_min: "2.0.1"
+      memory_requirements:
+        fp32: "15.0 GB"
+        fp16: "7.5 GB"
+        int8: "3.8 GB"
+        qlora_4bit: "3.0 GB"
+      max_sequence_length: 4096
+      supports_peft:
+        lora: true
+        qlora: true
+        adapter: false
+        prefix_tuning: false
+        prompt_tuning: true
+      recommended_peft_method: "qlora"
+      trust_remote_code: true
+      platform_compatibility:
+        colab_free: false
+        colab_pro: true
+        kaggle_gpu: true
+        local_16gb_gpu: true
+
+# Parameter-Efficient Fine-Tuning (PEFT) methods compatibility
+peft_methods:
+  lora:
+    name: "Low-Rank Adaptation"
+    peft_version_min: "0.5.0"
+    transformers_version_min: "4.30.0"
+    pytorch_version_min: "2.0.0"
+    
+    supported_models:
+      - "deberta"
+      - "roberta"
+      - "electra"
+      - "xlnet"
+      - "longformer"
+      - "t5"
+      - "llama"
+      - "mistral"
+      - "falcon"
+      - "mpt"
+      - "phi"
+    
+    hyperparameters:
+      rank:
+        minimum: 1
+        maximum: 256
+        recommended_small_models: 8
+        recommended_large_models: 16
+        recommended_xlarge_models: 32
+        recommended_llm: 16
+      alpha:
+        typical_ratio: 2.0  # alpha = rank * 2
+        recommended_small: 16
+        recommended_large: 32
+        recommended_xlm: 64
+      dropout:
+        minimum: 0.0
+        maximum: 0.5
+        recommended: 0.1
+      target_modules:
+        deberta: ["query_proj", "value_proj"]
+        roberta: ["query", "value"]
+        llama: ["q_proj", "v_proj"]
+        mistral: ["q_proj", "v_proj"]
+        t5: ["q", "v"]
+    
+    memory_reduction:
+      typical: "50-90%"
+      rank_8: "~70%"
+      rank_16: "~60%"
+      rank_32: "~50%"
+    
+    performance_impact:
+      training_speed: "10-20% slower than full fine-tuning"
+      inference_speed: "~5% slower (before merging)"
+      accuracy_retention: "95-99% of full fine-tuning"
+    
+    notes: |
+      LoRA is the most popular PEFT method with excellent accuracy/efficiency trade-off.
+      Recommended for most use cases including large models.
+      Can be merged back into base model for no inference overhead.
+
+  qlora:
+    name: "Quantized Low-Rank Adaptation"
+    peft_version_min: "0.5.0"
+    transformers_version_min: "4.30.0"
+    pytorch_version_min: "2.0.0"
+    bitsandbytes_version_min: "0.40.0"
+    
+    supported_models:
+      - "llama"
+      - "mistral"
+      - "falcon"
+      - "mpt"
+      - "phi"
+      - "deberta"  # Also works with transformers
+      - "roberta"
+      - "t5"
+    
+    quantization_options:
+      bits: [4, 8]
+      quant_type: ["nf4", "fp4"]
+      double_quant: true
+      compute_dtype: ["bfloat16", "float16", "float32"]
+    
+    hyperparameters:
+      rank:
+        recommended_7b_models: 16
+        recommended_13b_models: 8
+        recommended_70b_models: 8
+      alpha:
+        recommended: 32
+      dropout:
+        recommended: 0.1
+    
+    memory_reduction:
+      4bit_nf4: "~75%"
+      4bit_nf4_double_quant: "~80%"
+      8bit: "~50%"
+    
+    platform_requirements:
+      cuda_required: true
+      cuda_min_version: "11.8"
+      gpu_compute_capability_min: "7.0"  # Volta and newer
+    
+    performance_impact:
+      training_speed: "20-30% slower than LoRA"
+      inference_speed: "~10% slower"
+      accuracy_retention: "90-98% of full fine-tuning"
+    
+    notes: |
+      QLoRA enables fine-tuning of very large models on consumer GPUs.
+      Requires CUDA; not available for CPU-only environments.
+      4-bit NF4 with double quantization is recommended for best memory efficiency.
+      Slightly lower accuracy than LoRA but much more memory efficient.
+
+  adapter:
+    name: "Adapter Layers"
+    peft_version_min: "0.5.0"
+    transformers_version_min: "4.30.0"
+    
+    adapter_types:
+      houlsby:
+        description: "Original adapter (after attention and FFN)"
+        reduction_factor_recommended: 16
+        memory_overhead: "~5%"
+      pfeiffer:
+        description: "More efficient (after FFN only)"
+        reduction_factor_recommended: 16
+        memory_overhead: "~3%"
+      parallel:
+        description: "Parallel to main layers"
+        reduction_factor_recommended: 16
+        memory_overhead: "~4%"
+    
+    supported_models:
+      - "deberta"
+      - "roberta"
+      - "electra"
+      - "xlnet"
+    
+    memory_reduction: "20-40%"
+    
+    notes: |
+      Adapters are less popular than LoRA but can be effective.
+      Pfeiffer adapters are recommended for efficiency.
+      Not well-supported for very large LLMs.
+
+  prefix_tuning:
+    name: "Prefix Tuning"
+    peft_version_min: "0.5.0"
+    transformers_version_min: "4.30.0"
+    
+    hyperparameters:
+      num_virtual_tokens:
+        minimum: 1
+        maximum: 512
+        recommended_classification: 20
+        recommended_generation: 100
+      encoder_hidden_size:
+        typical: 512
+    
+    supported_models:
+      - "deberta"
+      - "roberta"
+      - "t5"
+      - "llama"
+      - "mistral"
+    
+    memory_reduction: "~95%"
+    
+    performance_impact:
+      accuracy_retention: "85-95% of full fine-tuning"
+      training_speed: "Faster than LoRA"
+    
+    notes: |
+      Very parameter-efficient but may have lower accuracy.
+      Works well for generation tasks, less optimal for classification.
+      Recommended for experimentation rather than production.
+
+  prompt_tuning:
+    name: "Prompt Tuning / Soft Prompting"
+    peft_version_min: "0.5.0"
+    transformers_version_min: "4.30.0"
+    
+    hyperparameters:
+      num_virtual_tokens:
+        recommended_classification: 8
+        recommended_generation: 20
+      init_method: ["random", "text"]
+    
+    supported_models:
+      - "t5"
+      - "llama"
+      - "mistral"
+      - "phi"
+    
+    memory_reduction: "~99%"
+    
+    performance_impact:
+      accuracy_retention: "70-90% of full fine-tuning"
+      best_for_large_models: true
+    
+    notes: |
+      Most parameter-efficient method.
+      Works better with larger models (>1B parameters).
+      May require more training data for good performance.
+
+  ia3:
+    name: "IA3 (Infused Adapter by Inhibiting and Amplifying Inner Activations)"
+    peft_version_min: "0.6.0"
+    transformers_version_min: "4.33.0"
+    
+    supported_models:
+      - "t5"
+      - "llama"
+    
+    memory_reduction: "~98%"
+    
+    notes: |
+      Very recent method, fewer parameters than LoRA.
+      Limited model support currently.
+      Experimental status.
+
+# Platform compatibility matrix
+platform_compatibility:
+  local:
+    name: "Local Machine"
+    
+    operating_systems:
+      windows:
+        supported: true
+        python_versions: ["3.8", "3.9", "3.10", "3.11"]
+        notes: |
+          Windows support is functional but may have issues with bitsandbytes.
+          WSL2 is recommended for best compatibility.
+          Pre-compiled wheels available for most packages.
+      linux:
+        supported: true
+        python_versions: ["3.8", "3.9", "3.10", "3.11"]
+        recommended: true
+        notes: "Best compatibility and performance. Recommended for development."
+      macos:
+        supported: true
+        python_versions: ["3.8", "3.9", "3.10", "3.11"]
+        notes: |
+          macOS support is good for CPU-only training.
+          MPS (Metal Performance Shaders) support in PyTorch 2.0+.
+          No CUDA support; QLoRA not available.
+          M1/M2/M3 Macs have good performance with MPS.
+    
+    hardware_profiles:
+      cpu_only:
+        min_ram: "8 GB"
+        recommended_ram: "16 GB"
+        max_model_size: "base models only"
+        training_speed: "Very slow"
+        supported_models: ["deberta_base", "roberta_base", "electra_base"]
+      
+      gpu_8gb:
+        gpu_examples: ["GTX 1070", "RTX 2060"]
+        vram: "8 GB"
+        supported_models: ["deberta_base", "roberta_base", "deberta_large_lora"]
+        max_batch_size: 8
+        notes: "Limited; suitable for small models only"
+      
+      gpu_12gb:
+        gpu_examples: ["GTX 1080 Ti", "RTX 2080 Ti", "RTX 3060"]
+        vram: "12 GB"
+        supported_models: ["deberta_large", "roberta_large", "deberta_xlarge_lora", "phi_2_qlora"]
+        max_batch_size: 16
+        recommended_for: "Development and small experiments"
+      
+      gpu_16gb:
+        gpu_examples: ["Tesla T4", "RTX 4060 Ti", "Tesla V100"]
+        vram: "16 GB"
+        supported_models: ["deberta_xlarge_lora", "llama2_7b_qlora", "mistral_7b_qlora"]
+        max_batch_size: 16
+        recommended_for: "Most experiments"
+      
+      gpu_24gb:
+        gpu_examples: ["RTX 3090", "RTX 4090", "Tesla A10", "A5000"]
+        vram: "24 GB"
+        supported_models: ["deberta_xxlarge_qlora", "llama2_13b_qlora", "ensemble_models"]
+        max_batch_size: 32
+        recommended_for: "SOTA experiments and production"
+      
+      gpu_40gb:
+        gpu_examples: ["Tesla A100 40GB", "A6000"]
+        vram: "40 GB"
+        supported_models: ["all_models", "mixtral_8x7b_qlora", "large_ensembles"]
+        max_batch_size: 64
+        recommended_for: "Ultimate SOTA and research"
+      
+      gpu_80gb:
+        gpu_examples: ["Tesla A100 80GB", "H100"]
+        vram: "80 GB"
+        supported_models: ["all_models", "full_fine_tuning"]
+        max_batch_size: 128
+        recommended_for: "Research and production at scale"
+
+  colab:
+    name: "Google Colaboratory"
+    
+    tiers:
+      free:
+        name: "Colab Free"
+        gpu_types: ["T4"]
+        vram: "16 GB"
+        ram: "12 GB"
+        session_timeout: "12 hours"
+        idle_timeout: "90 minutes"
+        storage: "Temporary (session-based)"
+        python_version: "3.10.12"
+        pytorch_version: "2.0.1+cu118"
+        cuda_version: "11.8"
+        
+        supported_models:
+          full_fine_tuning: ["deberta_base", "roberta_base", "deberta_large"]
+          lora: ["deberta_large", "deberta_xlarge", "roberta_large"]
+          qlora: ["llama2_7b", "mistral_7b", "phi_2", "phi_3"]
+        
+        limitations:
+          max_batch_size: 16
+          max_sequence_length: 512
+          gpu_quota: "Limited (varies)"
+          compute_units: "Limited"
+        
+        recommended_for:
+          - "quick_prototyping"
+          - "learning"
+          - "small_experiments"
+        
+        notes: |
+          GPU availability not guaranteed.
+          May be downgraded to CPU if quota exceeded.
+          Use Google Drive for persistent storage.
+      
+      pro:
+        name: "Colab Pro"
+        cost: "$9.99/month"
+        gpu_types: ["T4", "V100"]
+        vram: "16-32 GB"
+        ram: "25 GB"
+        session_timeout: "24 hours"
+        idle_timeout: "No limit"
+        storage: "Persistent (Google Drive)"
+        python_version: "3.10.12"
+        
+        supported_models:
+          full_fine_tuning: ["deberta_large", "deberta_xlarge"]
+          lora: ["deberta_xxlarge", "llama2_7b"]
+          qlora: ["llama2_7b", "llama2_13b", "mistral_7b", "mixtral_8x7b"]
+        
+        limitations:
+          max_batch_size: 32
+          compute_units: "Higher allocation"
+        
+        recommended_for:
+          - "serious_experiments"
+          - "sota_research"
+          - "production_prototyping"
+      
+      pro_plus:
+        name: "Colab Pro+"
+        cost: "$49.99/month"
+        gpu_types: ["V100", "A100"]
+        vram: "40 GB"
+        ram: "52 GB"
+        session_timeout: "24 hours"
+        python_version: "3.10.12"
+        
+        supported_models:
+          all: true
+        
+        recommended_for:
+          - "production_research"
+          - "large_scale_experiments"
+    
+    setup_requirements:
+      mount_drive: true
+      install_dependencies: true
+      session_management: "Required (auto-disconnect prevention)"
+    
+    optimizations:
+      cache_models: "Use Google Drive"
+      checkpoint_frequently: true
+      use_mixed_precision: true
+      gradient_checkpointing: true
+
+  kaggle:
+    name: "Kaggle Notebooks"
+    
+    compute_options:
+      cpu:
+        ram: "13 GB"
+        storage: "20 GB (temp)"
+        session_timeout: "9 hours"
+        python_version: "3.10.12"
+        free: true
+      
+      gpu:
+        gpu_type: "Tesla P100"
+        vram: "16 GB"
+        ram: "13 GB"
+        storage: "20 GB (temp)"
+        session_timeout: "9 hours"
+        weekly_quota: "30 hours/week"
+        python_version: "3.10.12"
+        pytorch_version: "2.0.1"
+        cuda_version: "11.8"
+        free: true
+        
+        supported_models:
+          full_fine_tuning: ["deberta_base", "roberta_base", "deberta_large"]
+          lora: ["deberta_xlarge", "roberta_large"]
+          qlora: ["llama2_7b", "mistral_7b", "phi_2", "phi_3"]
+        
+        recommended_for:
+          - "competitions"
+          - "reproducible_research"
+          - "free_gpu_training"
+      
+      tpu:
+        tpu_type: "TPU v3-8"
+        ram: "13 GB"
+        storage: "20 GB (temp)"
+        session_timeout: "9 hours"
+        weekly_quota: "30 hours/week"
+        python_version: "3.10.12"
+        pytorch_version: "2.0.1"  # XLA version
+        free: true
+        
+        notes: |
+          TPU support requires torch_xla.
+          Limited model compatibility.
+          Best for TensorFlow or JAX.
+          PyTorch support is experimental.
+    
+    features:
+      datasets: "Built-in dataset storage"
+      version_control: "Integrated with notebooks"
+      collaboration: "Public/private sharing"
+      competitions: "Submission integration"
+    
+    limitations:
+      internet: "On by default, can be disabled"
+      persistence: "No persistent storage (use Kaggle Datasets)"
+      gpu_memory: "13 GB RAM (less than Colab)"
+    
+    optimizations:
+      save_to_dataset: true
+      checkpoint_management: "Save to Kaggle Datasets"
+      use_kaggle_cache: true
+
+  gitpod:
+    name: "Gitpod"
+    
+    tiers:
+      free:
+        hours_per_month: 50
+        resources: "Standard"
+        notes: "CPU only typically"
+      
+      paid:
+        cost: "$9+/month"
+        hours_per_month: "100+"
+        resources: "Enhanced"
+    
+    python_version: "3.10+"
+    
+    notes: |
+      Cloud IDE with VS Code interface.
+      Limited GPU access.
+      Good for development, not for training.
+      Integrates well with GitHub.
+
+  codespaces:
+    name: "GitHub Codespaces"
+    
+    tiers:
+      free:
+        hours_per_month: 60
+        storage: "15 GB"
+        machine_types: ["2-core", "4-core"]
+      
+      paid:
+        cost: "Usage-based"
+        machine_types: ["2-core", "4-core", "8-core", "16-core", "32-core"]
+    
+    python_version: "3.10+"
+    gpu_support: false
+    
+    notes: |
+      Excellent for development and coding.
+      No GPU support; not suitable for model training.
+      Great integration with GitHub repositories.
+
+# Hardware compatibility matrix
+hardware_compatibility:
+  gpu:
+    nvidia:
+      required_for: ["cuda", "qlora", "gpu_training"]
+      
+      architectures:
+        kepler:
+          compute_capability: "3.0-3.7"
+          supported: false
+          notes: "Too old; not supported by modern PyTorch"
+        
+        maxwell:
+          compute_capability: "5.0-5.3"
+          examples: ["GTX 750 Ti", "GTX 980"]
+          pytorch_support: "Limited"
+          cuda_support: "Up to CUDA 11.x"
+          notes: "Deprecated; basic support only"
+        
+        pascal:
+          compute_capability: "6.0-6.2"
+          examples: ["GTX 1060", "GTX 1080", "GTX 1080 Ti", "Tesla P100"]
+          pytorch_support: true
+          cuda_support: "11.x, 12.x"
+          recommended: false
+          notes: "Supported but dated; limited performance"
+        
+        volta:
+          compute_capability: "7.0-7.2"
+          examples: ["Tesla V100", "Titan V"]
+          pytorch_support: true
+          cuda_support: "11.x, 12.x"
+          tensor_cores: true
+          mixed_precision: true
+          recommended: true
+          notes: "First generation with Tensor Cores; excellent for deep learning"
+        
+        turing:
+          compute_capability: "7.5"
+          examples: ["RTX 2060", "RTX 2080", "RTX 2080 Ti", "Tesla T4"]
+          pytorch_support: true
+          cuda_support: "11.x, 12.x"
+          tensor_cores: true
+          mixed_precision: true
+          int8_support: true
+          recommended: true
+          notes: "Widely used; good price/performance"
+        
+        ampere:
+          compute_capability: "8.0-8.6"
+          examples: ["RTX 3060", "RTX 3090", "Tesla A100", "A10", "A6000"]
+          pytorch_support: true
+          cuda_support: "11.x, 12.x"
+          tensor_cores: "3rd gen"
+          mixed_precision: true
+          bfloat16_support: true
+          int8_support: true
+          recommended: true
+          notes: "Excellent performance; supports bfloat16 for better numerical stability"
+        
+        ada_lovelace:
+          compute_capability: "8.9"
+          examples: ["RTX 4060", "RTX 4090"]
+          pytorch_support: true
+          cuda_support: "11.x, 12.x"
+          tensor_cores: "4th gen"
+          mixed_precision: true
+          bfloat16_support: true
+          fp8_support: true
+          recommended: true
+          notes: "Latest consumer GPUs; excellent performance/watt"
+        
+        hopper:
+          compute_capability: "9.0"
+          examples: ["H100"]
+          pytorch_support: true
+          cuda_support: "11.x, 12.x"
+          tensor_cores: "4th gen"
+          mixed_precision: true
+          bfloat16_support: true
+          fp8_support: true
+          transformer_engine: true
+          recommended: true
+          notes: "State-of-the-art; designed for large-scale AI training"
+      
+      cuda_requirements:
+        minimum: "11.7"
+        recommended: "11.8"
+        latest: "12.1"
+        notes: |
+          CUDA 11.8 offers best compatibility.
+          CUDA 12.x offers better performance on newer GPUs.
+          Ensure cuDNN is also installed (version 8.x).
+    
+    amd:
+      support: "Experimental"
+      framework: "ROCm"
+      notes: |
+        AMD GPU support via ROCm is experimental.
+        Limited PyTorch support.
+        Not recommended for this project.
+    
+    apple_silicon:
+      support: "Limited"
+      framework: "MPS (Metal Performance Shaders)"
+      pytorch_version: "2.0+"
+      supported_operations: "Most PyTorch operations"
+      limitations:
+        - "No CUDA support"
+        - "No bitsandbytes/QLoRA"
+        - "Limited transformer optimizations"
+      recommended_for: "Development and inference only"
+      notes: |
+        M1/M2/M3 Macs can use MPS for GPU acceleration.
+        Good for development and small-scale inference.
+        Not suitable for large model training or QLoRA.
+  
+  cpu:
+    minimum_cores: 2
+    recommended_cores: 8
+    minimum_ram: "8 GB"
+    recommended_ram: "16 GB"
+    
+    supported_models: ["small_transformers_only"]
+    training_speed: "Very slow (10-50x slower than GPU)"
+    
+    notes: |
+      CPU-only training is possible but very slow.
+      Recommended only for:
+        - Development and debugging
+        - Small model inference
+        - Data preprocessing
+      Not suitable for:
+        - Large model training
+        - Production inference at scale
+        - QLoRA (requires GPU)
+
+# IDE compatibility matrix
+ide_compatibility:
+  vscode:
+    name: "Visual Studio Code"
+    supported: true
+    recommended: true
+    
+    minimum_version: "1.75.0"
+    recommended_version: "1.85.0"
+    
+    required_extensions:
+      - "ms-python.python"
+      - "ms-python.vscode-pylance"
+      - "ms-toolsai.jupyter"
+    
+    recommended_extensions:
+      - "ms-python.black-formatter"
+      - "ms-python.flake8"
+      - "ms-python.isort"
+      - "tamasfe.even-better-toml"
+      - "redhat.vscode-yaml"
+      - "ms-azuretools.vscode-docker"
+    
+    configuration_location: ".ide/vscode/"
+    
+    features:
+      debugging: true
+      jupyter_integration: true
+      git_integration: true
+      remote_development: true
+      docker_integration: true
+    
+    notes: |
+      VSCode is the recommended IDE for this project.
+      Excellent Python and Jupyter support.
+      Remote development works well with WSL, SSH, and containers.
+
+  pycharm:
+    name: "PyCharm"
+    supported: true
+    recommended: true
+    
+    editions:
+      community:
+        supported: true
+        limitations: ["No Jupyter support", "No remote development"]
+      professional:
+        supported: true
+        recommended: true
+        features: ["Full Jupyter", "Remote development", "Database tools"]
+    
+    minimum_version: "2022.3"
+    recommended_version: "2023.3"
+    
+    configuration_location: ".ide/pycharm/.idea/"
+    
+    features:
+      debugging: true
+      jupyter_integration: true  # Professional only
+      git_integration: true
+      docker_integration: true
+      remote_development: true  # Professional only
+    
+    notes: |
+      PyCharm Professional recommended for full features.
+      Excellent refactoring and code intelligence.
+      Heavy on system resources.
+
+  jupyter:
+    name: "Jupyter Notebook/Lab"
+    supported: true
+    recommended: true
+    
+    variants:
+      notebook:
+        minimum_version: "6.5.0"
+        recommended_version: "7.0.0"
+      lab:
+        minimum_version: "3.6.0"
+        recommended_version: "4.0.0"
+        recommended: true
+    
+    configuration_location: ".ide/jupyter/"
+    
+    extensions:
+      - "jupyterlab-vim"
+      - "jupyterlab-git"
+      - "jupyterlab-toc"
+    
+    notes: |
+      JupyterLab recommended over classic Notebook.
+      Excellent for exploratory data analysis and prototyping.
+      All notebooks tested and maintained.
+
+  vim:
+    name: "Vim"
+    supported: true
+    
+    minimum_version: "8.2"
+    recommended_version: "9.0"
+    
+    required_plugins:
+      - "coc.nvim"
+      - "coc-python"
+      - "vim-python-pep8-indent"
+    
+    configuration_location: ".ide/vim/"
+    
+    notes: |
+      Advanced users only.
+      Requires significant configuration.
+      Excellent for remote development over SSH.
+
+  neovim:
+    name: "Neovim"
+    supported: true
+    
+    minimum_version: "0.8.0"
+    recommended_version: "0.9.0"
+    
+    required_plugins:
+      - "nvim-lspconfig"
+      - "nvim-cmp"
+      - "null-ls.nvim"
+    
+    configuration_location: ".ide/neovim/"
+    
+    notes: |
+      Modern Vim alternative with Lua configuration.
+      Excellent LSP support.
+      Recommended over Vim for new users.
+
+  sublime:
+    name: "Sublime Text"
+    supported: true
+    
+    minimum_version: "4.0"
+    recommended_version: "4.0"
+    
+    required_packages:
+      - "LSP"
+      - "LSP-pyright"
+      - "Terminus"
+    
+    configuration_location: ".ide/sublime/"
+    
+    notes: |
+      Lightweight and fast.
+      Good for quick edits.
+      Less feature-rich than VSCode/PyCharm.
+
+# Operating system compatibility
+os_compatibility:
+  linux:
+    supported: true
+    recommended: true
+    
+    distributions:
+      ubuntu:
+        versions: ["20.04 LTS", "22.04 LTS"]
+        recommended: "22.04 LTS"
+        notes: "Best tested and supported"
+      
+      debian:
+        versions: ["11", "12"]
+        supported: true
+      
+      centos:
+        versions: ["8", "9"]
+        supported: true
+        notes: "May require additional package sources"
+      
+      fedora:
+        versions: ["37", "38"]
+        supported: true
+      
+      arch:
+        supported: true
+        notes: "Rolling release; use at own risk"
+    
+    package_managers:
+      apt: "Recommended (Ubuntu/Debian)"
+      yum: "Supported (CentOS/RHEL)"
+      dnf: "Supported (Fedora)"
+      pacman: "Supported (Arch)"
+    
+    notes: |
+      Linux is the recommended platform for development and production.
+      Best performance and compatibility.
+      CUDA installation straightforward.
+
+  windows:
+    supported: true
+    
+    versions:
+      "10": true
+      "11": true
+    
+    notes: |
+      Windows support is functional but may have limitations.
+      Bitsandbytes requires pre-compiled wheels or WSL2.
+      Performance may be lower than Linux.
+      WSL2 recommended for best compatibility.
+    
+    wsl2:
+      supported: true
+      recommended: true
+      gpu_support: true
+      notes: |
+        WSL2 (Windows Subsystem for Linux 2) provides near-native Linux performance.
+        CUDA support available in WSL2.
+        Recommended over native Windows for ML development.
+
+  macos:
+    supported: true
+    
+    versions:
+      "12": "Monterey"
+      "13": "Ventura"
+      "14": "Sonoma"
+    
+    architectures:
+      intel:
+        supported: true
+        gpu_support: false
+        notes: "CPU-only; no CUDA support"
+      
+      apple_silicon:
+        supported: true
+        gpu_support: true  # Via MPS
+        models: ["M1", "M2", "M3"]
+        pytorch_acceleration: "MPS (Metal Performance Shaders)"
+        notes: |
+          MPS provides GPU acceleration on Apple Silicon.
+          No CUDA/QLoRA support.
+          Good for development and small-scale inference.
+    
+    limitations:
+      - "No CUDA support"
+      - "No QLoRA/bitsandbytes"
+      - "Limited transformer optimizations"
+    
+    recommended_for: "Development only"
+
+# Known compatibility issues and workarounds
+known_issues:
+  transformers_protobuf:
+    issue: "Transformers incompatible with Protobuf 4.x"
+    affected_versions:
+      transformers: "<4.25.0"
+      protobuf: ">=4.0.0"
+    workaround: "Pin protobuf to 3.20.x"
+    solution: "pip install protobuf==3.20.3"
+    status: "Resolved in transformers 4.25+"
+  
+  bitsandbytes_windows:
+    issue: "Bitsandbytes not available on Windows"
+    affected_platforms: ["windows"]
+    workaround: |
+      Use WSL2 or pre-compiled wheels from:
+      https://github.com/jllllll/bitsandbytes-windows-webui
+    alternative: "Use LoRA instead of QLoRA"
+    status: "Ongoing (community solutions available)"
+  
+  cuda_version_mismatch:
+    issue: "PyTorch CUDA version must match system CUDA"
+    symptom: "CUDA initialization errors"
+    workaround: |
+      Install PyTorch with correct CUDA version:
+      - For CUDA 11.8: pip install torch==2.0.1+cu118
+      - For CUDA 12.1: pip install torch==2.1.0+cu121
+    prevention: "Always check system CUDA version before installing PyTorch"
+  
+  out_of_memory:
+    issue: "Out of memory errors during training"
+    symptoms:
+      - "CUDA out of memory"
+      - "RuntimeError: CUDA error: out of memory"
+    workarounds:
+      - "Reduce batch size"
+      - "Enable gradient accumulation"
+      - "Use gradient checkpointing"
+      - "Switch to QLoRA for large models"
+      - "Reduce sequence length"
+      - "Use mixed precision training (fp16/bf16)"
+    
+  llama_authentication:
+    issue: "LLaMA models require HuggingFace authentication"
+    models_affected: ["llama2", "llama3"]
+    solution: |
+      1. Request access on HuggingFace model page
+      2. Login: huggingface-cli login
+      3. Provide your token
+    status: "Expected behavior (licensing requirement)"
+  
+  trust_remote_code:
+    issue: "Some models require trust_remote_code=True"
+    models_affected: ["falcon", "mpt", "phi"]
+    solution: "Set trust_remote_code=True in model loading"
+    security_note: "Only use with trusted model sources"
+
+# Feature availability matrix
+# Indicates which features are available on different platforms and configurations
+feature_matrix:
+  full_fine_tuning:
+    requires: ["GPU with sufficient VRAM"]
+    platforms:
+      local_gpu_24gb: true
+      local_gpu_16gb: "Limited (small models only)"
+      local_gpu_12gb: "Limited (base models only)"
+      colab_free: "Limited"
+      colab_pro: true
+      kaggle_gpu: "Limited"
+    
+  lora:
+    requires: ["GPU or CPU"]
+    platforms:
+      local_all: true
+      colab_all: true
+      kaggle_all: true
+    notes: "Available on all platforms; CPU training is slow"
+  
+  qlora:
+    requires: ["CUDA GPU", "bitsandbytes"]
+    platforms:
+      local_cuda: true
+      local_cpu: false
+      local_mac: false
+      colab_free: true
+      colab_pro: true
+      kaggle_gpu: true
+    notes: "Not available on CPU or macOS (MPS)"
+  
+  flash_attention_2:
+    requires: ["CUDA GPU", "Ampere or newer architecture", "transformers >=4.33.0"]
+    platforms:
+      local_ampere_plus: true
+      local_older_gpus: false
+      colab_free: false  # T4 is Turing
+      colab_pro: true    # V100 is Volta (limited support)
+      kaggle_gpu: false  # P100 is Pascal
+    notes: "Requires modern GPU architecture (Ampere+)"
+  
+  multi_gpu:
+    requires: ["Multiple GPUs", "accelerate library"]
+    platforms:
+      local_multi_gpu: true
+      colab: false
+      kaggle: false
+    notes: "Only available on local machines with multiple GPUs"
+  
+  tpu:
+    requires: ["TPU hardware", "torch_xla"]
+    platforms:
+      local: false
+      colab: false
+      kaggle_tpu: true
+      google_cloud: true
+    notes: "Limited model compatibility; experimental PyTorch support"
+  
+  model_quantization:
+    int8:
+      requires: ["Turing or newer GPU"]
+      platforms:
+        local_turing_plus: true
+        colab_free: true
+        kaggle_gpu: true
+    
+    int4:
+      requires: ["Ampere or newer GPU", "bitsandbytes"]
+      platforms:
+        local_ampere_plus: true
+        colab_free: false
+        colab_pro: true
+        kaggle_gpu: false
+
+# Dependency version lock recommendations
+# Recommended version combinations for stable operation
+recommended_combinations:
+  stable:
+    name: "Stable Configuration"
+    python: "3.10.12"
+    pytorch: "2.0.1"
+    transformers: "4.35.2"
+    peft: "0.6.0"
+    accelerate: "0.24.1"
+    bitsandbytes: "0.41.1"
+    datasets: "2.14.6"
+    cuda: "11.8"
+    notes: "Recommended for production and serious research"
+  
+  latest:
+    name: "Latest Configuration"
+    python: "3.11.0"
+    pytorch: "2.1.2"
+    transformers: "4.36.2"
+    peft: "0.7.1"
+    accelerate: "0.25.0"
+    bitsandbytes: "0.41.3"
+    datasets: "2.16.1"
+    cuda: "12.1"
+    notes: "Latest features; may have compatibility issues"
+  
+  minimal:
+    name: "Minimal Configuration"
+    python: "3.8.0"
+    pytorch: "2.0.0"
+    transformers: "4.30.0"
+    peft: "0.5.0"
+    accelerate: "0.20.0"
+    notes: "Minimum supported versions; not recommended"
+
+# End of compatibility matrix
+# Last updated: 2025-09-19
+# Maintainer: Võ Hải Dũng (vohaidung.work@gmail.com)
