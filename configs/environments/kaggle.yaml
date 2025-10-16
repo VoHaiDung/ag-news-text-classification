@@ -1,0 +1,1110 @@
+# AG News Text Classification - Kaggle Notebooks Environment Configuration
+#
+# This configuration file defines settings for the Kaggle Notebooks environment
+# of the AG News Text Classification project. It is optimized for free-tier GPU/TPU
+# training, Kaggle Datasets integration, quota management, and competitive ML workflows.
+#
+# Kaggle Notebooks Environment Characteristics:
+#   - Free GPU access (Tesla P100, 16GB VRAM)
+#   - Free TPU access (TPU v3-8)
+#   - Limited RAM (13GB - slightly more than Colab)
+#   - Session timeout (9 hours - shorter than Colab)
+#   - GPU quota (30 hours per week)
+#   - TPU quota (30 hours per week)
+#   - Kaggle Datasets for persistent storage
+#   - Internet access control (can be disabled)
+#   - Version control and reproducibility features
+#   - Competition and dataset integration
+#   - Public/private notebook sharing
+#   - Automated workflow support
+#
+# Usage:
+#   This configuration is automatically loaded in Kaggle notebooks:
+#     import os
+#     os.environ['ENVIRONMENT'] = 'kaggle'
+#     !python train.py
+#
+#   Or in notebook cell:
+#     from configs.config_loader import load_config
+#     config = load_config('kaggle')
+#
+#   For auto-training in Kaggle:
+#     !python src/cli_commands/auto_train.py --platform kaggle
+#
+# Design Principles:
+#   1. Quota Awareness:
+#      - Track GPU/TPU usage hours
+#      - Weekly quota management (30h GPU + 30h TPU)
+#      - Optimize for limited compute time
+#      - Smart checkpoint strategies
+#      - Efficient resource utilization
+#
+#   2. Dataset Integration:
+#      - Kaggle Datasets for persistence
+#      - Version-controlled datasets
+#      - Output datasets for results
+#      - Efficient data loading
+#      - Dataset caching strategies
+#
+#   3. Reproducibility:
+#      - Notebook versioning
+#      - Dataset versioning
+#      - Deterministic training
+#      - Seed management
+#      - Environment tracking
+#
+#   4. Performance Optimization:
+#      - P100 GPU optimization
+#      - TPU support (optional)
+#      - Memory-efficient settings for 13GB RAM
+#      - Batch size auto-tuning
+#      - Mixed precision training
+#
+#   5. Competition Readiness:
+#      - Submission-ready outputs
+#      - Leaderboard optimization
+#      - Test set handling
+#      - Inference pipelines
+#      - Ensemble support
+#
+# Kaggle-Specific Characteristics:
+#   
+#   Advantage 1: Better GPU (P100 vs T4)
+#   - 16GB VRAM vs 16GB (same but different architecture)
+#   - Better compute performance for large models
+#   - Supports larger batch sizes
+#   
+#   Advantage 2: TPU Access
+#   - Free TPU v3-8 cores
+#   - Excellent for large-scale training
+#   - PyTorch XLA support
+#   
+#   Advantage 3: Dataset Versioning
+#   - Built-in dataset management
+#   - Version control for data
+#   - Easy sharing and collaboration
+#   
+#   Advantage 4: No Idle Timeout
+#   - Only session timeout (9 hours)
+#   - No need for keep-alive scripts
+#   - More predictable runtime
+#   
+#   Challenge 1: Shorter Session (9h vs 12h)
+#   Solution: Efficient training, checkpointing, quota awareness
+#   
+#   Challenge 2: Internet Access Control
+#   Solution: Download dependencies upfront, use Kaggle datasets
+#   
+#   Challenge 3: Storage Management
+#   Solution: Use Kaggle Datasets, clean up temporary files
+#
+# References:
+#   Kaggle Platform Documentation:
+#     - "Kaggle Notebooks Documentation". https://www.kaggle.com/docs/notebooks
+#     - Best practices for GPU/TPU usage and dataset management
+#
+#   TPU Training:
+#     - "Cloud TPU Documentation". Google Cloud.
+#       https://cloud.google.com/tpu/docs
+#     - PyTorch/XLA: https://github.com/pytorch/xla
+#
+#   Competition ML Best Practices:
+#     - Kaggle Grandmasters' techniques and strategies
+#     - Feature engineering and model ensembling
+#     - Cross-validation strategies for leaderboard optimization
+#
+#   Reproducible ML Research:
+#     - Gundersen, O. E., & Kjensmo, S. (2018). "State of the Art: Reproducibility
+#       in Artificial Intelligence". AAAI.
+#     - Pineau, J., et al. (2021). "Improving Reproducibility in Machine Learning
+#       Research". Journal of Machine Learning Research.
+#
+#   Cloud Resource Management:
+#     - Armbrust, M., et al. (2010). "A View of Cloud Computing".
+#       Communications of the ACM, 53(4), 50-58.
+#     - Principles for managing limited cloud resources effectively
+#
+#   Distributed Training:
+#     - Goyal, P., et al. (2017). "Accurate, Large Minibatch SGD: Training
+#       ImageNet in 1 Hour". arXiv:1706.02677.
+#     - Techniques applicable to TPU training
+#
+# Author: Võ Hải Dũng
+# Email: vohaidung.work@gmail.com
+# License: MIT
+# Project: AG News Text Classification (ag-news-text-classification)
+# Repository: https://github.com/VoHaiDung/ag-news-text-classification
+
+# Metadata section
+# Provides information about this configuration file
+metadata:
+  name: "Kaggle Notebooks Environment Configuration"
+  description: "Configuration for Kaggle Notebooks environment of AG News Text Classification (ag-news-text-classification)"
+  project_name: "AG News Text Classification (ag-news-text-classification)"
+  project_version: "1.0.0"
+  config_version: "1.0.0"
+  environment: "kaggle"
+  author: "Võ Hải Dũng"
+  email: "vohaidung.work@gmail.com"
+  license: "MIT"
+  repository: "https://github.com/VoHaiDung/ag-news-text-classification"
+  created_date: "2025-09-19"
+  last_modified: "2025-09-19"
+  
+  # Configuration schema validation
+  schema_version: "1.0"
+  strict_validation: false  # Relaxed for experimentation
+  allow_unknown_fields: true
+  validate_on_load: true
+  
+  # Maintenance information
+  maintainer: "Võ Hải Dũng"
+  support_email: "vohaidung.work@gmail.com"
+  documentation_url: "https://github.com/VoHaiDung/ag-news-text-classification/blob/main/docs/platform_guides/kaggle_guide.md"
+  
+  # Kaggle-specific metadata
+  accelerator: "gpu"  # Options: none, gpu, tpu
+  target_gpu: "P100"  # Tesla P100 (most common)
+  target_tpu: "v3-8"  # TPU v3-8 cores
+  expected_vram_gb: 16
+  expected_ram_gb: 13
+  internet_enabled: true
+  notebook_type: "script"  # Options: notebook, script
+
+# Environment-specific settings
+# Core Kaggle environment configuration
+environment:
+  name: "kaggle_notebooks"
+  mode: "cloud_free"
+  debug: false
+  verbose: true
+  testing: false
+  
+  # Kaggle-specific flags
+  auto_reload: false
+  hot_reload_models: false
+  fail_fast: false
+  strict_mode: false
+  
+  # Performance optimization
+  optimize_for: "kaggle_efficiency"  # Maximize Kaggle resources
+  enable_profiling: false
+  enable_debugging: false
+  
+  # Data protection
+  protect_test_set: true
+  allow_data_leakage_warnings: false  # Strict for competitions
+  
+  # Reproducibility (critical for Kaggle)
+  deterministic: true
+  seed: 42
+  
+  # Cleanup (important for storage limits)
+  auto_cleanup: true
+  cleanup_on_exit: true
+  cleanup_interval_minutes: 30
+  
+  # Session management
+  session_timeout_hours: 9  # Kaggle limit
+  idle_timeout_minutes: null  # No idle timeout on Kaggle
+  auto_save_enabled: true
+  auto_save_interval_minutes: 10
+  
+  # Notebook-specific
+  notebook_mode: true
+  interactive_outputs: true
+  display_progress_bars: true
+  clear_output_on_update: false
+  
+  # Competition mode
+  competition_mode: false
+  submission_ready: false
+
+# Project paths
+# All paths configured for Kaggle file system
+paths:
+  # Root directories (Kaggle paths)
+  project_root: "/kaggle/working/ag-news-text-classification"
+  configs_root: "/kaggle/working/ag-news-text-classification/configs"
+  data_root: "/kaggle/input"  # Input datasets are read-only
+  src_root: "/kaggle/working/ag-news-text-classification/src"
+  outputs_root: "/kaggle/working"  # Working directory for outputs
+  
+  # Kaggle-specific paths
+  kaggle_input: "/kaggle/input"  # Read-only input data
+  kaggle_working: "/kaggle/working"  # Read-write working directory
+  kaggle_tmp: "/kaggle/tmp"  # Temporary directory
+  
+  # Data directories (from Kaggle Datasets)
+  data:
+    raw: "/kaggle/input/ag-news-dataset"  # Kaggle dataset
+    processed: "/kaggle/working/data/processed"
+    augmented: "/kaggle/working/data/augmented"
+    cache: "/kaggle/working/data/cache"
+    test_samples: "/kaggle/working/data/test_samples"
+    metadata: "/kaggle/working/data/metadata"
+  
+  # Output directories (in working directory)
+  outputs:
+    models: "/kaggle/working/models"
+    checkpoints: "/kaggle/working/checkpoints"
+    results: "/kaggle/working/results"
+    logs: "/kaggle/working/logs"
+    figures: "/kaggle/working/figures"
+    tensorboard: "/kaggle/working/tensorboard"
+    submission: "/kaggle/working/submission"  # For competition submissions
+  
+  # Cache directories
+  cache:
+    huggingface: "/kaggle/working/cache/huggingface"
+    models: "/kaggle/working/cache/models"
+    datasets: "/kaggle/working/cache/datasets"
+  
+  # Kaggle Datasets paths
+  datasets:
+    input: "/kaggle/input"
+    output: "/kaggle/working/output_dataset"  # For creating output datasets
+    cache: "/kaggle/input/cached-models"  # Pre-downloaded models
+  
+  # Configuration paths
+  configs:
+    models: "/kaggle/working/ag-news-text-classification/configs/models"
+    training: "/kaggle/working/ag-news-text-classification/configs/training"
+    data: "/kaggle/working/ag-news-text-classification/configs/data"
+
+# Kaggle Datasets configuration
+# Essential for persistence and data management
+kaggle_datasets:
+  # Input datasets
+  input_datasets:
+    ag_news: "ag-news-dataset"  # Main dataset
+    pretrained_models: "cached-transformers-models"  # Optional: cached models
+    external_data: null  # Optional: additional datasets
+  
+  # Output datasets (for persistence)
+  create_output_dataset: true
+  output_dataset_name: "ag-news-classification-results"
+  output_dataset_title: "AG News Classification Results"
+  output_dataset_private: true
+  
+  # Dataset versioning
+  version_control: true
+  create_new_version: true
+  version_notes: "Training results and model checkpoints"
+  
+  # Dataset management
+  max_dataset_size_gb: 20  # Kaggle limit
+  compress_outputs: true
+  cleanup_before_save: true
+
+# Model configuration
+# Optimized for Kaggle P100 GPU (16GB VRAM)
+model:
+  # Kaggle-optimized model selection
+  name: "microsoft/deberta-v3-large"  # Large model fits well on P100
+  type: "deberta"
+  variant: "large"
+  
+  # Model parameters
+  num_labels: 4
+  max_length: 512
+  
+  # Model loading
+  pretrained: true
+  use_cache: true
+  cache_dir: "/kaggle/working/cache/huggingface"
+  trust_remote_code: false
+  force_download: false
+  resume_download: true
+  local_files_only: false
+  
+  # Dropout
+  hidden_dropout_prob: 0.1
+  attention_probs_dropout_prob: 0.1
+  classifier_dropout: 0.1
+  
+  # Kaggle-specific settings
+  load_in_8bit: false  # P100 has enough VRAM
+  load_in_4bit: false
+  device_map: "auto"
+  low_cpu_mem_usage: true
+  torch_dtype: "auto"
+  
+  # Model head
+  head:
+    type: "classification"
+    num_hidden_layers: 0
+    activation: "gelu"
+    pooling_strategy: "cls"
+  
+  # Alternative models for Kaggle
+  alternatives:
+    xlarge_with_lora: "microsoft/deberta-v3-xlarge"  # With LoRA
+    memory_efficient: "microsoft/deberta-v3-base"
+    fastest: "distilbert-base-uncased"
+    llm_with_qlora: "meta-llama/Llama-2-7b-hf"  # With QLoRA
+
+# PEFT (Parameter-Efficient Fine-Tuning) configuration
+# LoRA recommended for Kaggle to maximize model capacity
+peft:
+  enabled: true  # Enable for larger models
+  method: "lora"
+  
+  # LoRA configuration (Kaggle-optimized)
+  lora:
+    rank: 16  # Good balance for P100
+    alpha: 32
+    dropout: 0.1
+    target_modules: ["query_proj", "value_proj", "key_proj", "dense"]
+    bias: "none"
+    task_type: "SEQ_CLS"
+    modules_to_save: ["classifier"]
+  
+  # QLoRA option for LLMs
+  qlora:
+    enabled: false
+    bits: 4
+    quant_type: "nf4"
+    double_quant: true
+    compute_dtype: "bfloat16"
+
+# Training configuration
+# Optimized for Kaggle constraints (13GB RAM, 9h session)
+training:
+  # Training regime (optimized for 9h session)
+  num_epochs: 8  # Fit in 9-hour session
+  max_steps: -1
+  
+  # Batch configuration (Kaggle RAM-aware)
+  batch_size: 24  # P100 can handle larger batches
+  eval_batch_size: 48
+  gradient_accumulation_steps: 2  # Effective batch size: 48
+  
+  # Optimization
+  optimizer:
+    type: "adamw"
+    lr: 2e-5
+    weight_decay: 0.01
+    betas: [0.9, 0.999]
+    eps: 1e-8
+    fused: false  # Not available on P100
+  
+  # Learning rate scheduling
+  scheduler:
+    type: "cosine"
+    num_warmup_steps: 0
+    warmup_ratio: 0.1
+    num_cycles: 1
+  
+  # Mixed precision (P100 supports FP16)
+  mixed_precision: "fp16"
+  fp16: true
+  bf16: false  # P100 doesn't support BF16
+  fp16_opt_level: "O2"
+  fp16_full_eval: true
+  
+  # Gradient control
+  max_grad_norm: 1.0
+  gradient_checkpointing: true  # Save memory
+  
+  # Training strategy
+  evaluation_strategy: "steps"
+  save_strategy: "steps"
+  logging_strategy: "steps"
+  
+  # Logging
+  logging_steps: 100
+  logging_first_step: true
+  logging_nan_inf_filter: true
+  
+  # Evaluation
+  eval_steps: 300
+  eval_delay: 0
+  eval_on_start: false
+  
+  # Checkpointing (important for 9h limit)
+  save_steps: 300  # Frequent saves
+  save_total_limit: 3
+  save_on_each_node: false
+  load_best_model_at_end: true
+  save_safetensors: true
+  
+  # Metrics
+  metric_for_best_model: "eval_f1"
+  greater_is_better: true
+  
+  # Early stopping
+  early_stopping:
+    enabled: true
+    patience: 3
+    min_delta: 0.001
+    monitor: "val_f1"
+    mode: "max"
+    restore_best_weights: true
+  
+  # Regularization
+  regularization:
+    dropout: 0.1
+    attention_dropout: 0.1
+    hidden_dropout: 0.1
+    weight_decay: 0.01
+    label_smoothing: 0.1
+    gradient_clip_norm: 1.0
+  
+  # Data loading
+  dataloader_num_workers: 2
+  dataloader_pin_memory: true
+  dataloader_drop_last: false
+  dataloader_prefetch_factor: 2
+  
+  # Reproducibility
+  seed: 42
+  data_seed: 42
+  deterministic: true
+  
+  # Kaggle-specific
+  report_to: ["tensorboard"]
+  run_name: "kaggle_run"
+  
+  # Session management
+  resume_from_checkpoint: true
+  ignore_data_skip: false
+  
+  # Memory optimization
+  gradient_checkpointing_kwargs:
+    use_reentrant: false
+
+# Data configuration
+# Kaggle data handling with Datasets integration
+data:
+  # Dataset
+  dataset_name: "ag_news"
+  dataset_config: null
+  
+  # Data paths (Kaggle Datasets)
+  data_dir: "/kaggle/input/ag-news-dataset"
+  cache_dir: "/kaggle/working/data/cache"
+  
+  # Split configuration
+  train_ratio: 0.8
+  val_ratio: 0.1
+  test_ratio: 0.1
+  
+  # Split strategy
+  stratify: true
+  shuffle: true
+  random_seed: 42
+  
+  # Sampling
+  max_samples:
+    train: null
+    validation: null
+    test: null
+  
+  # Preprocessing
+  preprocessing:
+    lowercase: false
+    remove_html: true
+    remove_urls: false
+    remove_special_chars: false
+    normalize_whitespace: true
+    strip: true
+  
+  # Tokenization
+  tokenization:
+    max_length: 512
+    padding: "max_length"
+    truncation: true
+    return_tensors: "pt"
+    return_attention_mask: true
+  
+  # Data augmentation
+  augmentation:
+    enabled: false
+    methods: []
+  
+  # Data validation
+  validation:
+    check_labels: true
+    check_text_lengths: true
+    check_duplicates: false
+    remove_invalid: true
+  
+  # Caching
+  use_cache: true
+  cache_processed_data: true
+  overwrite_cache: false
+  
+  # Data loading
+  num_proc: 2
+  keep_in_memory: false
+  
+  # Kaggle-specific
+  download_mode: "reuse_dataset_if_exists"
+  streaming: false
+  use_kaggle_datasets: true
+
+# TPU configuration
+# Optional TPU training on Kaggle
+tpu:
+  # TPU availability
+  enabled: false  # Set to true to use TPU
+  auto_detect: true
+  
+  # TPU configuration
+  tpu_name: null  # Auto-detected
+  tpu_zone: null  # Auto-detected
+  num_cores: 8  # TPU v3-8
+  
+  # TPU training settings
+  use_tpu: false
+  tpu_metrics_debug: false
+  
+  # XLA compilation
+  use_xla: false
+  xla_compile: false
+  
+  # TPU-specific optimizations
+  prefetch_size: 8
+  per_device_batch_size: 8
+  gradient_accumulation_steps: 4
+
+# API configuration
+# Not typically used in Kaggle, but available
+api:
+  enabled: false
+  host: "127.0.0.1"
+  port: 8000
+  workers: 1
+
+# Deployment configuration
+deployment:
+  type: "kaggle"
+  platform: "kaggle"
+  
+  # Model serving
+  model_serving:
+    framework: "pytorch"
+    optimization: "basic"
+    quantization: false
+  
+  # Submission preparation
+  submission:
+    create_submission: false
+    submission_format: "csv"
+    submission_path: "/kaggle/working/submission.csv"
+
+# Monitoring configuration
+# Kaggle-friendly monitoring
+monitoring:
+  enabled: true
+  
+  # TensorBoard
+  tensorboard:
+    enabled: true
+    log_dir: "/kaggle/working/tensorboard"
+    update_freq: "batch"
+    profile_batch: 0
+    histogram_freq: 1
+  
+  # MLflow
+  mlflow:
+    enabled: false
+    tracking_uri: "/kaggle/working/mlflow"
+  
+  # Weights & Biases
+  wandb:
+    enabled: false
+    project: "ag-news-text-classification"
+    group: "kaggle"
+    tags: ["kaggle", "free-tier"]
+  
+  # Local metrics
+  local_metrics:
+    enabled: true
+    save_dir: "/kaggle/working/metrics"
+    save_interval: 100
+    metrics_to_track:
+      - "loss"
+      - "accuracy"
+      - "f1"
+      - "precision"
+      - "recall"
+      - "learning_rate"
+      - "gpu_memory"
+  
+  # Performance monitoring
+  performance:
+    track_memory: true
+    track_gpu: true
+    track_time: true
+    track_session_time: true
+  
+  # Overfitting monitoring
+  overfitting:
+    track_train_val_gap: true
+    gap_threshold: 0.05
+    alert_on_overfitting: true
+
+# Logging configuration
+# Notebook-friendly logging for Kaggle
+logging:
+  # Log level
+  level: "INFO"
+  
+  # Log format
+  format: "%(asctime)s - %(levelname)s - %(message)s"
+  date_format: "%H:%M:%S"
+  
+  # Console output
+  console:
+    enabled: true
+    level: "INFO"
+    colored: false  # Kaggle doesn't support colored output well
+  
+  # File logging
+  file:
+    enabled: true
+    level: "INFO"
+    path: "/kaggle/working/logs/kaggle.log"
+    max_bytes: 10485760
+    backup_count: 3
+  
+  # Component-specific
+  components:
+    data: "INFO"
+    model: "INFO"
+    training: "INFO"
+    kaggle: "INFO"
+  
+  # Libraries
+  libraries:
+    transformers: "WARNING"
+    datasets: "WARNING"
+    torch: "WARNING"
+  
+  # Notebook-specific
+  notebook_friendly: true
+  use_tqdm: true
+  display_progress: true
+
+# Quota management
+# Critical for Kaggle free tier
+quota:
+  # Tracking
+  track_quota: true
+  track_gpu_hours: true
+  track_tpu_hours: true
+  track_compute_units: false
+  
+  # Limits (free tier)
+  limits:
+    max_session_hours: 9
+    gpu_hours_per_week: 30
+    tpu_hours_per_week: 30
+    max_idle_minutes: null  # No idle timeout
+  
+  # Alerts
+  alert_on_quota_warning: true
+  alert_threshold_percent: 80
+  
+  # Management
+  auto_shutdown_on_quota: false
+  save_on_quota_warning: true
+  
+  # Quota optimization
+  optimize_for_quota: true
+  prefer_shorter_training: true
+
+# Session management
+# Handle Kaggle session constraints
+session:
+  # Session info
+  max_session_duration_hours: 9
+  no_idle_timeout: true
+  
+  # Auto-save
+  auto_save: true
+  save_interval_minutes: 10
+  save_on_interrupt: true
+  
+  # Checkpointing
+  checkpoint:
+    auto_checkpoint: true
+    checkpoint_interval_minutes: 20
+    max_checkpoints: 5
+  
+  # Recovery
+  auto_resume: true
+  resume_from_last_checkpoint: true
+  verify_checkpoint_integrity: true
+  
+  # Output preservation
+  save_outputs_to_dataset: true
+  dataset_output_frequency: "on_completion"
+
+# Kaggle-specific optimizations
+kaggle:
+  # Environment detection
+  detect_kaggle: true
+  detect_accelerator: true  # Detect GPU/TPU
+  
+  # GPU optimization (P100)
+  gpu:
+    optimize_for_p100: true
+    enable_tf32: false  # P100 doesn't support
+    persistent_workers: false
+  
+  # Memory optimization
+  memory:
+    aggressive_cleanup: true
+    clear_cache_frequency: 100
+    garbage_collect_frequency: 50
+    use_memory_efficient_attention: true
+  
+  # Storage optimization
+  storage:
+    max_working_size_gb: 20
+    compress_checkpoints: true
+    cleanup_intermediate_files: true
+    save_only_best: false  # Save multiple for safety
+  
+  # Notebook integration
+  notebook:
+    display_widgets: true
+    interactive_plots: true
+    auto_display_metrics: true
+    rich_progress_bars: true
+    save_notebook_output: true
+  
+  # Internet access
+  internet:
+    enabled: true
+    download_dependencies: true
+    cache_downloads: true
+  
+  # Versioning
+  versioning:
+    enable_notebook_versioning: true
+    enable_dataset_versioning: true
+    version_on_improvement: true
+  
+  # Competition features
+  competition:
+    enabled: false
+    competition_name: null
+    create_submission: false
+    submission_file: "/kaggle/working/submission.csv"
+
+# Overfitting prevention
+# Competition-grade settings
+overfitting_prevention:
+  enabled: true
+  strict_mode: true  # Strict for competitions
+  
+  # Test set protection
+  test_set_protection:
+    enabled: true
+    hash_verification: true
+    access_logging: true
+    max_accesses: 1  # Only final evaluation
+  
+  # Monitoring
+  monitoring:
+    track_train_val_gap: true
+    gap_threshold: 0.02  # Strict
+    alert_on_overfitting: true
+    fail_on_overfitting: false  # Warn but continue
+  
+  # Constraints
+  constraints:
+    min_validation_size: 0.1
+    required_regularization: true
+    max_epochs_without_improvement: 5
+  
+  # Validation
+  validation:
+    strategy: "k_fold"
+    k_folds: 5
+    stratified: true
+
+# Security configuration
+security:
+  # Authentication
+  authentication:
+    enabled: false
+  
+  # Data privacy
+  data_privacy:
+    pii_detection: false
+    data_masking: false
+  
+  # Notebook security
+  notebook_security:
+    private_notebook: true
+    disable_internet_when_not_needed: false
+
+# Feature flags
+features:
+  # Experimental
+  experimental:
+    flash_attention: false  # Not on P100
+    gradient_checkpointing: true
+    tpu_training: false
+  
+  # Advanced
+  advanced:
+    ensemble_models: false
+    knowledge_distillation: false
+  
+  # Optimization
+  optimization:
+    mixed_precision: true
+    gradient_accumulation: true
+  
+  # Data
+  data:
+    augmentation: false
+  
+  # Platform
+  platform:
+    auto_platform_detection: true
+    platform_optimization: true
+    quota_tracking: true
+  
+  # Kaggle-specific
+  kaggle:
+    dataset_integration: true
+    output_dataset_creation: true
+    notebook_versioning: true
+    competition_mode: false
+
+# Platform-specific configuration
+platform:
+  type: "kaggle"
+  auto_detect: true
+  
+  # Kaggle configuration
+  kaggle:
+    accelerator: "gpu"  # Options: none, gpu, tpu
+    gpu_type: "P100"
+    gpu_count: 1
+    
+    # Resource expectations
+    expected_ram_gb: 13
+    expected_vram_gb: 16
+    expected_storage_gb: 20
+    
+    # Limits
+    session_timeout_hours: 9
+    gpu_quota_hours_per_week: 30
+    tpu_quota_hours_per_week: 30
+  
+  # Optimization
+  optimization:
+    auto_batch_size: true
+    auto_precision: true
+    memory_efficient: true
+
+# Performance configuration
+performance:
+  # Training
+  training:
+    compile_model: false
+    use_better_transformer: false
+    enable_tf32: false
+    cudnn_benchmark: true
+  
+  # Inference
+  inference:
+    batch_size: 48
+    use_half_precision: true
+  
+  # Memory
+  memory:
+    gradient_checkpointing: true
+    cpu_offload: false
+    empty_cache_steps: 50
+
+# Output dataset configuration
+# For persisting results
+output_dataset:
+  # Creation
+  create_dataset: true
+  dataset_slug: "ag-news-results"
+  dataset_title: "AG News Classification Training Results"
+  
+  # Content
+  include_checkpoints: true
+  include_logs: true
+  include_metrics: true
+  include_predictions: false
+  
+  # Metadata
+  dataset_description: |
+    Training results for AG News Text Classification.
+    Includes model checkpoints, training logs, and evaluation metrics.
+  
+  # Versioning
+  version_notes: "Training completed successfully"
+  is_private: true
+  
+  # Compression
+  compress: true
+  compression_format: "zip"
+
+# Backup configuration
+backup:
+  enabled: true
+  
+  # Backup targets
+  backup_checkpoints: true
+  backup_logs: true
+  backup_results: true
+  
+  # Backup strategy
+  strategy: "kaggle_dataset"
+  auto_backup: true
+  backup_on_completion: true
+  
+  # Dataset backup
+  create_backup_dataset: true
+  backup_dataset_name: "ag-news-backup"
+
+# Miscellaneous
+misc:
+  # Timezone
+  timezone: "UTC"
+  
+  # Locale
+  locale: "en_US.UTF-8"
+  
+  # Notifications
+  notifications:
+    enabled: false
+  
+  # Kaggle-specific
+  kernel_type: "notebook"
+  enable_gpu: true
+  enable_internet: true
+
+# Validation
+validation:
+  validate_schema: true
+  strict_schema: false
+  check_required_fields: true
+  fail_on_missing: false
+
+# Documentation
+documentation:
+  description: |
+    Kaggle Notebooks environment configuration for AG News Text Classification.
+    
+    Optimized for:
+    - Free-tier GPU training (Tesla P100, 16GB)
+    - Optional TPU training (TPU v3-8)
+    - 13GB RAM constraints
+    - 9-hour session limit
+    - 30h/week GPU quota
+    - Kaggle Datasets integration
+    - Competition workflows
+    - Reproducibility
+    
+    Key features:
+    - Frequent checkpointing
+    - Kaggle Datasets persistence
+    - Quota awareness
+    - No idle timeout
+    - Version control
+  
+  usage: |
+    In Kaggle notebook:
+    
+    1. Add input datasets:
+       - ag-news-dataset (main data)
+       - cached-transformers-models (optional)
+    
+    2. Clone repository (if internet enabled):
+       !git clone https://github.com/VoHaiDung/ag-news-text-classification.git
+       %cd ag-news-text-classification
+    
+    3. Install dependencies:
+       !pip install -r requirements/kaggle.txt
+    
+    4. Run training:
+       !python train.py --config configs/environments/kaggle.yaml
+    
+    Or use auto-train:
+       !python src/cli_commands/auto_train.py --platform kaggle
+    
+    5. Create output dataset:
+       Results automatically saved to output dataset
+  
+  tips: |
+    Kaggle tips:
+    
+    - Use Kaggle Datasets for persistence
+    - Enable GPU in notebook settings
+    - Download dependencies with internet enabled
+    - Disable internet after setup to save quota
+    - Use P100 for larger models than Colab T4
+    - Consider TPU for very large-scale training
+    - Save checkpoints every 20-30 minutes
+    - Create output dataset for results
+    - Version your notebooks
+    - Monitor GPU quota (30h/week limit)
+    - No idle timeout, but 9h session limit
+  
+  troubleshooting: |
+    Common issues:
+    
+    1. Out of Memory:
+       - Reduce batch_size to 16 or 12
+       - Enable gradient_checkpointing
+       - Use smaller model variant
+    
+    2. Session Timeout (9h):
+       - Results saved to output dataset
+       - Training auto-resumes from checkpoint
+       - Optimize training speed
+    
+    3. GPU Quota Exceeded:
+       - Switch to CPU runtime
+       - Use TPU as alternative
+       - Wait for quota reset (weekly)
+    
+    4. Dataset Not Found:
+       - Add dataset as input in notebook settings
+       - Check dataset slug/path
+       - Ensure dataset is public or owned
+    
+    5. Internet Access Issues:
+       - Enable internet in notebook settings
+       - Cache downloads before disabling
+       - Use Kaggle Datasets for large files
+    
+    6. TPU Not Available:
+       - Check accelerator setting
+       - Ensure PyTorch XLA installed
+       - TPU quota separate from GPU
+  
+  notes: |
+    Important notes:
+    
+    - P100 GPU is faster than Colab's T4 for large models
+    - 13GB RAM is slightly more than Colab (12GB)
+    - 9-hour session limit vs Colab's 12 hours
+    - No idle timeout (advantage over Colab)
+    - GPU quota: 30 hours per week
+    - TPU quota: 30 hours per week (separate)
+    - Kaggle Datasets provide version control
+    - Output datasets for persistence
+    - Competition features available
+    - Notebook versioning built-in
+    - P100 supports FP16 but not BF16
+    - Internet can be disabled to save quota
+    - Public notebooks can be forked by others
+
+# End of Kaggle Notebooks environment configuration
+# Last updated: 2025-09-19
+# Maintainer: Võ Hải Dũng (vohaidung.work@gmail.com)
