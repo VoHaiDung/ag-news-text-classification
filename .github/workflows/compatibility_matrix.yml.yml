@@ -306,25 +306,38 @@ jobs:
                   assert n == 10
               print("Walrus operator: OK")
           
-          # Python 3.9+ features
+          # Python 3.9+ features (dict merge)
           if sys.version_info >= (3, 9):
               test_dict = {'a': 1} | {'b': 2}
               assert test_dict == {'a': 1, 'b': 2}
               print("Dict merge operator: OK")
           
-          # Python 3.10+ features (pattern matching)
+          # Python 3.10+ features (union types)
           if sys.version_info >= (3, 10):
-              pattern_match_code = '''
-x = 10
-match x:
-    case 10:
-        result = "matched"
-    case _:
-        result = "not matched"
-assert result == "matched"
-'''
-              exec(pattern_match_code)
-              print("Pattern matching: OK")
+              # Test union type syntax
+              def union_test(value: int | str) -> int | str:
+                  return value
+              
+              assert union_test(10) == 10
+              assert union_test("test") == "test"
+              print("Union type syntax: OK")
+              
+              # Test zip strict
+              list1 = [1, 2, 3]
+              list2 = [4, 5, 6]
+              result = list(zip(list1, list2, strict=True))
+              assert result == [(1, 4), (2, 5), (3, 6)]
+              print("Zip strict: OK")
+          
+          # Python 3.11+ features
+          if sys.version_info >= (3, 11):
+              # Test exception groups
+              try:
+                  excs = [ValueError("error1"), TypeError("error2")]
+                  raise ExceptionGroup("multiple errors", excs)
+              except ExceptionGroup as eg:
+                  assert len(eg.exceptions) == 2
+              print("Exception groups: OK")
           
           print(f"\nPython {sys.version_info.major}.{sys.version_info.minor} compatibility: PASS")
           PYTHON_EOF
