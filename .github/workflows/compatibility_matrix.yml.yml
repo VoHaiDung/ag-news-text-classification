@@ -312,15 +312,18 @@ jobs:
               assert test_dict == {'a': 1, 'b': 2}
               print("Dict merge operator: OK")
           
-          # Python 3.10+ features
+          # Python 3.10+ features (pattern matching)
           if sys.version_info >= (3, 10):
-              x = 10
-              match x:
-                  case 10:
-                      result = "matched"
-                  case _:
-                      result = "not matched"
-              assert result == "matched"
+              pattern_match_code = '''
+x = 10
+match x:
+    case 10:
+        result = "matched"
+    case _:
+        result = "not matched"
+assert result == "matched"
+'''
+              exec(pattern_match_code)
               print("Pattern matching: OK")
           
           print(f"\nPython {sys.version_info.major}.{sys.version_info.minor} compatibility: PASS")
