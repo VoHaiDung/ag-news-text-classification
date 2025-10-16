@@ -48,8 +48,6 @@ Usage:
     
     Advanced usage:
         from configs import (
-            ConfigLoader,
-            ConfigValidator,
             load_model_config,
             load_training_config,
             load_environment_config,
@@ -77,23 +75,36 @@ Usage:
 
 References:
     Configuration Management Patterns:
-        - Martin Fowler. "Patterns of Enterprise Application Architecture". 2002.
-        - Gamma et al. "Design Patterns: Elements of Reusable Object-Oriented Software". 1994.
+        - Martin Fowler. "Patterns of Enterprise Application Architecture". 
+          Addison-Wesley, 2002.
+        - Gamma et al. "Design Patterns: Elements of Reusable Object-Oriented Software". 
+          Addison-Wesley, 1994.
     
     YAML Best Practices:
-        - https://yaml.org/spec/1.2/spec.html
-        - https://github.com/yaml/pyyaml
+        - YAML Specification: https://yaml.org/spec/1.2/spec.html
+        - PyYAML Documentation: https://pyyaml.org/wiki/PyYAMLDocumentation
     
     Jinja2 Templating:
-        - https://jinja.palletsprojects.com/
+        - Jinja2 Documentation: https://jinja.palletsprojects.com/
+        - Jinja2 Template Designer Documentation: 
+          https://jinja.palletsprojects.com/en/3.0.x/templates/
     
     Configuration Validation:
-        - JSON Schema: https://json-schema.org/
-        - Pydantic: https://pydantic-docs.helpmanual.io/
+        - JSON Schema Specification: https://json-schema.org/
+        - Pydantic Documentation: https://pydantic-docs.helpmanual.io/
     
     Overfitting Prevention:
-        - Goodfellow et al. "Deep Learning". MIT Press, 2016. Chapter 7: Regularization.
-        - Zhang et al. "Understanding deep learning requires rethinking generalization". ICLR 2017.
+        - Goodfellow, I., Bengio, Y., & Courville, A. (2016). 
+          "Deep Learning". MIT Press. Chapter 7: Regularization for Deep Learning.
+        - Zhang, C., Bengio, S., Hardt, M., Recht, B., & Vinyals, O. (2017). 
+          "Understanding deep learning requires rethinking generalization". 
+          International Conference on Learning Representations (ICLR).
+    
+    Parameter-Efficient Fine-Tuning:
+        - Hu, E. J., et al. (2021). "LoRA: Low-Rank Adaptation of Large Language Models". 
+          arXiv:2106.09685.
+        - Dettmers, T., et al. (2023). "QLoRA: Efficient Finetuning of Quantized LLMs". 
+          arXiv:2305.14314.
 
 Author: Võ Hải Dũng
 Email: vohaidung.work@gmail.com
@@ -105,12 +116,9 @@ Repository: https://github.com/VoHaiDung/ag-news-text-classification
 import os
 import sys
 import logging
-import yaml
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union, Type, Callable, Tuple
-from importlib import import_module
 from functools import lru_cache, wraps
-from collections import defaultdict
 
 
 # Project metadata
@@ -143,6 +151,13 @@ class ConfigurationError(Exception):
         message: Error description
         config_path: Path to the problematic configuration file
         details: Additional error details
+    
+    Examples:
+        raise ConfigurationError(
+            "Invalid configuration format",
+            config_path="/path/to/config.yaml",
+            details={"expected": "dict", "got": "list"}
+        )
     """
     
     def __init__(
@@ -151,6 +166,14 @@ class ConfigurationError(Exception):
         config_path: Optional[str] = None,
         details: Optional[Dict[str, Any]] = None
     ):
+        """
+        Initialize ConfigurationError.
+        
+        Args:
+            message: Error description
+            config_path: Path to problematic configuration file
+            details: Additional error details
+        """
         self.message = message
         self.config_path = config_path
         self.details = details or {}
@@ -188,9 +211,20 @@ class ConfigRegistry:
         threading.Lock for thread-safe operations.
     
     Attributes:
+        _instance: Singleton instance
         _configs: Dictionary storing registered configurations
         _lazy_loaders: Dictionary storing lazy loading functions
         _metadata: Dictionary storing configuration metadata
+    
+    Examples:
+        # Register configuration
+        ConfigRegistry.register('my_config', config_dict)
+        
+        # Get configuration
+        config = ConfigRegistry.get('my_config')
+        
+        # Register lazy loader
+        ConfigRegistry.register_lazy('lazy_config', lambda: load_config())
     """
     
     _instance = None
@@ -199,7 +233,12 @@ class ConfigRegistry:
     _metadata: Dict[str, Dict[str, Any]] = {}
     
     def __new__(cls):
-        """Ensure singleton pattern for the registry."""
+        """
+        Ensure singleton pattern for the registry.
+        
+        Returns:
+            Singleton instance of ConfigRegistry
+        """
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
@@ -223,6 +262,10 @@ class ConfigRegistry:
         
         Raises:
             ConfigurationError: If configuration already exists and overwrite is False
+        
+        Examples:
+            ConfigRegistry.register('model_config', model_dict)
+            ConfigRegistry.register('custom', config, metadata={'tier': 'tier_1'})
         """
         if name in cls._configs and not overwrite:
             raise ConfigurationError(
@@ -256,6 +299,10 @@ class ConfigRegistry:
         
         Raises:
             ConfigurationError: If configuration not found and no default provided
+        
+        Examples:
+            config = ConfigRegistry.get('model_config')
+            config = ConfigRegistry.get('optional', default={})
         """
         if name in cls._configs:
             return cls._configs[name]
@@ -288,13 +335,21 @@ class ConfigRegistry:
         Args:
             name: Configuration identifier
             loader: Function that returns the configuration when called
+        
+        Examples:
+            ConfigRegistry.register_lazy('heavy_config', lambda: load_heavy_config())
         """
         cls._lazy_loaders[name] = loader
         logger.debug(f"Registered lazy loader for: {name}")
     
     @classmethod
     def clear(cls) -> None:
-        """Clear all registered configurations."""
+        """
+        Clear all registered configurations.
+        
+        This method removes all configurations, lazy loaders, and metadata
+        from the registry. Useful for testing or resetting state.
+        """
         cls._configs.clear()
         cls._lazy_loaders.clear()
         cls._metadata.clear()
@@ -307,6 +362,10 @@ class ConfigRegistry:
         
         Returns:
             List of configuration identifiers
+        
+        Examples:
+            configs = ConfigRegistry.list_registered()
+            print(f"Available configs: {configs}")
         """
         return list(cls._configs.keys())
     
@@ -320,6 +379,10 @@ class ConfigRegistry:
         
         Returns:
             True if configuration exists, False otherwise
+        
+        Examples:
+            if ConfigRegistry.has('model_config'):
+                config = ConfigRegistry.get('model_config')
         """
         return name in cls._configs or name in cls._lazy_loaders
     
@@ -333,51 +396,63 @@ class ConfigRegistry:
         
         Returns:
             Configuration metadata dictionary
+        
+        Examples:
+            metadata = ConfigRegistry.get_metadata('model_config')
+            tier = metadata.get('tier')
         """
         return cls._metadata.get(name, {})
 
 
-# Lazy import functions for submodules
-def _lazy_import_config_loader():
-    """Lazy import for ConfigLoader to avoid circular dependencies."""
-    from configs.config_loader import ConfigLoader
-    return ConfigLoader
+def _safe_import(module_path: str, class_name: str):
+    """
+    Safely import a module and class with error handling.
+    
+    This function provides safe importing with detailed error messages
+    for debugging import issues.
+    
+    Args:
+        module_path: Full path to module (e.g., 'configs.config_loader')
+        class_name: Name of class to import
+    
+    Returns:
+        Imported class
+    
+    Raises:
+        ConfigurationError: If import fails
+    """
+    try:
+        from importlib import import_module
+        module = import_module(module_path)
+        return getattr(module, class_name)
+    except ImportError as e:
+        raise ConfigurationError(
+            f"Failed to import {class_name} from {module_path}",
+            details={"error": str(e), "module": module_path, "class": class_name}
+        )
+    except AttributeError as e:
+        raise ConfigurationError(
+            f"Class {class_name} not found in {module_path}",
+            details={"error": str(e), "module": module_path, "class": class_name}
+        )
 
 
-def _lazy_import_config_validator():
-    """Lazy import for ConfigValidator to avoid circular dependencies."""
-    from configs.config_validator import ConfigValidator
-    return ConfigValidator
-
-
-def _lazy_import_config_schema():
-    """Lazy import for ConfigSchema to avoid circular dependencies."""
-    from configs.config_schema import ConfigSchema
-    return ConfigSchema
-
-
-def _lazy_import_constants():
-    """Lazy import for constants module."""
-    from configs import constants
-    return constants
-
-
-def _lazy_import_smart_defaults():
-    """Lazy import for SmartDefaults to avoid circular dependencies."""
-    from configs.smart_defaults import SmartDefaults
-    return SmartDefaults
-
-
-# Module-level cached imports using lru_cache for performance
 @lru_cache(maxsize=1)
 def get_config_loader():
     """
     Get ConfigLoader class with caching.
     
+    Uses lazy loading and caching to avoid circular dependencies
+    and improve performance.
+    
     Returns:
         ConfigLoader class
+    
+    Examples:
+        ConfigLoader = get_config_loader()
+        config = ConfigLoader.load('config.yaml')
     """
-    return _lazy_import_config_loader()
+    return _safe_import('configs.config_loader', 'ConfigLoader')
 
 
 @lru_cache(maxsize=1)
@@ -385,10 +460,17 @@ def get_config_validator():
     """
     Get ConfigValidator class with caching.
     
+    Uses lazy loading and caching to avoid circular dependencies
+    and improve performance.
+    
     Returns:
         ConfigValidator class
+    
+    Examples:
+        ConfigValidator = get_config_validator()
+        ConfigValidator.validate(config)
     """
-    return _lazy_import_config_validator()
+    return _safe_import('configs.config_validator', 'ConfigValidator')
 
 
 @lru_cache(maxsize=1)
@@ -396,10 +478,17 @@ def get_config_schema():
     """
     Get ConfigSchema class with caching.
     
+    Uses lazy loading and caching to avoid circular dependencies
+    and improve performance.
+    
     Returns:
         ConfigSchema class
+    
+    Examples:
+        ConfigSchema = get_config_schema()
+        schema = ConfigSchema.get_schema('model')
     """
-    return _lazy_import_config_schema()
+    return _safe_import('configs.config_schema', 'ConfigSchema')
 
 
 @lru_cache(maxsize=1)
@@ -407,10 +496,24 @@ def get_constants():
     """
     Get constants module with caching.
     
+    Uses lazy loading and caching to avoid circular dependencies
+    and improve performance.
+    
     Returns:
         constants module
+    
+    Examples:
+        constants = get_constants()
+        model_types = constants.MODEL_TYPES
     """
-    return _lazy_import_constants()
+    try:
+        from importlib import import_module
+        return import_module('configs.constants')
+    except ImportError as e:
+        raise ConfigurationError(
+            "Failed to import constants module",
+            details={"error": str(e)}
+        )
 
 
 @lru_cache(maxsize=1)
@@ -418,13 +521,19 @@ def get_smart_defaults():
     """
     Get SmartDefaults class with caching.
     
+    Uses lazy loading and caching to avoid circular dependencies
+    and improve performance.
+    
     Returns:
         SmartDefaults class
+    
+    Examples:
+        SmartDefaults = get_smart_defaults()
+        defaults = SmartDefaults.get_default('model')
     """
-    return _lazy_import_smart_defaults()
+    return _safe_import('configs.smart_defaults', 'SmartDefaults')
 
 
-# High-level convenience functions
 def load_config(
     config_path: Union[str, Path],
     validate: bool = True,
@@ -449,17 +558,25 @@ def load_config(
     Raises:
         ConfigurationError: If loading or validation fails
     
-    Example:
+    Examples:
+        # Load with validation
         config = load_config('models/recommended/tier_1_sota/deberta_v3_xlarge_lora.yaml')
+        
+        # Load without validation
+        config = load_config('custom_config.yaml', validate=False)
+        
+        # Load with custom parameters
+        config = load_config('config.yaml', merge_defaults=False, encoding='utf-8')
     """
     ConfigLoader = get_config_loader()
     
     # Resolve path relative to configs directory if not absolute
-    if not Path(config_path).is_absolute():
-        config_path = CONFIGS_ROOT / config_path
+    config_path_obj = Path(config_path)
+    if not config_path_obj.is_absolute():
+        config_path_obj = CONFIGS_ROOT / config_path
     
     # Load configuration
-    config = ConfigLoader.load(str(config_path), **kwargs)
+    config = ConfigLoader.load(str(config_path_obj), **kwargs)
     
     # Merge with smart defaults if requested
     if merge_defaults:
@@ -493,8 +610,15 @@ def validate_config(
     Raises:
         ConfigurationError: If validation fails
     
-    Example:
+    Examples:
+        # Validate with auto-detected schema
+        validate_config(my_config)
+        
+        # Validate with specific schema
         validate_config(my_config, schema_type='model')
+        
+        # Validate with lenient mode
+        validate_config(my_config, strict=False)
     """
     ConfigValidator = get_config_validator()
     return ConfigValidator.validate(config, schema_type=schema_type, strict=strict)
@@ -514,8 +638,12 @@ def get_config(
     Returns:
         Configuration object
     
-    Example:
+    Examples:
+        # Get registered config
         model_config = get_config('model')
+        
+        # Get with default
+        config = get_config('optional_config', default={})
     """
     return ConfigRegistry.get(name, default=default)
 
@@ -535,8 +663,15 @@ def register_config(
         overwrite: Whether to overwrite existing configuration
         metadata: Optional metadata about the configuration
     
-    Example:
-        register_config('my_custom_model', custom_config, metadata={'tier': 'custom'})
+    Examples:
+        # Register simple config
+        register_config('my_custom_model', custom_config)
+        
+        # Register with metadata
+        register_config('model', config, metadata={'tier': 'tier_1_sota'})
+        
+        # Overwrite existing
+        register_config('model', new_config, overwrite=True)
     """
     ConfigRegistry.register(name, config, overwrite=overwrite, metadata=metadata)
 
@@ -558,8 +693,12 @@ def get_config_path(
     Raises:
         ConfigurationError: If must_exist is True and path does not exist
     
-    Example:
+    Examples:
+        # Get path
         path = get_config_path('models/recommended/quick_start.yaml')
+        
+        # Ensure path exists
+        path = get_config_path('config.yaml', must_exist=True)
     """
     abs_path = CONFIGS_ROOT / relative_path
     
@@ -588,8 +727,15 @@ def list_configs(
     Returns:
         List of configuration file paths
     
-    Example:
+    Examples:
+        # List all model configs
         model_configs = list_configs('models/recommended')
+        
+        # List training configs
+        training_configs = list_configs('training', pattern='*.yaml')
+        
+        # List non-recursively
+        configs = list_configs('models', recursive=False)
     """
     search_path = CONFIGS_ROOT / config_dir
     
@@ -598,9 +744,11 @@ def list_configs(
         return []
     
     if recursive:
-        return list(search_path.rglob(pattern))
+        configs = list(search_path.rglob(pattern))
     else:
-        return list(search_path.glob(pattern))
+        configs = list(search_path.glob(pattern))
+    
+    return configs
 
 
 def get_default_config(
@@ -620,14 +768,20 @@ def get_default_config(
     Returns:
         Default configuration dictionary
     
-    Example:
-        default_model = get_default_config('model', tier='tier_1_sota')
+    Examples:
+        # Get default model config
+        default_model = get_default_config('model')
+        
+        # Get tier-specific default
+        sota_model = get_default_config('model', tier='tier_1_sota')
+        
+        # Get training default
+        training = get_default_config('training')
     """
     SmartDefaults = get_smart_defaults()
     return SmartDefaults.get_default(config_type, tier=tier)
 
 
-# Model configuration functions
 def load_model_config(
     tier: Optional[str] = None,
     model_name: Optional[str] = None,
@@ -660,21 +814,16 @@ def load_model_config(
         config = load_model_config(tier='tier_3_ensemble', model_type='ensemble')
     """
     if model_name:
-        # Load specific model configuration
         if model_type == "ensemble":
             config_path = f"models/ensemble/{model_name}.yaml"
         else:
-            # Search in recommended or single directories
-            recommended_path = CONFIGS_ROOT / "models" / "recommended" / tier if tier else None
-            if recommended_path and recommended_path.exists():
+            if tier:
                 config_path = f"models/recommended/{tier}/{model_name}.yaml"
             else:
                 config_path = f"models/single/{model_name}.yaml"
     elif tier:
-        # Load tier-based default configuration
         config_path = f"models/recommended/{tier}/quick_start.yaml"
     else:
-        # Load overall default
         config_path = "models/recommended/quick_start.yaml"
     
     return load_config(config_path, validate=validate)
@@ -709,16 +858,12 @@ def load_training_config(
         config = load_training_config(mode='safe')
     """
     if platform:
-        # Load platform-adaptive configuration
         config_path = f"training/platform_adaptive/{platform}_{mode}_training.yaml"
     elif efficient_method:
-        # Load specific efficient method configuration
         config_path = f"training/efficient/{efficient_method}/{efficient_method}_config.yaml"
     elif mode == "safe":
-        # Load safe training configuration
         config_path = "training/safe/xlarge_safe_training.yaml"
     else:
-        # Load standard training configuration
         config_path = f"training/{mode}/base_training.yaml"
     
     return load_config(config_path, validate=validate)
@@ -738,7 +883,11 @@ def load_environment_config(
     Returns:
         Environment configuration dictionary
     
-    Example:
+    Examples:
+        # Load development environment
+        config = load_environment_config('dev')
+        
+        # Load Colab environment
         config = load_environment_config('colab')
     """
     config_path = f"environments/{environment}.yaml"
@@ -759,8 +908,12 @@ def load_service_config(
     Returns:
         Service configuration dictionary
     
-    Example:
+    Examples:
+        # Load prediction service config
         config = load_service_config('prediction_service')
+        
+        # Load training service config
+        config = load_service_config('training_service')
     """
     config_path = f"services/{service_name}.yaml"
     return load_config(config_path, validate=validate)
@@ -782,7 +935,11 @@ def load_api_config(
     Returns:
         API configuration dictionary
     
-    Example:
+    Examples:
+        # Load REST API config
+        config = load_api_config('rest')
+        
+        # Load specific config
         config = load_api_config('rest', 'rest_config')
     """
     if config_name:
@@ -820,7 +977,6 @@ def load_overfitting_prevention_config(
     if specific_config:
         config_path = f"overfitting_prevention/{config_type}/{specific_config}.yaml"
     else:
-        # Load default for the type
         config_path = f"overfitting_prevention/{config_type}/default.yaml"
     
     return load_config(config_path, validate=validate)
@@ -900,7 +1056,8 @@ def load_quota_config(
     Returns:
         Quota configuration dictionary
     
-    Example:
+    Examples:
+        # Load quota limits
         config = load_quota_config()
     """
     config_path = "quotas/quota_limits.yaml"
@@ -919,8 +1076,11 @@ def load_feature_flags(
     Returns:
         Feature flags configuration dictionary
     
-    Example:
+    Examples:
+        # Load feature flags
         flags = load_feature_flags()
+        if flags.get('enable_llm_models'):
+            pass
     """
     config_path = "features/feature_flags.yaml"
     return load_config(config_path, validate=validate)
@@ -958,7 +1118,6 @@ def load_experiment_config(
     return load_config(config_path, validate=validate)
 
 
-# Template and generation functions
 def render_config_template(
     template_name: str,
     params: Dict[str, Any],
@@ -981,7 +1140,8 @@ def render_config_template(
     Raises:
         ConfigurationError: If template rendering fails
     
-    Example:
+    Examples:
+        # Render DeBERTa config
         config = render_config_template(
             'deberta_template.yaml.j2',
             params={'rank': 16, 'alpha': 32, 'dropout': 0.1}
@@ -989,12 +1149,21 @@ def render_config_template(
     """
     try:
         from jinja2 import Environment, FileSystemLoader
-    except ImportError:
+        import yaml
+    except ImportError as e:
         raise ConfigurationError(
-            "Jinja2 is required for template rendering. Install with: pip install jinja2"
+            f"Required package not installed: {str(e)}. "
+            "Install with: pip install jinja2 pyyaml"
         )
     
     template_dir = CONFIGS_ROOT / "templates"
+    
+    if not template_dir.exists():
+        raise ConfigurationError(
+            "Templates directory not found",
+            config_path=str(template_dir)
+        )
+    
     env = Environment(loader=FileSystemLoader(str(template_dir)))
     
     try:
@@ -1036,13 +1205,16 @@ def generate_config_from_spec(
     Returns:
         Generated configuration dictionary
     
-    Example:
+    Examples:
+        # Generate model config
         config = generate_config_from_spec(
             'model_specs.yaml',
             config_type='deberta_large',
             lora_rank=16
         )
     """
+    import yaml
+    
     spec_path = CONFIGS_ROOT / "generation" / spec_name
     
     if not spec_path.exists():
@@ -1051,7 +1223,7 @@ def generate_config_from_spec(
             config_path=str(spec_path)
         )
     
-    with open(spec_path, 'r') as f:
+    with open(spec_path, 'r', encoding='utf-8') as f:
         specs = yaml.safe_load(f)
     
     if config_type not in specs:
@@ -1061,10 +1233,7 @@ def generate_config_from_spec(
             details={"available_types": list(specs.keys())}
         )
     
-    # Generate configuration from spec
     config = specs[config_type].copy()
-    
-    # Apply overrides
     config.update(overrides)
     
     if validate:
@@ -1073,7 +1242,6 @@ def generate_config_from_spec(
     return config
 
 
-# Compatibility and platform functions
 def load_compatibility_matrix(
     validate: bool = False
 ) -> Dict[str, Any]:
@@ -1089,17 +1257,20 @@ def load_compatibility_matrix(
     Returns:
         Compatibility matrix dictionary
     
-    Example:
+    Examples:
+        # Load matrix
         matrix = load_compatibility_matrix()
         compatible = matrix['models']['deberta_v3_xlarge']['platforms']['colab_free']
     """
+    import yaml
+    
     matrix_path = CONFIGS_ROOT / "compatibility_matrix.yaml"
     
     if not matrix_path.exists():
         logger.warning("Compatibility matrix not found, returning empty dict")
         return {}
     
-    with open(matrix_path, 'r') as f:
+    with open(matrix_path, 'r', encoding='utf-8') as f:
         matrix = yaml.safe_load(f)
     
     return matrix
@@ -1119,7 +1290,8 @@ def get_compatible_configs(
     Returns:
         Dictionary of compatible configurations
     
-    Example:
+    Examples:
+        # Check compatibility
         compatible = get_compatible_configs('deberta_v3_xlarge', 'colab_free')
     """
     matrix = load_compatibility_matrix()
@@ -1131,9 +1303,7 @@ def get_compatible_configs(
     try:
         model_compat = matrix.get('models', {}).get(model_name, {})
         platform_compat = model_compat.get('platforms', {}).get(platform, {})
-        
         return platform_compat
-    
     except Exception as e:
         logger.error(f"Error getting compatible configs: {e}")
         return {}
@@ -1149,13 +1319,14 @@ def get_platform_config(
     
     Args:
         platform: Platform name ('colab', 'kaggle', 'local')
-        config_category: Configuration category ('training', 'deployment', 'monitoring')
+        config_category: Configuration category ('training', 'deployment', 'environment')
         validate: Whether to validate configuration
     
     Returns:
         Platform-specific configuration dictionary
     
-    Example:
+    Examples:
+        # Get Colab training config
         config = get_platform_config('colab', 'training')
     """
     if config_category == "training":
@@ -1171,7 +1342,6 @@ def get_platform_config(
         )
 
 
-# Helper functions for configuration discovery
 def discover_model_configs(
     tier: Optional[str] = None,
     model_family: Optional[str] = None
@@ -1186,8 +1356,12 @@ def discover_model_configs(
     Returns:
         List of model configuration metadata
     
-    Example:
+    Examples:
+        # Discover SOTA models
         models = discover_model_configs(tier='tier_1_sota')
+        
+        # Discover DeBERTa models
+        models = discover_model_configs(model_family='deberta')
     """
     discovered = []
     
@@ -1233,8 +1407,12 @@ def discover_training_configs(
     Returns:
         List of training configuration metadata
     
-    Example:
+    Examples:
+        # Discover efficient training configs
         configs = discover_training_configs(mode='efficient')
+        
+        # Discover Colab configs
+        configs = discover_training_configs(platform='colab')
     """
     discovered = []
     
@@ -1263,7 +1441,6 @@ def discover_training_configs(
     return discovered
 
 
-# Initialize configuration paths in registry
 def _initialize_config_paths():
     """
     Initialize configuration paths and lazy loaders in the registry.
@@ -1271,11 +1448,9 @@ def _initialize_config_paths():
     This function registers commonly used configuration directories and
     sets up lazy loaders for frequently accessed configurations.
     """
-    # Register configuration directories
     ConfigRegistry.register('configs_root', CONFIGS_ROOT)
     ConfigRegistry.register('project_root', PROJECT_ROOT)
     
-    # Register lazy loaders for configuration directories
     config_dirs = [
         'models', 'training', 'data', 'overfitting_prevention',
         'deployment', 'api', 'services', 'environments',
@@ -1292,32 +1467,23 @@ def _initialize_config_paths():
     logger.debug("Initialized configuration paths in registry")
 
 
-# Initialize on module import
 _initialize_config_paths()
 
 
-# Public API - explicitly define what is exported
 __all__ = [
-    # Metadata
     '__version__',
     '__author__',
     '__email__',
     '__license__',
     '__project__',
     '__repository__',
-    
-    # Core classes
     'ConfigurationError',
     'ConfigRegistry',
-    
-    # Lazy import getters
     'get_config_loader',
     'get_config_validator',
     'get_config_schema',
     'get_constants',
     'get_smart_defaults',
-    
-    # High-level functions
     'load_config',
     'validate_config',
     'get_config',
@@ -1325,8 +1491,6 @@ __all__ = [
     'get_config_path',
     'list_configs',
     'get_default_config',
-    
-    # Specialized loading functions
     'load_model_config',
     'load_training_config',
     'load_environment_config',
@@ -1338,27 +1502,18 @@ __all__ = [
     'load_quota_config',
     'load_feature_flags',
     'load_experiment_config',
-    
-    # Template and generation functions
     'render_config_template',
     'generate_config_from_spec',
-    
-    # Compatibility and platform functions
     'load_compatibility_matrix',
     'get_compatible_configs',
     'get_platform_config',
-    
-    # Discovery functions
     'discover_model_configs',
     'discover_training_configs',
-    
-    # Constants
     'CONFIGS_ROOT',
     'PROJECT_ROOT',
 ]
 
 
-# Module initialization logging
 logger.info(
     f"Initialized {__project__} configuration package v{__version__} "
     f"(Author: {__author__})"
