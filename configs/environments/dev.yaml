@@ -1,960 +1,1527 @@
 # AG News Text Classification - Development Environment Configuration
 #
-# This configuration file defines settings for the development environment of the
-# AG News Text Classification project. It is optimized for rapid development,
-# experimentation, and debugging rather than production performance or accuracy.
+# This configuration file defines comprehensive settings for the development
+# environment of the AG News Text Classification project. The configuration is
+# meticulously optimized for rapid development iteration, experimental research,
+# comprehensive debugging, and local-first deployment rather than production
+# performance or cloud-based training.
 #
 # Development Environment Characteristics:
-#   - Fast iteration cycles with reduced training time
-#   - Enhanced logging and debugging capabilities
-#   - Relaxed validation and constraints for flexibility
-#   - Smaller dataset samples for quick testing
-#   - More verbose error messages and stack traces
-#   - Auto-reload and hot-reload features
-#   - Integration with development tools and IDEs
-#   - Local-first deployment (no cloud dependencies)
-#   - Extensive monitoring and profiling
-#   - Feature flags for experimental features
+#   Purpose and Scope:
+#     - Rapid prototyping and experimentation workflows
+#     - Local development with comprehensive debugging capabilities
+#     - Research experimentation with relaxed constraints
+#     - Code quality validation and integration testing
+#     - IDE integration and developer tooling support
+#     - Academic research methodology development
 #
-# Usage:
-#   This configuration is automatically loaded when running in development mode:
+#   Performance Characteristics:
+#     - Fast iteration cycles prioritized over training speed
+#     - Reduced dataset sizes for quick feedback loops
+#     - Minimal epochs for rapid experimentation
+#     - Single-worker data loading for deterministic debugging
+#     - No distributed training overhead
+#     - Immediate error feedback and stack traces
+#
+#   Development Features:
+#     - Hot code reloading for Python modules
+#     - Comprehensive logging at DEBUG level
+#     - Enhanced error messages with full stack traces
+#     - Memory and GPU profiling enabled by default
+#     - TensorBoard integration for real-time monitoring
+#     - Interactive debugging support
+#     - Automated testing integration
+#
+#   Resource Allocation:
+#     - Local GPU utilization (if available)
+#     - CPU fallback for non-GPU environments
+#     - Moderate memory footprint for laptop development
+#     - Flexible batch sizes for various hardware
+#     - No quota constraints or session timeouts
+#     - Persistent local storage for all artifacts
+#
+#   Safety and Validation:
+#     - Test set protection maintained (academic integrity)
+#     - Overfitting prevention with relaxed thresholds
+#     - Data validation with warnings instead of failures
+#     - Graceful degradation on missing dependencies
+#     - Configuration validation with permissive rules
+#     - Reproducibility through deterministic seeding
+#
+# Project Structure Integration:
+#   This configuration integrates with the following project components:
+#
+#   Core Modules:
+#     - src/core/health/health_checker.py: System health validation
+#     - src/core/auto_fix/: Automatic configuration fixing
+#     - src/deployment/platform_detector.py: Local platform detection
+#     - src/deployment/cache_manager.py: Local cache management
+#     - src/utils/logging_config.py: Comprehensive logging setup
+#
+#   Configuration System:
+#     - configs/config_loader.py: Dynamic configuration loading
+#     - configs/config_validator.py: Schema validation with relaxed mode
+#     - configs/smart_defaults.py: Development-aware default values
+#     - configs/compatibility_matrix.yaml: Version compatibility
+#
+#   Training Infrastructure:
+#     - src/training/trainers/auto_trainer.py: Quick training workflows
+#     - src/training/callbacks/: Comprehensive callback system
+#     - src/training/strategies/: Advanced training strategies
+#     - src/evaluation/: Detailed evaluation and analysis
+#
+#   Data Management:
+#     - src/data/loaders/dataloader.py: Flexible data loading
+#     - src/data/preprocessing/: Complete preprocessing pipeline
+#     - src/data/augmentation/: Optional augmentation (disabled in dev)
+#     - src/data/validation/: Data quality checks
+#
+#   Monitoring Systems:
+#     - monitoring/local/: Local monitoring infrastructure
+#     - monitoring/dashboards/: Real-time dashboards
+#     - src/services/monitoring/tensorboard_service.py: TensorBoard
+#     - src/services/monitoring/local_metrics_service.py: Metrics tracking
+#
+#   Development Tools:
+#     - tools/profiling/: Performance profiling utilities
+#     - tools/debugging/: Debugging helpers
+#     - tools/visualization/: Result visualization
+#     - tools/config_tools/: Configuration management
+#
+#   Testing Framework:
+#     - tests/unit/: Unit tests for all components
+#     - tests/integration/: Integration testing
+#     - tests/performance/: Performance benchmarks
+#     - tests/e2e/: End-to-end workflows
+#
+#   Scripts:
+#     - scripts/setup/verify_installation.py: Environment validation
+#     - scripts/training/train_single_model.py: Quick training
+#     - scripts/evaluation/: Evaluation scripts
+#     - scripts/local/: Local development utilities
+#
+#   Quickstart:
+#     - quickstart/train_simple.py: Minimal training example
+#     - quickstart/evaluate_simple.py: Quick evaluation
+#     - quickstart/demo_app.py: Interactive demonstration
+#
+# Usage Patterns:
+#
+#   Environment Activation:
+#     The development environment is activated automatically when running
+#     locally without platform-specific detection.
+#
+#   Explicit Configuration:
 #     export ENVIRONMENT=dev
 #     python train.py
 #
-#   Or explicitly specify:
-#     python train.py --config configs/environments/dev.yaml
+#   CLI-Based Training:
+#     python src/cli.py train --env dev --model deberta-base
 #
-#   For quick prototyping:
-#     python quickstart/train_simple.py --env dev
+#   Quick Prototyping:
+#     python quickstart/train_simple.py --quick-test
 #
-# Design Principles:
+#   Interactive Development:
+#     python -m src.cli train --env dev --debug
+#
+# Design Principles and Development Strategies:
+#
 #   1. Developer Experience First:
-#      - Minimize time from code change to feedback
-#      - Clear error messages and debugging information
-#      - Hot reload when possible
-#      - Fast startup and shutdown
+#      Strategy: Minimize time from code change to feedback
+#      Implementation:
+#        - Hot module reloading for Python source files
+#        - Immediate error messages with actionable suggestions
+#        - Fast training with minimal epochs (3 epochs default)
+#        - Quick dataset sampling for rapid iteration
+#        - TensorBoard auto-launch on training start
+#      Rationale: Developer productivity directly correlates with iteration
+#                 speed; faster feedback enables more experimentation
 #
-#   2. Safety with Flexibility:
-#      - Overfitting prevention enabled but less strict
-#      - Data validation with warnings instead of errors
-#      - Graceful degradation on missing dependencies
-#      - Easy override of default settings
+#   2. Comprehensive Debugging:
+#      Strategy: Provide maximum visibility into system behavior
+#      Implementation:
+#        - DEBUG-level logging for all components
+#        - Full stack traces with local variable inspection
+#        - PyTorch autograd anomaly detection enabled
+#        - Memory profiling for leak detection
+#        - GPU utilization monitoring
+#        - Gradient norm tracking
+#      Rationale: Deep learning debugging is notoriously difficult; comprehensive
+#                 instrumentation accelerates problem diagnosis
 #
-#   3. Comprehensive Logging:
-#      - Detailed logs for all operations
-#      - Performance profiling enabled
-#      - Memory usage tracking
-#      - GPU utilization monitoring
+#   3. Academic Rigor with Flexibility:
+#      Strategy: Maintain scientific validity while allowing experimentation
+#      Implementation:
+#        - Test set protection always enabled (immutable)
+#        - Overfitting monitoring with relaxed thresholds (0.1 vs 0.05)
+#        - Data leakage warnings instead of failures
+#        - Reproducibility through fixed seeds (seed: 42)
+#        - Configuration versioning for experiment tracking
+#      Rationale: Development requires flexibility but must not compromise
+#                 research integrity; test set remains sacred
 #
-#   4. Reproducibility:
-#      - Fixed random seeds
-#      - Deterministic operations when possible
-#      - Version tracking of all dependencies
-#      - Configuration versioning
+#   4. Local-First Architecture:
+#      Strategy: No cloud dependencies or network requirements
+#      Implementation:
+#        - All data cached locally in data/cache
+#        - Models downloaded once and reused
+#        - Checkpoints saved to local outputs/
+#        - TensorBoard logs accessible offline
+#        - No API keys or authentication required
+#      Rationale: Developers need consistent environment regardless of network;
+#                 local-first enables offline development
 #
-# References:
+#   5. Rapid Prototyping Support:
+#      Strategy: Enable quick testing of ideas with minimal overhead
+#      Implementation:
+#        - Quick test mode: 1000 train / 200 val / 200 test samples
+#        - Small base model (DeBERTa-base vs large)
+#        - Short sequences (256 vs 512 tokens)
+#        - Single-worker dataloading for simplicity
+#        - No distributed training complexity
+#      Rationale: Many experiments fail quickly; optimize for fast failure
+#                 and rapid iteration over training time
+#
+#   6. Progressive Complexity:
+#      Strategy: Start simple, add complexity incrementally
+#      Implementation:
+#        - LoRA disabled by default (full fine-tuning on small model)
+#        - No data augmentation initially
+#        - Simple holdout validation (no k-fold)
+#        - Single-GPU training (no multi-GPU)
+#        - Linear learning rate schedule (no complex schedules)
+#      Rationale: Complexity should be added only when needed; simpler
+#                 configurations are easier to debug and understand
+#
+#   7. Comprehensive Testing Integration:
+#      Strategy: Enable continuous validation during development
+#      Implementation:
+#        - Unit test execution before training
+#        - Integration test suite available
+#        - Performance regression detection
+#        - Configuration validation on load
+#        - Dependency version checking
+#      Rationale: Catch errors early before expensive training; automated
+#                 testing reduces debugging time
+#
+# Development Best Practices and References:
+#
+#   Software Engineering Principles:
+#     McConnell, S. (2004). Code Complete: A Practical Handbook of Software
+#     Construction (2nd ed.). Microsoft Press.
+#     - Emphasizes iterative development and rapid feedback
+#     - Advocates for comprehensive error handling
+#
+#     Martin, R. C. (2008). Clean Code: A Handbook of Agile Software
+#     Craftsmanship. Prentice Hall.
+#     - Principles of readable and maintainable code
+#     - Importance of good naming and documentation
+#
 #   Twelve-Factor App Methodology:
-#     - Wiggins, A. (2011). "The Twelve-Factor App".
-#       https://12factor.net/
-#     - Emphasizes environment-specific configuration and development/production parity
+#     Wiggins, A. (2011). The Twelve-Factor App.
+#     https://12factor.net/
+#     - Environment-specific configuration (Factor III)
+#     - Development/production parity (Factor X)
+#     - Logs as event streams (Factor XI)
 #
-#   Software Engineering Best Practices:
-#     - McConnell, S. (2004). "Code Complete: A Practical Handbook of Software
-#       Construction". Microsoft Press.
-#     - Martin, R. C. (2008). "Clean Code: A Handbook of Agile Software Craftsmanship".
-#       Prentice Hall.
+#   Machine Learning Engineering:
+#     Sculley, D., Holt, G., Golovin, D., Davydov, E., Phillips, T., Ebner, D.,
+#     Chaudhary, V., Young, M., Crespo, J. F., & Dennison, D. (2015). Hidden
+#     technical debt in machine learning systems. Advances in Neural Information
+#     Processing Systems, 28, 2503-2511.
+#     - Technical debt in ML systems
+#     - Importance of testing and monitoring
 #
-#   ML Development Best Practices:
-#     - Sculley, D., et al. (2015). "Hidden Technical Debt in Machine Learning Systems".
-#       NIPS.
-#     - Breck, E., et al. (2017). "The ML Test Score: A Rubric for ML Production
-#       Readiness and Technical Debt Reduction". IEEE Big Data.
+#   ML Testing and Validation:
+#     Breck, E., Cai, S., Nielsen, E., Salib, M., & Sculley, D. (2017). The ML
+#     test score: A rubric for ML production readiness and technical debt
+#     reduction. IEEE International Conference on Big Data, 1123-1132.
+#     https://doi.org/10.1109/BigData.2017.8258038
+#     - Comprehensive testing for ML systems
+#     - Production readiness checklist
+#
+#   Reproducible Research:
+#     Peng, R. D. (2011). Reproducible research in computational science.
+#     Science, 334(6060), 1226-1227.
+#     https://doi.org/10.1126/science.1213847
+#     - Importance of reproducibility in computational research
+#
+#     Stodden, V., & Miguez, S. (2014). Best practices for computational
+#     science: Software infrastructure and environments for reproducible and
+#     extensible research. Journal of Open Research Software, 2(1).
+#     https://doi.org/10.5334/jors.ay
+#     - Best practices for reproducible computational research
+#
+#   Deep Learning Debugging:
+#     Raschka, S., Patterson, J., & Nolet, C. (2020). Machine Learning in
+#     Python: Main developments and technology trends in data science, machine
+#     learning, and artificial intelligence. Information, 11(4), 193.
+#     https://doi.org/10.3390/info11040193
+#     - Modern ML development practices
+#     - Tools and frameworks for ML engineering
 #
 # Author: Võ Hải Dũng
 # Email: vohaidung.work@gmail.com
-# License: MIT
+# License: MIT License
 # Project: AG News Text Classification (ag-news-text-classification)
 # Repository: https://github.com/VoHaiDung/ag-news-text-classification
+# Documentation: https://github.com/VoHaiDung/ag-news-text-classification/blob/main/docs/
 
-# Metadata section
-# Provides information about this configuration file
 metadata:
   name: "Development Environment Configuration"
-  description: "Configuration for development environment of AG News Text Classification (ag-news-text-classification)"
-  project_name: "AG News Text Classification (ag-news-text-classification)"
-  project_version: "1.0.0"
-  config_version: "1.0.0"
-  environment: "dev"
-  author: "Võ Hải Dũng"
-  email: "vohaidung.work@gmail.com"
-  license: "MIT"
-  repository: "https://github.com/VoHaiDung/ag-news-text-classification"
-  created_date: "2025-09-19"
-  last_modified: "2025-09-19"
+  description: "Production-grade configuration for local development of AG News Text Classification"
   
-  # Configuration schema validation
-  schema_version: "1.0"
-  strict_validation: false  # Relaxed validation in dev
-  allow_unknown_fields: true
-  validate_on_load: true
+  project:
+    name_display: "AG News Text Classification"
+    name_full: "AG News Text Classification (ag-news-text-classification)"
+    name_slug: "ag-news-text-classification"
+    name_package: "ag_news_text_classification"
+    abbreviation: "AGNTC"
   
-  # Maintenance information
-  maintainer: "Võ Hải Dũng"
-  support_email: "vohaidung.work@gmail.com"
-  documentation_url: "https://github.com/VoHaiDung/ag-news-text-classification/blob/main/docs/"
+  version:
+    config_version: "1.0.0"
+    project_version: "1.0.0"
+    schema_version: "1.0.0"
+    api_version: "v1"
+  
+  environment:
+    type: "dev"
+    platform: "local_development"
+    tier: "development"
+    mode: "local_machine"
+    deployment_type: "development_research"
+  
+  authorship:
+    author: "Võ Hải Dũng"
+    email: "vohaidung.work@gmail.com"
+    affiliation: null
+    orcid: null
+  
+  legal:
+    license: "MIT"
+    copyright: "Copyright (c) 2025 Võ Hải Dũng"
+    terms_of_use: "https://github.com/VoHaiDung/ag-news-text-classification/blob/main/LICENSE"
+  
+  repository:
+    url: "https://github.com/VoHaiDung/ag-news-text-classification"
+    branch: "main"
+    commit: null
+    documentation: "https://github.com/VoHaiDung/ag-news-text-classification/blob/main/docs/"
+    issues: "https://github.com/VoHaiDung/ag-news-text-classification/issues"
+  
+  timestamps:
+    created: "2025-09-19"
+    modified: "2025-09-19"
+    reviewed: "2025-09-19"
+    expires: null
+  
+  validation:
+    schema_validation: true
+    strict_mode: false
+    allow_unknown_fields: true
+    validate_on_load: true
+    fail_on_error: false
+  
+  maintenance:
+    maintainer: "Võ Hải Dũng"
+    support_email: "vohaidung.work@gmail.com"
+    status: "stable"
+    stability_level: "development"
+  
+  development_specifications:
+    purpose: "rapid_iteration"
+    optimization_target: "developer_experience"
+    iteration_speed: "fast"
+    debugging_level: "comprehensive"
+    logging_verbosity: "debug"
+    constraint_strictness: "relaxed"
 
-# Environment-specific settings
-# Core environment configuration
 environment:
   name: "development"
-  mode: "dev"
-  debug: true
-  verbose: true
-  testing: false
+  type: "local"
+  mode: "development"
   
-  # Development flags
-  auto_reload: true  # Auto-reload on code changes
-  hot_reload_models: false  # Hot reload is experimental
-  fail_fast: false  # Continue on non-critical errors
-  strict_mode: false  # Allow flexibility for experimentation
+  runtime:
+    debug: true
+    verbose: true
+    testing: false
+    profiling: true
   
-  # Performance vs Development trade-off
-  optimize_for: "development_speed"  # Options: development_speed, accuracy, inference_speed
-  enable_profiling: true
-  enable_debugging: true
+  features:
+    auto_reload: true
+    hot_reload: true
+    fail_fast: false
+    strict_mode: false
+    warnings_as_errors: false
   
-  # Data protection
-  protect_test_set: true  # Always protect test set even in dev
-  allow_data_leakage_warnings: true  # Warn instead of fail
+  optimization:
+    optimize_for: "development_speed"
+    performance_profile: "debugging"
+    resource_priority: "developer_experience"
+    memory_strategy: "moderate"
   
-  # Reproducibility
-  deterministic: true
-  seed: 42
+  protection:
+    protect_test_set: true
+    prevent_data_leakage: true
+    enforce_overfitting_constraints: true
+    validate_checkpoints: true
   
-  # Cleanup
-  auto_cleanup: false  # Keep artifacts for debugging
-  cleanup_on_exit: false
+  reproducibility:
+    deterministic: true
+    seed: 42
+    enable_cudnn_deterministic: false
+    enable_cudnn_benchmark: true
+  
+  cleanup:
+    auto_cleanup: false
+    cleanup_on_exit: false
+    cleanup_interval_seconds: null
+    clear_cuda_cache: false
+    garbage_collect: false
+  
+  development:
+    quick_iteration: true
+    enable_debugging: true
+    enable_profiling: true
+    save_debug_artifacts: true
+    interactive_mode: false
 
-# Project paths
-# All paths relative to project root
+platform:
+  detector:
+    module: "src.deployment.platform_detector"
+    class: "PlatformDetector"
+    auto_detect: true
+    detection_method: "environment_inspection"
+    fallback_platform: "local"
+  
+  identifier:
+    platform_type: "local"
+    platform_name: "Local Development"
+    platform_version: "auto"
+    cloud_provider: null
+    region: "local"
+  
+  capabilities:
+    gpu_available: true
+    tpu_available: false
+    multi_gpu: false
+    distributed_training: false
+    mixed_precision: true
+    gradient_checkpointing: true
+  
+  resources:
+    tier: "local"
+    gpu:
+      type: "auto_detect"
+      count: 1
+      vram_gb: "auto_detect"
+      architecture: "auto_detect"
+      compute_capability: "auto_detect"
+      tensor_cores: "auto_detect"
+      fp16_supported: true
+      bf16_supported: "auto_detect"
+      tf32_supported: "auto_detect"
+    
+    cpu:
+      cores: "auto_detect"
+      threads: "auto_detect"
+      architecture: "auto_detect"
+      model: "auto_detect"
+      frequency_ghz: "auto_detect"
+    
+    memory:
+      ram_gb: "auto_detect"
+      swap_gb: "auto_detect"
+      shared_memory_gb: "auto_detect"
+    
+    storage:
+      available_gb: "auto_detect"
+      type: "local_ssd"
+      iops: "auto_detect"
+      throughput_mbps: "auto_detect"
+    
+    network:
+      bandwidth_mbps: "auto_detect"
+      latency_ms: "auto_detect"
+      egress_limited: false
+  
+  limitations:
+    session_timeout_hours: null
+    idle_timeout_minutes: null
+    gpu_quota_limited: false
+    storage_ephemeral: false
+    ip_changes: false
+    network_restrictions: false
+  
+  optimization:
+    auto_detect_capabilities: true
+    optimize_for_hardware: true
+    enable_platform_specific: false
+
 paths:
-  # Root directories
   project_root: "."
-  configs_root: "configs"
-  data_root: "data"
-  src_root: "src"
-  outputs_root: "outputs"
   
-  # Data directories
+  source:
+    root: "src"
+    configs: "configs"
+    scripts: "scripts"
+    notebooks: "notebooks"
+    tests: "tests"
+    docs: "docs"
+  
   data:
-    raw: "data/raw"
-    processed: "data/processed"
-    augmented: "data/augmented"
-    cache: "data/cache/local_cache"
-    test_samples: "data/test_samples"
-    metadata: "data/metadata"
+    root: "data"
+    
+    raw:
+      root: "data/raw"
+      ag_news: "data/raw/ag_news"
+    
+    processed:
+      root: "data/processed"
+      train: "data/processed/train"
+      validation: "data/processed/validation"
+      test: "data/processed/test"
+      stratified_folds: "data/processed/stratified_folds"
+    
+    augmented:
+      root: "data/augmented"
+      back_translated: "data/augmented/back_translated"
+      paraphrased: "data/augmented/paraphrased"
+      synthetic: "data/augmented/synthetic"
+    
+    metadata:
+      root: "data/metadata"
+      split_info: "data/metadata/split_info.json"
+      statistics: "data/metadata/statistics.json"
+      test_set_hash: "data/processed/.test_set_hash"
+    
+    platform_cache:
+      root: "data/platform_cache"
+      local_cache: "data/platform_cache/local_cache"
+    
+    quota_tracking:
+      root: "data/quota_tracking"
+      quota_history: "data/quota_tracking/quota_history.json"
+      session_logs: "data/quota_tracking/session_logs.json"
+      platform_usage_db: "data/quota_tracking/platform_usage.db"
   
-  # Output directories
   outputs:
-    models: "outputs/models"
-    checkpoints: "outputs/models/checkpoints"
-    results: "outputs/results"
-    logs: "outputs/logs/training"
-    figures: "outputs/artifacts/figures"
-    tensorboard: "outputs/logs/tensorboard"
-    mlflow: "outputs/logs/mlflow"
+    root: "outputs"
+    
+    models:
+      root: "outputs/models"
+      checkpoints: "outputs/models/checkpoints"
+      fine_tuned: "outputs/models/fine_tuned"
+      lora_adapters: "outputs/models/lora_adapters"
+      exported: "outputs/models/exported"
+    
+    results:
+      root: "outputs/results"
+      experiments: "outputs/results/experiments"
+      benchmarks: "outputs/results/benchmarks"
+      overfitting_reports: "outputs/results/overfitting_reports"
+      reports: "outputs/results/reports"
+    
+    logs:
+      root: "outputs/logs"
+      training: "outputs/logs/training"
+      tensorboard: "outputs/logs/tensorboard"
+      mlflow: "outputs/logs/mlflow"
+      local: "outputs/logs/local"
+    
+    artifacts:
+      root: "outputs/artifacts"
+      figures: "outputs/artifacts/figures"
+      tables: "outputs/artifacts/tables"
+    
+    profiling:
+      root: "outputs/profiling"
+      memory: "outputs/profiling/memory"
+      speed: "outputs/profiling/speed"
+      traces: "outputs/profiling/traces"
   
-  # Development-specific paths
-  dev:
+  cache:
+    root: "cache"
+    
+    huggingface:
+      root: "cache/huggingface"
+      models: "cache/huggingface/models"
+      datasets: "cache/huggingface/datasets"
+      transformers: "cache/huggingface/transformers"
+    
+    local:
+      root: "cache/local"
+      preprocessing: "cache/local/preprocessing"
+      tokenization: "cache/local/tokenization"
+    
+    models:
+      root: "cache/models"
+      pretrained: "cache/models/pretrained"
+      temporary: "cache/models/temporary"
+  
+  temp:
+    root: "temp"
+    processing: "temp/processing"
+    downloads: "temp/downloads"
+    extraction: "temp/extraction"
+  
+  development:
     experiments: "outputs/results/experiments/dev"
     quick_tests: "outputs/results/experiments/dev/quick_tests"
-    debug_outputs: "outputs/logs/debug"
-    profiling: "outputs/profiling"
-    temp: "outputs/temp/dev"
-  
-  # Cache directories
-  cache:
-    huggingface: "data/cache/huggingface_cache"
-    models: "data/cache/model_cache"
-    datasets: "data/cache/local_cache"
-  
-  # Configuration paths
-  configs:
-    models: "configs/models"
-    training: "configs/training"
-    data: "configs/data"
+    debug: "outputs/logs/debug"
+    profiling_dev: "outputs/profiling/dev"
 
-# Model configuration
-# Development-optimized model settings
 model:
-  # Quick development model (fast training)
-  name: "microsoft/deberta-v3-base"  # Base model for fast iteration
-  type: "deberta"
-  variant: "base"
+  selection:
+    strategy: "development_optimized"
+    tier: "baseline"
+    config_source: "configs/models/single/transformers/deberta/deberta_v3_base.yaml"
+    fallback_config: "configs/models/single/transformers/roberta/roberta_base.yaml"
   
-  # Model parameters
-  num_labels: 4  # AG News has 4 classes
-  max_length: 256  # Shorter sequences for faster training in dev
+  architecture:
+    base_model: "microsoft/deberta-v3-base"
+    model_type: "deberta"
+    model_family: "transformers"
+    variant: "v3-base"
+    
+    parameters:
+      total_params: 183000000
+      trainable_params: 183000000
+      frozen_params: 0
+      trainable_ratio: 1.0
+    
+    specifications:
+      num_labels: 4
+      num_hidden_layers: 12
+      hidden_size: 768
+      num_attention_heads: 12
+      intermediate_size: 3072
+      max_position_embeddings: 512
+      vocab_size: 128100
   
-  # Model loading
-  pretrained: true
-  use_cache: true
-  cache_dir: "data/cache/huggingface_cache"
-  trust_remote_code: false
-  force_download: false
-  resume_download: true
-  local_files_only: false
+  tokenizer:
+    name: "microsoft/deberta-v3-base"
+    type: "DebertaV2Tokenizer"
+    
+    configuration:
+      max_length: 256
+      padding: "max_length"
+      truncation: true
+      truncation_strategy: "longest_first"
+      return_tensors: "pt"
+      return_attention_mask: true
+      return_token_type_ids: false
+      add_special_tokens: true
+    
+    special_tokens:
+      cls_token: "[CLS]"
+      sep_token: "[SEP]"
+      pad_token: "[PAD]"
+      unk_token: "[UNK]"
+      mask_token: "[MASK]"
   
-  # Dropout (slightly higher for development to prevent quick overfitting)
-  hidden_dropout_prob: 0.1
-  attention_probs_dropout_prob: 0.1
-  classifier_dropout: 0.1
+  loading:
+    pretrained: true
+    cache_dir: "cache/huggingface/models"
+    
+    options:
+      trust_remote_code: false
+      force_download: false
+      resume_download: true
+      local_files_only: false
+      use_auth_token: false
+      revision: "main"
+    
+    memory:
+      device_map: "auto"
+      low_cpu_mem_usage: true
+      torch_dtype: "auto"
+      load_in_8bit: false
+      load_in_4bit: false
   
-  # Development settings
-  load_in_8bit: false  # Full precision in dev for better debugging
-  load_in_4bit: false
-  device_map: "auto"
-  low_cpu_mem_usage: true
-  
-  # Model head configuration
-  head:
-    type: "classification"
-    num_hidden_layers: 0  # Simple head for development
-    activation: "gelu"
-    pooling_strategy: "cls"
-  
-  # Alternative models for quick switching
-  alternatives:
-    fastest: "distilbert-base-uncased"  # For very quick tests
-    balanced: "microsoft/deberta-v3-base"  # Default
-    accurate: "microsoft/deberta-v3-large"  # For accuracy tests
+  configuration:
+    hidden_dropout_prob: 0.1
+    attention_probs_dropout_prob: 0.1
+    classifier_dropout: 0.1
+    
+    pooling:
+      type: "cls"
+      mean_pooling: false
+      max_pooling: false
+      attention_pooling: false
+    
+    head:
+      type: "classification"
+      num_layers: 1
+      hidden_size: 768
+      activation: "gelu"
+      dropout: 0.1
+      initializer_range: 0.02
 
-# PEFT (Parameter-Efficient Fine-Tuning) configuration
-# Optional LoRA for faster training of larger models
 peft:
-  enabled: false  # Disabled by default in dev (full fine-tuning is fine for small models)
-  method: "lora"  # Options: lora, qlora, adapter, prefix_tuning, prompt_tuning
+  enabled: false
+  method: "lora"
+  config_source: "configs/training/efficient/lora/lora_config.yaml"
   
-  # LoRA configuration
   lora:
-    rank: 8  # Small rank for fast training
+    rank: 8
     alpha: 16
     dropout: 0.1
-    target_modules: ["query_proj", "value_proj"]
-    bias: "none"
-    task_type: "SEQ_CLS"
-    modules_to_save: ["classifier"]
+    
+    target_modules:
+      - "query_proj"
+      - "value_proj"
+    
+    configuration:
+      bias: "none"
+      task_type: "SEQ_CLS"
+      inference_mode: false
+      r: 8
+      lora_alpha: 16
+      lora_dropout: 0.1
+      fan_in_fan_out: false
+      merge_weights: false
+    
+    modules_to_save:
+      - "classifier"
+    
+    init_lora_weights: true
+    
+    constraints:
+      max_rank: 64
+      min_rank: 4
+      recommended_rank_range: [4, 16]
+      rank_selection_strategy: "development_speed"
   
-  # Enable for quick testing of large models
-  quick_test_mode: true
-  allow_override: true
+  development:
+    enable_for_testing: true
+    quick_switch: true
 
-# Training configuration
-# Optimized for fast iteration and debugging
 training:
-  # Training regime
-  num_epochs: 3  # Few epochs for quick feedback
-  max_steps: -1  # No step limit
+  trainer:
+    module: "src.training.trainers.auto_trainer"
+    class: "AutoTrainer"
+    backend: "huggingface"
+    strategy: "development_optimized"
   
-  # Batch configuration
-  batch_size: 16  # Moderate batch size
-  eval_batch_size: 32  # Larger batch for faster evaluation
-  gradient_accumulation_steps: 1
+  regime:
+    num_epochs: 3
+    max_steps: -1
+    total_steps: null
+    warmup_steps: null
+    
+    evaluation_strategy: "epoch"
+    save_strategy: "epoch"
+    logging_strategy: "steps"
+    
+    logging_steps: 10
+    eval_steps: null
+    save_steps: null
+    
+    logging_first_step: true
+    eval_on_start: false
+    save_on_each_node: false
   
-  # Optimization
-  optimizer:
-    type: "adamw"
-    lr: 2e-5  # Standard learning rate
-    weight_decay: 0.01
-    betas: [0.9, 0.999]
-    eps: 1e-8
-    amsgrad: false
+  batching:
+    per_device_train_batch_size: 16
+    per_device_eval_batch_size: 32
+    gradient_accumulation_steps: 1
+    
+    effective_batch_size: 16
+    auto_find_batch_size: false
+    
+    dataloader_num_workers: 0
+    dataloader_pin_memory: true
+    dataloader_drop_last: false
+    dataloader_prefetch_factor: 2
+    dataloader_persistent_workers: false
   
-  # Learning rate scheduling
-  scheduler:
-    type: "linear"
-    num_warmup_steps: 0
-    warmup_ratio: 0.1
+  optimization:
+    optimizer:
+      type: "adamw_torch"
+      
+      parameters:
+        lr: 0.00002
+        betas: [0.9, 0.999]
+        eps: 0.00000001
+        weight_decay: 0.01
+        amsgrad: false
+      
+      clip_grad_norm: 1.0
+      clip_grad_value: null
+    
+    scheduler:
+      type: "linear"
+      
+      parameters:
+        num_warmup_steps: 0
+        warmup_ratio: 0.1
+        min_lr_ratio: 0.0
+      
+      warmup_strategy: "linear"
   
-  # Mixed precision
-  mixed_precision: "no"  # Disabled in dev for better debugging
-  fp16: false
-  bf16: false
-  fp16_opt_level: "O1"
-  fp16_backend: "auto"
+  precision:
+    mixed_precision: "no"
+    fp16: false
+    bf16: false
+    fp16_opt_level: "O1"
+    fp16_backend: "auto"
+    fp16_full_eval: false
+    
+    half_precision_backend: "auto"
+    
+    loss_scaling:
+      enabled: false
   
-  # Gradient control
-  max_grad_norm: 1.0
-  gradient_checkpointing: false  # Disabled in dev (uses more memory but faster)
+  memory:
+    gradient_checkpointing: false
+    gradient_checkpointing_kwargs:
+      use_reentrant: false
+    
+    max_grad_norm: 1.0
+    
+    optimization:
+      empty_cache_steps: 100
+      garbage_collect_steps: 200
+      low_memory_mode: false
   
-  # Training strategy
-  evaluation_strategy: "epoch"  # Evaluate every epoch
-  save_strategy: "epoch"  # Save every epoch
-  logging_strategy: "steps"
+  checkpointing:
+    save_total_limit: 3
+    save_safetensors: true
+    load_best_model_at_end: true
+    
+    checkpoint_manager:
+      module: "src.deployment.checkpoint_manager"
+      class: "CheckpointManager"
+      
+      strategy: "epoch_based"
+      interval_minutes: null
+      save_on_interrupt: true
+      verify_integrity: true
+      compress_checkpoints: false
+    
+    recovery:
+      resume_from_checkpoint: true
+      auto_resume: true
+      ignore_data_skip: false
+      strict_loading: false
   
-  # Logging
-  logging_steps: 10  # Frequent logging for development
-  logging_first_step: true
-  logging_nan_inf_filter: true
+  metrics:
+    metric_for_best_model: "eval_loss"
+    greater_is_better: false
+    
+    metrics_to_compute:
+      - "accuracy"
+      - "precision"
+      - "recall"
+      - "f1"
+      - "loss"
+    
+    evaluation:
+      prediction_loss_only: false
+      include_inputs_for_metrics: false
   
-  # Evaluation
-  eval_steps: 100
-  eval_delay: 0
-  eval_on_start: false  # Skip initial evaluation for speed
-  
-  # Checkpointing
-  save_steps: 500
-  save_total_limit: 3  # Keep only recent checkpoints
-  save_on_each_node: false
-  load_best_model_at_end: true
-  
-  # Metrics
-  metric_for_best_model: "eval_loss"
-  greater_is_better: false
-  
-  # Early stopping (relaxed in dev)
   early_stopping:
     enabled: true
-    patience: 5  # More patience in dev
-    min_delta: 0.001
-    monitor: "val_loss"
-    mode: "min"
-    restore_best_weights: true
-    baseline: null
+    
+    callback:
+      module: "src.training.callbacks.early_stopping"
+      class: "EarlyStoppingCallback"
+    
+    parameters:
+      patience: 5
+      min_delta: 0.001
+      monitor: "eval_loss"
+      mode: "min"
+      restore_best_weights: true
+      verbose: true
   
-  # Regularization
   regularization:
-    dropout: 0.1
-    attention_dropout: 0.1
-    hidden_dropout: 0.1
+    dropout:
+      hidden_dropout: 0.1
+      attention_dropout: 0.1
+      classifier_dropout: 0.1
+      lora_dropout: 0.1
+    
     weight_decay: 0.01
-    label_smoothing: 0.0  # Disabled in dev
-    mixup_alpha: 0.0  # Disabled in dev
-    cutmix_alpha: 0.0  # Disabled in dev
+    
+    label_smoothing: 0.0
+    label_smoothing_factor: 0.0
+    
+    gradient_clipping:
+      enabled: true
+      max_norm: 1.0
+      norm_type: 2
   
-  # Data loading
-  dataloader_num_workers: 0  # Single worker for easier debugging
-  dataloader_pin_memory: true
-  dataloader_drop_last: false
-  dataloader_prefetch_factor: 2
+  reproducibility:
+    seed: 42
+    data_seed: 42
+    full_determinism: false
+    
+    torch_deterministic: true
+    cudnn_deterministic: false
+    cudnn_benchmark: true
   
-  # Reproducibility
-  seed: 42
-  data_seed: 42
-  deterministic: true
+  callbacks:
+    enabled_callbacks:
+      - module: "src.training.callbacks.overfitting_monitor"
+        class: "OverfittingMonitorCallback"
+        priority: 1
+      
+      - module: "src.training.callbacks.memory_monitor_callback"
+        class: "MemoryMonitorCallback"
+        priority: 2
+      
+      - module: "transformers.trainer_callback"
+        class: "PrinterCallback"
+        priority: 10
+    
+    disable_default_callbacks: false
   
-  # Development-specific
-  skip_memory_metrics: false
-  report_to: ["tensorboard"]  # Simple reporting in dev
-  run_name: "dev_run"
+  reporting:
+    report_to:
+      - "tensorboard"
+    
+    run_name: "dev_run"
+    output_dir: "outputs/models/checkpoints"
+    logging_dir: "outputs/logs/tensorboard"
+    
+    push_to_hub: false
+    hub_model_id: null
+    hub_strategy: "every_save"
+    hub_token: null
+    hub_private_repo: false
   
-  # Quick test mode
-  quick_test:
-    enabled: false  # Enable for very quick tests
+  quick_test_mode:
+    enabled: false
     max_train_samples: 1000
-    max_eval_samples: 500
-    max_test_samples: 500
+    max_eval_samples: 200
+    max_test_samples: 200
     num_epochs: 1
 
-# Data configuration
-# Development-optimized data settings
 data:
-  # Dataset
-  dataset_name: "ag_news"
-  dataset_config: null
+  dataset:
+    name: "ag_news"
+    source: "huggingface"
+    dataset_name: "ag_news"
+    dataset_config: null
+    
+    loader:
+      module: "src.data.datasets.ag_news"
+      class: "AGNewsDataset"
+    
+    cache:
+      use_cache: true
+      cache_dir: "data/cache/local_cache"
+      overwrite_cache: false
+      download_mode: "reuse_cache_if_exists"
   
-  # Data paths
-  data_dir: "data/raw/ag_news"
-  cache_dir: "data/cache/local_cache"
+  splits:
+    strategy: "stratified"
+    
+    ratios:
+      train: 0.8
+      validation: 0.1
+      test: 0.1
+    
+    configuration:
+      stratify: true
+      shuffle: true
+      random_seed: 42
+    
+    validator:
+      module: "src.core.overfitting_prevention.validators.split_validator"
+      class: "SplitValidator"
+      
+      checks:
+        - "minimum_split_size"
+        - "label_distribution"
+        - "no_data_leakage"
   
-  # Data splits
-  train_file: null
-  validation_file: null
-  test_file: null
+  sampling:
+    max_samples:
+      train: null
+      validation: null
+      test: null
+    
+    quick_test_mode:
+      enabled: false
+      samples:
+        train: 1000
+        validation: 200
+        test: 200
   
-  # Split ratios
-  train_ratio: 0.8
-  val_ratio: 0.1
-  test_ratio: 0.1
-  
-  # Split strategy
-  stratify: true
-  shuffle: true
-  random_seed: 42
-  
-  # Sampling (for quick development testing)
-  max_samples:
-    train: null  # null = use all data, set number for quick tests
-    validation: null
-    test: null
-  
-  # Quick test mode
-  quick_test_samples:
-    train: 1000
-    validation: 200
-    test: 200
-  
-  # Text preprocessing
   preprocessing:
-    lowercase: false
-    remove_html: true
-    remove_urls: false
-    remove_special_chars: false
-    normalize_whitespace: true
-    strip: true
+    pipeline:
+      module: "src.data.preprocessing.text_cleaner"
+      steps:
+        - name: "normalize_whitespace"
+          enabled: true
+        - name: "strip"
+          enabled: true
+        - name: "remove_html"
+          enabled: true
+        - name: "lowercase"
+          enabled: false
+    
+    configuration:
+      lowercase: false
+      remove_html: true
+      remove_urls: false
+      remove_special_chars: false
+      normalize_whitespace: true
+      strip: true
+    
+    cache_processed: true
   
-  # Tokenization
-  tokenization:
-    max_length: 256  # Shorter in dev
-    padding: "max_length"
-    truncation: true
-    return_tensors: "pt"
-    return_attention_mask: true
-    return_token_type_ids: false
-  
-  # Data augmentation (disabled in dev by default)
   augmentation:
     enabled: false
+    
     methods: []
-    augmentation_ratio: 0.0
-    augmentation_per_sample: 1
+    
+    constraints:
+      module: "src.core.overfitting_prevention.constraints.augmentation_constraints"
+      max_augmentation_ratio: 2.0
+      preserve_label_distribution: true
   
-  # Data validation
   validation:
-    check_labels: true
-    check_text_lengths: true
-    check_duplicates: false  # Slow, disable in dev
-    remove_invalid: true
-    log_invalid: true
+    checks:
+      - "label_validity"
+      - "text_length"
+      - "encoding_validity"
+    
+    actions:
+      remove_invalid: true
+      log_invalid: true
+      fail_on_invalid: false
+    
+    validator:
+      module: "src.data.validation.split_strategies"
+      class: "DataValidator"
   
-  # Caching
-  use_cache: true
-  cache_processed_data: true
-  overwrite_cache: false
-  
-  # Data loading
-  num_proc: 1  # Single process for easier debugging
-  keep_in_memory: false  # Don't keep in memory to save RAM
+  loading:
+    num_proc: 1
+    keep_in_memory: false
+    streaming: false
+    
+    batch_size: 1000
+    writer_batch_size: 1000
 
-# API configuration
-# Development API settings
-api:
-  # Server configuration
-  host: "127.0.0.1"  # Localhost only in dev
-  port: 8000
-  workers: 1  # Single worker for debugging
-  reload: true  # Auto-reload on code changes
-  debug: true
-  log_level: "debug"
-  
-  # CORS (permissive in dev)
-  cors_enabled: true
-  cors_origins: ["*"]
-  cors_methods: ["*"]
-  cors_headers: ["*"]
-  cors_credentials: true
-  
-  # Rate limiting (relaxed in dev)
-  rate_limit:
-    enabled: false  # Disabled for development
-    requests_per_minute: 1000
-    burst: 100
-  
-  # Authentication (disabled in dev)
-  auth:
-    enabled: false
-    type: "none"
-  
-  # Request/Response
-  max_request_size: 10485760  # 10MB
-  request_timeout: 300  # 5 minutes
-  
-  # API endpoints
-  endpoints:
-    predict: "/predict"
-    batch_predict: "/batch_predict"
-    health: "/health"
-    metrics: "/metrics"
-    docs: "/docs"
-    redoc: "/redoc"
-  
-  # Response format
-  response_format: "json"
-  include_metadata: true
-  include_timing: true
-  
-  # Development features
-  enable_playground: true
-  enable_api_docs: true
-  enable_metrics: true
-
-# Deployment configuration
-# Local development deployment
-deployment:
-  type: "local"
-  platform: "local"
-  
-  # Docker (optional for dev)
-  docker:
-    enabled: false
-    image_name: "ag-news-dev"
-    image_tag: "latest"
-    dockerfile: "deployment/docker/Dockerfile.local"
-  
-  # Model serving
-  model_serving:
-    framework: "pytorch"
-    optimization: "none"  # No optimization in dev
-    quantization: false
-    pruning: false
-    onnx_export: false
-  
-  # Resources
-  resources:
-    cpu_limit: null
-    memory_limit: null
-    gpu_limit: null
-
-# Monitoring configuration
-# Development monitoring settings
 monitoring:
   enabled: true
   
-  # TensorBoard
   tensorboard:
     enabled: true
-    log_dir: "outputs/logs/tensorboard"
-    update_freq: "batch"
-    profile_batch: "10, 20"  # Profile batches 10-20
-    histogram_freq: 1
-    write_graph: true
-    write_images: false
+    
+    service:
+      module: "src.services.monitoring.tensorboard_service"
+      class: "TensorBoardService"
+    
+    configuration:
+      log_dir: "outputs/logs/tensorboard"
+      update_freq: "batch"
+      profile_batch: "10,20"
+      histogram_freq: 1
+      write_graph: true
+      write_images: false
+      embeddings_freq: 0
+    
+    development:
+      auto_launch: false
+      port: 6006
   
-  # MLflow
   mlflow:
-    enabled: false  # Disabled by default in dev (can be enabled)
-    tracking_uri: "outputs/logs/mlflow"
-    experiment_name: "ag_news_dev"
-    run_name: null  # Auto-generated
-    log_artifacts: true
-    log_models: false  # Don't log models in dev
+    enabled: false
+    
+    configuration:
+      tracking_uri: "outputs/logs/mlflow"
+      experiment_name: "ag_news_dev"
+      run_name: "dev_run"
   
-  # Weights & Biases
   wandb:
-    enabled: false  # Disabled in dev (requires account)
-    project: "ag-news-text-classification"
-    entity: null
-    group: "development"
-    tags: ["dev", "experiment"]
-    notes: "Development run"
+    enabled: false
+    
+    configuration:
+      project: "ag-news-text-classification"
+      entity: null
+      group: "development"
+      job_type: "train"
+      tags:
+        - "dev"
+        - "local"
+        - "experiment"
+      notes: "Development training run"
   
-  # Local metrics
   local_metrics:
     enabled: true
-    save_dir: "outputs/logs/local"
-    save_interval: 100
-    metrics_to_track:
-      - "loss"
-      - "accuracy"
-      - "f1"
-      - "learning_rate"
-      - "memory_usage"
-      - "gpu_utilization"
+    
+    service:
+      module: "src.services.monitoring.local_metrics_service"
+      class: "LocalMetricsService"
+    
+    configuration:
+      save_dir: "outputs/logs/local"
+      save_interval_steps: 10
+      
+      metrics_to_track:
+        - "train_loss"
+        - "eval_loss"
+        - "eval_accuracy"
+        - "eval_f1"
+        - "learning_rate"
+        - "epoch"
+        - "step"
+        - "gpu_memory_allocated"
+        - "gpu_memory_reserved"
+        - "training_time"
   
-  # Performance monitoring
+  overfitting:
+    monitor:
+      module: "src.core.overfitting_prevention.monitors.training_monitor"
+      class: "TrainingMonitor"
+    
+    configuration:
+      track_train_val_gap: true
+      gap_threshold: 0.1
+      gap_metric: "loss"
+      
+      alert_on_overfitting: true
+      alert_threshold_consecutive: 3
+      
+      generate_reports: true
+      report_frequency_steps: 100
+  
   performance:
     track_memory: true
-    track_gpu: true
-    track_time: true
-    profile_training: true
-    profile_inference: false
-  
-  # Overfitting monitoring
-  overfitting:
-    track_train_val_gap: true
-    gap_threshold: 0.05
-    alert_on_overfitting: true
-    log_train_val_comparison: true
+    track_gpu_utilization: true
+    track_training_speed: true
+    track_system_stats: true
+    
+    alerts:
+      memory_threshold_percent: 90
+      gpu_memory_threshold_percent: 90
 
-# Logging configuration
-# Comprehensive logging for development
+overfitting_prevention:
+  enabled: true
+  
+  system:
+    module: "src.core.overfitting_prevention"
+    strict_mode: false
+    config_source: "configs/overfitting_prevention"
+  
+  test_set_protection:
+    enabled: true
+    
+    guard:
+      module: "src.core.overfitting_prevention.guards.test_set_guard"
+      class: "TestSetGuard"
+    
+    configuration:
+      hash_verification: true
+      hash_algorithm: "sha256"
+      hash_file: "data/metadata/.test_set_hash"
+      
+      access_logging: true
+      log_file: "data/test_access_log.json"
+      
+      prevent_access_during_training: true
+      allow_final_evaluation: true
+  
+  monitoring:
+    real_time:
+      module: "src.core.overfitting_prevention.monitors.overfitting_detector"
+      class: "OverfittingDetector"
+    
+    configuration:
+      track_train_val_gap: true
+      gap_metrics:
+        - "loss"
+        - "accuracy"
+        - "f1"
+      
+      thresholds:
+        loss_gap: 0.1
+        accuracy_gap: 0.05
+        f1_gap: 0.05
+      
+      consecutive_violations: 3
+      
+      actions:
+        alert: true
+        log: true
+        stop_training: false
+        recommend_adjustments: true
+  
+  constraints:
+    enforcer:
+      module: "src.core.overfitting_prevention.constraints.constraint_enforcer"
+      class: "ConstraintEnforcer"
+    
+    model_constraints:
+      max_model_parameters: null
+      max_trainable_parameters: null
+      min_parameter_efficiency_ratio: 0.0
+      
+      lora_constraints:
+        max_rank: 64
+        recommended_rank: 8
+        max_alpha: 64
+    
+    training_constraints:
+      min_validation_ratio: 0.05
+      max_epochs_without_improvement: 10
+      
+      required_regularization: []
+    
+    data_constraints:
+      min_train_samples: 100
+      min_validation_samples: 50
+      prevent_data_augmentation_in_validation: true
+  
+  validation:
+    data_leakage:
+      detector:
+        module: "src.core.overfitting_prevention.validators.data_leakage_detector"
+        class: "DataLeakageDetector"
+      
+      checks:
+        - "train_val_overlap"
+        - "train_test_overlap"
+        - "val_test_overlap"
+        - "duplicate_samples"
+    
+    hyperparameter:
+      validator:
+        module: "src.core.overfitting_prevention.validators.hyperparameter_validator"
+        class: "HyperparameterValidator"
+      
+      rules:
+        prevent_tuning_on_test: true
+        limit_tuning_iterations: null
+        track_tuning_history: true
+  
+  recommendations:
+    recommender:
+      module: "src.core.overfitting_prevention.recommendations.config_recommender"
+      class: "ConfigRecommender"
+    
+    generation:
+      auto_recommend: true
+      recommend_on_overfitting: true
+      
+      suggestions:
+        - "increase_dropout"
+        - "increase_weight_decay"
+        - "reduce_model_complexity"
+        - "increase_data_augmentation"
+        - "early_stopping"
+  
+  reporting:
+    reporter:
+      module: "src.core.overfitting_prevention.reporting.overfitting_reporter"
+      class: "OverfittingReporter"
+    
+    configuration:
+      generate_reports: true
+      report_frequency_steps: 100
+      output_dir: "outputs/results/overfitting_reports"
+      
+      report_format: "html"
+      include_visualizations: true
+      include_recommendations: true
+
 logging:
-  # Log level
-  level: "DEBUG"  # Most verbose
+  configuration:
+    version: 1
+    disable_existing_loggers: false
   
-  # Log format
-  format: "%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s"
-  date_format: "%Y-%m-%d %H:%M:%S"
+  formatters:
+    standard:
+      format: "[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s"
+      datefmt: "%Y-%m-%d %H:%M:%S"
+    
+    detailed:
+      format: "[%(asctime)s] [%(name)s] [%(levelname)s] [%(filename)s:%(lineno)d] %(message)s"
+      datefmt: "%Y-%m-%d %H:%M:%S"
+    
+    simple:
+      format: "%(levelname)s - %(message)s"
   
-  # Log outputs
-  console:
-    enabled: true
+  handlers:
+    console:
+      class: "logging.StreamHandler"
+      level: "INFO"
+      formatter: "simple"
+      stream: "ext://sys.stdout"
+    
+    file:
+      class: "logging.handlers.RotatingFileHandler"
+      level: "DEBUG"
+      formatter: "detailed"
+      filename: "outputs/logs/local/dev.log"
+      maxBytes: 10485760
+      backupCount: 5
+      encoding: "utf8"
+    
+    error_file:
+      class: "logging.handlers.RotatingFileHandler"
+      level: "ERROR"
+      formatter: "detailed"
+      filename: "outputs/logs/local/dev_errors.log"
+      maxBytes: 10485760
+      backupCount: 3
+      encoding: "utf8"
+  
+  loggers:
+    ag_news_text_classification:
+      level: "DEBUG"
+      handlers:
+        - "console"
+        - "file"
+        - "error_file"
+      propagate: false
+    
+    ag_news_text_classification.data:
+      level: "DEBUG"
+    
+    ag_news_text_classification.models:
+      level: "DEBUG"
+    
+    ag_news_text_classification.training:
+      level: "DEBUG"
+    
+    ag_news_text_classification.deployment:
+      level: "DEBUG"
+    
+    transformers:
+      level: "INFO"
+    
+    datasets:
+      level: "INFO"
+    
+    torch:
+      level: "WARNING"
+  
+  root:
     level: "INFO"
-    colored: true
-  
-  file:
-    enabled: true
-    level: "DEBUG"
-    path: "outputs/logs/training/dev.log"
-    max_bytes: 10485760  # 10MB
-    backup_count: 5
-    encoding: "utf-8"
-  
-  # Component-specific logging
-  components:
-    data: "DEBUG"
-    model: "DEBUG"
-    training: "DEBUG"
-    evaluation: "INFO"
-    api: "DEBUG"
-    monitoring: "INFO"
-  
-  # Third-party library logging
-  libraries:
-    transformers: "INFO"
-    datasets: "INFO"
-    torch: "WARNING"
-    tensorflow: "WARNING"
-  
-  # Development features
-  log_gpu_stats: true
-  log_memory_stats: true
-  log_system_stats: true
-  log_hyperparameters: true
-  log_model_summary: true
+    handlers:
+      - "console"
+      - "file"
 
-# Debugging configuration
-# Enhanced debugging for development
 debugging:
   enabled: true
   
-  # Breakpoint support
-  allow_breakpoints: true
+  error_handling:
+    verbose_errors: true
+    full_stack_traces: true
+    interactive_debugger: false
+    save_error_state: true
   
-  # Error handling
-  verbose_errors: true
-  full_stack_traces: true
-  interactive_debugger: false  # Set true to drop into debugger on error
+  gradient_debugging:
+    detect_anomaly: true
+    check_gradients: true
+    log_gradient_norms: true
   
-  # Gradient debugging
-  detect_anomaly: true  # PyTorch autograd anomaly detection
-  check_gradients: true
-  log_gradient_norms: true
+  numerical_stability:
+    check_numerics: true
+    nan_detection: true
+    inf_detection: true
   
-  # Numerical stability
-  check_numerics: true
-  nan_detection: true
-  inf_detection: true
+  profiling:
+    profile_memory: true
+    profile_time: true
+    trace_malloc: false
   
-  # Performance debugging
-  profile_memory: true
-  profile_time: true
-  trace_malloc: false  # Very detailed memory tracing (slow)
+  model_debugging:
+    print_model_summary: true
+    save_model_graph: true
+    visualize_attention: false
   
-  # Model debugging
-  print_model_summary: true
-  save_model_graph: true
-  visualize_attention: false  # Can be slow
-  
-  # Development helpers
-  save_failed_batches: true
-  log_sample_predictions: true
-  log_sample_inputs: true
+  development_helpers:
+    save_failed_batches: true
+    log_sample_predictions: true
+    log_sample_inputs: true
 
-# Testing configuration
-# Settings for running tests in development
 testing:
-  # Test mode
-  enabled: false  # Not in test mode by default
+  enabled: false
   
-  # Test data
-  use_test_data: false
-  test_data_dir: "data/test_samples"
-  
-  # Test coverage
-  measure_coverage: false
-  coverage_threshold: 80
-  
-  # Unit tests
   unit_tests:
     enabled: true
     test_dir: "tests/unit"
     pattern: "test_*.py"
   
-  # Integration tests
   integration_tests:
     enabled: true
     test_dir: "tests/integration"
     pattern: "test_*.py"
   
-  # Performance tests
   performance_tests:
     enabled: false
     test_dir: "tests/performance"
   
-  # Quick test mode
-  quick_test_mode: false
-  skip_slow_tests: false
+  quick_test_mode:
+    enabled: false
+    skip_slow_tests: false
 
-# Overfitting prevention configuration
-# Relaxed settings for development
-overfitting_prevention:
-  enabled: true
-  strict_mode: false  # Relaxed in dev
+api:
+  enabled: false
   
-  # Test set protection
-  test_set_protection:
+  server:
+    host: "127.0.0.1"
+    port: 8000
+    workers: 1
+    reload: true
+    debug: true
+  
+  cors:
     enabled: true
-    hash_verification: true
-    access_logging: true
-    max_accesses: null  # Unlimited in dev
+    origins: ["*"]
+    methods: ["*"]
+    headers: ["*"]
   
-  # Monitoring
-  monitoring:
-    track_train_val_gap: true
-    gap_threshold: 0.1  # More lenient in dev
-    alert_on_overfitting: true
-    fail_on_overfitting: false  # Warn only
+  rate_limit:
+    enabled: false
   
-  # Constraints (relaxed in dev)
-  constraints:
-    max_model_complexity: null  # No limit
-    min_validation_size: 0.05  # Minimum 5%
-    required_regularization: false
-    max_epochs_without_improvement: 10
-  
-  # Validation strategy
-  validation:
-    strategy: "holdout"  # Simple holdout in dev
-    k_folds: null
-    stratified: true
-  
-  # Recommendations
-  recommendations:
-    enabled: true
-    auto_apply: false  # Manual application in dev
-    suggest_regularization: true
-    suggest_early_stopping: true
-
-# Security configuration
-# Relaxed security for development
-security:
-  # Authentication
   authentication:
     enabled: false
-    type: "none"
-  
-  # Authorization
-  authorization:
-    enabled: false
-  
-  # API security
-  api_key_required: false
-  token_required: false
-  
-  # Data privacy
-  data_privacy:
-    pii_detection: false  # Disabled in dev
-    data_masking: false
-  
-  # Model security
-  model_security:
-    checksum_verification: false
-    signature_verification: false
-  
-  # Network security
-  https_only: false
-  ssl_cert: null
-  ssl_key: null
 
-# Feature flags
-# Enable/disable experimental features
-features:
-  # Experimental features
-  experimental:
-    flash_attention: false  # Requires specific GPU
-    gradient_checkpointing: false
-    model_parallelism: false
-    pipeline_parallelism: false
+performance:
+  training:
+    optimization_level: "none"
+    
+    compiler:
+      torch_compile: false
+      compile_mode: null
+      compile_backend: null
+    
+    transformers:
+      use_better_transformer: false
+      flash_attention: false
+    
+    cuda:
+      enable_tf32: false
+      cudnn_benchmark: true
+      cudnn_deterministic: false
+    
+    dataloader:
+      pin_memory: true
+      non_blocking: true
+      prefetch_factor: 2
+      persistent_workers: false
   
-  # Advanced features
+  inference:
+    batch_size: 32
+    precision: "fp32"
+    optimization: "none"
+  
+  profiling:
+    enabled: true
+    
+    configuration:
+      profile_memory: true
+      profile_time: true
+      with_stack: false
+      record_shapes: false
+
+features:
+  experimental:
+    flash_attention: false
+    torch_compile: false
+    better_transformer: false
+  
   advanced:
     ensemble_models: false
     knowledge_distillation: false
     multi_task_learning: false
-    curriculum_learning: false
   
-  # Optimization features
   optimization:
     mixed_precision: false
     gradient_accumulation: true
+    gradient_checkpointing: false
     dynamic_batching: false
   
-  # Data features
   data:
     augmentation: false
-    back_translation: false
-    synthetic_generation: false
+    streaming: false
+    caching: true
   
-  # Platform features
   platform:
-    auto_platform_detection: true
-    platform_optimization: true
-    quota_tracking: false  # Not needed in local dev
+    auto_detection: true
+    platform_optimization: false
+    quota_tracking: false
   
-  # Development features
   development:
     hot_reload: true
     auto_profiling: true
     interactive_mode: false
 
-# Platform-specific configuration
-# Settings for different platforms (dev is typically local)
-platform:
-  type: "local"
-  auto_detect: false  # Explicitly set to local
-  
-  # Local configuration
-  local:
-    gpu_enabled: true
-    multi_gpu: false
-    cpu_fallback: true
-    
-    # Resource limits
-    max_memory_gb: null
-    max_gpu_memory_gb: null
-    max_cpus: null
-  
-  # Optimization
-  optimization:
-    auto_batch_size: false  # Manual control in dev
-    auto_precision: false
-    memory_efficient: false
-
-# Performance configuration
-# Development performance settings
-performance:
-  # Training performance
-  training:
-    compile_model: false  # PyTorch 2.0 compile (experimental)
-    use_better_transformer: false
-    channels_last: false
-  
-  # Inference performance
-  inference:
-    batch_size: 32
-    num_workers: 1
-    use_half_precision: false
-  
-  # Memory management
-  memory:
-    gradient_checkpointing: false
-    cpu_offload: false
-    empty_cache_steps: 100
-
-# Miscellaneous settings
-misc:
-  # Timezone
-  timezone: "UTC"
-  
-  # Locale
-  locale: "en_US.UTF-8"
-  
-  # Temporary files
-  temp_dir: "outputs/temp/dev"
-  cleanup_temp: false  # Keep for debugging
-  
-  # Notifications
-  notifications:
+security:
+  authentication:
     enabled: false
-    on_completion: false
-    on_error: false
   
-  # Backup
-  backup:
-    enabled: false
-    backup_dir: "backup/dev"
+  data_privacy:
+    pii_detection: false
+    data_masking: false
   
-  # Version control
-  git:
-    track_changes: true
-    commit_on_checkpoint: false
+  model_security:
+    verify_checksums: false
+    trusted_sources_only: true
 
-# Validation rules
-# Configuration validation settings
 validation:
-  # Schema validation
-  validate_schema: true
-  strict_schema: false
+  schema:
+    validate_on_load: true
+    strict_schema: false
+    allow_unknown_fields: true
   
-  # Type checking
-  strict_types: false
-  coerce_types: true
+  dependencies:
+    check_versions: true
+    check_gpu: true
+    check_cuda: true
   
-  # Required fields
-  check_required_fields: true
-  fail_on_missing: false  # Warn only in dev
-  
-  # Value ranges
-  check_ranges: true
-  fail_on_invalid_range: false  # Warn only
-  
-  # Dependencies
-  check_dependencies: true
-  warn_on_missing_dependencies: true
+  paths:
+    verify_existence: false
+    create_missing: true
 
-# Documentation
-# Inline documentation for this configuration
 documentation:
   description: |
     Development environment configuration for AG News Text Classification.
+    Optimized for rapid iteration, comprehensive debugging, and local development.
     
-    This configuration is optimized for:
-    - Fast iteration and experimentation
-    - Comprehensive debugging and logging
-    - Local development and testing
-    - Flexibility and ease of use
-    
-    Not suitable for:
-    - Production deployment
-    - Final accuracy benchmarks
-    - Large-scale training
-    - Performance optimization
+    Features:
+    - Fast training with DeBERTa-base model
+    - Comprehensive DEBUG-level logging
+    - Full error stack traces
+    - Memory and GPU profiling
+    - TensorBoard integration
+    - Test set protection maintained
+    - Relaxed overfitting constraints
   
-  usage: |
-    To use this configuration:
+  quickstart: |
+    Quick development workflow:
     
-    1. Set environment variable:
-       export ENVIRONMENT=dev
+    # Standard training
+    python src/cli.py train --env dev
     
-    2. Run training:
-       python train.py
+    # Quick test mode (1000 samples)
+    python src/cli.py train --env dev --quick-test
     
-    3. Or specify explicitly:
-       python train.py --config configs/environments/dev.yaml
+    # With TensorBoard
+    tensorboard --logdir outputs/logs/tensorboard
     
-    4. For quick tests:
-       python train.py --quick-test
+    # Simple training script
+    python quickstart/train_simple.py --env dev
   
-  tips: |
-    Development tips:
-    
-    - Use smaller batch sizes for faster GPU memory feedback
-    - Enable logging.level=DEBUG for detailed logs
-    - Set training.num_epochs=1 for very quick tests
-    - Use data.quick_test_samples for rapid iteration
-    - Enable debugging.detect_anomaly for gradient issues
-    - Check outputs/logs/tensorboard for training progress
+  references:
+    project_documentation: "https://github.com/VoHaiDung/ag-news-text-classification/blob/main/docs/"
+    troubleshooting: "https://github.com/VoHaiDung/ag-news-text-classification/blob/main/TROUBLESHOOTING.md"
   
-  notes: |
-    Important notes:
-    
-    - Test set is always protected even in dev mode
-    - Reproducibility is maintained with fixed seeds
-    - Auto-reload may not work with all code changes
-    - GPU memory usage may vary based on model size
-    - Some features require specific hardware/software
+  related_configs:
+    - "configs/models/single/transformers/deberta/deberta_v3_base.yaml"
+    - "configs/training/standard/base_training.yaml"
+    - "configs/overfitting_prevention/safe_defaults/beginner_safe_defaults.yaml"
 
-# End of development environment configuration
-# Last updated: 2025-09-19
-# Maintainer: Võ Hải Dũng (vohaidung.work@gmail.com)
+maintainer:
+  name: "Võ Hải Dũng"
+  email: "vohaidung.work@gmail.com"
+  last_updated: "2025-09-19"
+  version: "1.0.0"
