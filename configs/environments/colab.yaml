@@ -1,11 +1,10 @@
-# AG News Text Classification (ag-news-text-classification)
-# Google Colab Environment Configuration
+# AG News Text Classification - Google Colab Environment Configuration
 #
 # This configuration file defines comprehensive settings for executing the
-# AG News Text Classification (ag-news-text-classification) project within the
-# Google Colaboratory environment. The configuration is meticulously optimized
-# for free-tier GPU constraints, session lifecycle management, quota awareness,
-# Google Drive integration, and checkpoint-based recovery mechanisms.
+# AG News Text Classification within the Google Colaboratory environment. The 
+# configuration is meticulously optimized for free-tier GPU constraints, session
+# lifecycle management, quota awareness, Google Drive integration, and 
+# checkpoint-based recovery mechanisms.
 #
 # Google Colaboratory Environment Characteristics:
 #   Hardware Resources:
@@ -321,7 +320,7 @@
 
 metadata:
   name: "Google Colab Environment Configuration"
-  description: "Production-grade configuration for Google Colaboratory deployment of AG News Text Classification (ag-news-text-classification) project"
+  description: "Production-grade configuration for Google Colaboratory deployment of AG News Text Classification"
   
   project:
     name_display: "AG News Text Classification"
@@ -1819,8 +1818,8 @@ validation:
 documentation:
   description: |
     Production-grade Google Colab environment configuration for AG News Text
-    Classification (ag-news-text-classification) project. This configuration
-    is meticulously optimized for free-tier GPU training, incorporating:
+    Classification. This configuration is meticulously optimized for 
+    free-tier GPU training, incorporating:
     
     - Memory-efficient DeBERTa-large with LoRA (16GB VRAM, 12GB RAM)
     - Checkpoint-based session recovery for 12-hour runtime limit
