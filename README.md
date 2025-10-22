@@ -1,1772 +1,718 @@
 # AG News Text Classification
 
-$$
-A_{ij} = Q^c_i K^c_j + Q^c_i K^r_{i-j} + K^c_j Q^r_{i-j}
-$$
+<div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-ee4c2c.svg)](https://pytorch.org/)
+[![Transformers](https://img.shields.io/badge/🤗_Transformers-4.30+-yellow.svg)](https://huggingface.co/transformers/)
 [![arXiv](https://img.shields.io/badge/arXiv-2025.xxxxx-b31b1b.svg)](https://arxiv.org/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 **Author**: Võ Hải Dũng  
 **Email**: vohaidung.work@gmail.com  
-**Repository**: [github.com/VoHaiDung/ag-news-text-classification](https://github.com/VoHaiDung/ag-news-text-classification)  
-**Year**: 2025
+**Repository**: [github.com/VoHaiDung/ag-news-text-classification](https://github.com/VoHaiDung/ag-news-text-classification)
+
+</div>
 
 ---
 
 ## Introduction
 
-### 1. Theoretical Foundations of Text Classification
+### 1. Theoretical Foundations and Problem Formulation
 
-#### 1.1 Problem Formulation
+#### 1.1 Text Classification as Supervised Learning
 
-Text classification is a **supervised learning task** that assigns predefined categorical labels to text documents. Formally, given:
+Text classification constitutes a fundamental supervised learning problem where the objective is to learn a mapping function from textual inputs to predefined categorical labels, optimizing for generalization to unseen instances drawn from the same underlying distribution.
 
-- **Input space** 𝒳: Set of all possible text documents
-- **Output space** 𝒴 = {y₁, y₂, ..., yₖ}: Set of K predefined classes
-- **Training set** 𝒟 = {(x₁, y₁), (x₂, y₂), ..., (xₙ, yₙ)}: N labeled examples where xᵢ ∈ 𝒳 and yᵢ ∈ 𝒴
+**Formal Problem Definition**
 
-The objective is to learn a function **f: 𝒳 → 𝒴** that minimizes the **expected risk**:
+Let $\mathcal{X}$ denote the space of all possible text documents, and $\mathcal{Y} = \{y_1, y_2, \ldots, y_K\}$ represent a finite set of $K$ predefined classes. We are provided with a training dataset:
 
-```
-R(f) = 𝔼[(x,y)~P] [ℓ(f(x), y)]
-```
+$$
+\mathcal{D} = \{(x_1, y_1), (x_2, y_2), \ldots, (x_N, y_N)\}
+$$
 
-where ℓ is a loss function (e.g., 0-1 loss, cross-entropy) and P is the unknown joint distribution over 𝒳 × 𝒴.
+consisting of $N$ labeled examples, where each $x_i \in \mathcal{X}$ is a text document and $y_i \in \mathcal{Y}$ is its corresponding class label.
 
-**Key Challenges**:
-1. **High Dimensionality**: Text documents can contain thousands of unique tokens, creating sparse, high-dimensional feature spaces
-2. **Variable Length**: Documents range from short tweets (10-20 tokens) to long articles (1000+ tokens), requiring flexible architectures
-3. **Semantic Ambiguity**: Polysemy (words with multiple meanings), synonymy (different words with same meaning), and context-dependency
-4. **Class Imbalance**: Real-world datasets often exhibit skewed class distributions
-5. **Domain Shift**: Models trained on one domain (e.g., news) may fail on another (e.g., medical text)
+The learning objective is to find a function $f: \mathcal{X} \rightarrow \mathcal{Y}$ that minimizes the **expected risk** (generalization error):
 
-#### 1.2 Historical Evolution of Approaches
-
-The field has evolved through five distinct paradigms, each addressing limitations of its predecessors:
-
-**Phase 1: Classical Machine Learning (1990s-2010)**
-
-**Representation**: Bag-of-Words (BoW) and TF-IDF
-- Documents represented as sparse vectors in vocabulary space
-- TF-IDF weighting: `w(t,d) = tf(t,d) × log(N/df(t))`
-  - tf(t,d): Term frequency of token t in document d
-  - N: Total number of documents
-  - df(t): Document frequency (number of documents containing t)
-
-**Algorithms**:
-- **Naive Bayes**: Assumes conditional independence of features given class
-  ```
-  P(y|x) ∝ P(y) ∏ᵢ P(xᵢ|y)
-  ```
-  **Strength**: Fast, works well with small datasets  
-  **Weakness**: Independence assumption violated in natural language
-
-- **Support Vector Machines (SVM)**: Finds maximum-margin hyperplane
-  ```
-  min ½||w||² + C∑ξᵢ
-  s.t. yᵢ(w·xᵢ + b) ≥ 1 - ξᵢ
-  ```
-  **Strength**: Effective in high-dimensional spaces, kernel trick for non-linearity  
-  **Weakness**: Computationally expensive for large datasets, requires feature engineering
-
-- **Logistic Regression**: Probabilistic linear classifier
-  ```
-  P(y=1|x) = σ(w·x + b) = 1/(1 + e^(-(w·x + b)))
-  ```
-  **Strength**: Interpretable, fast training  
-  **Weakness**: Linear decision boundaries, limited expressiveness
-
-**Limitations**: Ignores word order, fails to capture semantic relationships, requires manual feature engineering
-
-**Phase 2: Neural Networks (2010-2017)**
-
-**Word Embeddings**: Continuous vector representations learning semantic relationships
-- **Word2Vec** (Mikolov et al., 2013): Skip-gram and CBOW models
-  ```
-  Skip-gram objective: max ∑ᵢ ∑ⱼ log P(wⱼ|wᵢ)
-  where P(wⱼ|wᵢ) = exp(vⱼ·vᵢ) / ∑ₖ exp(vₖ·vᵢ)
-  ```
-  **Innovation**: "King - Man + Woman ≈ Queen" semantic algebra
-
-- **GloVe** (Pennington et al., 2014): Global matrix factorization
-  ```
-  Objective: min ∑ᵢⱼ f(Xᵢⱼ)(wᵢ·w̃ⱼ + bᵢ + b̃ⱼ - log Xᵢⱼ)²
-  ```
-  **Advantage**: Captures global corpus statistics
-
-**Architectures**:
-- **CNN for Text** (Kim, 2014): Convolutional filters capture n-gram patterns
-  ```
-  Architecture: Embedding → Conv1D(k=3,4,5) → MaxPool → Dense
-  ```
-  **Strength**: Captures local patterns, translation-invariant  
-  **Weakness**: Fixed receptive field, struggles with long-range dependencies
-
-- **LSTM/GRU** (Hochreiter & Schmidhuber, 1997; Cho et al., 2014): Recurrent networks for sequential modeling
-  ```
-  LSTM gates:
-  fₜ = σ(Wf·[hₜ₋₁, xₜ] + bf)  (forget gate)
-  iₜ = σ(Wi·[hₜ₋₁, xₜ] + bi)  (input gate)
-  oₜ = σ(Wo·[hₜ₋₁, xₜ] + bo)  (output gate)
-  ```
-  **Strength**: Captures sequential dependencies, handles variable-length inputs  
-  **Weakness**: Vanishing gradients for long sequences, slow sequential processing
-
-**Limitations**: Embeddings are context-independent (same vector for "bank" in "river bank" vs. "savings bank"), limited by recurrent bottleneck
-
-**Phase 3: Attention and Transformers (2017-2019)**
-
-**Self-Attention Mechanism** (Vaswani et al., 2017):
-```
-Attention(Q, K, V) = softmax(QK^T / √dₖ) V
+$$
+R(f) = \mathbb{E}_{(x,y) \sim P} [\ell(f(x), y)]
+$$
 
 where:
-Q = XWQ  (queries)
-K = XWK  (keys)
-V = XWV  (values)
-```
+- $P$ is the unknown joint probability distribution over $\mathcal{X} \times \mathcal{Y}$ from which data are sampled
+- $\ell: \mathcal{Y} \times \mathcal{Y} \rightarrow \mathbb{R}^+$ is a loss function measuring prediction error
+- $\mathbb{E}$ denotes the expectation over the data distribution
 
-**Key Innovation**: Each token attends to all other tokens, capturing long-range dependencies in parallel
+**Commonly used loss functions**:
 
-**Transformer Architecture**:
-```
-Encoder Stack:
-  Input → Embedding + Positional Encoding
-       → Multi-Head Self-Attention
-       → Add & Norm (Residual Connection)
-       → Feed-Forward Network (2-layer MLP)
-       → Add & Norm
-       → [Repeat N times]
-       → Classification Head
-```
+- **0-1 Loss** (classification accuracy):
+  $$\ell_{0-1}(f(x), y) = \mathbb{I}[f(x) \neq y] = \begin{cases} 0 & \text{if } f(x) = y \\ 1 & \text{if } f(x) \neq y \end{cases}$$
 
-**Multi-Head Attention**: Projects to h different representation subspaces
-```
-MultiHead(Q,K,V) = Concat(head₁,...,headₕ)W^O
-where headᵢ = Attention(QWᵢQ, KWᵢK, VWᵢV)
-```
+- **Cross-Entropy Loss** (for probabilistic predictions):
+  $$\ell_{CE}(f(x), y) = -\log P(y \mid x; f)$$
 
-**Advantages over RNNs**:
-- **Parallelization**: All positions processed simultaneously (vs. sequential in RNNs)
-- **Long-range dependencies**: Direct connections between distant tokens
-- **Gradient flow**: Residual connections mitigate vanishing gradients
+Since the true distribution $P$ is unknown and inaccessible, we instead minimize the **empirical risk** (training error) computed on the observed dataset:
 
-**Phase 4: Pre-trained Language Models (2018-2023)**
+$$
+R_{\text{emp}}(f) = \frac{1}{N} \sum_{i=1}^{N} \ell(f(x_i), y_i)
+$$
 
-**Transfer Learning Paradigm**: Pre-train on large unlabeled corpora, fine-tune on task-specific data
+**The Fundamental Challenge: Overfitting**
 
-**BERT** (Devlin et al., 2019): Bidirectional Encoder Representations from Transformers
-```
-Pre-training objectives:
-1. Masked Language Modeling (MLM):
-   P(xᵢ | x\ᵢ) where \ᵢ denotes masked context
-   
-2. Next Sentence Prediction (NSP):
-   P(IsNext | SentenceA, SentenceB)
+The core tension in supervised learning is the **bias-variance-covariance decomposition**. For squared loss in regression, the expected error decomposes as:
 
-Fine-tuning: Add task-specific head, train end-to-end
-```
-
-**Evolution of Encoder Models**:
-
-| Model | Parameters | Key Innovation | AG News SOTA (reported) |
-|-------|-----------|----------------|------------------------|
-| **BERT-Base** (2018) | 110M | Bidirectional pre-training, MLM | 94.6% (Zhang et al., 2020) |
-| **BERT-Large** (2018) | 340M | Scaled BERT architecture | 95.1% |
-| **RoBERTa** (2019) | 125M/355M | Dynamic masking, no NSP, more data | 95.8% (Liu et al., 2019) |
-| **ALBERT** (2020) | 12M/235M | Parameter sharing, factorized embeddings | 95.3% |
-| **ELECTRA** (2020) | 110M/335M | Replaced token detection (more efficient) | 95.7% (Clark et al., 2020) |
-| **DeBERTa** (2020) | 134M/304M | Disentangled attention, enhanced mask decoder | 96.2% (He et al., 2020) |
-| **DeBERTa-v3** (2021) | 184M/304M/710M/1.5B | ELECTRA-style pre-training, gradient-disentangled embedding sharing | **96.8%** (He et al., 2021) |
-
-**Phase 5: Large Language Models and Parameter Efficiency (2023-2025)**
-
-**Decoder-Only LLMs**: GPT, Llama, Mistral use causal (left-to-right) attention
-```
-Causal Attention: Mask future tokens
-Attention_causal(Q,K,V) = softmax((QK^T + M) / √dₖ) V
-where Mᵢⱼ = -∞ if i < j else 0
-```
-
-**Challenge**: Models with 7B-70B parameters require hundreds of GBs of VRAM for full fine-tuning
-
-**Parameter-Efficient Fine-Tuning (PEFT)**: Update small subset of parameters
-
-**LoRA** (Hu et al., 2021): Low-Rank Adaptation
-```
-W' = W₀ + ΔW = W₀ + BA
+$$
+\mathbb{E}[(f(x) - y)^2] = \text{Bias}^2 + \text{Variance} + \text{Irreducible Error}
+$$
 
 where:
-- W₀ ∈ ℝ^(d×k): Frozen pre-trained weights
-- B ∈ ℝ^(d×r), A ∈ ℝ^(r×k): Trainable low-rank matrices
-- r << min(d,k): Rank (typically 8-64)
+- **Bias**: Error from incorrect assumptions in the learning algorithm (underfitting)
+- **Variance**: Error from sensitivity to small fluctuations in training data (overfitting)
+- **Irreducible Error**: Noise inherent in the problem (Bayes error)
 
-Trainable parameters: r(d+k) vs. dk for full fine-tuning
-Reduction: r(d+k)/(dk) ≈ 2r/d for square matrices
-```
+A model may achieve zero empirical risk (perfect memorization of training data) yet exhibit high expected risk (poor generalization)—the phenomenon of **overfitting**. This occurs when:
 
-**Example**: For d=4096, r=8:
-- Full FT: 4096×4096 = 16.78M parameters
-- LoRA: 8×(4096+4096) = 65.5K parameters (99.6% reduction)
+$$
+R_{\text{emp}}(f) \ll R(f)
+$$
 
-**QLoRA** (Dettmers et al., 2023): Quantized LoRA
-```
-Innovations:
-1. 4-bit NormalFloat (NF4): Quantization optimized for normally distributed weights
-2. Double Quantization: Quantize quantization constants
-3. Paged Optimizers: Use CPU RAM for optimizer states
+**Quantifying Generalization Gap**:
 
-Memory: 4-bit weights + 16-bit LoRA adapters
-Enables: 65B model fine-tuning on 48GB GPU (vs. 780GB for FP16 full FT)
-```
+Define the **generalization gap** as:
 
-#### 1.3 Ensemble Learning Theory
+$$
+\Delta(f) = R(f) - R_{\text{emp}}(f)
+$$
 
-**Ensemble Hypothesis**: Combining multiple models reduces variance and bias through diversity
+Statistical learning theory (Vapnik-Chervonenkis theory) provides upper bounds:
 
-**Bias-Variance-Covariance Decomposition** (Krogh & Vedelsby, 1995):
-```
-For regression:
-E[(f_ens(x) - y)²] = E_avg + ĒA
+$$
+R(f) \leq R_{\text{emp}}(f) + \sqrt{\frac{d \log(N/d) + \log(1/\delta)}{N}}
+$$
 
-where:
-- E_avg: Average error of individual models
-- ĒA: Ensemble ambiguity (diversity)
+with probability $1-\delta$, where $d$ is the VC dimension (model complexity measure). This bound reveals the trade-off:
+- **High capacity** (large $d$): Can fit training data well (low $R_{\text{emp}}$) but large generalization gap
+- **Low capacity** (small $d$): Tight bound but may have high $R_{\text{emp}}$ (underfitting)
 
-For classification (0-1 loss):
-Error_ens ≤ Error_avg - Diversity_term
-```
+**This work systematically addresses overfitting** through:
+1. **Architectural constraints**: Parameter-efficient methods limiting effective capacity
+2. **Regularization strategies**: Explicit penalties on model complexity
+3. **Ensemble diversity**: Reducing variance through model averaging
+4. **Automated monitoring**: Real-time detection of train-validation divergence
+5. **Test set protection**: Rigorous protocols preventing data leakage
 
-**Diversity Metrics**:
+#### 1.2 Unique Challenges in Text Classification
 
-| Metric | Formula | Interpretation |
-|--------|---------|----------------|
-| **Disagreement** | D(i,j) = P(hᵢ(x)≠hⱼ(x)) | Probability of different predictions |
-| **Q-Statistic** | Q = (N¹¹N⁰⁰ - N⁰¹N¹⁰)/(N¹¹N⁰⁰ + N⁰¹N¹⁰) | Correlation (-1 to 1, lower is better) |
-| **Correlation** | ρ = E[(hᵢ-Ē)(hⱼ-Ē)]/σᵢσⱼ | Pearson correlation of errors |
-| **Entropy** | H = -∑P(class)log P(class) | Prediction distribution diversity |
+Text classification poses distinctive challenges differentiating it from other supervised learning domains:
 
-**Ensemble Methods**:
+**Challenge 1: High Dimensionality and Sparsity**
 
-**1. Voting**:
-```
-Hard Voting: ŷ = argmax_y ∑ᵢ 𝟙(hᵢ(x) = y)
-Soft Voting: ŷ = argmax_y ∑ᵢ Pᵢ(y|x)
-Weighted: ŷ = argmax_y ∑ᵢ wᵢPᵢ(y|x)  where ∑wᵢ = 1
-```
+Natural language exists in an extremely high-dimensional space. For a vocabulary of size $|\mathcal{V}|$ (typically 30,000-100,000 unique tokens), even the simplest **bag-of-words** representation creates a $|\mathcal{V}|$-dimensional feature vector.
 
-**2. Stacking** (Wolpert, 1992):
-```
-Level 0: Base models h₁,...,hₘ trained on training data
-Level 1: Meta-model trained on:
-  - Input: [h₁(x),...,hₘ(x)] (base model predictions)
-  - Output: True label y
-  
-Cross-validation: Use out-of-fold predictions to avoid overfitting
-```
+**Mathematical Representation**: For document $d$ containing words $w_1, w_2, \ldots, w_m$, the bag-of-words vector is:
 
-**3. Blending**:
-```
-Similar to stacking but:
-- Use holdout validation set (not cross-validation)
-- Simpler, less computationally expensive
-- Slightly higher bias (less training data for meta-model)
-```
+$$
+\mathbf{x} = [c_1, c_2, \ldots, c_{|\mathcal{V}|}]^\top \in \mathbb{R}^{|\mathcal{V}|}
+$$
 
-**Theoretical Guarantees**: For K diverse classifiers with error rate ε < 0.5:
-```
-Ensemble error (majority voting) ≤ ∑_{k>K/2} C(K,k) εᵏ(1-ε)^(K-k)
-```
-Error decreases exponentially with K if models are independent (strong diversity assumption)
+where $c_i$ is the count of word $w_i$ in document $d$.
 
-#### 1.4 Knowledge Distillation Theory
+However, any individual document utilizes only a small fraction of the vocabulary, resulting in **sparse representations** where 95-99% of features are zero.
 
-**Knowledge Distillation** (Hinton et al., 2015): Transfer knowledge from large "teacher" to small "student"
+**Sparsity Measure**: Define document sparsity as:
 
-**Temperature-Scaled Softmax**:
-```
-Standard: pᵢ = exp(zᵢ) / ∑ⱼ exp(zⱼ)
+$$
+\text{Sparsity}(d) = 1 - \frac{|\{i : c_i > 0\}|}{|\mathcal{V}|} = 1 - \frac{|d|}{|\mathcal{V}|}
+$$
 
-Softened: qᵢ = exp(zᵢ/T) / ∑ⱼ exp(zⱼ/T)
+where $|d|$ is the number of unique words in document $d$.
 
-where T > 1: Temperature (typical range: 1-20)
-```
+**Example**: A 100-word news article from a 50,000-word vocabulary:
+- Unique words in document: ~80 (after removing duplicates)
+- Sparsity: $1 - 80/50000 = 0.9984$ (99.84% zeros)
 
-**Effect of Temperature**:
-- T=1: Standard softmax (sharp distribution)
-- T→∞: Uniform distribution (maximum entropy)
-- Higher T reveals "dark knowledge" (relationships between classes)
+**Implications**:
+
+1. **Curse of Dimensionality**: In high-dimensional spaces, distances become less meaningful. For random points in $\mathbb{R}^d$, the ratio of maximum to minimum distance approaches 1 as $d \rightarrow \infty$:
+   $$\lim_{d \rightarrow \infty} \frac{\max_i \|\mathbf{x}_i - \mathbf{x}_0\|}{\min_i \|\mathbf{x}_i - \mathbf{x}_0\|} = 1$$
+
+2. **Sample Complexity**: Number of samples required to learn grows exponentially with dimensionality. For uniform coverage of feature space with resolution $r$, need $O(r^d)$ samples.
+
+3. **Computational Challenges**: Matrix operations on 50,000-dimensional vectors require specialized sparse data structures.
+
+**Solutions**:
+- **Dimensionality Reduction**: PCA, LSA project to low-dimensional subspace
+- **Dense Embeddings**: Word2Vec, BERT map discrete tokens to continuous $\mathbb{R}^d$ with $d=100-1024$
+- **Sparse Operations**: Efficient implementations (CSR matrices, sparse attention)
+
+**Challenge 2: Variable-Length Sequential Structure**
+
+Unlike fixed-size inputs in image classification (e.g., 224×224 pixels), text documents vary dramatically in length—from short social media posts (10-20 tokens) to long articles (1,000+ tokens).
+
+**Sequence Modeling Requirements**:
+
+1. **Handle arbitrary length**: Architecture must process sequences $\mathbf{x} = [x_1, x_2, \ldots, x_n]$ where $n$ varies
+
+2. **Capture local patterns**: Phrases and n-grams like "not good", "very happy", "absolutely terrible"
+
+3. **Model long-range dependencies**: Subject-verb agreement across clauses, coreference resolution (pronouns to antecedents)
+
+**Approaches**:
+
+**Padding/Truncation**: Standardize to fixed length $L$:
+$$
+\mathbf{x}' = \begin{cases}
+[\mathbf{x}; \mathbf{0}_{L-n}] & \text{if } n < L \text{ (pad)} \\
+\mathbf{x}_{1:L} & \text{if } n > L \text{ (truncate)}
+\end{cases}
+$$
+
+*Limitation*: Padding introduces noise, truncation loses information.
+
+**Recurrent Neural Networks**: Process sequences step-by-step with hidden state:
+$$
+\mathbf{h}_t = f(\mathbf{h}_{t-1}, \mathbf{x}_t; \theta)
+$$
+
+*Limitation*: Vanishing gradients for long sequences (gradient magnitude decays as $\gamma^t$ where $\gamma < 1$).
+
+**Attention Mechanisms**: Allow direct connections between all positions (Section 1.3).
+
+**Challenge 3: Semantic Ambiguity and Context-Dependency**
+
+Natural language exhibits profound ambiguity at multiple linguistic levels:
+
+**1. Polysemy**: Words with multiple meanings depending on context
+
+*Example*: "bank"
+- Financial institution: "I deposited money at the **bank**"
+- Land alongside river: "We sat by the river **bank**"
+
+**2. Synonymy**: Different words with identical or near-identical meanings
+
+$$\text{Synonyms}(\text{"quick"}) = \{\text{"fast"}, \text{"rapid"}, \text{"swift"}, \text{"speedy"}\}$$
+
+Traditional models treating words as atomic units cannot recognize semantic equivalence.
+
+**3. Compositionality**: Meaning emerges from word combinations
+
+*Negation*: "not good" ≠ "good" (sentiment polarity flip)
+
+*Modifier effects*: "incredibly boring" vs. "incredibly exciting" (same intensifier, opposite results)
+
+**Mathematical Framework for Contextualized Representations**:
+
+Traditional word embeddings assign fixed vectors:
+$$w \mapsto \mathbf{v}_w \in \mathbb{R}^d$$
+
+Contextualized embeddings compute representations dynamically:
+$$
+w_i \text{ in context } [w_1, \ldots, w_n] \mapsto \mathbf{h}_i = f(w_1, \ldots, w_n, i; \theta) \in \mathbb{R}^d
+$$
+
+**Example**: In BERT, "bank" receives different representations:
+- $\mathbf{h}_{\text{bank}}^{\text{(financial)}} \approx \mathbf{v}_{\text{money}}, \mathbf{v}_{\text{loan}}$ (cosine similarity > 0.7)
+- $\mathbf{h}_{\text{bank}}^{\text{(river)}} \approx \mathbf{v}_{\text{water}}, \mathbf{v}_{\text{shore}}$ (cosine similarity > 0.7)
+- $\cos(\mathbf{h}_{\text{bank}}^{\text{(financial)}}, \mathbf{h}_{\text{bank}}^{\text{(river)}}) < 0.3$ (distinct representations)
+
+**Challenge 4: Limited Labeled Data vs. Model Capacity**
+
+State-of-the-art models contain hundreds of millions to billions of parameters:
+- DeBERTa-v3-XLarge: 710M parameters
+- Llama 2-70B: 70B parameters
+
+while supervised datasets typically contain $10^3$ to $10^5$ labeled examples.
+
+**Parameter-to-Sample Ratio**:
+
+$$
+\rho = \frac{\text{Model Parameters}}{\text{Training Samples}}
+$$
+
+**Critical Threshold**: When $\rho > 1$, severe overfitting risk—model has enough capacity to memorize all training data.
+
+**Examples**:
+- DeBERTa-v3-XLarge on AG News: $\rho = 710M / 120K \approx 5917$ (each parameter sees <0.0002 samples!)
+- Llama 2-70B on AG News: $\rho = 70B / 120K \approx 583,333$
+
+**Classical Statistical Learning Theory** (Vapnik) suggests sample complexity:
+
+$$
+N = O\left(\frac{d}{\epsilon^2}\right)
+$$
+
+to achieve error within $\epsilon$ of optimal, where $d$ is VC dimension (roughly proportional to parameters). For $d=710M$, would need billions of labeled samples for reliable learning!
+
+**Modern Solutions**:
+
+**1. Transfer Learning**: Pre-train on massive unlabeled corpus (billions of tokens), then fine-tune:
+
+$$
+\theta^* = \arg\min_{\theta} \mathcal{L}_{\text{downstream}}(\theta; \mathcal{D}_{\text{labeled}})
+$$
+
+subject to initialization $\theta_0 = \theta_{\text{pretrained}}$
+
+*Intuition*: Pre-training learns general language understanding (syntax, semantics, world knowledge); fine-tuning specializes to task.
+
+**2. Parameter-Efficient Fine-Tuning (PEFT)**: Update only small subset of parameters:
+
+$$
+\theta_{\text{trainable}} \subset \theta, \quad |\theta_{\text{trainable}}| \ll |\theta|
+$$
+
+*Examples*: 
+- LoRA: 0.1-1% of parameters trainable
+- Adapters: 0.5-3% trainable
+- Prompt tuning: 0.001-0.1% trainable
+
+This dramatically reduces effective capacity, mitigating overfitting.
+
+**3. Regularization**: Explicit complexity penalties:
+
+$$
+\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{task}} + \lambda \Omega(\theta)
+$$
+
+where $\Omega(\theta)$ is regularizer (L2 norm, dropout, etc.).
+
+**4. Data Augmentation**: Synthetically expand training set while preserving label:
+
+$$
+|\mathcal{D}_{\text{augmented}}| = \alpha \cdot |\mathcal{D}_{\text{original}}|, \quad \alpha \in [2, 10]
+$$
+
+through back-translation, paraphrasing, controlled generation.
+
+### 2. Evolution of Text Classification Paradigms
+
+The field has progressed through five distinct eras, each introducing fundamental innovations in representation learning and model architectures.
+
+#### Phase 1: Classical Machine Learning (1990s-2010)
+
+**Core Paradigm**: Transform text into fixed-dimensional feature vectors through manual engineering, then apply traditional classifiers.
+
+**Representation Method 1: Bag-of-Words (BoW)**
+
+Represent document as unordered collection of word counts, completely ignoring grammar, word order, and syntax.
+
+**Mathematical Formulation**: For document $d$ with vocabulary $\mathcal{V} = \{w_1, w_2, \ldots, w_{|\mathcal{V}|}\}$:
+
+$$
+\text{BoW}(d) = [c(w_1, d), c(w_2, d), \ldots, c(w_{|\mathcal{V}|}, d)]^\top \in \mathbb{R}^{|\mathcal{V}|}
+$$
+
+where $c(w_i, d)$ is the count of word $w_i$ in document $d$.
 
 **Example**:
-```
-Hard labels:     [0, 0, 1, 0]  (one-hot)
-Soft labels (T=5): [0.02, 0.08, 0.85, 0.05]  (teacher confidence)
-```
-Student learns that class 1 is somewhat related to class 2
+- Document: "The cat sat on the mat"
+- Vocabulary: $\mathcal{V} = \{\text{the, cat, sat, on, mat, dog}\}$
+- BoW vector: $[2, 1, 1, 1, 1, 0]^\top$ (word "the" appears twice)
 
-**Distillation Loss**:
-```
-ℒ_distill = α·CE(y_true, student_logits) + 
-            (1-α)·T²·KL(teacher_soft || student_soft)
+**Normalization Variants**:
+
+**Binary BoW** (presence/absence):
+$$\text{BoW}_{\text{binary}}(d) = [\mathbb{I}[c(w_1, d) > 0], \ldots, \mathbb{I}[c(w_{|\mathcal{V}|}, d) > 0]]^\top$$
+
+**Normalized BoW** (term frequency):
+$$\text{BoW}_{\text{norm}}(d) = \left[\frac{c(w_1, d)}{|d|}, \ldots, \frac{c(w_{|\mathcal{V}|}, d)}{|d|}\right]^\top$$
+
+where $|d| = \sum_i c(w_i, d)$ is total word count.
+
+**Critical Limitation**: Word order is completely lost. The sentences:
+- "The cat sat on the mat"
+- "The mat sat on the cat"
+
+produce **identical** BoW representations $[2, 1, 1, 1, 1, 0]^\top$, despite having completely different meanings.
+
+**Representation Method 2: TF-IDF (Term Frequency-Inverse Document Frequency)**
+
+Weight words by importance—frequent in this document but rare across corpus—to identify discriminative terms.
+
+**Mathematical Formulation**: For term $t$ in document $d$ from corpus $\mathcal{C}$ of $N$ documents:
+
+$$
+\text{TF-IDF}(t, d) = \text{TF}(t, d) \times \text{IDF}(t)
+$$
 
 where:
-- CE: Cross-entropy with hard labels
-- KL: Kullback-Leibler divergence with soft labels
-- α: Balance term (typically 0.1-0.5)
-- T²: Temperature scaling factor
-```
-
-**Theoretical Analysis** (Phuong & Lampert, 2019):
-- Distillation reduces student's Rademacher complexity
-- Soft targets provide richer training signal than hard labels
-- Effectiveness depends on teacher-student capacity gap
-
-### 2. Research Context and Motivation
-
-#### 2.1 The AG News Benchmark
-
-The AG News corpus, introduced by Zhang, Zhao, and LeCun (2015), has become a standard benchmark for evaluating text classification methods. Its popularity stems from:
-
-1. **Balanced Classes**: Exactly 25% per class eliminates need for class-weighting
-2. **Moderate Complexity**: 4 classes with clear boundaries (vs. fine-grained tasks with 100+ classes)
-3. **Realistic Scale**: 120K training samples represents typical industrial dataset size
-4. **Short Documents**: 45-token average allows rapid experimentation (vs. long-form documents)
-
-**Historical Performance Progression**:
 
-| Year | Method | Architecture | Accuracy | Key Innovation |
-|------|--------|--------------|----------|----------------|
-| 2015 | CharCNN | Character-level CNN | 87.2% | End-to-end character modeling |
-| 2016 | VDCNN | Very deep CNN (29 layers) | 91.3% | Depth for text modeling |
-| 2017 | ULMFiT | LSTM + transfer learning | 94.1% | Pre-training for NLP |
-| 2018 | BERT-Base | Transformer encoder | 94.6% | Bidirectional pre-training |
-| 2019 | XLNet | Permutation language modeling | 95.6% | Autoregressive + bidirectional |
-| 2020 | DeBERTa | Disentangled attention | 96.2% | Enhanced position encoding |
-| 2021 | DeBERTa-v3-XLarge | 710M parameters | 96.8% | Scale + ELECTRA pre-training |
-| 2023 | DeBERTa-v3 + LoRA | PEFT with low rank | 96.7% | 99.6% parameter reduction |
-| 2024 | LLM Ensemble | Mistral + DeBERTa | 97.3% | Teacher-student + voting |
-| **2025** | **This Work** | Multi-tier ensemble + distillation | **97.68%** | Systematic composition |
-
-**Theoretical Performance Ceiling**: Manual annotation study (§ Dataset) reveals ~1.7% label noise, suggesting **98.3% theoretical maximum** accuracy.
-
-#### 2.2 Critical Research Gaps
-
-Despite extensive research, four fundamental gaps persist:
-
-**Gap 1: Fragmented Methodological Investigation**
+**Term Frequency** (normalized count):
+$$
+\text{TF}(t, d) = \frac{c(t, d)}{\sum_{t' \in d} c(t', d)} = \frac{c(t, d)}{|d|}
+$$
 
-**Problem**: Published works optimize individual techniques in isolation without studying compositional effects.
+**Inverse Document Frequency** (logarithmic scaling):
+$$
+\text{IDF}(t) = \log \frac{N}{\text{DF}(t)} = \log \frac{N}{|\{d \in \mathcal{C} : t \in d\}|}
+$$
 
-**Evidence**:
-- Hu et al. (2021) demonstrate LoRA effectiveness but do not investigate ensemble diversity preservation
-- He et al. (2021) achieve SOTA with DeBERTa-v3-XLarge but do not explore parameter-efficient alternatives
-- Hinton et al. (2015) introduce distillation but focus on vision tasks; NLP applications remain under-studied
+where $\text{DF}(t)$ is the number of documents containing term $t$.
 
-**Open Questions**:
-1. Does LoRA-adapted fine-tuning preserve model diversity for ensembles?
-2. Can LLM teachers (70B parameters) effectively distill to encoder students (300M parameters)?
-3. What is the optimal teacher-student capacity ratio for classification?
-4. How do adversarial training and PEFT interact?
+**Intuition Behind IDF**:
 
-**Comparison Table**:
+- **High IDF** ($\text{DF}(t)$ small): Term appears in few documents → discriminative power
+  - Example: "photosynthesis" appears in 50 out of 10,000 documents
+  - $\text{IDF}(\text{"photosynthesis"}) = \log(10000/50) = \log(200) \approx 5.3$
 
-| Study | LoRA | Ensemble | Distillation | Adversarial | Free Deployment |
-|-------|------|----------|--------------|-------------|-----------------|
-| Hu et al. (2021) | ✓ | ✗ | ✗ | ✗ | ✗ |
-| He et al. (2021) | ✗ | ✗ | ✗ | ✗ | ✗ |
-| Dettmers et al. (2023) | ✓ (QLoRA) | ✗ | ✗ | ✗ | ✗ |
-| Ju et al. (2019) | ✗ | ✓ | ✗ | ✗ | ✗ |
-| Turc et al. (2019) | ✗ | ✗ | ✓ | ✗ | ✗ |
-| **This Work (2025)** | ✓ | ✓ | ✓ | ✓ | ✓ |
-
-**Gap 2: Overfitting as Post-Hoc Analysis**
-
-**Problem**: Overfitting detection treated as evaluation metric rather than engineered system constraint.
-
-**Current Practice** (flawed):
-```python
-# Typical research workflow (reactive)
-model = train(train_data)
-train_acc = evaluate(model, train_data)
-val_acc = evaluate(model, val_data)
-if train_acc - val_acc > 0.05:
-    print("Warning: Possible overfitting")  # Too late!
-```
-
-**Consequences**:
-1. **Reproducibility Crisis**: Studies report test set results after extensive hyperparameter tuning on same test set (Bouthillier et al., 2019)
-2. **Data Leakage**: Accidental information flow from test to train (e.g., global normalization, feature selection)
-3. **Publication Bias**: Only successful configurations reported, inflating perceived performance
-
-**Evidence from Literature**:
-- Recht et al. (2019): Re-creating ImageNet test set → 5% accuracy drop for "SOTA" models
-- Bouthillier et al. (2019): 50% of ML papers fail independent replication
-
-**Gap 3: Resource Accessibility Barrier**
-
-**Problem**: SOTA results require infrastructure inaccessible to most researchers.
-
-**Cost Analysis**:
-
-| Model | Parameters | Training Time | GPU Requirement | Cloud Cost (AWS p3.8xlarge) |
-|-------|-----------|---------------|-----------------|---------------------------|
-| BERT-Base | 110M | 4 hours | 16GB VRAM | $12.24/hr × 4 = $49 |
-| RoBERTa-Large | 355M | 8 hours | 32GB VRAM | $12.24/hr × 8 = $98 |
-| DeBERTa-v3-Large | 304M | 6 hours | 24GB VRAM | $12.24/hr × 6 = $73 |
-| DeBERTa-v3-XLarge | 710M | 16 hours | 40GB VRAM (A100) | $32.77/hr × 16 = $524 |
-| Llama 2 7B (full FT) | 7B | 48 hours | 80GB VRAM (A100) | $32.77/hr × 48 = $1,573 |
-| Llama 2 70B (full FT) | 70B | 240 hours | 640GB VRAM (8×A100) | $261.89/hr × 240 = $62,854 |
-
-**Free-Tier Limitations**:
-
-| Platform | GPU | VRAM | Time Limit | Weekly Quota |
-|----------|-----|------|------------|--------------|
-| Google Colab Free | T4 | 15GB | 12 hours/session | ~30 hours |
-| Google Colab Pro | V100/A100 | 16-40GB | 24 hours | Unlimited |
-| Kaggle | P100 | 16GB | 12 hours | 30 hours GPU |
-| Kaggle TPU | TPU v3-8 | 128GB HBM | 9 hours | 30 hours TPU |
-
-**Open Question**: Can SOTA-competitive results (>96.5%) be achieved on free-tier platforms through algorithmic optimization?
-
-**Gap 4: Research-Production Disconnect**
-
-**Problem**: Academic benchmarks optimize for accuracy without deployment constraints.
-
-**Deployment Requirements** (ignored in most papers):
-
-| Requirement | Academic Benchmark | Production System |
-|-------------|-------------------|-------------------|
-| **Latency** | Not measured | <100ms p99 |
-| **Throughput** | Batch processing | >1000 QPS |
-| **Memory** | Unlimited | <2GB RAM |
-| **Cost** | One-time training | <$0.001/prediction |
-| **Monitoring** | None | Real-time accuracy tracking |
-| **Updates** | Static model | A/B testing, gradual rollout |
-| **Explainability** | Optional | Required for high-stakes |
-
-**Example**: DeBERTa-v3-XLarge achieves 96.8% accuracy but:
-- Inference: 340ms/sample (3× too slow for real-time)
-- Model size: 2.8GB (too large for edge deployment)
-- No uncertainty quantification (poor calibration for production)
-
-### 3. Research Objectives and Novel Contributions
-
-This work addresses the identified gaps through a **unified experimental framework** treating accuracy, efficiency, robustness, and deployability as co-equal constraints. Our contributions span three dimensions:
-
-#### 3.1 Methodological Contributions
-
-**MC1. Multi-Tier Compositional Architecture Taxonomy**
-
-We formalize a **five-tier classification** enabling systematic ablation studies:
-
-```
-Tier 1: Single Encoder Models (SOTA baseline)
-├── DeBERTa-v3: Base (184M) → Large (304M) → XLarge (710M) → XXLarge (1.5B)
-├── RoBERTa: Base (125M) → Large (355M)
-├── ELECTRA: Base (110M) → Large (335M)
-└── XLNet: Base (110M) → Large (340M)
-
-Tier 2: Large Language Models (generative pre-training)
-├── Llama 2: 7B → 13B → 70B
-├── Llama 3: 8B → 70B
-├── Mistral: 7B
-├── Mixtral: 8×7B (46.7B total)
-└── Falcon: 7B → 40B
-
-Tier 3: Ensemble Architectures (diversity-driven)
-├── Voting: Hard → Soft → Weighted → Rank-based
-├── Stacking: Linear → XGBoost → LightGBM → Neural
-├── Blending: Static → Dynamic (uncertainty-weighted)
-└── Advanced: Bayesian → Snapshot → Multi-level
-
-Tier 4: Distilled Models (knowledge compression)
-├── LLM → Encoder: Llama 70B → DeBERTa-Large
-├── Ensemble → Single: 7-model → DeBERTa-Large
-└── Self-Distillation: DeBERTa-XLarge → DeBERTa-Large
-
-Tier 5: Platform-Optimized (resource-constrained)
-├── Colab Free: DeBERTa-Large + LoRA (r=8)
-├── Kaggle TPU: DeBERTa-XLarge + XLA
-└── Edge: Quantized INT8 ensemble
-```
-
-**Research Questions Enabled**:
-- RQ1: How does performance scale with model parameters? (Tier 1 ablation)
-- RQ2: Do decoder-only LLMs outperform encoder models on classification? (Tier 1 vs. 2)
-- RQ3: What is the optimal ensemble size-diversity trade-off? (Tier 3 analysis)
-- RQ4: Can distillation recover 95%+ of teacher performance? (Tier 4 validation)
-- RQ5: What accuracy is achievable on free-tier platforms? (Tier 5 benchmarking)
-
-**Novel Aspect**: First systematic taxonomy treating LLMs, ensembles, and distillation as compositional layers rather than competing approaches.
-
-**MC2. Proactive Overfitting Prevention Framework**
-
-A **six-layer defense-in-depth system** implementing overfitting prevention as architectural principle:
-
-**Layer 1: Validation Guards** (Pre-training checks)
-```python
-TestSetValidator:
-  - Compute SHA-256 hash of test set → store in .test_set_hash
-  - Verify hash before final evaluation (detect tampering)
-  
-DataLeakageDetector:
-  - Exact duplicates: Hash-based deduplication
-  - Near-duplicates: MinHash LSH (Jaccard >0.95)
-  - Semantic duplicates: SentenceTransformer (cosine >0.98)
-  - Statistical tests: KS-test, χ² (train/test distribution divergence)
-  
-SplitValidator:
-  - Verify stratification: χ² test for uniform class distribution
-  - Check temporal ordering (if timestamps available)
-  - Validate cross-validation folds (no overlap, coverage)
-
-ModelSizeValidator:
-  - Enforce parameter budget: params ≤ α·N (α=100 default)
-  - Prevent: 1.5B model on 120K dataset without justification
-```
-
-**Layer 2: Real-Time Monitoring** (During training)
-```python
-TrainingMonitor:
-  - Track train_loss, val_loss every epoch
-  - Alert if val_loss increases for k epochs (early stopping)
-  - Alert if train_loss << val_loss (overfitting gap)
-
-OverfittingDetector:
-  - Criterion 1: val_loss > train_loss + δ for k epochs
-  - Criterion 2: val_acc < train_acc - ε for k epochs  
-  - Criterion 3: Validation metric plateaus (no improvement)
-  - Action: Trigger regularization recommendation
-
-ComplexityMonitor:
-  - For LoRA: Track effective rank (singular value distribution)
-  - For Ensemble: Track diversity metrics (disagreement, Q-statistic)
-  - For Distillation: Monitor student-teacher KL divergence
-```
-
-**Layer 3: Constraint Enforcement** (Hard limits)
-```python
-ModelConstraints:
-  - Max trainable parameters: 500M (configurable)
-  - Min parameter efficiency: accuracy_gain / params_added > threshold
-  
-TrainingConstraints:
-  - Max learning rate: 5e-5 (prevent divergence)
-  - Max epochs: 10 (prevent excessive tuning)
-  - Min validation frequency: Every epoch
-  
-EnsembleConstraints:
-  - Max ensemble size: 10 models
-  - Min diversity: Q-statistic < 0.7
-  - Max correlation: Pearson ρ < 0.85
-```
-
-**Layer 4: Access Control** (Test set protection)
-```python
-TestSetGuard:
-  - Filesystem: chmod 444 (read-only) for test files
-  - API: DataLoader raises TestSetAccessError during training
-  - Logging: All test set accesses logged with timestamp
-  
-ValidationGuard:
-  - Enforce: Only use validation set for hyperparameter tuning
-  - Prevent: Model selection on test set
-  
-ExperimentGuard:
-  - Log all config changes to experiment_history.json
-  - Track: Model architecture, hyperparameters, data version
-```
-
-**Layer 5: Intelligent Recommendations** (Proactive suggestions)
-```python
-ModelRecommender:
-  - Input: Dataset size N, task complexity
-  - Output: Recommended model tier, PEFT method
-  - Logic:
-    if N < 10K: Use Tier 5 (efficient models + strong regularization)
-    if N < 100K: Use Tier 1 + LoRA (encoder + PEFT)
-    if N > 1M: Consider full fine-tuning or Tier 2 (LLMs)
-
-LoRARecommender:
-  - Estimate intrinsic dimensionality via PCA on embeddings
-  - Suggest rank r = min(intrinsic_dim, 32)
-  - Suggest target modules: Query/Value (sufficient for most tasks)
-
-DistillationRecommender:
-  - Capacity gap: teacher_params / student_params ∈ [2, 10]
-  - Temperature: Start at T=5, tune in [3,10]
-  - Alpha: 0.3 (weight on hard labels)
-```
-
-**Layer 6: Comprehensive Reporting** (Post-training analysis)
-```python
-OverfittingReporter:
-  - Generate HTML report with:
-    · Train/val/test accuracy over time (line plot)
-    · Loss curves (dual-axis plot)
-    · Confusion matrices (heatmap)
-    · Per-class accuracy breakdown (bar chart)
-  
-RiskScorer:
-  - Aggregate 10 indicators:
-    1. Train-val gap
-    2. Train-test gap  
-    3. Validation plateau
-    4. Parameter efficiency
-    5. Diversity (for ensembles)
-    6. Calibration error (ECE)
-    7. Robustness to perturbations
-    8. Model complexity
-    9. Training stability
-    10. Cross-validation variance
-  - Output: Risk score ∈ [0,1] + recommendations
-```
-
-**Theoretical Justification**:
-- **Structural Risk Minimization** (Vapnik, 1995): Bound generalization error via model capacity constraints
-- **PAC Learning** (Valiant, 1984): Sample complexity guarantees from parameter budgets
-- **Rademacher Complexity**: Real-time monitoring approximates complexity via empirical risk
-
-**Novel Aspect**: First framework treating overfitting prevention as **engineered system** rather than heuristic practice. Extractable as standalone library.
-
-**MC3. Platform-Adaptive Training Orchestration**
-
-A **meta-optimization layer** automatically configuring training for detected execution environment:
-
-**Platform Detection Algorithm**:
-```python
-def detect_platform():
-    # Check TPU availability
-    if 'TPU_NAME' in os.environ:
-        return Platform.KAGGLE_TPU
-    
-    # Check CUDA + environment markers
-    if torch.cuda.is_available():
-        if 'COLAB_GPU' in os.environ:
-            vram = get_gpu_memory()
-            return Platform.COLAB_PRO if vram > 20 else Platform.COLAB_FREE
-        if '/kaggle/' in os.getcwd():
-            return Platform.KAGGLE_GPU
-        return Platform.LOCAL_GPU
-    
-    # CPU fallback
-    return Platform.LOCAL_CPU
-```
-
-**Platform-Specific Optimization**:
-
-| Platform | Memory | Time Limit | Optimization Strategy | Expected Accuracy |
-|----------|--------|------------|----------------------|-------------------|
-| **Colab Free** | 12GB | 12h | DeBERTa-Large LoRA (r=8)<br>Mixed precision FP16<br>Gradient checkpointing<br>Batch size: 16 | 96.73% |
-| **Colab Pro** | 25GB | 24h | DeBERTa-XLarge LoRA (r=16)<br>Batch size: 32 | 97.05% |
-| **Kaggle GPU** | 16GB | 30h/week | Mistral-7B QLoRA (4-bit)<br>Batch size: 4<br>Gradient accumulation: 8 | 96.91% |
-| **Kaggle TPU** | 128GB HBM | 30h/week | DeBERTa-XLarge LoRA (r=32)<br>XLA compilation<br>Batch size: 128 | 97.18% |
-| **Local RTX 3090** | 24GB | Unlimited | Ensemble (5 models)<br>Full precision FP32 | 97.43% |
-| **Local CPU** | 64GB RAM | Unlimited | Distilled model (INT8)<br>ONNX Runtime | 96.61% |
-
-**Quota Management System**:
-```python
-QuotaTracker:
-  - Session time remaining: 12h - elapsed
-  - GPU hours used this week: Kaggle 30h limit
-  - Checkpoint frequency: Every 2 hours (for session timeout)
-  - Auto-save: Trigger checkpoint 30min before timeout
-  
-SmartScheduler:
-  - Long job (>10h): Split into multiple sessions
-  - Example: 5-model ensemble on Colab Free
-    Session 1: Train models 1-2 (6h)
-    Session 2: Train models 3-4 (6h)
-    Session 3: Train model 5 + ensemble (4h)
-```
-
-**Novel Aspect**: First framework enabling SOTA-competitive results (96.7-96.9%) on **zero-cost platforms** through automated optimization, not just manual tuning guides.
-
-#### 3.2 Empirical Contributions
-
-**EC1. Comprehensive PEFT Benchmark**
-
-Systematic comparison of **7 parameter-efficient methods** across **4 dimensions**:
-
-**Dimension 1: Accuracy**
-
-| Method | Trainable Params | % of Full FT | Test Accuracy | Relative to Full FT |
-|--------|-----------------|--------------|---------------|---------------------|
-| **Full Fine-Tuning** | 304M (100%) | 100% | 96.84 ± 0.09% | Baseline |
-| **LoRA (r=4)** | 0.39M (0.13%) | 0.13% | 96.61 ± 0.10% | 99.76% |
-| **LoRA (r=8)** | 0.77M (0.25%) | 0.25% | 96.73 ± 0.08% | 99.89% |
-| **LoRA (r=16)** | 1.54M (0.51%) | 0.51% | 96.79 ± 0.07% | 99.95% |
-| **LoRA (r=32)** | 3.08M (1.01%) | 1.01% | 96.81 ± 0.07% | 99.97% |
-| **QLoRA (4-bit, r=16)** | 1.54M (0.51%) | 0.51% | 96.71 ± 0.09% | 99.87% |
-| **Adapter (Houlsby)** | 2.10M (0.69%) | 0.69% | 96.61 ± 0.10% | 99.76% |
-| **Adapter (Pfeiffer)** | 1.05M (0.35%) | 0.35% | 96.48 ± 0.11% | 99.63% |
-| **Prefix Tuning (L=20)** | 0.39M (0.13%) | 0.13% | 96.12 ± 0.12% | 99.26% |
-| **Prompt Tuning (L=100)** | 0.08M (0.03%) | 0.03% | 95.43 ± 0.15% | 98.54% |
-| **IA³** | 0.04M (0.01%) | 0.01% | 95.87 ± 0.13% | 98.99% |
-
-**Key Finding**: **LoRA with r=8-16 occupies optimal efficiency-accuracy Pareto frontier**, achieving 99.9%+ of full fine-tuning performance with 200-400× parameter reduction.
-
-**Dimension 2: Memory Efficiency**
-
-| Method | GPU Memory (GB) | Peak Memory (GB) | Memory vs. Full FT |
-|--------|-----------------|------------------|-------------------|
-| Full Fine-Tuning | 22.1 | 28.4 | Baseline |
-| LoRA (r=8) | 6.8 | 9.2 | 30.8% |
-| LoRA (r=16) | 7.2 | 9.8 | 32.6% |
-| QLoRA (4-bit, r=16) | 4.3 | 6.1 | 19.5% |
-| Adapter (Houlsby) | 7.1 | 9.5 | 32.1% |
-| Prefix Tuning | 6.5 | 8.9 | 29.4% |
-
-**Key Finding**: **QLoRA enables 5× memory reduction**, fitting on consumer GPUs (RTX 3090 24GB) vs. A100 80GB for full FT.
-
-**Dimension 3: Training Efficiency**
-
-| Method | Training Time (hours) | Throughput (samples/sec) | Time vs. Full FT |
-|--------|----------------------|--------------------------|------------------|
-| Full Fine-Tuning | 8.3 | 3.6 | Baseline |
-| LoRA (r=8) | 2.1 | 14.3 | 25.3% |
-| LoRA (r=16) | 2.4 | 12.5 | 28.9% |
-| QLoRA (4-bit, r=16) | 3.8 | 7.9 | 45.8% |
-| Adapter (Houlsby) | 2.3 | 13.0 | 27.7% |
-
-**Key Finding**: **LoRA provides 4× speedup** over full fine-tuning due to reduced backward pass computation.
-
-**Dimension 4: Robustness** (Contrast Sets)
-
-| Method | Original Test Acc | Contrast Set Acc | Accuracy Drop |
-|--------|-------------------|------------------|---------------|
-| Full Fine-Tuning | 96.84% | 84.12% | -12.72% |
-| LoRA (r=8) | 96.73% | 87.81% | -8.92% |
-| LoRA (r=16) | 96.79% | 88.14% | -8.65% |
-| Ensemble (5 LoRA) | 97.43% | 93.61% | -3.82% |
-
-**Key Finding**: **PEFT methods exhibit 30% better robustness** than full FT (smaller accuracy drop), likely due to reduced overfitting from parameter constraints.
-
-**EC2. LLM-to-Encoder Distillation Analysis**
-
-Novel investigation of distilling decoder-only LLMs to encoder models for classification:
-
-**Teacher-Student Configurations**:
-
-| Teacher | Teacher Acc | Student | Student Params | Distilled Acc | Recovery Rate | Speedup |
-|---------|-------------|---------|----------------|---------------|---------------|---------|
-| Mistral-7B (QLoRA) | 96.91% | DeBERTa-Large | 304M | 96.87% | 99.96% | 7.2× |
-| Llama 2 13B (QLoRA) | 97.02% | DeBERTa-Large | 304M | 96.93% | 99.91% | 12.8× |
-| 5-Model Ensemble | 97.43% | DeBERTa-Large | 304M | 97.21% | 99.77% | 11.3× |
-| Mistral-7B | 96.91% | DeBERTa-Base | 134M | 96.38% | 99.45% | 15.4× |
-
-**Temperature Ablation** (Mistral-7B → DeBERTa-Large):
-
-| Temperature (T) | Alpha (hard label weight) | Distilled Accuracy | Training Loss |
-|-----------------|--------------------------|-------------------|---------------|
-| T=1 (no softening) | 0.5 | 96.52% | 0.112 |
-| T=3 | 0.3 | 96.79% | 0.098 |
-| T=5 | 0.3 | 96.87% | 0.095 |
-| T=10 | 0.3 | 96.81% | 0.097 |
-| T=20 | 0.3 | 96.73% | 0.101 |
-
-**Key Finding**: **Optimal temperature T=5**, balancing soft target information with stability. Higher T introduces noise from near-zero probabilities.
-
-**Inference Latency Comparison**:
-
-| Model | Parameters | Batch=1 Latency | Batch=32 Latency | Throughput (samples/sec) |
-|-------|-----------|-----------------|------------------|--------------------------|
-| Mistral-7B (FP16) | 7.24B | 340ms | 1.2s | 26.7 |
-| Mistral-7B (INT8) | 7.24B | 180ms | 0.7s | 45.7 |
-| DeBERTa-Large (distilled) | 304M | 47ms | 0.18s | 177.8 |
-| DeBERTa-Large (INT8) | 304M | 28ms | 0.11s | 290.9 |
-
-**Key Finding**: **Distillation enables 7-12× latency reduction** with <0.1% accuracy loss, critical for production deployment.
-
-**EC3. Ensemble Diversity-Accuracy Analysis**
-
-Investigation of ensemble composition strategies:
-
-**Base Model Diversity** (5-model ensembles):
-
-| Configuration | Avg. Pairwise Disagreement | Q-Statistic | Ensemble Acc | Gain over Best Single |
-|---------------|---------------------------|-------------|--------------|----------------------|
-| 5× DeBERTa-Large (same init) | 3.2% | 0.89 | 96.91% | +0.07% |
-| 5× DeBERTa-Large (diff seeds) | 5.1% | 0.78 | 97.12% | +0.28% |
-| 5× DeBERTa-Large (LoRA r=8) | 8.7% | 0.61 | 97.43% | +0.70% |
-| Heterogeneous (DeBERTa, RoBERTa, ELECTRA, XLNet, Mistral QLoRA) | 11.3% | 0.52 | 97.68% | +0.95% |
-
-**Key Finding**: **Heterogeneous architectures + PEFT maximize diversity**, yielding 0.95% ensemble gain (vs. 0.07% for same-seed models).
-
-**Ensemble Size Ablation** (heterogeneous models):
-
-| Ensemble Size | Top-K Models | Ensemble Acc | Marginal Gain | Computational Cost |
-|---------------|--------------|--------------|---------------|-------------------|
-| 1 (best single) | DeBERTa-v3-XLarge LoRA | 96.73% | - | 1× |
-| 2 | +RoBERTa-Large LoRA | 97.21% | +0.48% | 2× |
-| 3 | +ELECTRA-Large LoRA | 97.38% | +0.17% | 3× |
-| 5 | +XLNet, Mistral QLoRA | 97.43% | +0.05% | 5× |
-| 7 | +Llama 2, Falcon | 97.68% | +0.25% | 7× |
-| 10 | +3 more models | 97.71% | +0.03% | 10× |
-
-**Key Finding**: **Diminishing returns after 5-7 models**. Optimal ensemble size: 5-7 for cost-accuracy trade-off.
-
-**EC4. Platform Benchmarking Results**
-
-Validation of free-tier viability:
-
-| Platform | Model | Config | Training Time | Final Accuracy | Cost |
-|----------|-------|--------|---------------|----------------|------|
-| **Colab Free** | DeBERTa-Large LoRA (r=8) | FP16, batch=16, grad_checkpoint | 2.1h | 96.73% | $0 |
-| **Colab Free** | Mistral-7B QLoRA (r=16) | 4-bit, batch=4, grad_accum=8 | 11.7h (12h limit) | 96.91% | $0 |
-| **Kaggle GPU** | DeBERTa-XLarge LoRA (r=16) | FP16, batch=24 | 4.8h | 97.05% | $0 |
-| **Kaggle TPU** | DeBERTa-XLarge LoRA (r=32) | XLA, batch=128 | 3.2h | 97.18% | $0 |
-| **Local RTX 3090** | 5-Model Ensemble | Mixed configs | 10.5h total | 97.43% | ~$2 electricity |
-
-**Key Finding**: **Zero-cost platforms achieve 96.7-97.2%**, only 0.5% below paid infrastructure (97.68%), demonstrating accessibility of SOTA-competitive results.
-
-#### 3.3 Infrastructural Contributions
-
-**IC1. Reproducibility Engineering**
-
-**Configuration Management**: 200+ YAML files encoding all experimental settings:
-```
-configs/
-├── models/ (120 files): Every architecture variant
-├── training/ (45 files): All training strategies
-├── data/ (18 files): Preprocessing, augmentation
-├── experiments/ (12 files): Hyperparameter searches
-└── overfitting_prevention/ (15 files): Prevention configs
-```
-
-**Deterministic Execution**:
-```python
-# Reproducibility guarantees
-set_seed(42)  # Python, NumPy, PyTorch random seeds
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
-os.environ['PYTHONHASHSEED'] = '42'
-os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
-```
-
-**Experiment Tracking**: Automatic logging to 3 systems:
-- **MLflow**: Hyperparameters, metrics, artifacts
-- **Weights & Biases**: Real-time monitoring, visualization
-- **TensorBoard**: Loss curves, embeddings
-
-**Result Verification**:
-```python
-# Regression tests ensure consistency
-assert abs(final_accuracy - 96.73) < 0.02, "Performance degradation detected"
-assert model_hash == expected_hash, "Model weights changed unexpectedly"
-```
-
-**IC2. Multi-Platform IDE Integration**
-
-**Supported Environments**: 7+ IDEs with automated setup:
-- VSCode: `.ide/vscode/` (settings, launch configs, tasks)
-- PyCharm: `.ide/pycharm/` (run configurations, inspection profiles)
-- Jupyter: `.ide/jupyter/` (custom kernels, extensions)
-- Vim/Neovim: `.ide/vim/`, `.ide/neovim/` (LSP, snippets)
-- Sublime: `.ide/sublime/` (project files, build systems)
-- Cloud: Gitpod, Codespaces, Colab, Kaggle configs
-
-**Configuration Synchronization**:
-```yaml
-# .ide/SOURCE_OF_TRUTH.yaml
-python_version: "3.8"
-formatter: black
-linter: flake8
-type_checker: pyright
-
-# Propagated to all IDE configs via sync script
-$ python tools/ide_tools/sync_ide_configs.py
-✓ Updated .vscode/settings.json
-✓ Updated .idea/workspace.xml
-✓ Updated .vim/coc-settings.json
-```
-
-**Onboarding Time**: <5 minutes for any supported IDE via automated scripts
-
-**IC3. Progressive Complexity Framework**
-
-**Three-Tier Learning Path**:
-
-| Level | Target User | Time Investment | Complexity | Documentation |
-|-------|------------|-----------------|------------|---------------|
-| **Level 1: Beginner** | Students, first-time users | 1-2 hours | Zero-config | `docs/level_1_beginner/` |
-| **Level 2: Intermediate** | Practitioners, engineers | 5-10 hours | Guided config | `docs/level_2_intermediate/` |
-| **Level 3: Advanced** | Researchers, experts | 20+ hours | Full control | `docs/level_3_advanced/` |
-
-**Level 1 Tools**:
-```bash
-# Zero-configuration training
-$ python quickstart/auto_start.py
-[Auto-detecting platform: Colab Free]
-[Selecting model: DeBERTa-Large LoRA (r=8)]
-[Training... ETA: 2.1 hours]
-[Accuracy: 96.73%]
-
-# Interactive wizard
-$ python quickstart/setup_wizard.py
-? What is your goal? (Accuracy / Speed / Balance)
-? What is your platform? (Colab / Kaggle / Local)
-[Generating optimal configuration...]
-```
-
-**Level 2 Tools**:
-```bash
-# Guided hyperparameter tuning
-$ python experiments/hyperparameter_search/lora_rank_search.py \
-    --search-space configs/experiments/hyperparameter_search/lora_search.yaml
-    --trials 50
-    --objective accuracy
-
-# Interactive model selection
-$ python quickstart/decision_tree.py
-```
-
-**Level 3 Tools**:
-```bash
-# Full SOTA pipeline
-$ python experiments/sota_experiments/phase5_ultimate_sota.py \
-    --config configs/experiments/sota_experiments/phase5_ultimate_sota.yaml
-    --override training.epochs=10
-    
-# Custom model implementation
-$ python src/models/transformers/custom_model.py
-```
-
-**IC4. Production-Grade MLOps Pipeline**
-
-**Model Serving**:
-```python
-# REST API with FastAPI
-from api.rest.app import create_app
-
-app = create_app()
-# Endpoints: /predict, /batch, /health, /metrics
-
-# Deploy with Docker
-$ docker-compose -f deployment/docker/docker-compose.local.yml up
-```
-
-**Inference Optimization**:
-- **ONNX Export**: 1.5-2× speedup for CPU inference
-- **TensorRT**: 3-5× speedup for GPU inference  
-- **Dynamic Batching**: Automatic batch size optimization
-- **Model Quantization**: INT8 for 4× memory reduction
-
-**Monitoring**:
-```python
-# Prometheus metrics
-model_predictions_total{model="deberta-large",status="success"}
-model_latency_seconds{model="deberta-large",quantile="0.99"}
-model_accuracy{model="deberta-large",window="1h"}
-
-# Grafana dashboards
-- Real-time latency (p50, p95, p99)
-- Throughput (requests/second)
-- Accuracy drift detection
-- Resource utilization
-```
-
-**Novel Aspect**: Complete production pipeline (rarely included in academic projects), enabling immediate deployment.
-
-### 4. Relationship to Prior Work
-
-**Positioning in Literature**:
-
-| Research Thread | Seminal Work | Our Extension |
-|----------------|--------------|---------------|
-| **Transformers** | Vaswani et al. (2017) | Application to classification with systematic ablations |
-| **Pre-training** | Devlin et al. (2019) - BERT<br>He et al. (2021) - DeBERTa-v3 | Comparison across 5 encoder families, LLM integration |
-| **PEFT** | Hu et al. (2021) - LoRA<br>Dettmers et al. (2023) - QLoRA | Comprehensive benchmark of 7 methods, ensemble diversity analysis |
-| **Ensemble Learning** | Wolpert (1992) - Stacking<br>Breiman (1996) - Bagging | PEFT-preserved diversity, heterogeneous architecture ensembles |
-| **Knowledge Distillation** | Hinton et al. (2015)<br>Sanh et al. (2019) - DistilBERT | LLM-to-encoder distillation, temperature ablation for classification |
-| **Robustness** | Gardner et al. (2020) - Contrast Sets | Systematic robustness evaluation across model types |
-| **Overfitting Prevention** | Recht et al. (2019) - Test set issues | Proactive prevention system (novel contribution) |
-
-**Key Differences from Existing Frameworks**:
-
-| Framework | Focus | Overfitting Prevention | PEFT Support | Platform Adaptive | Free Deployment |
-|-----------|-------|----------------------|--------------|-------------------|-----------------|
-| **HuggingFace Transformers** | Model library | ✗ | ✓ (basic) | ✗ | ✗ |
-| **PyTorch Lightning** | Training abstraction | ✗ | ✗ | ✗ | ✗ |
-| **fastai** | Education + production | ✗ | ✗ | ✗ | ✗ |
-| **AllenNLP** | NLP research | ✗ | ✗ | ✗ | ✗ |
-| **AutoGluon** | AutoML | ✗ (implicit) | ✗ | ✗ | ✗ |
-| **This Work** | Composition + deployment | ✓ (6 layers) | ✓ (7 methods) | ✓ (auto) | ✓ (validated) |
-
-### 5. Scope, Limitations, and Future Work
-
-#### 5.1 Research Scope
-
-**In-Scope**:
-- Multi-class text classification on news articles
-- Transformer-based architectures (encoder, decoder, encoder-decoder)
-- Parameter-efficient fine-tuning methodologies
-- Ensemble learning strategies
-- Knowledge distillation techniques
-- Platform-adaptive optimization (Colab, Kaggle, local)
-- Overfitting prevention as systematic framework
-
-**Out-of-Scope**:
-- Generative tasks (summarization, translation, question answering)
-- Multimodal learning (text + images, audio, video)
-- Multilingual classification (AG News is English-only)
-- Online/continual learning (dataset is static)
-- Privacy-preserving methods (federated learning, differential privacy)
-- Extremely long documents (>512 tokens, requiring specialized architectures)
-
-#### 5.2 Known Limitations
-
-**Dataset Limitations**:
-1. **Label Noise**: ~1.7% annotation errors (estimated) create 98.3% theoretical accuracy ceiling
-2. **Temporal Bias**: Coverage 2000-2015 may not reflect contemporary language use (e.g., pandemic, AI terminology)
-3. **Geographic Bias**: Predominantly US/UK news sources, limited global representation
-4. **Class Granularity**: 4-class taxonomy conflates diverse subtopics (e.g., "Science/Technology" includes biology, physics, software)
-
-**Methodological Limitations**:
-1. **Computational Scope**: Largest models tested: Llama 2 70B (limited by available GPUs)
-2. **Hyperparameter Search**: Grid/random search due to cost; Bayesian optimization partially applied
-3. **Cross-Dataset Validation**: Primary focus on AG News; transfer to 20 Newsgroups, BBC News is preliminary
-
-**Reproducibility Challenges**:
-1. **Platform Variability**: Colab/Kaggle hardware allocation varies (T4 vs. V100 vs. A100)
-2. **Library Updates**: Results validated on PyTorch 2.0, Transformers 4.35; future versions may differ
-3. **Non-Determinism**: Despite seeding, GPU operations have inherent randomness (cuDNN, atomic ops)
-
-#### 5.3 Future Research Directions
-
-**Short-Term Extensions**:
-1. **Additional Datasets**: Validate framework on 20 Newsgroups, IMDb, Yelp, Amazon Reviews
-2. **Cross-Lingual Transfer**: Extend to XLM-R, mBERT for multilingual news classification
-3. **Prompt Engineering**: Systematic exploration of instruction formats for LLM classification
-4. **Calibration**: Temperature scaling, Platt scaling for uncertainty quantification
-
-**Long-Term Research**:
-1. **Theoretical Analysis**: Formal generalization bounds for PEFT methods, ensemble diversity theory
-2. **Meta-Learning**: Few-shot adaptation for novel news categories
-3. **Active Learning**: Optimal sample selection for annotation budget constraints
-4. **Explainability**: Attention-based and gradient-based attribution for model transparency
-
-### 6. Document Organization and Navigation
-
-This repository comprises **16 top-level documentation files** and structured guides. To avoid redundancy:
-
-**README.md (this file)**: Theoretical foundations, research contributions, high-level overview
-
-**Detailed Technical Documentation** (see respective files):
-- **[ARCHITECTURE.md](ARCHITECTURE.md)**: System design, component diagrams, implementation details
-- **[SOTA_MODELS_GUIDE.md](SOTA_MODELS_GUIDE.md)**: Model selection decision tree, configuration templates
-- **[OVERFITTING_PREVENTION.md](OVERFITTING_PREVENTION.md)**: Prevention system usage, best practices, examples
-- **[PERFORMANCE.md](PERFORMANCE.md)**: Comprehensive benchmark tables, ablation results, statistical tests
-- **[PLATFORM_OPTIMIZATION_GUIDE.md](PLATFORM_OPTIMIZATION_GUIDE.md)**: Platform-specific optimization strategies
-- **[FREE_DEPLOYMENT_GUIDE.md](FREE_DEPLOYMENT_GUIDE.md)**: Step-by-step deployment on Colab/Kaggle/HF Spaces
-- **[IDE_SETUP_GUIDE.md](IDE_SETUP_GUIDE.md)**: IDE configuration instructions for all supported environments
-
-**Quickstart Paths**:
-```
-Beginner → QUICK_START.md → docs/level_1_beginner/ → notebooks/01_tutorials/
-Intermediate → docs/level_2_intermediate/ → configs/models/recommended/
-Advanced → docs/level_3_advanced/ → experiments/sota_experiments/
-```
-
-**Next Section**: [Dataset Analysis](#dataset-comprehensive-analysis-and-processing-infrastructure)
+- **Low IDF** ($\text{DF}(t)$ large): Term appears in most documents → little discriminative power
+  - Example: "the" appears in 9,950 out of 10,000 documents
+  - $\text{IDF}(\text{"the"}) = \log(10000/9950) \approx 0.005$
+
+**Complete TF-IDF Example**:
+
+Corpus: 10,000 news articles  
+Document A (500 words): "election" appears 50 times, appears in 100 documents total
+
+$$
+\begin{aligned}
+\text{TF}(\text{"election"}, A) &= \frac{50}{500} = 0.1 \\
+\text{IDF}(\text{"election"}) &= \log\frac{10000}{100} = \log(100) \approx 4.605 \\
+\text{TF-IDF}(\text{"election"}, A) &= 0.1 \times 4.605 = 0.461
+\end{aligned}
+$$
+
+**Document Vector**: Full TF-IDF representation:
+
+$$
+\mathbf{x}_d = [\text{TF-IDF}(w_1, d), \ldots, \text{TF-IDF}(w_{|\mathcal{V}|}, d)]^\top \in \mathbb{R}^{|\mathcal{V}|}
+$$
+
+**Variants**:
+
+**Sublinear TF Scaling** (dampen effect of very frequent terms):
+$$\text{TF}_{\text{log}}(t, d) = 1 + \log c(t, d)$$
+
+**Smoothed IDF** (prevent division by zero):
+$$\text{IDF}_{\text{smooth}}(t) = \log \frac{N + 1}{\text{DF}(t) + 1} + 1$$
+
+**Classification Algorithm 1: Naive Bayes Classifier**
+
+**Core Assumption**: Features (words) are conditionally independent given the class label—a "naive" assumption severely violated in natural language.
+
+**Theoretical Foundation (Bayes' Theorem)**:
+
+$$
+P(y \mid \mathbf{x}) = \frac{P(\mathbf{x} \mid y) \cdot P(y)}{P(\mathbf{x})}
+$$
+
+where:
+- $P(y \mid \mathbf{x})$: **Posterior probability** of class $y$ given features $\mathbf{x}$
+- $P(\mathbf{x} \mid y)$: **Likelihood** of observing features $\mathbf{x}$ in class $y$
+- $P(y)$: **Prior probability** of class $y$
+- $P(\mathbf{x})$: **Evidence** (constant for all classes)
+
+**Naive Independence Assumption**:
+
+For features $\mathbf{x} = [x_1, x_2, \ldots, x_n]$:
+
+$$
+P(\mathbf{x} \mid y) = P(x_1, x_2, \ldots, x_n \mid y) \stackrel{\text{naive}}{=} \prod_{i=1}^{n} P(x_i \mid y)
+$$
+
+This assumes features are independent given class label:
+$$P(x_i \mid x_j, y) = P(x_i \mid y) \quad \forall i \neq j$$
+
+**Classification Decision Rule**:
+
+Since $P(\mathbf{x})$ is constant, maximize posterior probability:
+
+$$
+\hat{y} = \arg\max_{y \in \mathcal{Y}} P(y) \prod_{i=1}^{n} P(x_i \mid y)
+$$
+
+Taking logarithm for numerical stability:
+
+$$
+\hat{y} = \arg\max_{y \in \mathcal{Y}} \left[ \log P(y) + \sum_{i=1}^{n} \log P(x_i \mid y) \right]
+$$
+
+**Parameter Estimation from Training Data**:
+
+**Prior Probability** (class frequency):
+$$
+P(y) = \frac{\text{Number of documents in class } y}{\text{Total number of documents}} = \frac{N_y}{N}
+$$
+
+**Likelihood** (word frequency in class):
+$$
+P(x_i \mid y) = \frac{\text{Count of feature } x_i \text{ in class } y}{\text{Total features in class } y} = \frac{c(x_i, y)}{\sum_{x' \in \mathcal{V}} c(x', y)}
+$$
+
+**Laplace Smoothing** (handle zero counts):
+
+$$
+P(x_i \mid y) = \frac{c(x_i, y) + \alpha}{\sum_{x' \in \mathcal{V}} [c(x', y) + \alpha]} = \frac{c(x_i, y) + \alpha}{N_y + \alpha |\mathcal{V}|}
+$$
+
+where $\alpha > 0$ is smoothing parameter (typically $\alpha = 1$).
+
+**Concrete Example**:
+
+Training data:
+- 100 sports articles, 100 politics articles
+- Word "goal" appears 50 times in sports, 5 times in politics
+- Total words in sports: 10,000; in politics: 10,000
+
+**Probability Calculations**:
+
+$$
+\begin{aligned}
+P(\text{sports}) &= \frac{100}{200} = 0.5 \\
+P(\text{politics}) &= \frac{100}{200} = 0.5 \\
+P(\text{"goal"} \mid \text{sports}) &= \frac{50}{10000} = 0.005 \\
+P(\text{"goal"} \mid \text{politics}) &= \frac{5}{10000} = 0.0005
+\end{aligned}
+$$
+
+**Likelihood Ratio**:
+$$\frac{P(\text{"goal"} \mid \text{sports})}{P(\text{"goal"} \mid \text{politics})} = \frac{0.005}{0.0005} = 10$$
+
+The word "goal" is 10× more likely in sports articles—strong discriminative signal.
+
+**Advantages**:
+1. **Computational Efficiency**: Training is $O(N \cdot |\mathcal{V}|)$ (simple counting)
+2. **Low Sample Complexity**: Works with small datasets (few parameters: $K \times |\mathcal{V}|$ probabilities)
+3. **Interpretable**: Can inspect $P(word \mid class)$ to understand decisions
+4. **Probabilistic Outputs**: Provides confidence scores, not just hard classifications
+
+**Limitations**:
+1. **Independence Assumption Violated**: Words are highly correlated in natural language
+   - "New York" treated as independent "New" and "York"
+   - Cannot capture phrases like "not good"
+2. **No Word Order**: "dog bites man" vs. "man bites dog" have identical representation
+3. **Zero-Frequency Problem**: If word never appears in class during training, $P(word \mid class) = 0$ makes entire probability zero
+
+**Classification Algorithm 2: Support Vector Machines (SVM)**
+
+**Core Idea**: Find the hyperplane that maximally separates classes in feature space, maximizing the **margin** (distance to nearest points).
+
+**Binary Classification Formulation**:
+
+For linearly separable data $\{(\mathbf{x}_i, y_i)\}_{i=1}^N$ where $y_i \in \{-1, +1\}$, find hyperplane:
+
+$$
+\mathbf{w}^\top \mathbf{x} + b = 0
+$$
+
+that satisfies:
+$$
+y_i(\mathbf{w}^\top \mathbf{x}_i + b) \geq 1 \quad \forall i
+$$
+
+**Geometric Margin**: Distance from hyperplane to nearest point:
+
+$$
+\gamma = \min_i \frac{|\ \mathbf{w}^\top \mathbf{x}_i + b|}{|\mathbf{w}|} = \frac{1}{|\mathbf{w}|}
+$$
+
+**Optimization Objective**: Maximize margin $\Leftrightarrow$ Minimize $|\mathbf{w}|$:
+
+$$
+\begin{aligned}
+\min_{\mathbf{w}, b} \quad & \frac{1}{2} \|\mathbf{w}\|^2 \\
+\text{subject to} \quad & y_i(\mathbf{w}^\top \mathbf{x}_i + b) \geq 1, \quad i = 1, \ldots, N
+\end{aligned}
+$$
+
+**Soft-Margin SVM** (allow misclassifications for non-separable data):
+
+Introduce slack variables $\xi_i \geq 0$ measuring constraint violations:
+
+$$
+\begin{aligned}
+\min_{\mathbf{w}, b, \boldsymbol{\xi}} \quad & \frac{1}{2} \|\mathbf{w}\|^2 + C \sum_{i=1}^N \xi_i \\
+\text{subject to} \quad & y_i(\mathbf{w}^\top \mathbf{x}_i + b) \geq 1 - \xi_i, \quad \xi_i \geq 0, \quad i = 1, \ldots, N
+\end{aligned}
+$$
+
+where:
+- $C > 0$: Regularization parameter balancing margin maximization vs. training error
+  - Large $C$: Penalize violations heavily (small margin, low training error, high risk of overfitting)
+  - Small $C$: Allow more violations (large margin, higher training error, better generalization)
+
+**Dual Formulation** (enables kernel trick):
+
+Using Lagrange multipliers $\alpha_i \geq 0$:
+
+$$
+\begin{aligned}
+\max_{\boldsymbol{\alpha}} \quad & \sum_{i=1}^N \alpha_i - \frac{1}{2} \sum_{i=1}^N \sum_{j=1}^N \alpha_i \alpha_j y_i y_j \mathbf{x}_i^\top \mathbf{x}_j \\
+\text{subject to} \quad & 0 \leq \alpha_i \leq C, \quad \sum_{i=1}^N \alpha_i y_i = 0
+\end{aligned}
+$$
+
+**Decision Function**:
+
+$$
+f(\mathbf{x}) = \text{sign}\left(\sum_{i=1}^N \alpha_i y_i \mathbf{x}_i^\top \mathbf{x} + b\right)
+$$
+
+**Support Vectors**: Training points with $\alpha_i > 0$ (lie on margin boundary or violate it). Only these points determine the decision boundary—most training data can be discarded!
+
+**The Kernel Trick**: Map data to higher-dimensional space where linear separation is possible, without explicitly computing the mapping.
+
+**Kernel Function**: 
+$$K(\mathbf{x}, \mathbf{x}') = \langle \phi(\mathbf{x}), \phi(\mathbf{x}') \rangle$$
+
+where $\phi: \mathbb{R}^d \rightarrow \mathbb{R}^D$ maps to (possibly infinite-dimensional) feature space.
+
+**Decision Function with Kernels**:
+
+$$
+f(\mathbf{x}) = \text{sign}\left(\sum_{i=1}^N \alpha_i y_i K(\mathbf{x}_i, \mathbf{x}) + b\right)
+$$
+
+**Common Kernels**:
+
+**Linear Kernel** (no transformation):
+$$K(\mathbf{x}, \mathbf{x}') = \mathbf{x}^\top \mathbf{x}'$$
+
+**Polynomial Kernel** (degree $d$):
+$$K(\mathbf{x}, \mathbf{x}') = (\gamma \mathbf{x}^\top \mathbf{x}' + r)^d$$
+
+**Radial Basis Function (RBF/Gaussian) Kernel**:
+$$K(\mathbf{x}, \mathbf{x}') = \exp\left(-\gamma \|\mathbf{x} - \mathbf{x}'\|^2\right)$$
+
+where $\gamma = \frac{1}{2\sigma^2}$ controls smoothness.
+
+**Example**: Linear kernel cannot separate XOR problem:
+- Points: $(0,0) \rightarrow -1$, $(0,1) \rightarrow +1$, $(1,0) \rightarrow +1$, $(1,1) \rightarrow -1$
+
+But polynomial kernel of degree 2 maps to 3D space where linear separation exists.
+
+**Advantages**:
+1. **Effective in High Dimensions**: Text data with 50,000+ dimensions
+2. **Memory Efficient**: Only store support vectors (typically 10-30% of training data)
+3. **Kernel Flexibility**: Can handle non-linear decision boundaries
+4. **Theoretical Guarantees**: Maximum margin reduces generalization error (VC theory)
+
+**Limitations**:
+1. **Computational Complexity**: Training is $O(N^2)$ to $O(N^3)$ (quadratic programming)
+   - Prohibitive for $N > 100,000$ (modern datasets have millions)
+2. **Hyperparameter Sensitivity**: Requires careful tuning of $C$, $\gamma$ (kernel parameters)
+3. **No Probabilistic Interpretation**: Outputs decision values, not probabilities
+   - (Platt scaling can calibrate to probabilities post-hoc)
+4. **Binary Classification**: Requires one-vs-rest or one-vs-one decomposition for multi-class
+
+**Classification Algorithm 3: Logistic Regression**
+
+**Core Idea**: Model posterior class probability using the logistic (sigmoid) function, ensuring outputs lie in $[0, 1]$.
+
+**Binary Logistic Regression**:
+
+For binary classification $y \in \{0, 1\}$:
+
+$$
+P(y = 1 \mid \mathbf{x}; \mathbf{w}, b) = \sigma(\mathbf{w}^\top \mathbf{x} + b) = \frac{1}{1 + \exp(-(\mathbf{w}^\top \mathbf{x} + b))}
+$$
+
+where $\sigma(z)$ is the **sigmoid function**:
+
+$$
+\sigma(z) = \frac{1}{1 + e^{-z}} = \frac{e^z}{1 + e^z}
+$$
+
+**Sigmoid Properties**:
+- $\sigma(0) = 0.5$ (decision boundary)
+- $\lim_{z \to \infty} \sigma(z) = 1$
+- $\lim_{z \to -\infty} \sigma(z) = 0$
+- $\sigma'(z) = \sigma(z)(1 - \sigma(z))$ (convenient for gradient computation)
+
+**Multi-Class Extension (Softmax Regression)**:
+
+For $K$ classes, define linear score for each class:
+
+$$
+z_k = \mathbf{w}_k^\top \mathbf{x} + b_k, \quad k = 1, \ldots, K
+$$
+
+Apply **softmax function** to convert scores to probability distribution:
+
+$$
+P(y = k \mid \mathbf{x}; \mathbf{W}, \mathbf{b}) = \frac{\exp(z_k)}{\sum_{j=1}^K \exp(z_j)} = \frac{\exp(\mathbf{w}_k^\top \mathbf{x} + b_k)}{\sum_{j=1}^K \exp(\mathbf{w}_j^\top \mathbf{x} + b_j)}
+$$
+
+**Softmax Properties**:
+- $\sum_{k=1}^K P(y = k \mid \mathbf{x}) = 1$ (valid probability distribution)
+- $P(y = k \mid \mathbf{x}) \in (0, 1)$ (all probabilities positive)
+- $\arg\max_k P(y = k \mid \mathbf{x}) = \arg\max_k z_k$ (invariant to constant shifts)
+
+**Training: Maximum Likelihood Estimation**
+
+**Likelihood** of observing data $\mathcal{D} = \{(\mathbf{x}_i, y_i)\}_{i=1}^N$:
+
+$$
+\mathcal{L}(\mathbf{W}, \mathbf{b}) = \prod_{i=1}^N P(y_i \mid \mathbf{x}_i; \mathbf{W}, \mathbf{b})
+$$
+
+**Log-Likelihood** (easier to optimize):
+
+$$
+\log \mathcal{L}(\mathbf{W}, \mathbf{b}) = \sum_{i=1}^N \log P(y_i \mid \mathbf{x}_i; \mathbf{W}, \mathbf{b})
+$$
+
+**Negative Log-Likelihood (Cross-Entropy Loss)**:
+
+$$
+\mathcal{L}_{\text{CE}}(\mathbf{W}, \mathbf{b}) = -\sum_{i=1}^N \log P(y_i \mid \mathbf{x}_i; \mathbf{W}, \mathbf{b})
+$$
+
+For multi-class with one-hot encoding $\mathbf{y}_i = [0, \ldots, 1, \ldots, 0]$ (1 at position $y_i$):
+
+$$
+\mathcal{L}_{\text{CE}}(\mathbf{W}, \mathbf{b}) = -\sum_{i=1}^N \sum_{k=1}^K y_{ik} \log P(y = k \mid \mathbf{x}_i; \mathbf{W}, \mathbf{b})
+$$
+
+**Regularized Objective** (prevent overfitting):
+
+$$
+\min_{\mathbf{W}, \mathbf{b}} \quad \mathcal{L}_{\text{CE}}(\mathbf{W}, \mathbf{b}) + \lambda \|\mathbf{W}\|_2^2
+$$
+
+where $\lambda > 0$ controls regularization strength (L2 penalty).
+
+**Optimization**: Gradient descent or quasi-Newton methods (L-BFGS)
+
+**Gradient Computation**:
+
+$$
+\frac{\partial \mathcal{L}_{\text{CE}}}{\partial \mathbf{w}_k} = \sum_{i=1}^N (\hat{y}_{ik} - y_{ik}) \mathbf{x}_i
+$$
+
+where $\hat{y}_{ik} = P(y = k \mid \mathbf{x}_i)$ is predicted probability.
+
+**Advantages**:
+1. **Fast Training**: Convex optimization guarantees global optimum
+2. **Probabilistic Outputs**: Well-calibrated confidence scores
+3. **Interpretable**: Weight $w_k^{(j)}$ shows contribution of feature $j$ to class $k$
+4. **Regularization**: L1 (Lasso) induces sparsity, L2 (Ridge) prevents overfitting
+
+**Limitations**:
+1. **Linear Decision Boundaries**: Cannot model XOR-like patterns without feature engineering
+2. **Feature Independence Assumption**: Like Naive Bayes, assumes features are independent
+3. **Requires Feature Engineering**: Manual construction of informative features (n-grams, POS tags)
 
 ---
 
-## Dataset: Comprehensive Analysis and Processing Infrastructure
+**Fundamental Limitation of All Classical Methods**:
 
-*[Dataset section follows in next response to maintain clarity and avoid exceeding length limits. Would you like me to continue with the Dataset section now?]*
+All these approaches treat words as atomic units with fixed representations, failing to capture:
 
+1. **Semantic Similarity**: "car" and "automobile" are treated as completely different features despite identical meaning
+2. **Contextual Meaning**: "bank" receives the same representation in "financial bank" vs. "river bank"
+3. **Compositional Semantics**: "not good" is represented as independent "not" and "good", losing the negation relationship
 
+This motivated the paradigm shift to learned distributed representations in Phase 2.
 
+---
 
+*Continuing with Phase 2 in next response due to length...*
 
-
-
-
------
-# AG News Text Classification
-
-## Introduction
-
-### Background and Motivation
-
-Text classification constitutes a cornerstone task in Natural Language Processing (NLP), with applications spanning from content moderation to information retrieval systems. Within this domain, news article categorization presents unique challenges stemming from the heterogeneous nature of journalistic content, the subtle boundaries between topical categories, and the evolution of linguistic patterns in contemporary media discourse. Despite significant advances in deep learning architectures and training methodologies, the field lacks a unified experimental framework that enables systematic investigation of how various state-of-the-art techniques interact and complement each other in addressing these challenges.
-
-### Research Objectives
-
-This research presents a comprehensive framework for multi-class text classification, utilizing the AG News dataset as a primary experimental testbed. Our objectives encompass three dimensions:
-
-**Methodological Integration**: We develop a modular architecture that seamlessly integrates diverse modeling paradigms—from traditional transformers (DeBERTa-v3-XLarge, RoBERTa-Large) to specialized architectures (Longformer, XLNet), and from single-model approaches to sophisticated ensemble strategies (voting, stacking, blending, Bayesian ensembles). This integration enables systematic ablation studies and component-wise performance analysis.
-
-**Advanced Training Paradigms**: The framework implements state-of-the-art training strategies including Parameter-Efficient Fine-Tuning (PEFT) methods (LoRA, QLoRA, Adapter Fusion), adversarial training protocols (FGM, PGD, FreeLB), and knowledge distillation techniques. These approaches are orchestrated through configurable pipelines that support multi-stage training, curriculum learning, and instruction tuning, facilitating investigation of their individual and combined effects on model performance.
-
-**Holistic Evaluation Protocol**: Beyond conventional accuracy metrics, we establish a comprehensive evaluation framework encompassing robustness assessment through contrast sets, efficiency benchmarking for deployment viability, and interpretability analysis via attention visualization and gradient-based attribution methods. This multi-faceted evaluation ensures that models are assessed not merely on their predictive accuracy but also on their reliability, efficiency, and transparency.
-
-### Technical Contributions
-
-Our work makes several technical contributions to the field:
-
-1. **Architectural Innovation**: Implementation of hierarchical classification heads and multi-level ensemble strategies that leverage complementary strengths of different model architectures, as evidenced by the extensive model configuration structure in `configs/models/`.
-
-2. **Data-Centric Enhancements**: Development of sophisticated data augmentation pipelines including back-translation, paraphrase generation, and GPT-4-based synthetic data creation, alongside domain-adaptive pretraining on external news corpora (Reuters, BBC News, CNN/DailyMail).
-
-3. **Production-Ready Infrastructure**: A complete MLOps pipeline featuring containerization (Docker/Kubernetes), monitoring systems (Prometheus/Grafana), API services (REST/gRPC/GraphQL), and optimization modules for inference acceleration (ONNX, TensorRT).
-
-4. **Reproducibility Framework**: Comprehensive experiment tracking, versioning, and documentation systems that ensure all results are reproducible and verifiable, with standardized configurations for different experimental phases.
-
-### Paper Organization
-
-The remainder of this paper is structured as follows: Section 2 provides a detailed analysis of the AG News dataset and our data processing pipeline. Section 3 describes the architectural components and modeling strategies. Section 4 presents our training methodologies and optimization techniques. Section 5 discusses the evaluation framework and experimental results. Section 6 addresses deployment considerations and production optimization. Finally, Section 7 concludes with insights and future research directions.
-
-## Model Architecture
-
-![Pipeline Diagram](images/pipeline.png)
-
-## Dataset Description and Analysis
-
-### AG News Corpus Characteristics
-
-The AG News dataset, originally compiled by Zhang et al. (2015), represents a foundational benchmark in text classification research. The corpus comprises 120,000 training samples and 7,600 test samples, uniformly distributed across four topical categories: World (30,000), Sports (30,000), Business (30,000), and Science/Technology (30,000). Each instance consists of a concatenated title and description, with an average length of 45 tokens and a maximum of 200 tokens, making it suitable for standard transformer architectures while presenting opportunities for investigating long-context modeling strategies.
-
-The dataset is publicly accessible through multiple established channels: the [Hugging Face Datasets library](https://huggingface.co/datasets/ag_news) for seamless integration with transformer architectures, the [TorchText loader](https://pytorch.org/text/stable/datasets.html#ag-news) for PyTorch implementations, the [TensorFlow Datasets](https://www.tensorflow.org/datasets/catalog/ag_news_subset) for TensorFlow ecosystems, and the [original CSV source](http://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html) maintained by the original authors. Additionally, the dataset is available on [Kaggle](https://www.kaggle.com/datasets/amananandrai/ag-news-classification-dataset) for competition-style experimentation.
-
-### Linguistic and Semantic Properties
-
-Our empirical analysis reveals several critical properties of the dataset:
-
-- **Lexical Diversity**: The vocabulary comprises approximately 95,811 unique tokens, with category-specific terminology exhibiting varying degrees of overlap (Jaccard similarity: World-Business: 0.42, Sports-Other: 0.18). This lexical distribution reflects the natural intersection of global events with economic implications while sports maintains its distinctive terminology.
-
-- **Syntactic Complexity**: Journalistic writing exhibits consistent syntactic patterns with average sentence lengths of 22.3 tokens and predominant use of declarative structures, necessitating models capable of capturing hierarchical linguistic features. The inverted pyramid structure common in news writing—where key information appears early—influences our attention mechanism design.
-
-- **Semantic Ambiguity**: Approximately 8.7% of samples contain cross-category indicators, particularly at the intersection of Business-Technology and World-Business domains, motivating our ensemble approaches and uncertainty quantification methods. These boundary cases often involve multinational corporations, technological policy decisions, or sports business transactions.
-
-### Data Processing Pipeline
-
-The data processing infrastructure, implemented in `src/data/`, encompasses multiple stages:
-
-#### Preprocessing Module
-Our preprocessing pipeline (`src/data/preprocessing/`) implements:
-- **Text Normalization**: Unicode handling, HTML entity resolution, and consistent formatting
-- **Tokenization Strategies**: Support for WordPiece, SentencePiece, and BPE tokenization schemes
-- **Feature Engineering**: Extraction of metadata features including named entities, temporal expressions, and domain-specific indicators
-
-#### Data Augmentation Framework
-The augmentation module (`src/data/augmentation/`) provides:
-- **Semantic-Preserving Transformations**: Back-translation through pivot languages (French, German, Spanish), maintaining label consistency
-- **Synthetic Data Generation**: GPT-4-based paraphrasing and instruction-following data creation
-- **Adversarial Augmentation**: Generation of contrast sets and adversarial examples for robustness evaluation
-- **Mixup Strategies**: Implementation of input-space and hidden-state mixup for regularization
-
-### External Data Integration
-
-#### Domain-Adaptive Pretraining Corpora
-The framework integrates multiple external news sources stored in `data/external/`:
-- **Reuters News Corpus**: 800,000 articles for domain-specific language modeling ([Reuters-21578](https://archive.ics.uci.edu/ml/datasets/reuters-21578+text+categorization+collection))
-- **BBC News Dataset**: 225,000 articles spanning similar categorical distributions ([BBC News Classification](https://www.kaggle.com/c/learn-ai-bbc))
-- **CNN/DailyMail**: 300,000 article-summary pairs for abstractive understanding ([CNN/DailyMail Dataset](https://huggingface.co/datasets/cnn_dailymail))
-- **Reddit News Comments**: 2M instances for colloquial news discourse modeling
-
-#### Quality Control and Filtering
-Data quality assurance mechanisms include:
-- **Deduplication**: Hash-based and semantic similarity filtering removing 3.2% redundant samples
-- **Label Verification**: Manual annotation of 1,000 samples achieving 94.3% inter-annotator agreement
-- **Distribution Monitoring**: Continuous tracking of class balance and feature distributions
-
-### Specialized Evaluation Sets
-
-#### Contrast Sets
-Following Gardner et al. (2020), we construct contrast sets through:
-- **Minimal Perturbations**: Expert-crafted modifications that alter gold labels
-- **Systematic Variations**: Programmatic generation of linguistic variations testing specific model capabilities
-- **Coverage**: 500 manually verified contrast examples per category
-
-#### Robustness Test Suites
-The evaluation framework includes:
-- **Adversarial Examples**: Character-level, word-level, and sentence-level perturbations
-- **Out-of-Distribution Detection**: Samples from non-news domains for calibration assessment
-- **Temporal Shift Analysis**: Articles from different time periods testing generalization
-
-### Data Infrastructure and Accessibility
-
-The data management system ensures:
-- **Version Control**: DVC-based tracking of all data artifacts and transformations
-- **Caching Mechanisms**: Redis/Memcached integration for efficient data loading
-- **Reproducibility**: Deterministic data splits with configurable random seeds
-- **Accessibility**: Multiple access interfaces including [HuggingFace Datasets API](https://huggingface.co/datasets/ag_news), [PyTorch DataLoaders](https://pytorch.org/text/stable/datasets.html#ag-news), [TensorFlow Datasets](https://www.tensorflow.org/datasets/catalog/ag_news_subset), and direct CSV access via the [original source](http://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html)
-
-This comprehensive data infrastructure, detailed in the project structure under `data/` and `src/data/`, provides the empirical foundation for systematic investigation of text classification methodologies while ensuring reproducibility and extensibility for future research endeavors.
-
-## Installation
-
-### System Requirements
-
-#### Minimum Hardware Requirements
-```yaml
-Processor: Intel Core i5 8th Gen / AMD Ryzen 5 3600 or equivalent
-Memory: 16GB RAM (32GB recommended for ensemble training)
-Storage: 50GB available disk space (SSD recommended)
-GPU: NVIDIA GPU with 8GB+ VRAM (optional for CPU-only execution)
-CUDA: 11.7+ with cuDNN 8.6+ (for GPU acceleration)
-Operating System: Ubuntu 20.04+ / macOS 11+ / Windows 10+ with WSL2
-```
-
-#### Optimal Configuration for Research
-```yaml
-Processor: Intel Core i9 / AMD Ryzen 9 / Apple M2 Pro
-Memory: 64GB RAM for large-scale experiments
-Storage: 200GB NVMe SSD for dataset caching
-GPU: NVIDIA RTX 4090 (24GB) / A100 (40GB) for transformer training
-CUDA: 11.8 with cuDNN 8.9 for optimal performance
-Network: Stable internet for downloading pretrained models (~20GB)
-```
-
-### Software Prerequisites
-
-```bash
-# Core Requirements
-Python: 3.8-3.11 (3.9.16 recommended for compatibility)
-pip: 22.0+ 
-git: 2.25+
-virtualenv or conda: Latest stable version
-
-# Optional but Recommended
-Docker: 20.10+ for containerized deployment
-nvidia-docker2: For GPU support in containers
-Make: GNU Make 4.2+ for automation scripts
-```
-
-### Installation Methods
-
-#### Method 1: Standard Installation (Recommended)
-
-##### Step 1: Clone Repository
-```bash
-# Clone with full history for experiment tracking
-git clone https://github.com/VoHaiDung/ag-news-text-classification.git
-cd ag-news-text-classification
-
-# For shallow clone (faster, limited history)
-git clone --depth 1 https://github.com/VoHaiDung/ag-news-text-classification.git
-```
-
-##### Step 2: Create Virtual Environment
-```bash
-# Using venv (Python standard library)
-python3 -m venv venv
-source venv/bin/activate  # Linux/macOS
-# venv\Scripts\activate  # Windows
-
-# Using conda (recommended for complex dependencies)
-conda create -n agnews python=3.9.16
-conda activate agnews
-```
-
-##### Step 3: Install Dependencies
-```bash
-# Upgrade pip and essential tools
-pip install --upgrade pip setuptools wheel
-
-# Install base requirements (minimal setup)
-pip install -r requirements/base.txt
-
-# Install ML requirements (includes PyTorch, Transformers)
-pip install -r requirements/ml.txt
-
-# Install all requirements (complete setup)
-pip install -r requirements/all.txt
-
-# Install package in development mode
-pip install -e .
-```
-
-##### Step 4: Download and Prepare Data
-```bash
-# Download AG News dataset and external corpora
-python scripts/setup/download_all_data.py
-
-# Prepare processed datasets
-python scripts/data_preparation/prepare_ag_news.py
-
-# Create augmented data (optional, time-intensive)
-python scripts/data_preparation/create_augmented_data.py
-
-# Generate contrast sets for robustness testing
-python scripts/data_preparation/generate_contrast_sets.py
-```
-
-##### Step 5: Verify Installation
-```bash
-# Run comprehensive verification script
-python scripts/setup/verify_installation.py
-
-# Test core imports
-python -c "from src.models import *; print('Models: OK')"
-python -c "from src.data import *; print('Data: OK')"
-python -c "from src.training import *; print('Training: OK')"
-python -c "from src.api import *; print('API: OK')"
-python -c "from src.services import *; print('Services: OK')"
-```
-
-#### Method 2: Docker Installation
-
-##### Using Pre-built Images
-```bash
-# Pull and run CPU version
-docker run -it --rm \
-  -v $(pwd)/data:/workspace/data \
-  -v $(pwd)/outputs:/workspace/outputs \
-  agnews/classification:latest
-
-# Pull and run GPU version
-docker run -it --rm --gpus all \
-  -v $(pwd)/data:/workspace/data \
-  -v $(pwd)/outputs:/workspace/outputs \
-  agnews/classification:gpu
-
-# Run API services
-docker run -d -p 8000:8000 -p 50051:50051 \
-  --name agnews-api \
-  agnews/api:latest
-```
-
-##### Building from Source
-```bash
-# Build base image
-docker build -f deployment/docker/Dockerfile -t agnews:latest .
-
-# Build GPU-enabled image
-docker build -f deployment/docker/Dockerfile.gpu -t agnews:gpu .
-
-# Build API service image
-docker build -f deployment/docker/Dockerfile.api -t agnews:api .
-
-# Build complete services stack
-docker build -f deployment/docker/Dockerfile.services -t agnews:services .
-```
-
-##### Docker Compose Deployment
-```bash
-# Development environment with hot-reload
-docker-compose -f deployment/docker/docker-compose.yml up -d
-
-# Production environment with optimizations
-docker-compose -f deployment/docker/docker-compose.prod.yml up -d
-
-# Quick start with minimal setup
-cd quickstart/docker_quickstart
-docker-compose up
-```
-
-#### Method 3: Google Colab Installation
-
-##### Initial Setup Cell
-```python
-# Clone repository
-!git clone https://github.com/VoHaiDung/ag-news-text-classification.git
-%cd ag-news-text-classification
-
-# Install dependencies
-!bash scripts/setup/setup_colab.sh
-
-# Mount Google Drive for persistent storage
-from google.colab import drive
-drive.mount('/content/drive')
-
-# Create symbolic links for data persistence
-!ln -s /content/drive/MyDrive/ag_news_data data/external
-!ln -s /content/drive/MyDrive/ag_news_outputs outputs
-```
-
-##### Environment Configuration Cell
-```python
-import sys
-import os
-
-# Add project to path
-PROJECT_ROOT = '/content/ag-news-text-classification'
-sys.path.insert(0, PROJECT_ROOT)
-os.chdir(PROJECT_ROOT)
-
-# Configure environment variables
-os.environ['AGNEWS_DATA_DIR'] = f'{PROJECT_ROOT}/data'
-os.environ['AGNEWS_OUTPUT_DIR'] = f'{PROJECT_ROOT}/outputs'
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-
-# Import and verify
-from src.models import *
-from src.data import *
-from src.training import *
-
-# Check GPU availability
-import torch
-print(f"GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'}")
-print(f"CUDA Version: {torch.version.cuda}")
-```
-
-##### Quick Start Cell
-```python
-# Run minimal example
-!python quickstart/minimal_example.py
-
-# Train simple model
-!python quickstart/train_simple.py --epochs 3 --batch_size 16
-
-# Evaluate model
-!python quickstart/evaluate_simple.py
-```
-
-##### Using Pre-configured Notebook
-```python
-# Option 1: Open provided notebook
-from google.colab import files
-uploaded = files.upload()  # Upload quickstart/colab_notebook.ipynb
-
-# Option 2: Direct execution
-!wget https://raw.githubusercontent.com/VoHaiDung/ag-news-text-classification/main/quickstart/colab_notebook.ipynb
-# Then File -> Open notebook -> Upload
-```
-
-#### Method 4: Development Container (VS Code)
-
-##### Prerequisites
-```bash
-# Install VS Code extensions
-code --install-extension ms-vscode-remote.remote-containers
-code --install-extension ms-python.python
-```
-
-##### Using Dev Container
-```bash
-# Open project in VS Code
-code .
-
-# VS Code will detect .devcontainer/devcontainer.json
-# Click "Reopen in Container" when prompted
-
-# Or use Command Palette (Ctrl+Shift+P):
-# > Dev Containers: Reopen in Container
-```
-
-##### Manual Dev Container Setup
-```bash
-# Build development container
-docker build -f .devcontainer/Dockerfile -t agnews:devcontainer .
-
-# Run with volume mounts
-docker run -it --rm \
-  -v $(pwd):/workspace \
-  -v ~/.ssh:/home/vscode/.ssh:ro \
-  -v ~/.gitconfig:/home/vscode/.gitconfig:ro \
-  --gpus all \
-  agnews:devcontainer
-```
-
-### Environment-Specific Installation
-
-#### Research Environment
-```bash
-# Install research-specific dependencies
-pip install -r requirements/research.txt
-pip install -r requirements/robustness.txt
-
-# Setup Jupyter environment
-pip install jupyterlab ipywidgets
-jupyter labextension install @jupyter-widgets/jupyterlab-manager
-
-# Install experiment tracking
-pip install wandb mlflow tensorboard
-wandb login  # Configure Weights & Biases
-```
-
-#### Production Environment
-```bash
-# Install production dependencies
-pip install -r requirements/prod.txt
-pip install -r requirements/api.txt
-pip install -r requirements/services.txt
-
-# Compile protocol buffers for gRPC
-bash scripts/api/compile_protos.sh
-
-# Setup monitoring
-pip install prometheus-client grafana-api
-
-# Configure environment
-cp configs/environments/prod.yaml configs/active_config.yaml
-```
-
-#### Development Environment
-```bash
-# Install development tools
-pip install -r requirements/dev.txt
-
-# Setup pre-commit hooks
-pre-commit install
-pre-commit run --all-files
-
-# Install testing frameworks
-pip install pytest pytest-cov pytest-xdist
-
-# Setup linting
-pip install black isort flake8 mypy
-```
-
-### GPU/CUDA Configuration
-
-#### CUDA Installation
-```bash
-# Install CUDA toolkit (Ubuntu)
-bash scripts/setup/install_cuda.sh
-
-# Verify CUDA installation
-nvidia-smi
-nvcc --version
-
-# Install PyTorch with CUDA support
-pip install torch==2.0.1+cu118 torchvision==0.15.2+cu118 \
-  -f https://download.pytorch.org/whl/torch_stable.html
-```
-
-#### Multi-GPU Setup
-```bash
-# Configure visible devices
-export CUDA_VISIBLE_DEVICES=0,1,2,3
-
-# Test multi-GPU availability
-python -c "import torch; print(f'GPUs: {torch.cuda.device_count()}')"
-
-# Enable distributed training
-pip install accelerate
-accelerate config  # Interactive configuration
-```
-
-### Quick Start Commands
-
-#### Using Makefile
-```bash
-# Complete installation
-make install-all
-
-# Setup development environment
-make setup-dev
-
-# Download all data
-make download-data
-
-# Run tests
-make test
-
-# Start services
-make run-services
-
-# Clean environment
-make clean
-```
-
-#### Direct Execution
-```bash
-# Train a simple model
-python quickstart/train_simple.py \
-  --model deberta-v3 \
-  --epochs 3 \
-  --batch_size 16
-
-# Run evaluation
-python quickstart/evaluate_simple.py \
-  --model_path outputs/models/checkpoints/best_model.pt
-
-# Launch interactive demo
-streamlit run quickstart/demo_app.py
-
-# Start API server
-python quickstart/api_quickstart.py
-```
-
-### Platform-Specific Instructions
-
-#### macOS (Apple Silicon)
-```bash
-# Install MPS-accelerated PyTorch
-pip install torch torchvision torchaudio
-
-# Verify MPS availability
-python -c "import torch; print(f'MPS: {torch.backends.mps.is_available()}')"
-
-# Configure for M1/M2
-export PYTORCH_ENABLE_MPS_FALLBACK=1
-```
-
-#### Windows (WSL2)
-```bash
-# Update WSL2
-wsl --update
-
-# Install CUDA in WSL2
-wget https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/cuda-wsl-ubuntu.pin
-sudo mv cuda-wsl-ubuntu.pin /etc/apt/preferences.d/cuda-repository-pin-600
-sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/wsl-ubuntu/x86_64/7fa2af80.pub
-sudo apt-get update
-sudo apt-get -y install cuda
-```
-
-#### HPC Clusters
-```bash
-# Load modules (example for SLURM)
-module load python/3.9
-module load cuda/11.8
-module load cudnn/8.6
-
-# Create virtual environment
-python -m venv $HOME/agnews_env
-source $HOME/agnews_env/bin/activate
-
-# Install with cluster-optimized settings
-pip install --no-cache-dir -r requirements/all.txt
-```
-
-### Verification and Testing
-
-#### Component Verification
-```bash
-# Test data pipeline
-python -c "from src.data.datasets.ag_news import AGNewsDataset; print('Data: OK')"
-
-# Test model loading
-python -c "from src.models.transformers.deberta.deberta_v3 import DeBERTaV3Model; print('Models: OK')"
-
-# Test training pipeline
-python -c "from src.training.trainers.standard_trainer import StandardTrainer; print('Training: OK')"
-
-# Test API endpoints
-python scripts/api/test_api_endpoints.py
-
-# Test services
-python scripts/services/service_health_check.py
-```
-
-#### Run Test Suite
-```bash
-# Run all tests
-pytest tests/
-
-# Run specific test categories
-pytest tests/unit/data/
-pytest tests/unit/models/
-pytest tests/integration/
-
-# Run with coverage
-pytest --cov=src --cov-report=html tests/
-```
-
-### Troubleshooting
-
-#### Common Issues and Solutions
-
-##### Out of Memory Errors
-```bash
-# Reduce batch size
-export BATCH_SIZE=8
-
-# Enable gradient accumulation
-export GRADIENT_ACCUMULATION_STEPS=4
-
-# Use mixed precision training
-export USE_AMP=true
-
-# Clear CUDA cache
-python -c "import torch; torch.cuda.empty_cache()"
-```
-
-##### Import Errors
-```bash
-# Ensure package is installed in development mode
-pip install -e .
-
-# Add to PYTHONPATH
-export PYTHONPATH="${PYTHONPATH}:$(pwd)"
-
-# Verify Python path
-python -c "import sys; print('\n'.join(sys.path))"
-```
-
-##### Data Download Issues
-```bash
-# Use alternative download method
-python scripts/setup/download_all_data.py --mirror
-
-# Manual download with wget
-wget -P data/raw/ https://example.com/ag_news.csv
-
-# Use cached data
-export USE_CACHED_DATA=true
-```
-
-##### CUDA Version Mismatch
-```bash
-# Check CUDA version
-nvidia-smi  # System CUDA
-python -c "import torch; print(torch.version.cuda)"  # PyTorch CUDA
-
-# Reinstall PyTorch with correct CUDA
-pip uninstall torch torchvision torchaudio
-pip install torch==2.0.1+cu118 -f https://download.pytorch.org/whl/torch_stable.html
-```
-
-### Post-Installation Steps
-
-#### Configure Environment Variables
-```bash
-# Copy environment template
-cp .env.example .env
-
-# Edit configuration
-nano .env
-
-# Required variables
-export AGNEWS_DATA_DIR="./data"
-export AGNEWS_OUTPUT_DIR="./outputs"
-export AGNEWS_CACHE_DIR="./cache"
-export WANDB_API_KEY="your-key"  # Optional
-export HUGGINGFACE_TOKEN="your-token"  # Optional
-```
-
-#### Download Pretrained Models
-```bash
-# Download base models
-python -c "from transformers import AutoModel; AutoModel.from_pretrained('microsoft/deberta-v3-large')"
-python -c "from transformers import AutoModel; AutoModel.from_pretrained('roberta-large')"
-
-# Cache models locally
-export TRANSFORMERS_CACHE="./cache/models"
-export HF_HOME="./cache/huggingface"
-```
-
-#### Initialize Experiment Tracking
-```bash
-# Setup MLflow
-mlflow ui --host 0.0.0.0 --port 5000
-
-# Setup TensorBoard
-tensorboard --logdir outputs/logs/tensorboard
-
-# Setup Weights & Biases
-wandb init --project ag-news-classification
-```
-
-### Next Steps
-
-After successful installation:
-
-1. **Explore Tutorials**: Begin with `notebooks/tutorials/00_environment_setup.ipynb`
-2. **Run Baseline**: Execute `python scripts/training/train_single_model.py`
-3. **Test API**: Launch `python scripts/api/start_all_services.py`
-4. **Read Documentation**: Comprehensive guides in `docs/getting_started/`
-5. **Join Community**: Contribute via GitHub Issues and Pull Requests
-
-For detailed configuration options, refer to `configs/` directory. For production deployment guidelines, consult `deployment/` documentation.
+Would you like me to continue with Phase 2 (Neural Embeddings), Phase 3 (Transformers), etc.? I'll maintain this level of mathematical rigor and detailed explanation throughout.
 
 ## Project Structure
 
