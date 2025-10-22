@@ -692,8 +692,6 @@ where $\hat{y}_{ik} = P(y = k \mid \mathbf{x}_i)$ is predicted probability.
 2. **Feature Independence Assumption**: Like Naive Bayes, assumes features are independent
 3. **Requires Feature Engineering**: Manual construction of informative features (n-grams, POS tags)
 
----
-
 **Fundamental Limitation of All Classical Methods**:
 
 All these approaches treat words as atomic units with fixed representations, failing to capture:
