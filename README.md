@@ -1,11 +1,5 @@
 # AG News Text Classification
 
-$$
-A_{ij} = ⟦ Q^c_i K^c_j + Q^c_i K^r_{i-j} + K^c_j Q^r_{i-j} ⟧
-$$
-
-
-
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -776,6 +770,11 @@ $$
 Replace flat softmax with binary tree structure (Huffman tree based on word frequency).
 
 **Probability Computation**: Path from root to word $w$ with $L(w)$ nodes:
+
+$$
+P(w \mid w_t) = \prod_{i=1}^{L(w)-1} \sigma\left(\text{&#10214;} n(w, i+1) = \text{left}(n(w, i)) \text{&#10215;} \cdot \mathbf{u}_{n(w,i)}^\top \mathbf{v}_{w_t}\right)
+$$
+
 
 $$
 P(w \mid w_t) = \prod_{i=1}^{L(w)-1} \sigma\left(\llbracket n(w, i+1) = \text{left}(n(w, i)) \rrbracket \cdot \mathbf{u}_{n(w,i)}^\top \mathbf{v}_{w_t}\right)
