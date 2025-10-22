@@ -11,1404 +11,704 @@
 
 </div>
 
-## Introduction
+# Introduction
 
-### 1. Theoretical Foundations and Problem Formulation
+## 1.1 Research Motivation and Context
 
-#### 1.1 Text Classification as Supervised Learning
+Text classification constitutes one of the fundamental tasks in natural language processing, serving as a cornerstone for applications ranging from sentiment analysis and spam detection to news categorization and intent recognition. The task is formally defined as learning a mapping function from a document space to a discrete set of predefined categories, where the objective is to minimize prediction error on unseen examples drawn from the same underlying distribution as the training data.
 
-Text classification constitutes a fundamental supervised learning problem where the objective is to learn a mapping function from textual inputs to predefined categorical labels, optimizing for generalization to unseen instances drawn from the same underlying distribution.
+Over the past decade, the field has witnessed a paradigm shift from feature-engineering approaches based on bag-of-words representations and classical machine learning algorithms, to end-to-end neural architectures that learn hierarchical representations directly from raw text. The introduction of attention mechanisms and pre-trained transformer models has further revolutionized the landscape, enabling competitive accuracy on benchmark datasets through transfer learning from massive unsupervised corpora.
 
-**Formal Problem Definition**
+Despite these advances, a fundamental tension persists between the capacity of modern neural architectures and the size of available labeled datasets. Contemporary state-of-the-art models such as BERT, RoBERTa, DeBERTa, and large language models like LLaMA and Mistral contain parameters numbering in the hundreds of millions to tens of billions, while supervised classification datasets typically provide only thousands to hundreds of thousands of labeled examples. This disparity creates a severe risk of overfitting, where models achieve near-perfect accuracy on training data yet fail to generalize to held-out test sets.
 
-Let $\mathcal{X}$ denote the space of all possible text documents, and $\mathcal{Y} = \{y_1, y_2, \ldots, y_K\}$ represent a finite set of $K$ predefined classes. We are provided with a training dataset:
+This project addresses the challenge of developing text classification systems that achieve competitive accuracy while maintaining rigorous generalization guarantees. We focus specifically on the AG News dataset as an experimental testbed—not because it represents the frontier of difficulty in modern NLP, but precisely because its moderate size and balanced structure provide an ideal controlled environment for studying the interplay between model capacity, training methodology, and generalization performance. The complete dataset characteristics and experimental protocols are detailed in [Dataset](#dataset).
 
-$$
-\mathcal{D} = \{(x_1, y_1), (x_2, y_2), \ldots, (x_N, y_N)\}
-$$
+## 1.2 The Generalization Challenge in Modern NLP
 
-consisting of $N$ labeled examples, where each $x_i \in \mathcal{X}$ is a text document and $y_i \in \mathcal{Y}$ is its corresponding class label.
+The core theoretical challenge in supervised machine learning is the minimization of expected risk, defined over an unknown data distribution. Let us denote the input space of text documents as $\mathcal{X}$ and the output space of class labels as $\mathcal{Y}$. Given a training dataset $\mathcal{D}$ consisting of $N$ independently and identically distributed samples:
 
-The learning objective is to find a function $f: \mathcal{X} \rightarrow \mathcal{Y}$ that minimizes the **expected risk** (generalization error):
+$$\mathcal{D} = \{(x_1, y_1), (x_2, y_2), \ldots, (x_N, y_N)\}$$
 
-$$
-R(f) = \mathbb{E}_{(x,y) \sim P} [\ell(f(x), y)]
-$$
+where each pair $(x_i, y_i)$ is drawn from an unknown joint distribution $P$ over $\mathcal{X} \times \mathcal{Y}$, the learning objective is to find a function $f: \mathcal{X} \rightarrow \mathcal{Y}$ that minimizes the expected risk:
 
-where:
-- $P$ is the unknown joint probability distribution over $\mathcal{X} \times \mathcal{Y}$ from which data are sampled
-- $\ell: \mathcal{Y} \times \mathcal{Y} \rightarrow \mathbb{R}^+$ is a loss function measuring prediction error
-- $\mathbb{E}$ denotes the expectation over the data distribution
+$$R(f) = \mathbb{E}_{(x,y) \sim P}[\ell(f(x), y)]$$
 
-**Commonly used loss functions**:
+Here, $\ell$ denotes a loss function quantifying the penalty for incorrect predictions. For classification tasks, this is commonly the zero-one loss, which equals one when the prediction differs from the true label and zero otherwise.
 
-- **0-1 Loss** (classification accuracy):
-  $$\ell_{0-1}(f(x), y) = \mathbb{I}[f(x) \neq y] = \begin{cases} 0 & \text{if } f(x) = y \\ 1 & \text{if } f(x) \neq y \end{cases}$$
+Since the true distribution $P$ is unknown and inaccessible, practical learning algorithms instead minimize the empirical risk computed on the observed training data:
 
-- **Cross-Entropy Loss** (for probabilistic predictions):
-  $$\ell_{CE}(f(x), y) = -\log P(y \mid x; f)$$
+$$R_{\text{emp}}(f) = \frac{1}{N} \sum_{i=1}^{N} \ell(f(x_i), y_i)$$
 
-Since the true distribution $P$ is unknown and inaccessible, we instead minimize the **empirical risk** (training error) computed on the observed dataset:
+The fundamental question is whether a function $f$ that achieves low empirical risk will also achieve low expected risk on new, unseen examples. The difference between these two quantities is termed the **generalization gap**:
 
-$$
-R_{\text{emp}}(f) = \frac{1}{N} \sum_{i=1}^{N} \ell(f(x_i), y_i)
-$$
+$$\Delta(f) = R(f) - R_{\text{emp}}(f)$$
 
-**The Fundamental Challenge: Overfitting**
+This generalization gap represents the core challenge addressed throughout this framework. When $\Delta(f)$ is large, the model has overfit to the training data and will perform poorly on new examples despite excellent training accuracy.
 
-The core tension in supervised learning is the **bias-variance-covariance decomposition**. For squared loss in regression, the expected error decomposes as:
+Statistical learning theory provides bounds on this generalization gap. According to the Vapnik-Chervonenkis theory, with probability at least $1 - \delta$, the true risk is bounded by:
 
-$$
-\mathbb{E}[(f(x) - y)^2] = \text{Bias}^2 + \text{Variance} + \text{Irreducible Error}
-$$
+$$R(f) \leq R_{\text{emp}}(f) + \sqrt{\frac{d \log(2N/d) + \log(4/\delta)}{N}}$$
 
-where:
-- **Bias**: Error from incorrect assumptions in the learning algorithm (underfitting)
-- **Variance**: Error from sensitivity to small fluctuations in training data (overfitting)
-- **Irreducible Error**: Noise inherent in the problem (Bayes error)
+where $d$ represents the VC dimension, a measure of the model's capacity or expressiveness. 
 
-A model may achieve zero empirical risk (perfect memorization of training data) yet exhibit high expected risk (poor generalization)—the phenomenon of **overfitting**. This occurs when:
+**Interpreting this bound**: The inequality reveals a fundamental trade-off. The first term $R_{\text{emp}}(f)$ decreases as we use more expressive models with higher capacity (larger $d$), since such models can fit the training data better. However, the second term—the generalization gap—increases with model capacity $d$ and decreases with dataset size $N$. Models with high capacity can achieve low empirical risk but may suffer from a large generalization gap. Conversely, models with limited capacity have tighter generalization bounds but may be unable to capture the true underlying patterns, leading to high bias. The optimal model complexity minimizes the sum of both terms.
 
-$$
-R_{\text{emp}}(f) \ll R(f)
-$$
+In the context of modern transformer-based language models, the effective capacity is enormous. For instance, DeBERTa-v3-XLarge contains approximately 710 million parameters, while the AG News training set provides 120,000 labeled examples. This yields a parameter-to-sample ratio of approximately 5,917:1, meaning each parameter is informed by fewer than 0.0002 training samples on average. Classical statistical learning theory would suggest that such models should catastrophically overfit, memorizing training examples without learning generalizable patterns.
 
-**Quantifying Generalization Gap**:
+However, empirical practice demonstrates that careful application of several techniques can mitigate this overfitting risk:
 
-Define the **generalization gap** as:
+- **Transfer Learning**: Pre-training on large unsupervised corpora allows models to learn general linguistic representations before fine-tuning on task-specific data. This effectively reduces the number of parameters that must be learned from the supervised dataset alone, as discussed in [Section 1.6.2](#162-transfer-learning-and-pre-training).
 
-$$
-\Delta(f) = R(f) - R_{\text{emp}}(f)
-$$
+- **Parameter-Efficient Fine-Tuning**: Methods such as Low-Rank Adaptation (LoRA) and Quantized LoRA (QLoRA) constrain the fine-tuning process to modify only a small subset of model parameters, dramatically reducing effective capacity. Theoretical foundations are provided in [Section 1.6.3](#163-parameter-efficient-fine-tuning-theory).
 
-Statistical learning theory (Vapnik-Chervonenkis theory) provides upper bounds:
+- **Regularization**: Techniques including dropout, weight decay, and early stopping impose explicit or implicit penalties on model complexity, encouraging simpler solutions that generalize better. Our regularization strategies are detailed in [configs/training/regularization/](./configs/training/regularization/).
 
-$$
-R(f) \leq R_{\text{emp}}(f) + \sqrt{\frac{d \log(N/d) + \log(1/\delta)}{N}}
-$$
+- **Ensemble Methods**: Combining predictions from multiple diverse models reduces variance and improves robustness, even when individual models may overfit. The theoretical basis is explained in [Section 1.6.4](#164-ensemble-methods-and-diversity).
 
-with probability $1-\delta$, where $d$ is the VC dimension (model complexity measure). This bound reveals the trade-off:
-- **High capacity** (large $d$): Can fit training data well (low $R_{\text{emp}}$) but large generalization gap
-- **Low capacity** (small $d$): Tight bound but may have high $R_{\text{emp}}$ (underfitting)
+- **Knowledge Distillation**: Training smaller student models to mimic the behavior of larger teacher models or ensembles preserves much of the performance gain while reducing inference cost and overfitting risk, as detailed in [Section 1.6.5](#165-knowledge-distillation).
 
-**This work systematically addresses overfitting** through:
-1. **Architectural constraints**: Parameter-efficient methods limiting effective capacity
-2. **Regularization strategies**: Explicit penalties on model complexity
-3. **Ensemble diversity**: Reducing variance through model averaging
-4. **Automated monitoring**: Real-time detection of train-validation divergence
-5. **Test set protection**: Rigorous protocols preventing data leakage
+The challenge addressed by this project is to systematically combine these techniques within a unified framework that treats overfitting prevention not as an afterthought, but as a primary architectural consideration from the outset. The complete overfitting prevention architecture is documented in [OVERFITTING_PREVENTION.md](./OVERFITTING_PREVENTION.md).
 
-#### 1.2 Unique Challenges in Text Classification
+## 1.3 Bridging Theory and Practice
 
-Text classification poses distinctive challenges differentiating it from other supervised learning domains:
+A significant gap exists in the current landscape between theoretical understanding of generalization and practical implementation of text classification systems. Research papers often present novel architectures or training techniques with impressive benchmark results, yet the code repositories accompanying these papers frequently lack the infrastructure necessary to ensure that these results are reliable, reproducible, and generalizable.
 
-**Challenge 1: High Dimensionality and Sparsity**
+Common issues include:
 
-Natural language exists in an extremely high-dimensional space. For a vocabulary of size $|\mathcal{V}|$ (typically 30,000-100,000 unique tokens), even the simplest **bag-of-words** representation creates a $|\mathcal{V}|$-dimensional feature vector.
+- **Inadequate Validation Protocols**: Using a single train-test split without proper validation set management, leading to potential overfitting to the validation set through repeated hyperparameter tuning.
 
-**Mathematical Representation**: For document $d$ containing words $w_1, w_2, \ldots, w_m$, the bag-of-words vector is:
+- **Test Set Contamination**: Inadvertent exposure of test set information during development, such as through exploratory data analysis, error analysis on test samples, or repeated evaluation during model selection.
 
-$$
-\mathbf{x} = [c_1, c_2, \ldots, c_{|\mathcal{V}|}]^\top \in \mathbb{R}^{|\mathcal{V}|}
-$$
+- **Unreported Hyperparameter Sensitivity**: Publishing results from a single random seed or configuration without acknowledging variance across runs, making results difficult to reproduce.
 
-where $c_i$ is the count of word $w_i$ in document $d$.
+- **Platform-Specific Assumptions**: Code that assumes access to specific computational infrastructure (multi-GPU clusters, high-memory machines, fast storage) that is not available to many researchers and practitioners.
 
-However, any individual document utilizes only a small fraction of the vocabulary, resulting in **sparse representations** where 95-99% of features are zero.
+- **Lack of Systematic Overfitting Detection**: Relying on manual inspection of learning curves rather than automated monitoring systems that can detect subtle signs of overfitting early in training.
 
-**Sparsity Measure**: Define document sparsity as:
+This project seeks to bridge this gap by providing not merely a collection of high-performing models, but a complete experimental framework that embeds best practices for generalization into every component of the system. The overfitting prevention mechanisms described in detail in [OVERFITTING_PREVENTION.md](./OVERFITTING_PREVENTION.md) are not separate modules to be optionally enabled, but rather integral parts of the training pipeline that operate by default.
 
-$$
-\text{Sparsity}(d) = 1 - \frac{|\{i : c_i > 0\}|}{|\mathcal{V}|} = 1 - \frac{|d|}{|\mathcal{V}|}
-$$
+Furthermore, we recognize that reproducibility requires more than fixing random seeds. It requires comprehensive logging of the complete experimental environment, including hardware specifications, software versions, data preprocessing steps, and the full hyperparameter configuration. It requires statistical rigor in comparing models, using multiple random seeds and appropriate significance testing. And it requires transparent reporting of all results, including negative results and failed experiments, to provide an honest assessment of what approaches work and under what conditions.
 
-where $|d|$ is the number of unique words in document $d$.
+Our implementation of these principles includes:
 
-**Example**: A 100-word news article from a 50,000-word vocabulary:
-- Unique words in document: ~80 (after removing duplicates)
-- Sparsity: $1 - 80/50000 = 0.9984$ (99.84% zeros)
+- **Automated Environment Logging**: Capture of hardware specifications, CUDA versions, library versions, and platform characteristics. See [src/utils/experiment_tracking.py](./src/utils/experiment_tracking.py).
 
-**Implications**:
+- **Multi-Seed Evaluation**: All reported results average over at least 3-5 random seeds with standard deviations. Configuration templates in [configs/experiments/reproducibility/](./configs/experiments/reproducibility/).
 
-1. **Curse of Dimensionality**: In high-dimensional spaces, distances become less meaningful. For random points in $\mathbb{R}^d$, the ratio of maximum to minimum distance approaches 1 as $d \rightarrow \infty$:
-   $$\lim_{d \rightarrow \infty} \frac{\max_i \|\mathbf{x}_i - \mathbf{x}_0\|}{\min_i \|\mathbf{x}_i - \mathbf{x}_0\|} = 1$$
+- **Statistical Significance Testing**: Paired t-tests with Bonferroni correction for comparing multiple models. Implementation in [src/evaluation/metrics/](./src/evaluation/metrics/).
 
-2. **Sample Complexity**: Number of samples required to learn grows exponentially with dimensionality. For uniform coverage of feature space with resolution $r$, need $O(r^d)$ samples.
+- **Comprehensive Experiment Tracking**: Integration with TensorBoard, MLflow, and Weights & Biases for complete audit trails. Setup guides in [LOCAL_MONITORING_GUIDE.md](./LOCAL_MONITORING_GUIDE.md).
 
-3. **Computational Challenges**: Matrix operations on 50,000-dimensional vectors require specialized sparse data structures.
+## 1.4 Research Gaps and Motivations
 
-**Solutions**:
-- **Dimensionality Reduction**: PCA, LSA project to low-dimensional subspace
-- **Dense Embeddings**: Word2Vec, BERT map discrete tokens to continuous $\mathbb{R}^d$ with $d=100-1024$
-- **Sparse Operations**: Efficient implementations (CSR matrices, sparse attention)
+Through extensive review of existing text classification implementations and research codebases, we have identified several specific gaps that motivated the design decisions in this project.
 
-**Challenge 2: Variable-Length Sequential Structure**
+### 1.4.1 Post-Hoc Versus Preventive Overfitting Management
 
-Unlike fixed-size inputs in image classification (e.g., 224×224 pixels), text documents vary dramatically in length—from short social media posts (10-20 tokens) to long articles (1,000+ tokens).
+**Current Practice**: The typical workflow in developing text classification systems treats overfitting as a problem to be diagnosed after it occurs. Researchers train models, observe divergence between training and validation metrics, and then apply corrective measures such as increasing regularization strength, reducing model capacity, or implementing early stopping.
 
-**Sequence Modeling Requirements**:
+**Limitation**: This reactive approach has several drawbacks. First, it wastes computational resources by allowing training to proceed even when the configuration is almost certain to overfit. Second, it creates opportunities for inadvertent test set leakage, as researchers may be tempted to check test performance to gauge whether their overfitting mitigation strategies are working. Third, it lacks systematic principles for determining appropriate hyperparameter values, leading to ad-hoc choices that may not generalize across different datasets or model architectures.
 
-1. **Handle arbitrary length**: Architecture must process sequences $\mathbf{x} = [x_1, x_2, \ldots, x_n]$ where $n$ varies
+**Our Approach**: We implement a preventive overfitting management system that operates at multiple stages:
 
-2. **Capture local patterns**: Phrases and n-grams like "not good", "very happy", "absolutely terrible"
+1. **Pre-Training Validation**: Before any GPU computation begins, the system analyzes the proposed configuration against a set of constraint rules based on dataset size, model capacity, and historical performance patterns. Configurations likely to result in severe overfitting are rejected with explanatory messages and recommended alternatives. Implementation in [src/core/overfitting_prevention/validators/](./src/core/overfitting_prevention/validators/).
 
-3. **Model long-range dependencies**: Subject-verb agreement across clauses, coreference resolution (pronouns to antecedents)
+2. **Real-Time Monitoring**: During training, multiple metrics are tracked to detect early warning signs of overfitting, including the train-validation gap in both loss and accuracy, the rate of change in these metrics, gradient magnitudes, and parameter norms. When predefined thresholds are exceeded, training can be automatically halted with diagnostic information. See [src/core/overfitting_prevention/monitors/](./src/core/overfitting_prevention/monitors/).
 
-**Approaches**:
+3. **Post-Training Analysis**: After training completes, comprehensive overfitting risk scores are computed based on multiple factors, and detailed reports are generated comparing the observed behavior to expected patterns for the given configuration. Report generation in [src/core/overfitting_prevention/reporting/](./src/core/overfitting_prevention/reporting/).
 
-**Padding/Truncation**: Standardize to fixed length $L$:
-$$
-\mathbf{x}' = \begin{cases}
-[\mathbf{x}; \mathbf{0}_{L-n}] & \text{if } n < L \text{ (pad)} \\
-\mathbf{x}_{1:L} & \text{if } n > L \text{ (truncate)}
-\end{cases}
-$$
+The theoretical foundations and implementation details of this system are described in [OVERFITTING_PREVENTION.md](./OVERFITTING_PREVENTION.md), while this document focuses on the high-level rationale and integration with the overall experimental workflow.
 
-*Limitation*: Padding introduces noise, truncation loses information.
+### 1.4.2 Fragmented State-of-the-Art Techniques
 
-**Recurrent Neural Networks**: Process sequences step-by-step with hidden state:
-$$
-\mathbf{h}_t = f(\mathbf{h}_{t-1}, \mathbf{x}_t; \theta)
-$$
+**Current Practice**: Achieving competitive results on text classification benchmarks increasingly requires combining multiple advanced techniques: large pre-trained transformers, parameter-efficient fine-tuning methods, ensemble approaches, and knowledge distillation. However, these techniques are often developed and published in separate research efforts, with implementations residing in different codebases using incompatible interfaces.
 
-*Limitation*: Vanishing gradients for long sequences (gradient magnitude decays as $\gamma^t$ where $\gamma < 1$).
+**Limitation**: A researcher wishing to reproduce state-of-the-art results must manually integrate code from multiple sources, resolve dependency conflicts, adapt to different configuration formats, and navigate undocumented assumptions about data formats and training procedures. This integration burden is particularly challenging for researchers who are domain experts but not deep learning engineers.
 
-**Attention Mechanisms**: Allow direct connections between all positions (Section 1.3).
+**Our Approach**: We provide a unified model zoo spanning classical baselines to large language models, with consistent interfaces and composable configurations. The system is organized into tiers that represent different points in the accuracy-efficiency trade-off space:
 
-**Challenge 3: Semantic Ambiguity and Context-Dependency**
+- **Tier 1 - Classical Baselines**: Traditional machine learning approaches including Naive Bayes, Support Vector Machines, and Logistic Regression, serving as sanity checks and computational efficiency baselines. Implementations in [experiments/baselines/classical/](./experiments/baselines/classical/).
 
-Natural language exhibits profound ambiguity at multiple linguistic levels:
+- **Tier 2 - Standard Transformers**: Full fine-tuning of models like BERT-Base and RoBERTa-Base, establishing the performance ceiling for conventional approaches. Configurations in [configs/models/single/transformers/](./configs/models/single/transformers/).
 
-**1. Polysemy**: Words with multiple meanings depending on context
+- **Tier 3 - Large Transformers with PEFT**: Models such as DeBERTa-v3-XLarge and DeBERTa-v2-XXLarge fine-tuned using Low-Rank Adaptation, demonstrating parameter-efficient scaling to larger architectures. Configurations in [configs/models/recommended/tier_1_sota/](./configs/models/recommended/tier_1_sota/).
 
-*Example*: "bank"
-- Financial institution: "I deposited money at the **bank**"
-- Land alongside river: "We sat by the river **bank**"
+- **Tier 4 - Large Language Models**: Instruction-tuned models like LLaMA 2 and Mistral fine-tuned with Quantized LoRA, representing the current frontier in transfer learning. Configurations in [configs/models/recommended/tier_2_llm/](./configs/models/recommended/tier_2_llm/).
 
-**2. Synonymy**: Different words with identical or near-identical meanings
+- **Tier 5 - Ensembles and Distillation**: Multi-model ensembles achieving maximum accuracy, and distilled student models that compress ensemble knowledge into efficient single-model architectures. Configurations in [configs/models/recommended/tier_3_ensemble/](./configs/models/recommended/tier_3_ensemble/) and [configs/models/recommended/tier_4_distilled/](./configs/models/recommended/tier_4_distilled/).
 
-$$\text{Synonyms}(\text{"quick"}) = \{\text{"fast"}, \text{"rapid"}, \text{"swift"}, \text{"speedy"}\}$$
+Detailed guidance on selecting appropriate models for different use cases is provided in [SOTA_MODELS_GUIDE.md](./SOTA_MODELS_GUIDE.md), while the system architecture enabling this modularity is documented in [ARCHITECTURE.md](./ARCHITECTURE.md).
 
-Traditional models treating words as atomic units cannot recognize semantic equivalence.
+### 1.4.3 Platform Dependence and Accessibility Barriers
 
-**3. Compositionality**: Meaning emerges from word combinations
+**Current Practice**: Much academic research in NLP assumes access to substantial computational resources, such as multi-GPU clusters with high-bandwidth interconnects, large amounts of RAM, and fast persistent storage. Code is often optimized for specific environments like institutional SLURM clusters or cloud platforms with particular instance types.
 
-*Negation*: "not good" ≠ "good" (sentiment polarity flip)
+**Limitation**: This creates significant barriers for independent researchers, students, and practitioners in resource-constrained settings. Even when pre-trained models are publicly available, fine-tuning them on custom datasets may be infeasible without access to expensive infrastructure. Furthermore, differences in hardware and software configurations across platforms frequently lead to reproducibility failures, where code that runs successfully in one environment produces errors or different results in another.
 
-*Modifier effects*: "incredibly boring" vs. "incredibly exciting" (same intensifier, opposite results)
+**Our Approach**: We adopt a platform-agnostic design that automatically adapts to available computational resources:
 
-**Mathematical Framework for Contextualized Representations**:
+1. **Automatic Platform Detection**: The system identifies the execution environment at runtime (Google Colab, Kaggle Notebooks, local CPU, local GPU, etc.) and loads appropriate configuration defaults. Implementation in [src/deployment/platform_detector.py](./src/deployment/platform_detector.py).
 
-Traditional word embeddings assign fixed vectors:
-$$w \mapsto \mathbf{v}_w \in \mathbb{R}^d$$
+2. **Resource-Aware Model Selection**: Based on detected GPU memory, CPU count, and time quotas, the system recommends models and training configurations that will complete within available resources. Decision logic in [src/deployment/smart_selector.py](./src/deployment/smart_selector.py).
 
-Contextualized embeddings compute representations dynamically:
-$$
-w_i \text{ in context } [w_1, \ldots, w_n] \mapsto \mathbf{h}_i = f(w_1, \ldots, w_n, i; \theta) \in \mathbb{R}^d
-$$
+3. **Checkpoint Resilience**: Training state is periodically synchronized to persistent storage (Google Drive for Colab, Kaggle Datasets for Kaggle) so that sessions interrupted due to platform time limits can be seamlessly resumed. Implementation in [src/deployment/checkpoint_manager.py](./src/deployment/checkpoint_manager.py).
 
-**Example**: In BERT, "bank" receives different representations:
-- $\mathbf{h}_{\text{bank}}^{\text{(financial)}} \approx \mathbf{v}_{\text{money}}, \mathbf{v}_{\text{loan}}$ (cosine similarity > 0.7)
-- $\mathbf{h}_{\text{bank}}^{\text{(river)}} \approx \mathbf{v}_{\text{water}}, \mathbf{v}_{\text{shore}}$ (cosine similarity > 0.7)
-- $\cos(\mathbf{h}_{\text{bank}}^{\text{(financial)}}, \mathbf{h}_{\text{bank}}^{\text{(river)}}) < 0.3$ (distinct representations)
+4. **Quota Management**: For platforms with usage limits (Colab's 12-hour sessions, Kaggle's weekly GPU quotas), the system tracks consumption and optimizes checkpoint intervals to maximize effective training time. Quota tracking in [src/deployment/quota_tracker.py](./src/deployment/quota_tracker.py).
 
-**Challenge 4: Limited Labeled Data vs. Model Capacity**
+The platform adaptation mechanisms are detailed in [PLATFORM_OPTIMIZATION_GUIDE.md](./PLATFORM_OPTIMIZATION_GUIDE.md), while platform-specific configurations are available in [configs/environments/](./configs/environments/) and [configs/training/platform_adaptive/](./configs/training/platform_adaptive/).
 
-State-of-the-art models contain hundreds of millions to billions of parameters:
-- DeBERTa-v3-XLarge: 710M parameters
-- Llama 2-70B: 70B parameters
+### 1.4.4 Test Set Integrity and Experimental Validity
 
-while supervised datasets typically contain $10^3$ to $10^5$ labeled examples.
+**Current Practice**: In many machine learning projects, the test set is treated as merely another data split, stored in the same directory structure as training and validation data and accessible to all code components. Researchers manually ensure that test data is not used during development, relying on discipline rather than technical safeguards.
 
-**Parameter-to-Sample Ratio**:
+**Limitation**: Human error and the iterative nature of machine learning experimentation make test set leakage a persistent risk. Subtle forms of leakage can occur through:
 
-$$
-\rho = \frac{\text{Model Parameters}}{\text{Training Samples}}
-$$
+- **Direct leakage**: Accidentally including test samples in training batches due to indexing errors or incorrect data split logic.
 
-**Critical Threshold**: When $\rho > 1$, severe overfitting risk—model has enough capacity to memorize all training data.
+- **Indirect leakage**: Making modeling decisions (feature selection, architecture choices, hyperparameter ranges) based on test set characteristics observed during exploratory analysis.
 
-**Examples**:
-- DeBERTa-v3-XLarge on AG News: $\rho = 710M / 120K \approx 5917$ (each parameter sees <0.0002 samples!)
-- Llama 2-70B on AG News: $\rho = 70B / 120K \approx 583,333$
+- **Adaptive leakage**: Trying multiple models or configurations and selecting based on test performance, effectively overfitting to the test set through the model selection process itself.
 
-**Classical Statistical Learning Theory** (Vapnik) suggests sample complexity:
+- **Preprocessing leakage**: Computing normalization statistics, vocabulary mappings, or other preprocessing parameters on the full dataset including test samples, then applying these to create test features.
 
-$$
-N = O\left(\frac{d}{\epsilon^2}\right)
-$$
+**Our Approach**: We implement cryptographic test set protection mechanisms:
 
-to achieve error within $\epsilon$ of optimal, where $d$ is VC dimension (roughly proportional to parameters). For $d=710M$, would need billions of labeled samples for reliable learning!
+1. **Hash-Based Integrity**: Upon first loading the test set, a SHA-256 hash is computed over the sorted sample identifiers and stored in a protected file at [data/processed/.test_set_hash](./data/processed/.test_set_hash). Every subsequent test evaluation verifies that the hash matches, detecting any modification or corruption of the test set. Implementation in [src/core/overfitting_prevention/utils/hash_utils.py](./src/core/overfitting_prevention/utils/hash_utils.py).
 
-**Modern Solutions**:
+2. **Access Logging**: All code paths that access test data are instrumented to log the timestamp, calling function, purpose statement, and stack trace to [data/test_access_log.json](./data/test_access_log.json). This creates an auditable record of test set usage. Implementation in [src/core/overfitting_prevention/guards/test_set_guard.py](./src/core/overfitting_prevention/guards/test_set_guard.py).
 
-**1. Transfer Learning**: Pre-train on massive unlabeled corpus (billions of tokens), then fine-tune:
+3. **Access Control**: The test set loader requires explicit authorization through configuration flags. By default, attempting to load test data during training or hyperparameter tuning raises an exception. Guard implementation in [src/core/overfitting_prevention/guards/access_control.py](./src/core/overfitting_prevention/guards/access_control.py).
 
-$$
-\theta^* = \arg\min_{\theta} \mathcal{L}_{\text{downstream}}(\theta; \mathcal{D}_{\text{labeled}})
-$$
+4. **Budget Enforcement**: A configurable limit on the number of test evaluations prevents adaptive overfitting through repeated model selection based on test performance. Configuration in [configs/overfitting_prevention/validation/test_set_protection.yaml](./configs/overfitting_prevention/validation/test_set_protection.yaml).
 
-subject to initialization $\theta_0 = \theta_{\text{pretrained}}$
+These mechanisms, described in detail in [OVERFITTING_PREVENTION.md § Test Set Protection](./OVERFITTING_PREVENTION.md), provide technical enforcement of best practices that would otherwise rely solely on researcher discipline.
 
-*Intuition*: Pre-training learns general language understanding (syntax, semantics, world knowledge); fine-tuning specializes to task.
+## 1.5 Core Contributions
 
-**2. Parameter-Efficient Fine-Tuning (PEFT)**: Update only small subset of parameters:
+This project makes several specific contributions to the practice of text classification:
 
-$$
-\theta_{\text{trainable}} \subset \theta, \quad |\theta_{\text{trainable}}| \ll |\theta|
-$$
+### 1. Comprehensive Overfitting Prevention Framework
 
-*Examples*: 
-- LoRA: 0.1-1% of parameters trainable
-- Adapters: 0.5-3% trainable
-- Prompt tuning: 0.001-0.1% trainable
+We provide a multi-layered system for preventing, detecting, and diagnosing overfitting that operates throughout the experimental lifecycle. This includes pre-training configuration validation, real-time monitoring during training, post-training risk assessment, and test set protection mechanisms. The system is designed to be both technically rigorous—implementing ideas from statistical learning theory and adaptive data analysis—and practically usable, with clear error messages and actionable recommendations.
 
-This dramatically reduces effective capacity, mitigating overfitting.
+Key components:
 
-**3. Regularization**: Explicit complexity penalties:
+- Pre-training validators in [src/core/overfitting_prevention/validators/](./src/core/overfitting_prevention/validators/)
+- Real-time monitors in [src/core/overfitting_prevention/monitors/](./src/core/overfitting_prevention/monitors/)
+- Constraint enforcers in [src/core/overfitting_prevention/constraints/](./src/core/overfitting_prevention/constraints/)
+- Test set guards in [src/core/overfitting_prevention/guards/](./src/core/overfitting_prevention/guards/)
+- Automated recommenders in [src/core/overfitting_prevention/recommendations/](./src/core/overfitting_prevention/recommendations/)
 
-$$
-\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{task}} + \lambda \Omega(\theta)
-$$
+Complete documentation in [OVERFITTING_PREVENTION.md](./OVERFITTING_PREVENTION.md).
 
-where $\Omega(\theta)$ is regularizer (L2 norm, dropout, etc.).
+### 2. Unified Parameter-Efficient Fine-Tuning Infrastructure
 
-**4. Data Augmentation**: Synthetically expand training set while preserving label:
+We integrate multiple PEFT methods (LoRA, QLoRA, Adapters, Prefix Tuning, Prompt Tuning) within a consistent interface, enabling fair comparisons and hybrid approaches. Extensive hyperparameter search results for LoRA rank selection, target module choices, and regularization strategies are provided to guide users toward configurations that balance accuracy and efficiency for the AG News dataset.
 
-$$
-|\mathcal{D}_{\text{augmented}}| = \alpha \cdot |\mathcal{D}_{\text{original}}|, \quad \alpha \in [2, 10]
-$$
+Implementations:
 
-through back-translation, paraphrasing, controlled generation.
+- LoRA: [src/models/efficient/lora/](./src/models/efficient/lora/)
+- QLoRA: [src/models/efficient/qlora/](./src/models/efficient/qlora/)
+- Adapters: [src/models/efficient/adapters/](./src/models/efficient/adapters/)
+- Prefix Tuning: [src/models/efficient/prefix_tuning/](./src/models/efficient/prefix_tuning/)
+- Prompt Tuning: [src/models/efficient/prompt_tuning/](./src/models/efficient/prompt_tuning/)
 
-### 2. Evolution of Text Classification Paradigms
+Configuration templates in [configs/training/efficient/](./configs/training/efficient/) and ablation studies in [experiments/ablation_studies/](./experiments/ablation_studies/).
 
-The field has progressed through five distinct eras, each introducing fundamental innovations in representation learning and model architectures.
+### 3. Multi-Stage SOTA Pipeline
 
-#### Phase 1: Classical Machine Learning (1990s-2010)
+We demonstrate a systematic progression from individual high-capacity models through ensemble aggregation to knowledge distillation, achieving competitive accuracy while maintaining interpretability and deployability. Each stage is fully reproducible with provided configurations and scripts, and ablation studies isolate the contribution of each component.
 
-**Core Paradigm**: Transform text into fixed-dimensional feature vectors through manual engineering, then apply traditional classifiers.
+Pipeline stages:
 
-**Representation Method 1: Bag-of-Words (BoW)**
+- Phase 1: XLarge model training with LoRA - [experiments/sota_experiments/phase1_xlarge_lora.py](./experiments/sota_experiments/phase1_xlarge_lora.py)
+- Phase 2: LLM fine-tuning with QLoRA - [experiments/sota_experiments/phase2_llm_qlora.py](./experiments/sota_experiments/phase2_llm_qlora.py)
+- Phase 3: Knowledge distillation - [experiments/sota_experiments/phase3_llm_distillation.py](./experiments/sota_experiments/phase3_llm_distillation.py)
+- Phase 4: Ensemble aggregation - [experiments/sota_experiments/phase4_ensemble_xlarge.py](./experiments/sota_experiments/phase4_ensemble_xlarge.py)
+- Phase 5: Ultimate SOTA - [experiments/sota_experiments/phase5_ultimate_sota.py](./experiments/sota_experiments/phase5_ultimate_sota.py)
 
-Represent document as unordered collection of word counts, completely ignoring grammar, word order, and syntax.
+Complete pipeline guide in [SOTA_MODELS_GUIDE.md](./SOTA_MODELS_GUIDE.md).
 
-**Mathematical Formulation**: For document $d$ with vocabulary $\mathcal{V} = \{w_1, w_2, \ldots, w_{|\mathcal{V}|}\}$:
+### 4. Platform-Agnostic Reproducibility
 
-$$
-\text{BoW}(d) = [c(w_1, d), c(w_2, d), \ldots, c(w_{|\mathcal{V}|}, d)]^\top \in \mathbb{R}^{|\mathcal{V}|}
-$$
+Through automatic platform detection, resource-aware configuration selection, and comprehensive environment logging, we ensure that experiments can be reproduced across diverse computational environments. This includes consumer laptops, cloud platforms (Google Colab, Kaggle Notebooks), and institutional compute clusters.
 
-where $c(w_i, d)$ is the count of word $w_i$ in document $d$.
+Platform support:
 
-**Example**:
-- Document: "The cat sat on the mat"
-- Vocabulary: $\mathcal{V} = \{\text{the, cat, sat, on, mat, dog}\}$
-- BoW vector: $[2, 1, 1, 1, 1, 0]^\top$ (word "the" appears twice)
+- Detection system: [src/deployment/platform_detector.py](./src/deployment/platform_detector.py)
+- Smart configuration selection: [src/deployment/smart_selector.py](./src/deployment/smart_selector.py)
+- Platform-specific configs: [configs/environments/](./configs/environments/)
+- Colab optimization: [configs/training/platform_adaptive/colab_free_training.yaml](./configs/training/platform_adaptive/colab_free_training.yaml)
+- Kaggle optimization: [configs/training/platform_adaptive/kaggle_gpu_training.yaml](./configs/training/platform_adaptive/kaggle_gpu_training.yaml)
 
-**Normalization Variants**:
+Platform guide in [PLATFORM_OPTIMIZATION_GUIDE.md](./PLATFORM_OPTIMIZATION_GUIDE.md).
 
-**Binary BoW** (presence/absence):
-$$\text{BoW}_{\text{binary}}(d) = [\mathbb{I}[c(w_1, d) > 0], \ldots, \mathbb{I}[c(w_{|\mathcal{V}|}, d) > 0]]^\top$$
+### 5. Extensive Documentation and Educational Resources
 
-**Normalized BoW** (term frequency):
-$$\text{BoW}_{\text{norm}}(d) = \left[\frac{c(w_1, d)}{|d|}, \ldots, \frac{c(w_{|\mathcal{V}|}, d)}{|d|}\right]^\top$$
+Beyond this technical README, we provide detailed guides targeted at different user expertise levels:
 
-where $|d| = \sum_i c(w_i, d)$ is total word count.
+- **Beginners**: Step-by-step tutorials covering basic concepts and common workflows in [docs/level_1_beginner/](./docs/level_1_beginner/)
+- **Practitioners**: Best practice guides for model selection, hyperparameter tuning, and deployment in [docs/best_practices/](./docs/best_practices/)
+- **Researchers**: In-depth theoretical treatments of overfitting prevention, ensemble methods, and distillation in [OVERFITTING_PREVENTION.md](./OVERFITTING_PREVENTION.md) and [ARCHITECTURE.md](./ARCHITECTURE.md)
+- **Developers**: API documentation and architecture descriptions for extending the codebase in [docs/developer_guide/](./docs/developer_guide/) and [docs/api_reference/](./docs/api_reference/)
 
-**Critical Limitation**: Word order is completely lost. The sentences:
-- "The cat sat on the mat"
-- "The mat sat on the cat"
+This progressive disclosure approach allows users to engage with the system at a level appropriate to their background and goals. Complete navigation guide in [Section 1.8](#18-organization-of-documentation).
 
-produce **identical** BoW representations $[2, 1, 1, 1, 1, 0]^\top$, despite having completely different meanings.
+## 1.6 Theoretical Foundations: Overview
 
-**Representation Method 2: TF-IDF (Term Frequency-Inverse Document Frequency)**
+This section provides a high-level overview of the theoretical principles underlying our implementation. Detailed mathematical treatments, proofs, and empirical validations are provided in specialized documentation referenced below.
 
-Weight words by importance—frequent in this document but rare across corpus—to identify discriminative terms.
+### 1.6.1 Statistical Learning Theory and Capacity Control
 
-**Mathematical Formulation**: For term $t$ in document $d$ from corpus $\mathcal{C}$ of $N$ documents:
+The fundamental question in supervised learning is how well a model trained on finite data will perform on new examples. Statistical learning theory, particularly the Vapnik-Chervonenkis framework, provides rigorous bounds on generalization error as a function of model capacity and sample size.
 
-$$
-\text{TF-IDF}(t, d) = \text{TF}(t, d) \times \text{IDF}(t)
-$$
+For a hypothesis space with VC dimension $d$, the generalization bound states that with probability at least $1 - \delta$, the true risk $R(f)$ of any hypothesis $f$ is bounded by:
+
+$$R(f) \leq R_{\text{emp}}(f) + \sqrt{\frac{d \log(2N/d) + \log(4/\delta)}{N}}$$
 
 where:
 
-**Term Frequency** (normalized count):
-$$
-\text{TF}(t, d) = \frac{c(t, d)}{\sum_{t' \in d} c(t', d)} = \frac{c(t, d)}{|d|}
-$$
+- $R_{\text{emp}}(f)$ is the empirical risk (average loss on training data)
+- $N$ is the number of training samples
+- $d$ is the VC dimension (a measure of model complexity)
+- $\delta$ is the confidence parameter
 
-**Inverse Document Frequency** (logarithmic scaling):
-$$
-\text{IDF}(t) = \log \frac{N}{\text{DF}(t)} = \log \frac{N}{|\{d \in \mathcal{C} : t \in d\}|}
-$$
+**Interpretation**: This bound consists of two terms. The first term, empirical risk, can be made arbitrarily small by using sufficiently complex models that fit the training data well. However, the second term—the generalization gap—grows with model capacity ($d$) and shrinks with dataset size ($N$). The optimal model complexity minimizes the sum of these two terms.
 
-where $\text{DF}(t)$ is the number of documents containing term $t$.
+More intuitively, the bound tells us that as we increase model complexity $d$, we can fit the training data better (reducing $R_{\text{emp}}(f)$), but the gap between training and true performance grows (the second term increases). Conversely, with more training data $N$, we can safely use more complex models since the generalization gap shrinks proportionally to $1/\sqrt{N}$.
 
-**Intuition Behind IDF**:
+**Practical Implications for This Project**:
 
-- **High IDF** ($\text{DF}(t)$ small): Term appears in few documents → discriminative power
-  - Example: "photosynthesis" appears in 50 out of 10,000 documents
-  - $\text{IDF}(\text{"photosynthesis"}) = \log(10000/50) = \log(200) \approx 5.3$
+1. **Parameter-Efficient Fine-Tuning**: Methods like LoRA reduce the effective VC dimension by constraining the fine-tuning process to low-rank subspaces. For a transformer with $d_{\text{model}}$ hidden dimensions and rank $r \ll d_{\text{model}}$, LoRA updates have far fewer degrees of freedom than full fine-tuning, leading to tighter generalization bounds. Implementation in [src/models/efficient/lora/](./src/models/efficient/lora/).
 
-- **Low IDF** ($\text{DF}(t)$ large): Term appears in most documents → little discriminative power
-  - Example: "the" appears in 9,950 out of 10,000 documents
-  - $\text{IDF}(\text{"the"}) = \log(10000/9950) \approx 0.005$
+2. **Early Stopping**: Rather than training until convergence on the training set, we halt training when validation performance plateaus. This implicitly limits effective capacity by restricting the number of gradient updates. Callback implementation in [src/training/callbacks/early_stopping.py](./src/training/callbacks/early_stopping.py).
 
-**Complete TF-IDF Example**:
+3. **Ensemble Methods**: While individual models may have high capacity, ensemble averaging acts as a form of regularization. The variance reduction achieved through ensembling can be formalized through bias-variance decomposition as shown in [Section 1.6.4](#164-ensemble-methods-and-diversity).
 
-Corpus: 10,000 news articles  
-Document A (500 words): "election" appears 50 times, appears in 100 documents total
+4. **Validation-Based Model Selection**: By selecting models based on validation rather than test performance, we avoid the adaptive overfitting problem identified by Dwork et al. (2015) in their work on preserving validity in adaptive data analysis. Our validation protocols are detailed in [configs/overfitting_prevention/validation/](./configs/overfitting_prevention/validation/).
 
-$$
-\begin{aligned}
-\text{TF}(\text{"election"}, A) &= \frac{50}{500} = 0.1 \\
-\text{IDF}(\text{"election"}) &= \log\frac{10000}{100} = \log(100) \approx 4.605 \\
-\text{TF-IDF}(\text{"election"}, A) &= 0.1 \times 4.605 = 0.461
-\end{aligned}
-$$
+Complete theoretical treatments including Rademacher complexity analysis, PAC learning bounds, and empirical process theory perspectives are provided in [OVERFITTING_PREVENTION.md § Theoretical Framework](./OVERFITTING_PREVENTION.md).
 
-**Document Vector**: Full TF-IDF representation:
+### 1.6.2 Transfer Learning and Pre-Training
 
-$$
-\mathbf{x}_d = [\text{TF-IDF}(w_1, d), \ldots, \text{TF-IDF}(w_{|\mathcal{V}|}, d)]^\top \in \mathbb{R}^{|\mathcal{V}|}
-$$
+The remarkable success of transformer-based models on text classification despite limited labeled data is largely attributable to transfer learning through unsupervised pre-training. The pre-training phase learns general linguistic representations from massive unlabeled corpora, while fine-tuning specializes these representations to task-specific patterns.
 
-**Variants**:
+**Mathematical Formulation**: Let $\theta$ denote the model parameters. Pre-training solves:
 
-**Sublinear TF Scaling** (dampen effect of very frequent terms):
-$$\text{TF}_{\text{log}}(t, d) = 1 + \log c(t, d)$$
+$$\theta^* = \arg\min_{\theta} \mathcal{L}_{\text{pretrain}}(\theta; \mathcal{D}_{\text{unlabeled}})$$
 
-**Smoothed IDF** (prevent division by zero):
-$$\text{IDF}_{\text{smooth}}(t) = \log \frac{N + 1}{\text{DF}(t) + 1} + 1$$
+where $\mathcal{L}_{\text{pretrain}}$ is an unsupervised objective such as masked language modeling. For masked language modeling, given a sequence of tokens $\mathbf{x} = (x_1, x_2, \ldots, x_T)$, we randomly mask a subset of positions $\mathcal{M}$ and train the model to predict the masked tokens:
 
-**Classification Algorithm 1: Naive Bayes Classifier**
+$$\mathcal{L}_{\text{MLM}} = -\sum_{i \in \mathcal{M}} \log P(x_i | \mathbf{x}_{\backslash \mathcal{M}}; \theta)$$
 
-**Core Assumption**: Features (words) are conditionally independent given the class label—a "naive" assumption severely violated in natural language.
+where $\mathbf{x}_{\backslash \mathcal{M}}$ denotes the sequence with masked positions replaced by a special [MASK] token.
 
-**Theoretical Foundation (Bayes' Theorem)**:
+Fine-tuning then solves:
 
-$$
-P(y \mid \mathbf{x}) = \frac{P(\mathbf{x} \mid y) \cdot P(y)}{P(\mathbf{x})}
-$$
+$$\theta_{\text{task}} = \arg\min_{\theta} \mathcal{L}_{\text{task}}(\theta; \mathcal{D}_{\text{labeled}})$$
 
-where:
-- $P(y \mid \mathbf{x})$: **Posterior probability** of class $y$ given features $\mathbf{x}$
-- $P(\mathbf{x} \mid y)$: **Likelihood** of observing features $\mathbf{x}$ in class $y$
-- $P(y)$: **Prior probability** of class $y$
-- $P(\mathbf{x})$: **Evidence** (constant for all classes)
+initialized at $\theta^*$ rather than random initialization. For classification, the task loss is typically cross-entropy:
 
-**Naive Independence Assumption**:
+$$\mathcal{L}_{\text{task}} = -\sum_{(x,y) \in \mathcal{D}} \log P(y | x; \theta)$$
 
-For features $\mathbf{x} = [x_1, x_2, \ldots, x_n]$:
+**Why This Works**: Pre-training on diverse text learns broadly useful features—syntactic patterns, semantic relationships, world knowledge—that transfer across tasks. Fine-tuning requires learning only task-specific decision boundaries, which can be accomplished with far less labeled data than learning both representations and decision boundaries from scratch.
 
-$$
-P(\mathbf{x} \mid y) = P(x_1, x_2, \ldots, x_n \mid y) \stackrel{\text{naive}}{=} \prod_{i=1}^{n} P(x_i \mid y)
-$$
+The effectiveness can be understood through a two-stage perspective:
+1. In the pre-training stage, the model learns to encode general linguistic knowledge into its parameters $\theta^*$
+2. In the fine-tuning stage, only the final classification layer (and optionally, small adjustments to the encoder) needs to be learned from the limited labeled data
 
-This assumes features are independent given class label:
-$$P(x_i \mid x_j, y) = P(x_i \mid y) \quad \forall i \neq j$$
+**Evidence**: Empirical studies (Devlin et al., 2019; Liu et al., 2019; He et al., 2021) demonstrate that pre-trained transformers achieve competitive performance with hundreds to thousands of labeled examples, whereas comparable architectures trained from scratch require orders of magnitude more data.
 
-**Classification Decision Rule**:
+**Application in This Project**: All Tier 2 and higher models leverage publicly available pre-trained checkpoints from Hugging Face Hub. We additionally explore domain-adaptive pre-training on news corpora to further specialize representations to the AG News domain. 
 
-Since $P(\mathbf{x})$ is constant, maximize posterior probability:
+Pre-trained model configurations:
+- Standard transformers: [configs/models/single/transformers/](./configs/models/single/transformers/)
+- Large language models: [configs/models/single/llm/](./configs/models/single/llm/)
+- Domain adaptation scripts: [scripts/domain_adaptation/](./scripts/domain_adaptation/)
 
-$$
-\hat{y} = \arg\max_{y \in \mathcal{Y}} P(y) \prod_{i=1}^{n} P(x_i \mid y)
-$$
+The transfer learning pipeline is detailed in [ARCHITECTURE.md § Transfer Learning](./ARCHITECTURE.md).
 
-Taking logarithm for numerical stability:
+### 1.6.3 Parameter-Efficient Fine-Tuning Theory
 
-$$
-\hat{y} = \arg\max_{y \in \mathcal{Y}} \left[ \log P(y) + \sum_{i=1}^{n} \log P(x_i \mid y) \right]
-$$
+Full fine-tuning of large pre-trained models is parameter-inefficient: it requires storing and updating hundreds of millions to billions of parameters, most of which change only slightly from their pre-trained values. Parameter-efficient fine-tuning (PEFT) methods address this by constraining updates to low-dimensional subspaces or small adapter modules.
 
-**Parameter Estimation from Training Data**:
+**Low-Rank Adaptation (LoRA)**: The key insight is that the weight updates during fine-tuning often have low intrinsic dimensionality. For a pre-trained weight matrix $W_0 \in \mathbb{R}^{d \times k}$, LoRA represents updates as a low-rank decomposition:
 
-**Prior Probability** (class frequency):
-$$
-P(y) = \frac{\text{Number of documents in class } y}{\text{Total number of documents}} = \frac{N_y}{N}
-$$
+$$W = W_0 + \Delta W = W_0 + BA$$
 
-**Likelihood** (word frequency in class):
-$$
-P(x_i \mid y) = \frac{\text{Count of feature } x_i \text{ in class } y}{\text{Total features in class } y} = \frac{c(x_i, y)}{\sum_{x' \in \mathcal{V}} c(x', y)}
-$$
+where $B \in \mathbb{R}^{d \times r}$, $A \in \mathbb{R}^{r \times k}$, and $r \ll \min(d, k)$ is the rank.
 
-**Laplace Smoothing** (handle zero counts):
+**Detailed Explanation**: 
+- $W_0$ is the original pre-trained weight matrix, which remains frozen during training
+- $\Delta W = BA$ represents the update to the weights, factorized as a product of two smaller matrices
+- Matrix $B$ has dimensions $d \times r$ and matrix $A$ has dimensions $r \times k$
+- The rank $r$ controls the capacity of the adaptation; smaller $r$ means fewer trainable parameters and stronger regularization
 
-$$
-P(x_i \mid y) = \frac{c(x_i, y) + \alpha}{\sum_{x' \in \mathcal{V}} [c(x', y) + \alpha]} = \frac{c(x_i, y) + \alpha}{N_y + \alpha |\mathcal{V}|}
-$$
+During forward pass, instead of using $W_0 x$, we compute:
+$$y = W_0 x + BAx = W_0 x + \Delta W x$$
 
-where $\alpha > 0$ is smoothing parameter (typically $\alpha = 1$).
+**Parameter Count**: The original matrix has $d \times k$ parameters. LoRA introduces only $r(d + k)$ trainable parameters while freezing $W_0$. For typical values ($d = k = 768$, $r = 8$), this represents a reduction from 589,824 to 12,288 trainable parameters—a 48× reduction.
 
-**Concrete Example**:
+For example, in a standard transformer attention layer:
+- Original: Query, Key, Value, Output matrices each have $768 \times 768 = 589,824$ parameters
+- With LoRA (rank 8): Each adaptation has only $8 \times (768 + 768) = 12,288$ trainable parameters
+- Total reduction: From ~2.4M parameters per attention layer to ~50K trainable parameters
 
-Training data:
-- 100 sports articles, 100 politics articles
-- Word "goal" appears 50 times in sports, 5 times in politics
-- Total words in sports: 10,000; in politics: 10,000
+**Theoretical Justification**: Li et al. (2018) demonstrated that the optimization landscape of neural networks lies approximately on low-dimensional manifolds. More recently, Aghajanyan et al. (2021) showed empirically that fine-tuning is intrinsically low-dimensional, with effective rank often much smaller than the explicit parameter count. This means that even though the full parameter space is high-dimensional, the optimization trajectory primarily moves in a low-dimensional subspace.
 
-**Probability Calculations**:
+**Quantized LoRA (QLoRA)**: Building on LoRA, QLoRA applies 4-bit quantization to the frozen base model weights, reducing memory requirements by approximately 4× while maintaining fine-tuning quality through additional techniques:
 
-$$
-\begin{aligned}
-P(\text{sports}) &= \frac{100}{200} = 0.5 \\
-P(\text{politics}) &= \frac{100}{200} = 0.5 \\
-P(\text{"goal"} \mid \text{sports}) &= \frac{50}{10000} = 0.005 \\
-P(\text{"goal"} \mid \text{politics}) &= \frac{5}{10000} = 0.0005
-\end{aligned}
-$$
+1. **4-bit NormalFloat Quantization**: Uses a special data type optimized for normally distributed weights
+2. **Double Quantization**: Quantizes the quantization constants themselves to save additional memory
+3. **Paged Optimizers**: Uses NVIDIA unified memory to handle memory spikes during training
 
-**Likelihood Ratio**:
-$$\frac{P(\text{"goal"} \mid \text{sports})}{P(\text{"goal"} \mid \text{politics})} = \frac{0.005}{0.0005} = 10$$
+The quantization function maps full-precision weights $W_0$ to 4-bit representation:
+$$W_0^{\text{quant}} = \text{Quantize}(W_0, \text{dtype}=\text{NF4})$$
 
-The word "goal" is 10× more likely in sports articles—strong discriminative signal.
+During fine-tuning, only the LoRA adapters $B$ and $A$ are kept in full precision.
 
-**Advantages**:
-1. **Computational Efficiency**: Training is $O(N \cdot |\mathcal{V}|)$ (simple counting)
-2. **Low Sample Complexity**: Works with small datasets (few parameters: $K \times |\mathcal{V}|$ probabilities)
-3. **Interpretable**: Can inspect $P(word \mid class)$ to understand decisions
-4. **Probabilistic Outputs**: Provides confidence scores, not just hard classifications
+**Application in This Project**: We provide extensive configurations for LoRA (ranks 4, 8, 16, 32, 64) and QLoRA (4-bit, 8-bit) across multiple target modules (query, key, value, output projections). 
 
-**Limitations**:
-1. **Independence Assumption Violated**: Words are highly correlated in natural language
-   - "New York" treated as independent "New" and "York"
-   - Cannot capture phrases like "not good"
-2. **No Word Order**: "dog bites man" vs. "man bites dog" have identical representation
-3. **Zero-Frequency Problem**: If word never appears in class during training, $P(word \mid class) = 0$ makes entire probability zero
+Configuration files:
+- LoRA configs: [configs/training/efficient/lora/](./configs/training/efficient/lora/)
+- QLoRA configs: [configs/training/efficient/qlora/](./configs/training/efficient/qlora/)
+- Rank ablation: [experiments/ablation_studies/lora_rank_ablation.py](./experiments/ablation_studies/lora_rank_ablation.py)
+- Target module ablation: [configs/training/efficient/lora/lora_target_modules_experiments.yaml](./configs/training/efficient/lora/lora_target_modules_experiments.yaml)
 
-**Classification Algorithm 2: Support Vector Machines (SVM)**
+Theoretical analysis is provided in [OVERFITTING_PREVENTION.md § Parameter Efficiency](./OVERFITTING_PREVENTION.md).
 
-**Core Idea**: Find the hyperplane that maximally separates classes in feature space, maximizing the **margin** (distance to nearest points).
+### 1.6.4 Ensemble Methods and Diversity
 
-**Binary Classification Formulation**:
+Ensemble methods combine predictions from multiple models to achieve better performance than any individual model. The effectiveness of ensembling is well-understood through bias-variance decomposition.
 
-For linearly separable data $\{(\mathbf{x}_i, y_i)\}_{i=1}^N$ where $y_i \in \{-1, +1\}$, find hyperplane:
+**Bias-Variance-Covariance Decomposition**: For squared loss in regression, the expected error of an ensemble can be decomposed as:
 
-$$
-\mathbf{w}^\top \mathbf{x} + b = 0
-$$
-
-that satisfies:
-$$
-y_i(\mathbf{w}^\top \mathbf{x}_i + b) \geq 1 \quad \forall i
-$$
-
-**Geometric Margin**: Distance from hyperplane to nearest point:
-
-$$
-\gamma = \min_i \frac{|\ \mathbf{w}^\top \mathbf{x}_i + b|}{|\mathbf{w}|} = \frac{1}{|\mathbf{w}|}
-$$
-
-**Optimization Objective**: Maximize margin $\Leftrightarrow$ Minimize $|\mathbf{w}|$:
-
-$$
-\begin{aligned}
-\min_{\mathbf{w}, b} \quad & \frac{1}{2} \|\mathbf{w}\|^2 \\
-\text{subject to} \quad & y_i(\mathbf{w}^\top \mathbf{x}_i + b) \geq 1, \quad i = 1, \ldots, N
-\end{aligned}
-$$
-
-**Soft-Margin SVM** (allow misclassifications for non-separable data):
-
-Introduce slack variables $\xi_i \geq 0$ measuring constraint violations:
-
-$$
-\begin{aligned}
-\min_{\mathbf{w}, b, \boldsymbol{\xi}} \quad & \frac{1}{2} \|\mathbf{w}\|^2 + C \sum_{i=1}^N \xi_i \\
-\text{subject to} \quad & y_i(\mathbf{w}^\top \mathbf{x}_i + b) \geq 1 - \xi_i, \quad \xi_i \geq 0, \quad i = 1, \ldots, N
-\end{aligned}
-$$
+$$E_{\text{ensemble}} = \overline{\text{Bias}^2} + \frac{1}{M}\overline{\text{Var}} + \frac{M-1}{M}\overline{\text{Cov}}$$
 
 where:
-- $C > 0$: Regularization parameter balancing margin maximization vs. training error
-  - Large $C$: Penalize violations heavily (small margin, low training error, high risk of overfitting)
-  - Small $C$: Allow more violations (large margin, higher training error, better generalization)
+- $M$ is the number of models in the ensemble
+- $\overline{\text{Bias}^2}$ is the average squared bias of individual models
+- $\overline{\text{Var}}$ is the average variance of individual models
+- $\overline{\text{Cov}}$ is the average covariance between model predictions
 
-**Dual Formulation** (enables kernel trick):
+**Detailed Interpretation**: 
 
-Using Lagrange multipliers $\alpha_i \geq 0$:
+This decomposition reveals three key insights:
 
-$$
-\begin{aligned}
-\max_{\boldsymbol{\alpha}} \quad & \sum_{i=1}^N \alpha_i - \frac{1}{2} \sum_{i=1}^N \sum_{j=1}^N \alpha_i \alpha_j y_i y_j \mathbf{x}_i^\top \mathbf{x}_j \\
-\text{subject to} \quad & 0 \leq \alpha_i \leq C, \quad \sum_{i=1}^N \alpha_i y_i = 0
-\end{aligned}
-$$
+1. **Bias Term ($\overline{\text{Bias}^2}$)**: Represents systematic errors that all models in the ensemble share. Ensembling does not reduce bias—if all models make the same systematic mistake, averaging them preserves that mistake. The bias term remains constant regardless of ensemble size.
 
-**Decision Function**:
+2. **Variance Term ($\frac{1}{M}\overline{\text{Var}}$)**: Represents random errors due to finite training data. This term is reduced by a factor of $M$ through averaging. With $M=5$ models, variance is reduced to 20% of the single-model variance. This is why ensembles are particularly effective when individual models have high variance (overfitting).
 
-$$
-f(\mathbf{x}) = \text{sign}\left(\sum_{i=1}^N \alpha_i y_i \mathbf{x}_i^\top \mathbf{x} + b\right)
-$$
+3. **Covariance Term ($\frac{M-1}{M}\overline{\text{Cov}}$)**: Represents correlation between model errors. If models make identical errors, $\overline{\text{Cov}} = \overline{\text{Var}}$, and the variance reduction benefit is completely negated. Maximum variance reduction occurs when models are diverse—making errors on different examples, so $\overline{\text{Cov}} \approx 0$.
 
-**Support Vectors**: Training points with $\alpha_i > 0$ (lie on margin boundary or violate it). Only these points determine the decision boundary—most training data can be discarded!
+For classification, while the exact decomposition differs, the same principles apply: ensemble performance improves when individual models are both accurate (low bias) and diverse (low error correlation).
 
-**The Kernel Trick**: Map data to higher-dimensional space where linear separation is possible, without explicitly computing the mapping.
+**Diversity Promotion Strategies**: We employ several approaches to create diverse ensemble members:
 
-**Kernel Function**: 
-$$K(\mathbf{x}, \mathbf{x}') = \langle \phi(\mathbf{x}), \phi(\mathbf{x}') \rangle$$
-
-where $\phi: \mathbb{R}^d \rightarrow \mathbb{R}^D$ maps to (possibly infinite-dimensional) feature space.
-
-**Decision Function with Kernels**:
-
-$$
-f(\mathbf{x}) = \text{sign}\left(\sum_{i=1}^N \alpha_i y_i K(\mathbf{x}_i, \mathbf{x}) + b\right)
-$$
-
-**Common Kernels**:
-
-**Linear Kernel** (no transformation):
-$$K(\mathbf{x}, \mathbf{x}') = \mathbf{x}^\top \mathbf{x}'$$
-
-**Polynomial Kernel** (degree $d$):
-$$K(\mathbf{x}, \mathbf{x}') = (\gamma \mathbf{x}^\top \mathbf{x}' + r)^d$$
-
-**Radial Basis Function (RBF/Gaussian) Kernel**:
-$$K(\mathbf{x}, \mathbf{x}') = \exp\left(-\gamma \|\mathbf{x} - \mathbf{x}'\|^2\right)$$
-
-where $\gamma = \frac{1}{2\sigma^2}$ controls smoothness.
-
-**Example**: Linear kernel cannot separate XOR problem:
-- Points: $(0,0) \rightarrow -1$, $(0,1) \rightarrow +1$, $(1,0) \rightarrow +1$, $(1,1) \rightarrow -1$
-
-But polynomial kernel of degree 2 maps to 3D space where linear separation exists.
-
-**Advantages**:
-1. **Effective in High Dimensions**: Text data with 50,000+ dimensions
-2. **Memory Efficient**: Only store support vectors (typically 10-30% of training data)
-3. **Kernel Flexibility**: Can handle non-linear decision boundaries
-4. **Theoretical Guarantees**: Maximum margin reduces generalization error (VC theory)
-
-**Limitations**:
-1. **Computational Complexity**: Training is $O(N^2)$ to $O(N^3)$ (quadratic programming)
-   - Prohibitive for $N > 100,000$ (modern datasets have millions)
-2. **Hyperparameter Sensitivity**: Requires careful tuning of $C$, $\gamma$ (kernel parameters)
-3. **No Probabilistic Interpretation**: Outputs decision values, not probabilities
-   - (Platt scaling can calibrate to probabilities post-hoc)
-4. **Binary Classification**: Requires one-vs-rest or one-vs-one decomposition for multi-class
-
-**Classification Algorithm 3: Logistic Regression**
-
-**Core Idea**: Model posterior class probability using the logistic (sigmoid) function, ensuring outputs lie in $[0, 1]$.
-
-**Binary Logistic Regression**:
-
-For binary classification $y \in \{0, 1\}$:
-
-$$
-P(y = 1 \mid \mathbf{x}; \mathbf{w}, b) = \sigma(\mathbf{w}^\top \mathbf{x} + b) = \frac{1}{1 + \exp(-(\mathbf{w}^\top \mathbf{x} + b))}
-$$
-
-where $\sigma(z)$ is the **sigmoid function**:
-
-$$
-\sigma(z) = \frac{1}{1 + e^{-z}} = \frac{e^z}{1 + e^z}
-$$
-
-**Sigmoid Properties**:
-- $\sigma(0) = 0.5$ (decision boundary)
-- $\lim_{z \to \infty} \sigma(z) = 1$
-- $\lim_{z \to -\infty} \sigma(z) = 0$
-- $\sigma'(z) = \sigma(z)(1 - \sigma(z))$ (convenient for gradient computation)
-
-**Multi-Class Extension (Softmax Regression)**:
-
-For $K$ classes, define linear score for each class:
-
-$$
-z_k = \mathbf{w}_k^\top \mathbf{x} + b_k, \quad k = 1, \ldots, K
-$$
-
-Apply **softmax function** to convert scores to probability distribution:
-
-$$
-P(y = k \mid \mathbf{x}; \mathbf{W}, \mathbf{b}) = \frac{\exp(z_k)}{\sum_{j=1}^K \exp(z_j)} = \frac{\exp(\mathbf{w}_k^\top \mathbf{x} + b_k)}{\sum_{j=1}^K \exp(\mathbf{w}_j^\top \mathbf{x} + b_j)}
-$$
-
-**Softmax Properties**:
-- $\sum_{k=1}^K P(y = k \mid \mathbf{x}) = 1$ (valid probability distribution)
-- $P(y = k \mid \mathbf{x}) \in (0, 1)$ (all probabilities positive)
-- $\arg\max_k P(y = k \mid \mathbf{x}) = \arg\max_k z_k$ (invariant to constant shifts)
-
-**Training: Maximum Likelihood Estimation**
-
-**Likelihood** of observing data $\mathcal{D} = \{(\mathbf{x}_i, y_i)\}_{i=1}^N$:
-
-$$
-\mathcal{L}(\mathbf{W}, \mathbf{b}) = \prod_{i=1}^N P(y_i \mid \mathbf{x}_i; \mathbf{W}, \mathbf{b})
-$$
-
-**Log-Likelihood** (easier to optimize):
-
-$$
-\log \mathcal{L}(\mathbf{W}, \mathbf{b}) = \sum_{i=1}^N \log P(y_i \mid \mathbf{x}_i; \mathbf{W}, \mathbf{b})
-$$
-
-**Negative Log-Likelihood (Cross-Entropy Loss)**:
-
-$$
-\mathcal{L}_{\text{CE}}(\mathbf{W}, \mathbf{b}) = -\sum_{i=1}^N \log P(y_i \mid \mathbf{x}_i; \mathbf{W}, \mathbf{b})
-$$
-
-For multi-class with one-hot encoding $\mathbf{y}_i = [0, \ldots, 1, \ldots, 0]$ (1 at position $y_i$):
-
-$$
-\mathcal{L}_{\text{CE}}(\mathbf{W}, \mathbf{b}) = -\sum_{i=1}^N \sum_{k=1}^K y_{ik} \log P(y = k \mid \mathbf{x}_i; \mathbf{W}, \mathbf{b})
-$$
-
-**Regularized Objective** (prevent overfitting):
-
-$$
-\min_{\mathbf{W}, \mathbf{b}} \quad \mathcal{L}_{\text{CE}}(\mathbf{W}, \mathbf{b}) + \lambda \|\mathbf{W}\|_2^2
-$$
-
-where $\lambda > 0$ controls regularization strength (L2 penalty).
-
-**Optimization**: Gradient descent or quasi-Newton methods (L-BFGS)
-
-**Gradient Computation**:
-
-$$
-\frac{\partial \mathcal{L}_{\text{CE}}}{\partial \mathbf{w}_k} = \sum_{i=1}^N (\hat{y}_{ik} - y_{ik}) \mathbf{x}_i
-$$
-
-where $\hat{y}_{ik} = P(y = k \mid \mathbf{x}_i)$ is predicted probability.
-
-**Advantages**:
-1. **Fast Training**: Convex optimization guarantees global optimum
-2. **Probabilistic Outputs**: Well-calibrated confidence scores
-3. **Interpretable**: Weight $w_k^{(j)}$ shows contribution of feature $j$ to class $k$
-4. **Regularization**: L1 (Lasso) induces sparsity, L2 (Ridge) prevents overfitting
-
-**Limitations**:
-1. **Linear Decision Boundaries**: Cannot model XOR-like patterns without feature engineering
-2. **Feature Independence Assumption**: Like Naive Bayes, assumes features are independent
-3. **Requires Feature Engineering**: Manual construction of informative features (n-grams, POS tags)
-
-**Fundamental Limitation of All Classical Methods**:
-
-All these approaches treat words as atomic units with fixed representations, failing to capture:
-
-1. **Semantic Similarity**: "car" and "automobile" are treated as completely different features despite identical meaning
-2. **Contextual Meaning**: "bank" receives the same representation in "financial bank" vs. "river bank"
-3. **Compositional Semantics**: "not good" is represented as independent "not" and "good", losing the negation relationship
-
-This motivated the paradigm shift to learned distributed representations in Phase 2.
-
-#### Phase 2: Neural Embeddings and Deep Learning (2010-2017)
-
-**Revolutionary Insight: The Distributional Hypothesis**
-
-> "You shall know a word by the company it keeps" — J.R. Firth (1957)
-
-Words appearing in similar contexts should have similar meanings. This principle enables learning dense vector representations from word co-occurrence patterns in large unlabeled corpora.
-
-**Paradigm Shift**: Instead of treating words as atomic symbols with arbitrary IDs, represent them as **continuous vectors** in a learned semantic space where geometric relationships correspond to semantic relationships.
-
-**Word2Vec: Neural Embedding Learning (Mikolov et al., 2013)**
-
-Two complementary architectures for learning distributed word representations:
-
-**Architecture 1: Continuous Bag-of-Words (CBOW)**
-
-**Objective**: Predict center word from surrounding context words.
-
-Given context window of size $c$, predict target word $w_t$ from context $\{w_{t-c}, \ldots, w_{t-1}, w_{t+1}, \ldots, w_{t+c}\}$.
-
-**Model Architecture**:
-
-1. **Input Layer**: One-hot encoded context words $\mathbf{x}_{t-c}, \ldots, \mathbf{x}_{t-1}, \mathbf{x}_{t+1}, \ldots, \mathbf{x}_{t+c} \in \{0,1\}^{|\mathcal{V}|}$
-
-2. **Embedding Layer**: Map to dense vectors via embedding matrix $\mathbf{E} \in \mathbb{R}^{d \times |\mathcal{V}|}$:
-   $$\mathbf{v}_{t+j} = \mathbf{E} \mathbf{x}_{t+j} \in \mathbb{R}^d$$
-
-3. **Context Representation**: Average context embeddings:
-   $$\mathbf{h} = \frac{1}{2c} \sum_{j \in \{-c, \ldots, -1, 1, \ldots, c\}} \mathbf{v}_{t+j}$$
-
-4. **Output Layer**: Predict target word via softmax over vocabulary:
-   $$P(w_t \mid \text{context}) = \frac{\exp(\mathbf{u}_{w_t}^\top \mathbf{h})}{\sum_{w \in \mathcal{V}} \exp(\mathbf{u}_w^\top \mathbf{h})}$$
+1. **Different Architectures**: DeBERTa, RoBERTa, ELECTRA, XLNet have different inductive biases:
+   - DeBERTa uses disentangled attention mechanisms
+   - RoBERTa uses dynamic masking during pre-training
+   - ELECTRA uses discriminative pre-training objectives
+   - XLNet uses permutation language modeling
    
-   where $\mathbf{u}_w \in \mathbb{R}^d$ is the output embedding for word $w$.
+   Configurations in [configs/models/ensemble/](./configs/models/ensemble/)
 
-**Training Objective**: Maximize log-likelihood over corpus:
+2. **Different Initializations**: Multiple random seeds create different optimization trajectories, even with the same architecture. Configuration templates in [configs/experiments/reproducibility/seeds.yaml](./configs/experiments/reproducibility/seeds.yaml).
 
-$$
-\mathcal{L}_{\text{CBOW}} = \sum_{t=1}^T \log P(w_t \mid w_{t-c}, \ldots, w_{t-1}, w_{t+1}, \ldots, w_{t+c})
-$$
+3. **Different Data Views**: Varied data augmentation strategies (back-translation, paraphrasing, LLM-based generation) expose models to different perturbations of the training data. Augmentation configs in [configs/data/augmentation/](./configs/data/augmentation/).
 
-**Architecture 2: Skip-Gram**
+4. **Different Training Procedures**: Varied learning rates, dropout rates, and regularization strengths create models with different bias-variance trade-offs. Configurations in [configs/training/regularization/](./configs/training/regularization/).
 
-**Objective**: Predict context words from center word (inverse of CBOW).
+**Aggregation Methods**: We compare multiple ensemble aggregation strategies:
 
-Given target word $w_t$, predict each context word $w_{t+j}$ independently.
-
-**Model**: For each context position $j \in \{-c, \ldots, -1, 1, \ldots, c\}$:
-
-$$
-P(w_{t+j} \mid w_t) = \frac{\exp(\mathbf{u}_{w_{t+j}}^\top \mathbf{v}_{w_t})}{\sum_{w \in \mathcal{V}} \exp(\mathbf{u}_w^\top \mathbf{v}_{w_t})}
-$$
-
-where:
-- $\mathbf{v}_{w_t} \in \mathbb{R}^d$: Input embedding of center word
-- $\mathbf{u}_{w_{t+j}} \in \mathbb{R}^d$: Output embedding of context word
-
-**Training Objective**: Maximize log-likelihood:
-
-$$
-\mathcal{L}_{\text{Skip-gram}} = \sum_{t=1}^T \sum_{j \in \{-c, \ldots, c\}, j \neq 0} \log P(w_{t+j} \mid w_t)
-$$
-
-**Computational Challenge**: Softmax denominator requires summing over entire vocabulary (50,000+ terms) for each prediction—computationally prohibitive.
-
-**Solution 1: Hierarchical Softmax**
-
-Replace flat softmax with binary tree structure (Huffman tree based on word frequency).
-
-**Probability Computation**: Path from root to word $w$ with $L(w)$ nodes:
-
-$$
-P(w \mid w_t) = \prod_{i=1}^{L(w)-1} \sigma\left(\text{&#10214;} n(w, i+1) = \text{left}(n(w, i)) \text{&#10215;} \cdot \mathbf{u}_{n(w,i)}^\top \mathbf{v}_{w_t}\right)
-$$
-
-where:
-- $n(w, i)$: $i$-th node on path to word $w$
-- $\text{Indicator } \text{&#10214;}\cdot\text{&#10215;} : 1 \text{ if true, } -1 \text{ if false}$
-- $\sigma(z) = 1/(1 + e^{-z})$: Sigmoid function
-
-**Complexity Reduction**: $O(|\mathcal{V}|) \rightarrow O(\log |\mathcal{V}|)$ per word
-
-**Solution 2: Negative Sampling**
-
-Approximate softmax by discriminating target word from $k$ random "negative" samples.
-
-**Modified Objective**: For each target word $w_t$ and context $w_c$, sample $k$ negative words $w_i \sim P_{\text{noise}}$:
-
-$$
-\mathcal{L}_{\text{NEG}} = \log \sigma(\mathbf{u}_{w_c}^\top \mathbf{v}_{w_t}) + \sum_{i=1}^k \mathbb{E}_{w_i \sim P_{\text{noise}}} \left[\log \sigma(-\mathbf{u}_{w_i}^\top \mathbf{v}_{w_t})\right]
-$$
-
-**Noise Distribution**: Empirically, unigram distribution raised to power 3/4 works best:
-
-$$
-P_{\text{noise}}(w) = \frac{f(w)^{3/4}}{\sum_{w' \in \mathcal{V}} f(w')^{3/4}}
-$$
-
-where $f(w)$ is word frequency.
-
-**Intuition**:
-- Maximize probability that target word appears in context: &#963;(𝐮<sub>w<sub>c</sub></sub><sup>T</sup> 𝐯<sub>w<sub>t</sub></sub>) &#8594; 1  
-- Minimize probability that random words appear: &#963;(𝐮<sub>w<sub>i</sub></sub><sup>T</sup> 𝐯<sub>w<sub>t</sub></sub>) &#8594; 0
-
-**Complexity**: $O(|\mathcal{V}|) \rightarrow O(k)$ per word, typically $k=5-20$
-
-**Emergent Semantic Properties**
-
-After training on billions of words (e.g., Google News corpus: 100B tokens), word vectors exhibit remarkable **linear regularities**:
-
-**Semantic Analogies**:
-
-$$
-\mathbf{v}(\text{king}) - \mathbf{v}(\text{man}) + \mathbf{v}(\text{woman}) \approx \mathbf{v}(\text{queen})
-$$
-
-$$
-\mathbf{v}(\text{Paris}) - \mathbf{v}(\text{France}) + \mathbf{v}(\text{Italy}) \approx \mathbf{v}(\text{Rome})
-$$
-
-**Syntactic Analogies**:
-
-$$
-\mathbf{v}(\text{walking}) - \mathbf{v}(\text{walk}) \approx \mathbf{v}(\text{swimming}) - \mathbf{v}(\text{swim})
-$$
-
-(verb tense transformation)
-
-$$
-\mathbf{v}(\text{slow}) - \mathbf{v}(\text{slower}) \approx \mathbf{v}(\text{fast}) - \mathbf{v}(\text{faster})
-$$
-
-(comparative form)
-
-**Cosine Similarity Clustering**: Semantically related words have high cosine similarity:
-
-$$
-\cos(\mathbf{v}_i, \mathbf{v}_j) = \frac{\mathbf{v}_i^\top \mathbf{v}_j}{\|\mathbf{v}_i\| \|\mathbf{v}_j\|}
-$$
-
-**Examples**:
-- Countries: $\{\text{France}, \text{Germany}, \text{Italy}, \text{Spain}\}$ have pairwise similarity $>0.7$
-- Sports: $\{\text{football}, \text{basketball}, \text{tennis}, \text{soccer}\}$ have pairwise similarity $>0.6$
-
-**Geometric Interpretation**: Word vectors organize into coherent semantic and syntactic subspaces where:
-- **Direction** encodes relationships (gender, tense, plurality)
-- **Distance** measures semantic similarity
-
-**GloVe: Global Vectors for Word Representation (Pennington et al., 2014)**
-
-**Motivation**: Word2Vec relies on local context windows, potentially missing global corpus statistics.
-
-**Core Idea**: Directly factorize word co-occurrence matrix to leverage global statistics.
-
-**Co-occurrence Matrix**: Define $X_{ij}$ as number of times word $j$ appears in context of word $i$:
-
-$$
-X_{ij} = \sum_{t=1}^T \sum_{k=-c}^c \mathbb{I}[w_t = i \wedge w_{t+k} = j]
-$$
-
-**Objective**: Learn vectors such that their dot product equals log co-occurrence:
-
-$$
-\mathbf{w}_i^\top \mathbf{w}_j + b_i + b_j \approx \log X_{ij}
-$$
-
-where $b_i, b_j$ are bias terms for words $i, j$.
-
-**Weighted Least Squares Loss**:
-
-$$
-\mathcal{L}_{\text{GloVe}} = \sum_{i,j=1}^{|\mathcal{V}|} f(X_{ij}) \left(\mathbf{w}_i^\top \mathbf{w}_j + b_i + b_j - \log X_{ij}\right)^2
-$$
-
-**Weighting Function**: Prevent common word pairs from dominating:
-
-$$
-f(x) = \begin{cases}
-(x / x_{\max})^\alpha & \text{if } x < x_{\max} \\
-1 & \text{otherwise}
-\end{cases}
-$$
-
-Typical values: $x_{\max} = 100$, $\alpha = 0.75$.
-
-**Intuition**:
-- Rare co-occurrences ($X_{ij}$ small): Low weight (unreliable statistics)
-- Very common co-occurrences ($X_{ij} > x_{\max}$): Capped weight (prevent dominance)
-- Intermediate frequencies: Highest relative weight
-
-**Advantage over Word2Vec**: Captures global corpus statistics, not just local windows. Empirically achieves better performance on word analogy tasks (75% → 80% accuracy).
-
-**Neural Classification Architectures**
-
-**Convolutional Neural Networks for Text (Kim, 2014)**
-
-**Architecture Pipeline**:
-
-1. **Embedding Layer**: Map words to dense vectors
-   $$\mathbf{x}_{1:n} = [\mathbf{v}_{w_1}, \mathbf{v}_{w_2}, \ldots, \mathbf{v}_{w_n}]$$
-   where each $\mathbf{v}_{w_i} \in \mathbb{R}^d$ (typically $d=300$ from pre-trained Word2Vec/GloVe)
-
-2. **Convolutional Filters**: Detect n-gram patterns
-
-   For filter $\mathbf{W} \in \mathbb{R}^{k \times d}$ of height $k$ (n-gram size):
+1. **Soft Voting**: Average predicted probabilities across models before taking argmax:
+   $$\hat{y} = \arg\max_c \frac{1}{M} \sum_{m=1}^{M} P_m(y=c|x)$$
    
-   $$c_i = f\left(\mathbf{W} \cdot \mathbf{x}_{i:i+k-1} + b\right)$$
+   Implementation in [src/models/ensemble/voting/soft_voting.py](./src/models/ensemble/voting/soft_voting.py)
+
+2. **Weighted Voting**: Learn optimal weights $w_m$ on validation set:
+   $$\hat{y} = \arg\max_c \sum_{m=1}^{M} w_m P_m(y=c|x)$$
    
-   where:
-   - $\mathbf{x}_{i:i+k-1} = [\mathbf{v}_{w_i}; \mathbf{v}_{w_{i+1}}; \ldots; \mathbf{v}_{w_{i+k-1}}] \in \mathbb{R}^{kd}$ is concatenation of $k$ consecutive word vectors
-   - $f$ is activation function (typically ReLU: $f(z) = \max(0, z)$)
-   - $b \in \mathbb{R}$ is bias term
+   where $\sum_m w_m = 1$ and $w_m \geq 0$. Weights can be learned using linear regression or more complex meta-learners. Implementation in [src/models/ensemble/voting/weighted_voting.py](./src/models/ensemble/voting/weighted_voting.py).
 
-   This produces feature map:
-   $$\mathbf{c} = [c_1, c_2, \ldots, c_{n-k+1}] \in \mathbb{R}^{n-k+1}$$
+3. **Stacking**: Train a meta-classifier (logistic regression, gradient boosting) on concatenated predictions from base models:
+   $$\hat{y} = f_{\text{meta}}([P_1(y|x), P_2(y|x), \ldots, P_M(y|x)])$$
+   
+   Implementation in [src/models/ensemble/stacking/](./src/models/ensemble/stacking/)
 
-3. **Max-Pooling**: Extract most important feature from each filter
-   $$\hat{c} = \max(\mathbf{c}) = \max\{c_1, c_2, \ldots, c_{n-k+1}\}$$
+Implementation details and empirical comparisons are provided in [src/models/ensemble/](./src/models/ensemble/) with selection guidance in [SOTA_MODELS_GUIDE.md § Ensemble Selection](./SOTA_MODELS_GUIDE.md).
 
-4. **Multiple Filter Sizes**: Use filters of different heights ($k \in \{3, 4, 5\}$) with $m$ filters per size
-   $$\mathbf{z} = [\hat{c}_1^{(3)}, \ldots, \hat{c}_m^{(3)}, \hat{c}_1^{(4)}, \ldots, \hat{c}_m^{(4)}, \hat{c}_1^{(5)}, \ldots, \hat{c}_m^{(5)}] \in \mathbb{R}^{3m}$$
+### 1.6.5 Knowledge Distillation
 
-5. **Fully Connected Layer**: Classification
-   $$\mathbf{y} = \text{softmax}(\mathbf{W}_{\text{fc}} \mathbf{z} + \mathbf{b}_{\text{fc}})$$
+Knowledge distillation (Hinton et al., 2015) addresses a key limitation of ensemble methods: while ensembles achieve high accuracy, they are computationally expensive at inference time, requiring multiple forward passes. Distillation trains a single student model to mimic an ensemble teacher, preserving much of the performance gain while drastically reducing inference cost.
 
-**Intuition**: 
-- 3-gram filters detect trigrams: "not very good", "extremely happy"
-- 4-gram filters detect 4-word phrases: "very easy to use"
-- 5-gram filters detect longer patterns: "I would highly recommend this"
+**Distillation Loss**: The student is trained on a combination of two objectives:
 
-**Advantages**:
-1. **Captures Local Patterns**: N-grams indicative of sentiment/topic
-2. **Translation Invariant**: Same filter applied everywhere
-3. **Parallel Computation**: All filters computed simultaneously (fast on GPUs)
-4. **Pre-trained Embeddings**: Initialize with Word2Vec/GloVe (transfer learning)
-
-**Limitations**:
-1. **Fixed Receptive Field**: Cannot capture dependencies beyond n-gram size
-2. **Loses Long-Range Order**: Max-pooling discards position information
-3. **No Sequential Dependencies**: Unlike RNNs, doesn't model word order globally
-
-**Recurrent Neural Networks: Long Short-Term Memory (LSTM)**
-
-**Motivation**: Standard RNNs suffer from **vanishing gradient problem**—gradients decay exponentially with sequence length, preventing learning of long-term dependencies.
-
-**Vanishing Gradient in Standard RNN**:
-
-For RNN $\mathbf{h}_t = \tanh(\mathbf{W} \mathbf{h}_{t-1} + \mathbf{U} \mathbf{x}_t)$, gradient at step $t$ w.r.t. step $t-k$:
-
-$$
-\frac{\partial \mathbf{h}_t}{\partial \mathbf{h}_{t-k}} = \prod_{i=t-k+1}^t \frac{\partial \mathbf{h}_i}{\partial \mathbf{h}_{i-1}} = \prod_{i=t-k+1}^t \mathbf{W}^\top \text{diag}[\tanh'(\cdot)]
-$$
-
-Since $|\tanh'(z)| \leq 1$ and typically $\|\mathbf{W}\| < 1$ for stability, gradients decay as:
-
-$$
-\left\|\frac{\partial \mathbf{h}_t}{\partial \mathbf{h}_{t-k}}\right\| \approx \gamma^k \quad \text{where } \gamma < 1
-$$
-
-For $k=100$ and $\gamma = 0.9$: gradient is $0.9^{100} \approx 10^{-5}$ (vanished!).
-
-**LSTM Solution (Hochreiter & Schmidhuber, 1997)**
-
-Introduce **gating mechanisms** to control information flow, enabling gradients to flow unchanged across many time steps.
-
-**Four Components**:
-
-**1. Forget Gate** $\mathbf{f}_t$ (what to discard from cell state):
-
-$$
-\mathbf{f}_t = \sigma(\mathbf{W}_f \cdot [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_f)
-$$
-
-where $\sigma(z) = 1/(1+e^{-z})$ is sigmoid function outputting values in $(0, 1)$.
-
-**2. Input Gate** $\mathbf{i}_t$ (what new information to store):
-
-$$
-\mathbf{i}_t = \sigma(\mathbf{W}_i \cdot [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_i)
-$$
-
-**Candidate Values** $\tilde{\mathbf{C}}_t$ (potential new information):
-
-$$
-\tilde{\mathbf{C}}_t = \tanh(\mathbf{W}_C \cdot [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_C)
-$$
-
-**3. Cell State Update** $\mathbf{C}_t$ (memory highway):
-
-$$
-\mathbf{C}_t = \mathbf{f}_t \odot \mathbf{C}_{t-1} + \mathbf{i}_t \odot \tilde{\mathbf{C}}_t
-$$
-
-where $\odot$ is element-wise (Hadamard) product.
-
-**Interpretation**:
-- $\mathbf{f}_t \odot \mathbf{C}_{t-1}$: Selectively forget old memory (forget gate acts as filter)
-- $\mathbf{i}_t \odot \tilde{\mathbf{C}}_t$: Selectively add new information (input gate controls flow)
-
-**4. Output Gate** $\mathbf{o}_t$ (what to output):
-
-$$
-\mathbf{o}_t = \sigma(\mathbf{W}_o \cdot [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_o)
-$$
-
-**Hidden State**:
-
-$$
-\mathbf{h}_t = \mathbf{o}_t \odot \tanh(\mathbf{C}_t)
-$$
-
-**Geometric Interpretation**:
-
-- **Cell State $\mathbf{C}_t$**: "Memory highway" carrying information across time with minimal transformation
-- **Gates** (sigmoid outputs $\in (0,1)$): Differentiable switches
-  - $\sigma(z) \approx 1$: Gate open (information flows)
-  - $\sigma(z) \approx 0$: Gate closed (information blocked)
-
-**Gradient Flow**: Crucial property enabling long-term learning:
-
-$$
-\frac{\partial \mathbf{C}_t}{\partial \mathbf{C}_{t-1}} = \mathbf{f}_t
-$$
-
-Since $\mathbf{f}_t \in (0,1)$ is learned (not fixed like $\mathbf{W}$ in RNN), the network can learn to set $\mathbf{f}_t \approx 1$ for important information, allowing gradients to flow unchanged across 100+ steps.
-
-**Concrete Example**: 
-
-Sentence: "The cat, which I saw yesterday in the park while I was walking, was sleeping."
-
-**Challenge**: Predict verb "was" (singular) requiring subject "cat" from 12 words earlier.
-
-**LSTM Behavior**:
-1. At "cat": Input gate $\mathbf{i}_t$ opens, stores "singular subject" in cell state $\mathbf{C}_t$
-2. During intervening clause: Forget gate $\mathbf{f}_t \approx 1$ preserves "singular" information
-3. At "was": Output gate $\mathbf{o}_t$ opens, retrieves "singular" → selects "was" (not "were")
-
-**Bidirectional LSTM (BiLSTM)**:
-
-Process sequence in both directions:
-
-$$
-\begin{aligned}
-\overrightarrow{\mathbf{h}}_t &= \text{LSTM}(\overrightarrow{\mathbf{h}}_{t-1}, \mathbf{x}_t) \quad \text{(forward)} \\
-\overleftarrow{\mathbf{h}}_t &= \text{LSTM}(\overleftarrow{\mathbf{h}}_{t+1}, \mathbf{x}_t) \quad \text{(backward)} \\
-\mathbf{h}_t &= [\overrightarrow{\mathbf{h}}_t; \overleftarrow{\mathbf{h}}_t] \quad \text{(concatenate)}
-\end{aligned}
-$$
-
-**Advantage**: Access to both past and future context (crucial for classification where entire document is available).
-
-**Advantages of LSTMs**:
-1. **Long-Range Dependencies**: Captures patterns across 100+ tokens
-2. **Variable Length**: Naturally handles sequences of any length
-3. **Sequential Structure**: Models inherent word order
-4. **Bidirectionality**: BiLSTM sees full context
-
-**Limitations**:
-1. **Sequential Processing**: Cannot parallelize across time steps (slow training)
-2. **Still Limited**: Struggles with 500+ token dependencies
-3. **Computational Cost**: Requires two passes for BiLSTM
-
-**Critical Limitation of Phase 2: Context-Independent Embeddings**
-
-**Fundamental Problem**: Word2Vec and GloVe produce **static embeddings**—each word receives a single fixed vector regardless of context.
-
-**Example Failure**: Word "bank"
-
-Word2Vec assigns fixed vector $\mathbf{v}_{\text{bank}}$ used in both:
-- "I deposited money at the **bank**" (financial institution)
-- "We sat by the river **bank**" (land alongside water)
-
-These usages have completely different meanings, but receive identical representations!
-
-**Attempted Solution**: Use LSTM to compute contextualized representations:
-
-$$
-\mathbf{h}_t = \text{BiLSTM}(\mathbf{v}_{w_1}, \ldots, \mathbf{v}_{w_t}, \ldots, \mathbf{v}_{w_n})
-$$
-
-**Remaining Issue**: LSTM still initializes from static embeddings and suffers from:
-- Sequential processing bottleneck
-- Limited context window (100-200 tokens effective range)
-- Difficulty modeling very long-range dependencies
-
-**This limitation motivated Phase 3: Attention mechanisms enabling truly context-dependent representations with global receptive field.**
-
----
-
-#### Phase 3: Attention Mechanisms and Transformers (2017-2019)
-
-**The Attention Revolution**
-
-**Core Insight**: Instead of forcing the network to compress entire sequence into fixed-size vector, allow it to selectively **attend** to relevant parts for each prediction.
-
-**Self-Attention Mechanism**
-
-**Motivation**: For each token, compute representation as weighted combination of all tokens in sequence, with weights determined by relevance.
-
-**Mathematical Formulation**:
-
-Given input sequence of $n$ tokens represented as matrix:
-
-$$
-\mathbf{X} = [\mathbf{x}_1, \mathbf{x}_2, \ldots, \mathbf{x}_n]^\top \in \mathbb{R}^{n \times d}
-$$
-
-where each $\mathbf{x}_i \in \mathbb{R}^d$ is token embedding.
-
-**Step 1: Linear Projections**
-
-Transform input to three representations via learned matrices:
-
-$$
-\begin{aligned}
-\mathbf{Q} &= \mathbf{X} \mathbf{W}_Q \in \mathbb{R}^{n \times d_k} \quad \text{(Queries)} \\
-\mathbf{K} &= \mathbf{X} \mathbf{W}_K \in \mathbb{R}^{n \times d_k} \quad \text{(Keys)} \\
-\mathbf{V} &= \mathbf{X} \mathbf{W}_V \in \mathbb{R}^{n \times d_v} \quad \text{(Values)}
-\end{aligned}
-$$
-
-where $\mathbf{W}_Q, \mathbf{W}_K \in \mathbb{R}^{d \times d_k}$ and $\mathbf{W}_V \in \mathbb{R}^{d \times d_v}$ are learned projection matrices.
-
-**Interpretation**:
-- **Query** $\mathbf{q}_i$: "What am I looking for?" (what information does token $i$ need)
-- **Key** $\mathbf{k}_j$: "What information do I contain?" (what token $j$ offers)
-- **Value** $\mathbf{v}_j$: "What information do I provide?" (actual content from token $j$)
-
-**Step 2: Compute Attention Scores**
-
-Measure relevance between all token pairs via dot product:
-
-$$
-\mathbf{S} = \mathbf{Q} \mathbf{K}^\top \in \mathbb{R}^{n \times n}
-$$
-
-where $S_{ij} = \mathbf{q}_i^\top \mathbf{k}_j$ measures compatibility between query $i$ and key $j$.
-
-**Scaled Dot-Product** (prevent gradients from vanishing):
-
-$$
-\mathbf{S} = \frac{\mathbf{Q} \mathbf{K}^\top}{\sqrt{d_k}}
-$$
-
-**Why scaling?** For random vectors $\mathbf{q}, \mathbf{k} \in \mathbb{R}^{d_k}$ with unit variance:
-
-$$
-\mathbb{E}[\mathbf{q}^\top \mathbf{k}] = 0, \quad \text{Var}[\mathbf{q}^\top \mathbf{k}] = d_k
-$$
-
-Dot products grow with dimension → softmax saturates → gradients vanish. Dividing by $\sqrt{d_k}$ maintains unit variance.
-
-**Step 3: Attention Weights**
-
-Convert scores to probability distribution via softmax (row-wise):
-
-$$
-\mathbf{A} = \text{softmax}(\mathbf{S}) \in \mathbb{R}^{n \times n}
-$$
-
-$$
-A_{ij} = \frac{\exp(S_{ij})}{\sum_{k=1}^n \exp(S_{ik})}
-$$
-
-**Properties**:
-- Each row sums to 1: $\sum_{j=1}^n A_{ij} = 1$
-- All values positive: $A_{ij} \in (0, 1)$
-- $A_{ij}$ represents "how much token $i$ attends to token $j$"
-
-**Step 4: Weighted Aggregation**
-
-Compute output as attention-weighted sum of values:
-
-$$
-\mathbf{Z} = \mathbf{A} \mathbf{V} \in \mathbb{R}^{n \times d_v}
-$$
-
-$$
-\mathbf{z}_i = \sum_{j=1}^n A_{ij} \mathbf{v}_j
-$$
-
-**Complete Self-Attention Formula**:
-
-$$
-\text{Attention}(\mathbf{Q}, \mathbf{K}, \mathbf{V}) = \text{softmax}\left(\frac{\mathbf{Q} \mathbf{K}^\top}{\sqrt{d_k}}\right) \mathbf{V}
-$$
-
-**Concrete Example**:
-
-Sentence: "The cat sat on the mat"
-
-For token "sat" (query):
-- High attention to "cat" (subject performing action): $A_{\text{sat,cat}} = 0.45$
-- High attention to "mat" (object of preposition): $A_{\text{sat,mat}} = 0.30$
-- Moderate attention to "on" (preposition): $A_{\text{sat,on}} = 0.15$
-- Low attention to "the": $A_{\text{sat,the}} = 0.05$ each
-
-Output representation $\mathbf{z}_{\text{sat}}$ is weighted combination:
-
-$$
-\mathbf{z}_{\text{sat}} = 0.45 \mathbf{v}_{\text{cat}} + 0.30 \mathbf{v}_{\text{mat}} + 0.15 \mathbf{v}_{\text{on}} + \ldots
-$$
-
-This representation captures that "sat" relates primarily to "cat" and "mat"—syntactic and semantic structure discovered automatically!
-
-**Multi-Head Attention**
-
-**Motivation**: Single attention mechanism may focus on one relationship type (e.g., syntactic). Multiple heads can capture different relationship types in parallel.
-
-**Formulation**: Run $h$ attention heads with different projection matrices:
-
-$$
-\text{head}_i = \text{Attention}(\mathbf{Q} \mathbf{W}_Q^i, \mathbf{K} \mathbf{W}_K^i, \mathbf{V} \mathbf{W}_V^i)
-$$
-
-where $\mathbf{W}_Q^i, \mathbf{W}_K^i \in \mathbb{R}^{d \times d_k}$, $\mathbf{W}_V^i \in \mathbb{R}^{d \times d_v}$ are learned parameters for head $i$.
-
-**Concatenate and Project**:
-
-$$
-\text{MultiHead}(\mathbf{Q}, \mathbf{K}, \mathbf{V}) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h) \mathbf{W}^O
-$$
-
-where $\mathbf{W}^O \in \mathbb{R}^{h \cdot d_v \times d}$ projects back to original dimension.
-
-**Typical Configuration**: 
-- BERT-Base: $h=12$ heads, $d_k = d_v = d/h = 768/12 = 64$
-- Each head has 64-dimensional queries/keys/values
-
-**Empirical Finding**: Different heads specialize in different patterns:
-
-- **Head 1**: Subject-verb agreement ("cat **was**" vs. "cats **were**")
-- **Head 2**: Object-verb relationships
-- **Head 3**: Prepositional attachments
-- **Head 4**: Coreference resolution (pronouns → antecedents: "John ... **he**")
-- **Head 5**: Positional proximity (adjacent words)
-- **Head 6**: Semantic similarity (synonyms, related concepts)
-
-**Visualization**: Attention patterns reveal linguistic structure without explicit supervision!
-
-**The Transformer Architecture (Vaswani et al., 2017)**
-
-**Revolutionary Design**: Entirely based on attention, completely removing recurrence and convolution.
-
-**Encoder Architecture** (for classification):
-
-```
-Input Tokens
-    ↓
-Token Embedding + Positional Encoding
-    ↓
-┌─────────────────────────────────┐
-│  Encoder Block (×N layers)      │
-│  ┌───────────────────────────┐  │
-│  │ Multi-Head Self-Attention │  │
-│  └───────────────────────────┘  │
-│            ↓                     │
-│      Add & Normalize             │
-│            ↓                     │
-│  ┌───────────────────────────┐  │
-│  │  Feed-Forward Network     │  │
-│  └───────────────────────────┘  │
-│            ↓                     │
-│      Add & Normalize             │
-└─────────────────────────────────┘
-    ↓
-Classification Head (pooling + linear)
-    ↓
-Output Probabilities
-```
-
-**Key Components**:
-
-**1. Positional Encoding**
-
-**Problem**: Attention is **permutation invariant**—reordering tokens doesn't change attention output. But word order matters in language!
-
-**Solution**: Add position-dependent patterns to input embeddings.
-
-**Sinusoidal Encoding** (original Transformer):
-
-$$
-\begin{aligned}
-PE_{(\text{pos}, 2i)} &= \sin\left(\frac{\text{pos}}{10000^{2i/d}}\right) \\
-PE_{(\text{pos}, 2i+1)} &= \cos\left(\frac{\text{pos}}{10000^{2i/d}}\right)
-\end{aligned}
-$$
+$$\mathcal{L}_{\text{distill}} = \alpha \cdot \mathcal{L}_{\text{CE}}(y, p_{\text{student}}) + (1-\alpha) \cdot \mathcal{L}_{\text{KL}}(p_{\text{teacher}}, p_{\text{student}})$$
 
 where:
-- $\text{pos} \in \{0, 1, \ldots, n-1\}$: Position in sequence
-- $i \in \{0, 1, \ldots, d/2-1\}$: Dimension index
-- Even dimensions use sine, odd use cosine
+- $\mathcal{L}_{\text{CE}}$ is cross-entropy loss with ground truth labels $y$
+- $\mathcal{L}_{\text{KL}}$ is KL divergence between teacher and student probability distributions
+- $\alpha \in [0,1]$ balances the two objectives
 
-**Properties**:
-- Each position has unique encoding
-- Relative positions have consistent patterns: $PE_{\text{pos}+k}$ is linear function of $PE_{\text{pos}}$ (enables learning of relative position relationships)
-- Extrapolates to longer sequences than seen during training
+**Detailed Explanation**:
 
-**Alternative: Learned Positional Embeddings** (BERT):
+The cross-entropy term ensures the student learns from the ground truth labels:
+$$\mathcal{L}_{\text{CE}}(y, p_{\text{student}}) = -\sum_{c=1}^{C} \mathbb{1}[y=c] \log p_{\text{student}}(c)$$
 
-$$
-PE_{\text{pos}} = \mathbf{W}_{\text{pos}}[\text{pos}] \in \mathbb{R}^d
-$$
+where $C$ is the number of classes and $\mathbb{1}[y=c]$ is 1 if the true label is $c$, else 0.
 
-where $\mathbf{W}_{\text{pos}} \in \mathbb{R}^{n_{\max} \times d}$ is learned embedding matrix for positions up to $n_{\max}$.
+The KL divergence term transfers knowledge from the teacher:
+$$\mathcal{L}_{\text{KL}}(p_{\text{teacher}}, p_{\text{student}}) = \sum_{c=1}^{C} p_{\text{teacher}}(c) \log \frac{p_{\text{teacher}}(c)}{p_{\text{student}}(c)}$$
 
-**Input to First Layer**:
+The hyperparameter $\alpha$ controls the trade-off:
+- $\alpha = 1$: Pure supervised learning (ignores teacher)
+- $\alpha = 0$: Pure distillation (ignores ground truth)
+- Typical values: $\alpha \in [0.1, 0.5]$ work well in practice
 
-$$
-\mathbf{x}_i^{(0)} = \text{TokenEmbed}(w_i) + PE_i
-$$
+**Temperature Scaling**: To transfer richer information, both teacher and student logits $z$ are divided by temperature $T$ before applying softmax:
 
-**2. Feed-Forward Network**
+$$p_i = \frac{\exp(z_i/T)}{\sum_j \exp(z_j/T)}$$
 
-Applied independently to each position (no interaction between positions):
+**Interpretation**: Higher temperatures ($T > 1$) produce softer probability distributions. Consider an example with 4 classes:
 
-$$
-\text{FFN}(\mathbf{x}) = \max(0, \mathbf{x} \mathbf{W}_1 + \mathbf{b}_1) \mathbf{W}_2 + \mathbf{b}_2
-$$
+- **Hard prediction** ($T=1$): $[0.98, 0.01, 0.01, 0.00]$
+  - The model is very confident about class 1
+  - Provides almost no information about relationships between other classes
+  
+- **Soft prediction** ($T=3$): $[0.70, 0.15, 0.12, 0.03]$
+  - Still predicts class 1, but with less confidence
+  - Reveals that class 2 and 3 are more similar to class 1 than class 4
+  - The relative ordering of classes 2 and 3 provides information about semantic similarity
 
-where:
-- $\mathbf{W}_1 \in \mathbb{R}^{d \times d_{\text{ff}}}$: Expand dimension (typically $d_{\text{ff}} = 4d$)
-- $\mathbf{W}_2 \in \mathbb{R}^{d_{\text{ff}} \times d}$: Project back
-- ReLU activation: $\max(0, \cdot)$
+This softer distribution reveals the teacher's uncertainty and relative similarities between classes—information lost when using only hard labels (one-hot vectors). The temperature effectively "smooths" the distribution, making it easier for the student to learn the fine-grained knowledge encoded in the teacher's predictions.
 
-**Intuition**: 
-- Self-attention mixes information across positions
-- FFN processes each position independently to extract features
+During distillation training:
+$$p_{\text{teacher}}(T) = \text{softmax}(z_{\text{teacher}}/T)$$
+$$p_{\text{student}}(T) = \text{softmax}(z_{\text{student}}/T)$$
 
-**3. Layer Normalization**
+And the KL divergence is computed at temperature $T$, then scaled by $T^2$ to ensure gradient magnitudes match the cross-entropy term:
+$$\mathcal{L}_{\text{KL}} = T^2 \cdot \text{KL}(p_{\text{teacher}}(T) \| p_{\text{student}}(T))$$
 
-Normalize activations across feature dimension (not batch like BatchNorm):
+**Why It Works**: The soft labels from the teacher ensemble contain information about class similarities and ambiguous cases that is not present in the one-hot ground truth labels. By training on this richer supervision signal, the student learns to mimic not just the teacher's final predictions but its confidence calibration and inter-class relationships.
 
-$$
-\text{LayerNorm}(\mathbf{x}) = \gamma \odot \frac{\mathbf{x} - \mu}{\sqrt{\sigma^2 + \epsilon}} + \beta
-$$
+For example, in AG News classification:
+- Ground truth might simply say: "This is a Sports article"
+- Teacher's soft labels might say: "90% Sports, 7% Business (because it discusses sports contracts), 2% World, 1% Sci/Tech"
+- The student learns both the correct class AND the semantic relationships between categories
 
-where:
-- $\mu = \frac{1}{d} \sum_{i=1}^d x_i$: Mean across features
-- $\sigma^2 = \frac{1}{d} \sum_{i=1}^d (x_i - \mu)^2$: Variance
-- $\gamma, \beta \in \mathbb{R}^d$: Learned scale and shift parameters
-- $\epsilon$: Small constant for numerical stability (typically $10^{-12}$)
+**Multi-Stage Distillation in This Project**:
 
-**Why Layer Norm?** Stabilizes training of deep networks by preventing internal covariate shift.
+1. **Stage 1 (LLM → Transformer)**: Distill knowledge from large language models (LLaMA 2-13B, Mistral-7B) into large transformers (DeBERTa-v3-Large), achieving 40× parameter reduction with minimal accuracy loss. Scripts in [scripts/training/distillation/distill_from_llama.py](./scripts/training/distillation/distill_from_llama.py) and [scripts/training/distillation/distill_from_mistral.py](./scripts/training/distillation/distill_from_mistral.py).
 
-**4. Residual Connections**
+2. **Stage 2 (Ensemble → Single)**: Distill an ensemble of 5-7 diverse DeBERTa-Large models into a single DeBERTa-Large student, capturing ensemble benefits without ensemble inference cost. Configuration in [configs/training/advanced/knowledge_distillation/ensemble_distillation.yaml](./configs/training/advanced/knowledge_distillation/ensemble_distillation.yaml).
 
-Add input to output of each sublayer:
+3. **Stage 3 (Compression)**: Apply INT8 quantization to the distilled model for 4× size reduction and faster CPU inference. Scripts in [scripts/optimization/quantization_optimization.py](./scripts/optimization/quantization_optimization.py).
 
-$$
-\mathbf{x}^{(\ell+1)} = \text{LayerNorm}(\mathbf{x}^{(\ell)} + \text{Sublayer}(\mathbf{x}^{(\ell)}))
-$$
+Experimental results demonstrating accuracy retention through this pipeline are provided in [experiments/sota_experiments/phase3_llm_distillation.py](./experiments/sota_experiments/phase3_llm_distillation.py). Theoretical analysis and best practices are detailed in [SOTA_MODELS_GUIDE.md § Knowledge Distillation](./SOTA_MODELS_GUIDE.md).
 
-**Benefit**: Enable gradient flow through deep networks (up to 24 layers in BERT-Large).
+## 1.7 Scope and Limitations
 
-**Gradient Backpropagation**: Residual connections create direct paths:
+To establish appropriate expectations and clarify the boundaries of this project, we explicitly state what is and is not within scope.
 
-$$
-\frac{\partial \mathbf{x}^{(L)}}{\partial \mathbf{x}^{(0)}} = \mathbf{I} + \frac{\partial}{\partial \mathbf{x}^{(0)}} \sum_{\ell=1}^L \text{Sublayer}^{(\ell)}
-$$
+### 1.7.1 Within Scope
 
-Identity $\mathbf{I}$ ensures gradient has magnitude at least 1 (prevents vanishing).
+This project provides:
 
-**Complete Encoder Layer**:
+- **Complete Text Classification Pipeline**: End-to-end workflow from raw text preprocessing through model training, evaluation, and deployment for supervised classification tasks. Pipeline documentation in [ARCHITECTURE.md](./ARCHITECTURE.md).
 
-$$
-\begin{aligned}
-\mathbf{z}^{(\ell)} &= \text{LayerNorm}(\mathbf{x}^{(\ell-1)} + \text{MultiHead}(\mathbf{x}^{(\ell-1)})) \\
-\mathbf{x}^{(\ell)} &= \text{LayerNorm}(\mathbf{z}^{(\ell)} + \text{FFN}(\mathbf{z}^{(\ell)}))
-\end{aligned}
-$$
+- **Rigorous Experimental Protocols**: Infrastructure for conducting statistically valid experiments including proper train-validation-test splits, multiple random seed evaluation, significance testing, and prevention of data leakage. Protocols detailed in [OVERFITTING_PREVENTION.md](./OVERFITTING_PREVENTION.md).
 
-**Advantages Over RNNs and CNNs**:
+- **Comprehensive Model Coverage**: Implementations spanning classical machine learning baselines (Naive Bayes, SVM) through modern transformers (BERT, RoBERTa, DeBERTa) to large language models (LLaMA, Mistral) with parameter-efficient fine-tuning. Complete model zoo in [configs/models/](./configs/models/).
 
-| Aspect | RNN/LSTM | CNN | Transformer |
-|--------|----------|-----|-------------|
-| **Parallelization** | Sequential (one token at a time) | Parallel within layer | Fully parallel |
-| **Training Speed** | Slow ($O(n)$ sequential steps) | Fast | Very fast |
-| **Long-Range Dependencies** | Limited (gradient decay) | Limited (receptive field) | Unlimited (direct connections) |
-| **Path Length** | $O(n)$ between distant tokens | $O(\log n)$ (stacked layers) | $O(1)$ (direct attention) |
-| **Memory** | $O(n)$ | $O(n)$ | $O(n^2)$ (attention matrix) |
-| **Receptive Field** | Full sequence | Local then global (stacking) | Full sequence from layer 1 |
+- **Advanced Training Techniques**: Support for ensemble methods, knowledge distillation, adversarial training, data augmentation, and multi-stage training pipelines. Training strategies in [configs/training/](./configs/training/).
 
-**Computational Complexity Analysis**:
+- **Platform Portability**: Configurations and tooling for running experiments on consumer laptops, cloud platforms (Google Colab, Kaggle), and institutional compute clusters with automatic resource adaptation. Platform guide in [PLATFORM_OPTIMIZATION_GUIDE.md](./PLATFORM_OPTIMIZATION_GUIDE.md).
 
-For sequence length $n$ and dimension $d$:
+- **Extensive Documentation**: Technical documentation targeted at multiple expertise levels from beginners to advanced researchers, including theoretical treatments, API references, and step-by-step tutorials. Documentation index in [docs/](./docs/).
 
-**Self-Attention**:
-- $\mathbf{Q} \mathbf{K}^\top$: $O(n^2 \cdot d)$ (bottleneck for long sequences)
-- Softmax: $O(n^2)$
-- Attention $\times$ Values: $O(n^2 \cdot d)$
-- **Total**: $O(n^2 \cdot d)$
+### 1.7.2 Explicitly Out of Scope
 
-**Feed-Forward**:
-- Two matrix multiplications: $O(n \cdot d \cdot d_{\text{ff}}) = O(n \cdot d^2)$ (since $d_{\text{ff}} = 4d$)
+This project does not provide:
 
-**Trade-off**:
-- Short sequences ($n < d$): Self-attention faster
-- Long sequences ($n > d$): FFN dominates
+- **Novel Architectural Contributions**: We implement and combine existing published techniques rather than proposing new model architectures or training algorithms. Original research contributions are in the domain of systematic evaluation and rigorous experimental methodology.
 
-For typical transformers: $n=512$, $d=768$ → $n < d$ → attention is bottleneck
+- **Multilingual Classification**: Focus is on English-language text classification as determined by the AG News dataset. Extensions to multilingual scenarios would require different pre-trained models and evaluation protocols.
 
-**Maximum Sequence Length**: Quadratic memory $O(n^2)$ limits practical length:
-- BERT: 512 tokens
-- RoBERTa: 512 tokens
-- Longformer: 4096 tokens (sparse attention)
-- BigBird: 4096 tokens (random/window/global attention)
+- **Streaming or Real-Time Inference**: The system is designed for batch processing and offline evaluation. While inference latency is measured and reported in [benchmarks/efficiency/](./benchmarks/efficiency/), we do not optimize for real-time serving constraints or provide production-grade serving infrastructure.
 
-This concludes Phase 3. Shall I continue with Phase 4 (Pre-trained Language Models) and Phase 5 (LLMs and Parameter Efficiency)?
+- **Adversarial Robustness Certification**: While we include adversarial training as an optional technique in [configs/training/advanced/adversarial_training.yaml](./configs/training/advanced/adversarial_training.yaml), we do not provide formally verified robustness guarantees or certified defense mechanisms against adversarial examples.
+
+- **Automatic Data Collection**: We assume users have access to their data. The project provides tools for processing and analyzing data in [src/data/](./src/data/), but does not include web scraping, data purchasing, or crowdsourcing annotation pipelines.
+
+- **Production Deployment Infrastructure**: While we provide basic Docker configurations in [deployment/docker/](./deployment/docker/) and deployment guidelines in [docs/user_guide/local_deployment.md](./docs/user_guide/local_deployment.md), comprehensive production infrastructure (Kubernetes orchestration, auto-scaling, monitoring, A/B testing) is beyond scope.
+
+- **Graphical User Interfaces**: All interfaces are command-line based or notebook-based. We do not provide web dashboards or GUI tools for non-technical users, though Streamlit and Gradio apps are available in [app/](./app/) for demonstration purposes.
+
+### 1.7.3 Assumptions and Prerequisites
+
+**Data Assumptions**:
+
+- **Balanced or Near-Balanced Classes**: Many techniques (ensemble diversity metrics, stratified sampling) assume approximately balanced class distributions. Highly imbalanced datasets may require additional techniques like class weighting or resampling not extensively covered in this framework.
+
+- **Text Length**: Default configurations assume document length of 512 tokens or fewer, matching common transformer limits. Longer documents require alternative architectures (Longformer, BigBird) available in [configs/models/single/transformers/longformer/](./configs/models/single/transformers/longformer/) or truncation strategies.
+
+- **Clean Labels**: We assume labels are accurate and consistent. Label noise handling is not explicitly addressed beyond standard regularization techniques.
+
+- **Single-Label Classification**: The focus is on assigning each document to exactly one category. Multi-label classification (assigning multiple categories per document) requires modifications to loss functions and evaluation metrics.
+
+**Computational Assumptions**:
+
+- **GPU Access**: Training transformer-based models requires GPU acceleration. While CPU-only training is technically possible, it is prohibitively slow for models beyond simple baselines. Access to cloud platforms with GPU quotas or local GPU hardware is assumed. CPU-optimized configs available in [configs/models/recommended/tier_5_free_optimized/cpu_friendly/](./configs/models/recommended/tier_5_free_optimized/cpu_friendly/).
+
+- **Internet Connectivity**: Downloading pre-trained model checkpoints requires stable internet access and sufficient bandwidth. Models range from hundreds of megabytes (BERT-Base) to tens of gigabytes (LLaMA-70B).
+
+- **Storage Capacity**: Training runs generate checkpoints, logs, and cached preprocessed data. We recommend at least 50GB of available disk space for a typical experiment series.
+
+**User Knowledge Assumptions**:
+
+- **Python Programming**: Users should be comfortable with Python syntax, including functions, classes, imports, and common libraries (NumPy, pandas).
+
+- **Command-Line Interfaces**: Basic familiarity with terminal commands, file paths, and environment variables.
+
+- **Machine Learning Fundamentals**: Understanding of core concepts including train-validation-test splits, overfitting, hyperparameters, and evaluation metrics (accuracy, precision, recall, F1).
+
+- **Deep Learning Basics** (for advanced features): Familiarity with neural network architectures, backpropagation, optimization algorithms, and regularization techniques.
+
+Users without these prerequisites are encouraged to consult the beginner-level tutorials in [docs/level_1_beginner/](./docs/level_1_beginner/) which provide gentler introductions with more extensive explanations.
+
+### 1.7.4 Known Limitations
+
+**Limitation 1: Quadratic Complexity of Self-Attention**
+
+Transformer architectures compute pairwise attention between all tokens, resulting in $O(n^2)$ memory and computational complexity where $n$ is sequence length. This limits practical sequence lengths to 512-1024 tokens for standard models.
+
+**Mitigation**: We provide configurations for efficient transformers (Longformer, BigBird) that use sparse attention patterns to achieve $O(n)$ complexity in [configs/models/single/transformers/longformer/](./configs/models/single/transformers/longformer/). However, these are not the primary focus and have received less extensive tuning.
+
+**Future Direction**: Integration of recent linear attention mechanisms (Performers, FNet, Linformer) could enable processing of longer documents without quadratic scaling. Tracked in [ROADMAP.md](./ROADMAP.md).
+
+**Limitation 2: Memory Requirements for Large Models**
+
+Even with parameter-efficient fine-tuning and quantization, the largest models (LLaMA-70B, Mixtral-8x7B) require 40-80GB of GPU memory. This exceeds the capacity of consumer GPUs and requires either model parallelism across multiple devices or cloud instances with high-memory GPUs.
+
+**Mitigation**: QLoRA with 4-bit quantization reduces memory requirements by approximately 4×, making models up to 13B parameters accessible on consumer GPUs with 16-24GB VRAM. Configurations in [configs/training/efficient/qlora/](./configs/training/efficient/qlora/). For larger models, we provide configurations for gradient checkpointing and CPU offloading that trade computation time for memory in [configs/training/efficient/](./configs/training/efficient/).
+
+**Future Direction**: Exploration of more aggressive quantization (INT4, INT2) and structured pruning could further reduce memory footprints. Research directions in [ROADMAP.md](./ROADMAP.md).
+
+**Limitation 3: Ensemble Inference Overhead**
+
+While ensemble methods achieve the highest accuracy in our experiments (results in [benchmarks/accuracy/ensemble_results.json](./benchmarks/accuracy/ensemble_results.json)), they require multiple forward passes at inference time, increasing latency proportionally to ensemble size. A 7-model ensemble is 7× slower than a single model.
+
+**Mitigation**: Knowledge distillation compresses ensemble knowledge into a single student model, retaining typically 90-95% of ensemble improvement while restoring single-model inference speed. Distillation configurations in [configs/training/advanced/knowledge_distillation/](./configs/training/advanced/knowledge_distillation/).
+
+**Future Direction**: Investigation of fast ensemble approximation methods such as dropout ensembles or BatchEnsemble could provide accuracy benefits closer to full ensembles with minimal computational overhead. Tracked in [ROADMAP.md](./ROADMAP.md).
+
+**Limitation 4: Platform-Specific Quota Management**
+
+Our platform detection and quota management systems use heuristics based on typical platform limits (Colab 12-hour sessions, Kaggle 30-hour GPU weekly quotas). These limits may change over time and vary based on account type (free tier versus paid subscriptions).
+
+**Mitigation**: Conservative checkpoint intervals and explicit quota tracking provide safety margins in [src/deployment/quota_tracker.py](./src/deployment/quota_tracker.py). Users can override automatic settings if they have specific information about their quota limits through [configs/quotas/](./configs/quotas/).
+
+**Future Direction**: Integration with platform APIs (when available) could provide real-time quota information rather than relying on hardcoded assumptions. Tracked in [ROADMAP.md](./ROADMAP.md).
+
+**Limitation 5: English-Only Evaluation**
+
+All experiments are conducted on the English-language AG News dataset. While the underlying transformer models (mBERT, XLM-R) support multilingual text, we have not evaluated cross-lingual transfer or performance on non-English datasets.
+
+**Mitigation**: The framework architecture is language-agnostic, and extending to other languages primarily requires different datasets and evaluation protocols rather than code modifications. The modular design in [src/](./src/) supports such extensions.
+
+**Future Direction**: Systematic evaluation on multilingual benchmarks (XNLI, PAWS-X) and investigation of cross-lingual transfer learning techniques. Multilingual support tracked in [ROADMAP.md](./ROADMAP.md).
+
+## 1.8 Organization of Documentation
+
+This project provides extensive documentation organized according to progressive disclosure principles, allowing users to engage at levels appropriate to their expertise and goals.
+
+### 1.8.1 Entry Points by User Type
+
+**New Users Seeking Quick Start**:
+
+- [QUICK_START.md](./QUICK_START.md): Minimal setup to first working model in under 10 minutes
+- [quickstart/auto_start.py](./quickstart/auto_start.py): Single-command demo requiring no configuration
+- [docs/getting_started/installation.md](./docs/getting_started/installation.md): Comprehensive installation guide for different platforms
+- [quickstart/decision_tree.py](./quickstart/decision_tree.py): Interactive CLI for guided model selection
+
+**Practitioners Seeking Best Practices**:
+
+- [SOTA_MODELS_GUIDE.md](./SOTA_MODELS_GUIDE.md): Model selection flowcharts and performance comparisons
+- [docs/user_guide/](./docs/user_guide/): Detailed guides on data preparation, training, evaluation, and deployment
+- [docs/best_practices/](./docs/best_practices/): Domain-specific recommendations for model selection, hyperparameter tuning, and avoiding common pitfalls
+- [notebooks/01_tutorials/](./notebooks/01_tutorials/): Interactive Jupyter tutorials with executable examples
+
+**Researchers Seeking Theoretical Depth**:
+
+- [OVERFITTING_PREVENTION.md](./OVERFITTING_PREVENTION.md): Complete theoretical framework including proofs and statistical guarantees
+- [ARCHITECTURE.md](./ARCHITECTURE.md): Detailed system architecture with transformer internals and optimization techniques
+- [docs/level_3_advanced/](./docs/level_3_advanced/): Advanced topics including custom model development and research workflows
+- [experiments/](./experiments/): Ablation studies, hyperparameter searches, and baseline comparisons with full experimental protocols
+
+**Developers Seeking to Extend the System**:
+
+- [docs/developer_guide/](./docs/developer_guide/): Architecture overview, coding standards, and extension points
+- [docs/api_reference/](./docs/api_reference/): Complete API documentation for all modules
+- [CONTRIBUTING.md](./CONTRIBUTING.md): Guidelines for contributing code, documentation, and bug reports
+- [ARCHITECTURE.md](./ARCHITECTURE.md): Design patterns and architectural decisions
+
+### 1.8.2 Document Hierarchy and Specialization
+
+To avoid duplication and maintain a single source of truth, different documents have clearly defined scopes:
+
+**[README.md](./README.md)** (This Document):
+- High-level introduction to the project and its motivation
+- Overview of theoretical foundations with links to detailed treatments
+- Dataset description and experimental setup (Section 2)
+- Quick start instructions and navigation guide
+
+**[OVERFITTING_PREVENTION.md](./OVERFITTING_PREVENTION.md)**:
+- Complete mathematical treatment of generalization theory
+- Detailed description of overfitting prevention architecture
+- Empirical validation of prevention mechanisms
+- Decision trees for selecting prevention strategies
+
+**[ARCHITECTURE.md](./ARCHITECTURE.md)**:
+- System architecture and component interactions
+- Detailed explanations of transformer architectures
+- Optimization techniques and efficiency considerations
+- Design patterns and extension points
+
+**[SOTA_MODELS_GUIDE.md](./SOTA_MODELS_GUIDE.md)**:
+- Model zoo overview and tier descriptions
+- Performance benchmarks and accuracy-efficiency trade-offs
+- Hyperparameter recommendations for each model family
+- Selection flowcharts for different use cases
+
+**[PLATFORM_OPTIMIZATION_GUIDE.md](./PLATFORM_OPTIMIZATION_GUIDE.md)**:
+- Platform detection mechanisms
+- Resource profiling and quota management
+- Checkpoint synchronization strategies
+- Platform-specific optimization techniques
+
+**User Guides in [docs/user_guide/](./docs/user_guide/)**:
+- Step-by-step instructions for common workflows
+- Code examples and configuration templates
+- Troubleshooting common issues
+- Best practices for specific tasks
+
+**API Reference in [docs/api_reference/](./docs/api_reference/)**:
+- Function and class signatures
+- Parameter descriptions and types
+- Return value specifications
+- Usage examples for each API component
+
+This hierarchical organization ensures that:
+
+1. Users can find information at the appropriate level of detail
+2. Each piece of information has a single authoritative source
+3. Updates to concepts need to be made in only one location
+4. Cross-references guide users to related information in other documents
+
+For a visual overview of the documentation structure, see [docs/00_START_HERE.md](./docs/00_START_HERE.md), which provides a guided navigation map based on your learning objectives and experience level.
+
+
 
 ## Project Structure
 
