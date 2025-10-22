@@ -1,9 +1,5 @@
 # AG News Text Classification
 
-**Intuition**:
-- Maximize probability that target word appears in context: &#963;(𝐮<sub>w<sub>c</sub></sub><sup>T</sup> 𝐯<sub>w<sub>t</sub></sub>) &#8594; 1  
-- Minimize probability that random words appear: &#963;(𝐮<sub>w<sub>i</sub></sub><sup>T</sup> 𝐯<sub>w<sub>t</sub></sub>) &#8594; 0
-
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -805,8 +801,8 @@ $$
 where $f(w)$ is word frequency.
 
 **Intuition**:
-- Maximize probability that target word appears in context: &#963;(<i>𝘶</i><sub>w<sub>c</sub></sub><sup>T</sup><i>𝘷</i><sub>w<sub>t</sub></sub>) &#8594; 1  
-- Minimize probability that random words appear: &#963;(<i>𝘶</i><sub>w<sub>i</sub></sub><sup>T</sup><i>𝘷</i><sub>w<sub>t</sub></sub>) &#8594; 0
+- Maximize probability that target word appears in context: &#963;(𝐮<sub>w<sub>c</sub></sub><sup>T</sup> 𝐯<sub>w<sub>t</sub></sub>) &#8594; 1  
+- Minimize probability that random words appear: &#963;(𝐮<sub>w<sub>i</sub></sub><sup>T</sup> 𝐯<sub>w<sub>t</sub></sub>) &#8594; 0
 
 **Complexity**: $O(|\mathcal{V}|) \rightarrow O(k)$ per word, typically $k=5-20$
 
