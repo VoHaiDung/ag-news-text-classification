@@ -704,11 +704,715 @@ All these approaches treat words as atomic units with fixed representations, fai
 
 This motivated the paradigm shift to learned distributed representations in Phase 2.
 
+#### Phase 2: Neural Embeddings and Deep Learning (2010-2017)
+
+**Revolutionary Insight: The Distributional Hypothesis**
+
+> "You shall know a word by the company it keeps" — J.R. Firth (1957)
+
+Words appearing in similar contexts should have similar meanings. This principle enables learning dense vector representations from word co-occurrence patterns in large unlabeled corpora.
+
+**Paradigm Shift**: Instead of treating words as atomic symbols with arbitrary IDs, represent them as **continuous vectors** in a learned semantic space where geometric relationships correspond to semantic relationships.
+
+**Word2Vec: Neural Embedding Learning (Mikolov et al., 2013)**
+
+Two complementary architectures for learning distributed word representations:
+
+**Architecture 1: Continuous Bag-of-Words (CBOW)**
+
+**Objective**: Predict center word from surrounding context words.
+
+Given context window of size $c$, predict target word $w_t$ from context $\{w_{t-c}, \ldots, w_{t-1}, w_{t+1}, \ldots, w_{t+c}\}$.
+
+**Model Architecture**:
+
+1. **Input Layer**: One-hot encoded context words $\mathbf{x}_{t-c}, \ldots, \mathbf{x}_{t-1}, \mathbf{x}_{t+1}, \ldots, \mathbf{x}_{t+c} \in \{0,1\}^{|\mathcal{V}|}$
+
+2. **Embedding Layer**: Map to dense vectors via embedding matrix $\mathbf{E} \in \mathbb{R}^{d \times |\mathcal{V}|}$:
+   $$\mathbf{v}_{t+j} = \mathbf{E} \mathbf{x}_{t+j} \in \mathbb{R}^d$$
+
+3. **Context Representation**: Average context embeddings:
+   $$\mathbf{h} = \frac{1}{2c} \sum_{j \in \{-c, \ldots, -1, 1, \ldots, c\}} \mathbf{v}_{t+j}$$
+
+4. **Output Layer**: Predict target word via softmax over vocabulary:
+   $$P(w_t \mid \text{context}) = \frac{\exp(\mathbf{u}_{w_t}^\top \mathbf{h})}{\sum_{w \in \mathcal{V}} \exp(\mathbf{u}_w^\top \mathbf{h})}$$
+   
+   where $\mathbf{u}_w \in \mathbb{R}^d$ is the output embedding for word $w$.
+
+**Training Objective**: Maximize log-likelihood over corpus:
+
+$$
+\mathcal{L}_{\text{CBOW}} = \sum_{t=1}^T \log P(w_t \mid w_{t-c}, \ldots, w_{t-1}, w_{t+1}, \ldots, w_{t+c})
+$$
+
+**Architecture 2: Skip-Gram**
+
+**Objective**: Predict context words from center word (inverse of CBOW).
+
+Given target word $w_t$, predict each context word $w_{t+j}$ independently.
+
+**Model**: For each context position $j \in \{-c, \ldots, -1, 1, \ldots, c\}$:
+
+$$
+P(w_{t+j} \mid w_t) = \frac{\exp(\mathbf{u}_{w_{t+j}}^\top \mathbf{v}_{w_t})}{\sum_{w \in \mathcal{V}} \exp(\mathbf{u}_w^\top \mathbf{v}_{w_t})}
+$$
+
+where:
+- $\mathbf{v}_{w_t} \in \mathbb{R}^d$: Input embedding of center word
+- $\mathbf{u}_{w_{t+j}} \in \mathbb{R}^d$: Output embedding of context word
+
+**Training Objective**: Maximize log-likelihood:
+
+$$
+\mathcal{L}_{\text{Skip-gram}} = \sum_{t=1}^T \sum_{j \in \{-c, \ldots, c\}, j \neq 0} \log P(w_{t+j} \mid w_t)
+$$
+
+**Computational Challenge**: Softmax denominator requires summing over entire vocabulary (50,000+ terms) for each prediction—computationally prohibitive.
+
+**Solution 1: Hierarchical Softmax**
+
+Replace flat softmax with binary tree structure (Huffman tree based on word frequency).
+
+**Probability Computation**: Path from root to word $w$ with $L(w)$ nodes:
+
+$$
+P(w \mid w_t) = \prod_{i=1}^{L(w)-1} \sigma\left(\llbracket n(w, i+1) = \text{left}(n(w, i)) \rrbracket \cdot \mathbf{u}_{n(w,i)}^\top \mathbf{v}_{w_t}\right)
+$$
+
+where:
+- $n(w, i)$: $i$-th node on path to word $w$
+- $\llbracket \cdot \rrbracket$: Indicator function (1 if true, -1 if false)
+- $\sigma(z) = 1/(1 + e^{-z})$: Sigmoid function
+
+**Complexity Reduction**: $O(|\mathcal{V}|) \rightarrow O(\log |\mathcal{V}|)$ per word
+
+**Solution 2: Negative Sampling**
+
+Approximate softmax by discriminating target word from $k$ random "negative" samples.
+
+**Modified Objective**: For each target word $w_t$ and context $w_c$, sample $k$ negative words $w_i \sim P_{\text{noise}}$:
+
+$$
+\mathcal{L}_{\text{NEG}} = \log \sigma(\mathbf{u}_{w_c}^\top \mathbf{v}_{w_t}) + \sum_{i=1}^k \mathbb{E}_{w_i \sim P_{\text{noise}}} \left[\log \sigma(-\mathbf{u}_{w_i}^\top \mathbf{v}_{w_t})\right]
+$$
+
+**Noise Distribution**: Empirically, unigram distribution raised to power 3/4 works best:
+
+$$
+P_{\text{noise}}(w) = \frac{f(w)^{3/4}}{\sum_{w' \in \mathcal{V}} f(w')^{3/4}}
+$$
+
+where $f(w)$ is word frequency.
+
+**Intuition**: 
+- Maximize probability that target word appears in context: $\sigma(\mathbf{u}_{w_c}^\top \mathbf{v}_{w_t}) \rightarrow 1$
+- Minimize probability that random words appear: $\sigma(\mathbf{u}_{w_i}^\top \mathbf{v}_{w_t}) \rightarrow 0$
+
+**Complexity**: $O(|\mathcal{V}|) \rightarrow O(k)$ per word, typically $k=5-20$
+
+**Emergent Semantic Properties**
+
+After training on billions of words (e.g., Google News corpus: 100B tokens), word vectors exhibit remarkable **linear regularities**:
+
+**Semantic Analogies**:
+
+$$
+\mathbf{v}(\text{king}) - \mathbf{v}(\text{man}) + \mathbf{v}(\text{woman}) \approx \mathbf{v}(\text{queen})
+$$
+
+$$
+\mathbf{v}(\text{Paris}) - \mathbf{v}(\text{France}) + \mathbf{v}(\text{Italy}) \approx \mathbf{v}(\text{Rome})
+$$
+
+**Syntactic Analogies**:
+
+$$
+\mathbf{v}(\text{walking}) - \mathbf{v}(\text{walk}) \approx \mathbf{v}(\text{swimming}) - \mathbf{v}(\text{swim})
+$$
+
+(verb tense transformation)
+
+$$
+\mathbf{v}(\text{slow}) - \mathbf{v}(\text{slower}) \approx \mathbf{v}(\text{fast}) - \mathbf{v}(\text{faster})
+$$
+
+(comparative form)
+
+**Cosine Similarity Clustering**: Semantically related words have high cosine similarity:
+
+$$
+\cos(\mathbf{v}_i, \mathbf{v}_j) = \frac{\mathbf{v}_i^\top \mathbf{v}_j}{\|\mathbf{v}_i\| \|\mathbf{v}_j\|}
+$$
+
+**Examples**:
+- Countries: $\{\text{France}, \text{Germany}, \text{Italy}, \text{Spain}\}$ have pairwise similarity $>0.7$
+- Sports: $\{\text{football}, \text{basketball}, \text{tennis}, \text{soccer}\}$ have pairwise similarity $>0.6$
+
+**Geometric Interpretation**: Word vectors organize into coherent semantic and syntactic subspaces where:
+- **Direction** encodes relationships (gender, tense, plurality)
+- **Distance** measures semantic similarity
+
+**GloVe: Global Vectors for Word Representation (Pennington et al., 2014)**
+
+**Motivation**: Word2Vec relies on local context windows, potentially missing global corpus statistics.
+
+**Core Idea**: Directly factorize word co-occurrence matrix to leverage global statistics.
+
+**Co-occurrence Matrix**: Define $X_{ij}$ as number of times word $j$ appears in context of word $i$:
+
+$$
+X_{ij} = \sum_{t=1}^T \sum_{k=-c}^c \mathbb{I}[w_t = i \wedge w_{t+k} = j]
+$$
+
+**Objective**: Learn vectors such that their dot product equals log co-occurrence:
+
+$$
+\mathbf{w}_i^\top \mathbf{w}_j + b_i + b_j \approx \log X_{ij}
+$$
+
+where $b_i, b_j$ are bias terms for words $i, j$.
+
+**Weighted Least Squares Loss**:
+
+$$
+\mathcal{L}_{\text{GloVe}} = \sum_{i,j=1}^{|\mathcal{V}|} f(X_{ij}) \left(\mathbf{w}_i^\top \mathbf{w}_j + b_i + b_j - \log X_{ij}\right)^2
+$$
+
+**Weighting Function**: Prevent common word pairs from dominating:
+
+$$
+f(x) = \begin{cases}
+(x / x_{\max})^\alpha & \text{if } x < x_{\max} \\
+1 & \text{otherwise}
+\end{cases}
+$$
+
+Typical values: $x_{\max} = 100$, $\alpha = 0.75$.
+
+**Intuition**:
+- Rare co-occurrences ($X_{ij}$ small): Low weight (unreliable statistics)
+- Very common co-occurrences ($X_{ij} > x_{\max}$): Capped weight (prevent dominance)
+- Intermediate frequencies: Highest relative weight
+
+**Advantage over Word2Vec**: Captures global corpus statistics, not just local windows. Empirically achieves better performance on word analogy tasks (75% → 80% accuracy).
+
+**Neural Classification Architectures**
+
+**Convolutional Neural Networks for Text (Kim, 2014)**
+
+**Architecture Pipeline**:
+
+1. **Embedding Layer**: Map words to dense vectors
+   $$\mathbf{x}_{1:n} = [\mathbf{v}_{w_1}, \mathbf{v}_{w_2}, \ldots, \mathbf{v}_{w_n}]$$
+   where each $\mathbf{v}_{w_i} \in \mathbb{R}^d$ (typically $d=300$ from pre-trained Word2Vec/GloVe)
+
+2. **Convolutional Filters**: Detect n-gram patterns
+
+   For filter $\mathbf{W} \in \mathbb{R}^{k \times d}$ of height $k$ (n-gram size):
+   
+   $$c_i = f\left(\mathbf{W} \cdot \mathbf{x}_{i:i+k-1} + b\right)$$
+   
+   where:
+   - $\mathbf{x}_{i:i+k-1} = [\mathbf{v}_{w_i}; \mathbf{v}_{w_{i+1}}; \ldots; \mathbf{v}_{w_{i+k-1}}] \in \mathbb{R}^{kd}$ is concatenation of $k$ consecutive word vectors
+   - $f$ is activation function (typically ReLU: $f(z) = \max(0, z)$)
+   - $b \in \mathbb{R}$ is bias term
+
+   This produces feature map:
+   $$\mathbf{c} = [c_1, c_2, \ldots, c_{n-k+1}] \in \mathbb{R}^{n-k+1}$$
+
+3. **Max-Pooling**: Extract most important feature from each filter
+   $$\hat{c} = \max(\mathbf{c}) = \max\{c_1, c_2, \ldots, c_{n-k+1}\}$$
+
+4. **Multiple Filter Sizes**: Use filters of different heights ($k \in \{3, 4, 5\}$) with $m$ filters per size
+   $$\mathbf{z} = [\hat{c}_1^{(3)}, \ldots, \hat{c}_m^{(3)}, \hat{c}_1^{(4)}, \ldots, \hat{c}_m^{(4)}, \hat{c}_1^{(5)}, \ldots, \hat{c}_m^{(5)}] \in \mathbb{R}^{3m}$$
+
+5. **Fully Connected Layer**: Classification
+   $$\mathbf{y} = \text{softmax}(\mathbf{W}_{\text{fc}} \mathbf{z} + \mathbf{b}_{\text{fc}})$$
+
+**Intuition**: 
+- 3-gram filters detect trigrams: "not very good", "extremely happy"
+- 4-gram filters detect 4-word phrases: "very easy to use"
+- 5-gram filters detect longer patterns: "I would highly recommend this"
+
+**Advantages**:
+1. **Captures Local Patterns**: N-grams indicative of sentiment/topic
+2. **Translation Invariant**: Same filter applied everywhere
+3. **Parallel Computation**: All filters computed simultaneously (fast on GPUs)
+4. **Pre-trained Embeddings**: Initialize with Word2Vec/GloVe (transfer learning)
+
+**Limitations**:
+1. **Fixed Receptive Field**: Cannot capture dependencies beyond n-gram size
+2. **Loses Long-Range Order**: Max-pooling discards position information
+3. **No Sequential Dependencies**: Unlike RNNs, doesn't model word order globally
+
+**Recurrent Neural Networks: Long Short-Term Memory (LSTM)**
+
+**Motivation**: Standard RNNs suffer from **vanishing gradient problem**—gradients decay exponentially with sequence length, preventing learning of long-term dependencies.
+
+**Vanishing Gradient in Standard RNN**:
+
+For RNN $\mathbf{h}_t = \tanh(\mathbf{W} \mathbf{h}_{t-1} + \mathbf{U} \mathbf{x}_t)$, gradient at step $t$ w.r.t. step $t-k$:
+
+$$
+\frac{\partial \mathbf{h}_t}{\partial \mathbf{h}_{t-k}} = \prod_{i=t-k+1}^t \frac{\partial \mathbf{h}_i}{\partial \mathbf{h}_{i-1}} = \prod_{i=t-k+1}^t \mathbf{W}^\top \text{diag}[\tanh'(\cdot)]
+$$
+
+Since $|\tanh'(z)| \leq 1$ and typically $\|\mathbf{W}\| < 1$ for stability, gradients decay as:
+
+$$
+\left\|\frac{\partial \mathbf{h}_t}{\partial \mathbf{h}_{t-k}}\right\| \approx \gamma^k \quad \text{where } \gamma < 1
+$$
+
+For $k=100$ and $\gamma = 0.9$: gradient is $0.9^{100} \approx 10^{-5}$ (vanished!).
+
+**LSTM Solution (Hochreiter & Schmidhuber, 1997)**
+
+Introduce **gating mechanisms** to control information flow, enabling gradients to flow unchanged across many time steps.
+
+**Four Components**:
+
+**1. Forget Gate** $\mathbf{f}_t$ (what to discard from cell state):
+
+$$
+\mathbf{f}_t = \sigma(\mathbf{W}_f \cdot [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_f)
+$$
+
+where $\sigma(z) = 1/(1+e^{-z})$ is sigmoid function outputting values in $(0, 1)$.
+
+**2. Input Gate** $\mathbf{i}_t$ (what new information to store):
+
+$$
+\mathbf{i}_t = \sigma(\mathbf{W}_i \cdot [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_i)
+$$
+
+**Candidate Values** $\tilde{\mathbf{C}}_t$ (potential new information):
+
+$$
+\tilde{\mathbf{C}}_t = \tanh(\mathbf{W}_C \cdot [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_C)
+$$
+
+**3. Cell State Update** $\mathbf{C}_t$ (memory highway):
+
+$$
+\mathbf{C}_t = \mathbf{f}_t \odot \mathbf{C}_{t-1} + \mathbf{i}_t \odot \tilde{\mathbf{C}}_t
+$$
+
+where $\odot$ is element-wise (Hadamard) product.
+
+**Interpretation**:
+- $\mathbf{f}_t \odot \mathbf{C}_{t-1}$: Selectively forget old memory (forget gate acts as filter)
+- $\mathbf{i}_t \odot \tilde{\mathbf{C}}_t$: Selectively add new information (input gate controls flow)
+
+**4. Output Gate** $\mathbf{o}_t$ (what to output):
+
+$$
+\mathbf{o}_t = \sigma(\mathbf{W}_o \cdot [\mathbf{h}_{t-1}, \mathbf{x}_t] + \mathbf{b}_o)
+$$
+
+**Hidden State**:
+
+$$
+\mathbf{h}_t = \mathbf{o}_t \odot \tanh(\mathbf{C}_t)
+$$
+
+**Geometric Interpretation**:
+
+- **Cell State $\mathbf{C}_t$**: "Memory highway" carrying information across time with minimal transformation
+- **Gates** (sigmoid outputs $\in (0,1)$): Differentiable switches
+  - $\sigma(z) \approx 1$: Gate open (information flows)
+  - $\sigma(z) \approx 0$: Gate closed (information blocked)
+
+**Gradient Flow**: Crucial property enabling long-term learning:
+
+$$
+\frac{\partial \mathbf{C}_t}{\partial \mathbf{C}_{t-1}} = \mathbf{f}_t
+$$
+
+Since $\mathbf{f}_t \in (0,1)$ is learned (not fixed like $\mathbf{W}$ in RNN), the network can learn to set $\mathbf{f}_t \approx 1$ for important information, allowing gradients to flow unchanged across 100+ steps.
+
+**Concrete Example**: 
+
+Sentence: "The cat, which I saw yesterday in the park while I was walking, was sleeping."
+
+**Challenge**: Predict verb "was" (singular) requiring subject "cat" from 12 words earlier.
+
+**LSTM Behavior**:
+1. At "cat": Input gate $\mathbf{i}_t$ opens, stores "singular subject" in cell state $\mathbf{C}_t$
+2. During intervening clause: Forget gate $\mathbf{f}_t \approx 1$ preserves "singular" information
+3. At "was": Output gate $\mathbf{o}_t$ opens, retrieves "singular" → selects "was" (not "were")
+
+**Bidirectional LSTM (BiLSTM)**:
+
+Process sequence in both directions:
+
+$$
+\begin{aligned}
+\overrightarrow{\mathbf{h}}_t &= \text{LSTM}(\overrightarrow{\mathbf{h}}_{t-1}, \mathbf{x}_t) \quad \text{(forward)} \\
+\overleftarrow{\mathbf{h}}_t &= \text{LSTM}(\overleftarrow{\mathbf{h}}_{t+1}, \mathbf{x}_t) \quad \text{(backward)} \\
+\mathbf{h}_t &= [\overrightarrow{\mathbf{h}}_t; \overleftarrow{\mathbf{h}}_t] \quad \text{(concatenate)}
+\end{aligned}
+$$
+
+**Advantage**: Access to both past and future context (crucial for classification where entire document is available).
+
+**Advantages of LSTMs**:
+1. **Long-Range Dependencies**: Captures patterns across 100+ tokens
+2. **Variable Length**: Naturally handles sequences of any length
+3. **Sequential Structure**: Models inherent word order
+4. **Bidirectionality**: BiLSTM sees full context
+
+**Limitations**:
+1. **Sequential Processing**: Cannot parallelize across time steps (slow training)
+2. **Still Limited**: Struggles with 500+ token dependencies
+3. **Computational Cost**: Requires two passes for BiLSTM
+
+**Critical Limitation of Phase 2: Context-Independent Embeddings**
+
+**Fundamental Problem**: Word2Vec and GloVe produce **static embeddings**—each word receives a single fixed vector regardless of context.
+
+**Example Failure**: Word "bank"
+
+Word2Vec assigns fixed vector $\mathbf{v}_{\text{bank}}$ used in both:
+- "I deposited money at the **bank**" (financial institution)
+- "We sat by the river **bank**" (land alongside water)
+
+These usages have completely different meanings, but receive identical representations!
+
+**Attempted Solution**: Use LSTM to compute contextualized representations:
+
+$$
+\mathbf{h}_t = \text{BiLSTM}(\mathbf{v}_{w_1}, \ldots, \mathbf{v}_{w_t}, \ldots, \mathbf{v}_{w_n})
+$$
+
+**Remaining Issue**: LSTM still initializes from static embeddings and suffers from:
+- Sequential processing bottleneck
+- Limited context window (100-200 tokens effective range)
+- Difficulty modeling very long-range dependencies
+
+**This limitation motivated Phase 3: Attention mechanisms enabling truly context-dependent representations with global receptive field.**
+
 ---
 
-*Continuing with Phase 2 in next response due to length...*
+#### Phase 3: Attention Mechanisms and Transformers (2017-2019)
 
-Would you like me to continue with Phase 2 (Neural Embeddings), Phase 3 (Transformers), etc.? I'll maintain this level of mathematical rigor and detailed explanation throughout.
+**The Attention Revolution**
+
+**Core Insight**: Instead of forcing the network to compress entire sequence into fixed-size vector, allow it to selectively **attend** to relevant parts for each prediction.
+
+**Self-Attention Mechanism**
+
+**Motivation**: For each token, compute representation as weighted combination of all tokens in sequence, with weights determined by relevance.
+
+**Mathematical Formulation**:
+
+Given input sequence of $n$ tokens represented as matrix:
+
+$$
+\mathbf{X} = [\mathbf{x}_1, \mathbf{x}_2, \ldots, \mathbf{x}_n]^\top \in \mathbb{R}^{n \times d}
+$$
+
+where each $\mathbf{x}_i \in \mathbb{R}^d$ is token embedding.
+
+**Step 1: Linear Projections**
+
+Transform input to three representations via learned matrices:
+
+$$
+\begin{aligned}
+\mathbf{Q} &= \mathbf{X} \mathbf{W}_Q \in \mathbb{R}^{n \times d_k} \quad \text{(Queries)} \\
+\mathbf{K} &= \mathbf{X} \mathbf{W}_K \in \mathbb{R}^{n \times d_k} \quad \text{(Keys)} \\
+\mathbf{V} &= \mathbf{X} \mathbf{W}_V \in \mathbb{R}^{n \times d_v} \quad \text{(Values)}
+\end{aligned}
+$$
+
+where $\mathbf{W}_Q, \mathbf{W}_K \in \mathbb{R}^{d \times d_k}$ and $\mathbf{W}_V \in \mathbb{R}^{d \times d_v}$ are learned projection matrices.
+
+**Interpretation**:
+- **Query** $\mathbf{q}_i$: "What am I looking for?" (what information does token $i$ need)
+- **Key** $\mathbf{k}_j$: "What information do I contain?" (what token $j$ offers)
+- **Value** $\mathbf{v}_j$: "What information do I provide?" (actual content from token $j$)
+
+**Step 2: Compute Attention Scores**
+
+Measure relevance between all token pairs via dot product:
+
+$$
+\mathbf{S} = \mathbf{Q} \mathbf{K}^\top \in \mathbb{R}^{n \times n}
+$$
+
+where $S_{ij} = \mathbf{q}_i^\top \mathbf{k}_j$ measures compatibility between query $i$ and key $j$.
+
+**Scaled Dot-Product** (prevent gradients from vanishing):
+
+$$
+\mathbf{S} = \frac{\mathbf{Q} \mathbf{K}^\top}{\sqrt{d_k}}
+$$
+
+**Why scaling?** For random vectors $\mathbf{q}, \mathbf{k} \in \mathbb{R}^{d_k}$ with unit variance:
+
+$$
+\mathbb{E}[\mathbf{q}^\top \mathbf{k}] = 0, \quad \text{Var}[\mathbf{q}^\top \mathbf{k}] = d_k
+$$
+
+Dot products grow with dimension → softmax saturates → gradients vanish. Dividing by $\sqrt{d_k}$ maintains unit variance.
+
+**Step 3: Attention Weights**
+
+Convert scores to probability distribution via softmax (row-wise):
+
+$$
+\mathbf{A} = \text{softmax}(\mathbf{S}) \in \mathbb{R}^{n \times n}
+$$
+
+$$
+A_{ij} = \frac{\exp(S_{ij})}{\sum_{k=1}^n \exp(S_{ik})}
+$$
+
+**Properties**:
+- Each row sums to 1: $\sum_{j=1}^n A_{ij} = 1$
+- All values positive: $A_{ij} \in (0, 1)$
+- $A_{ij}$ represents "how much token $i$ attends to token $j$"
+
+**Step 4: Weighted Aggregation**
+
+Compute output as attention-weighted sum of values:
+
+$$
+\mathbf{Z} = \mathbf{A} \mathbf{V} \in \mathbb{R}^{n \times d_v}
+$$
+
+$$
+\mathbf{z}_i = \sum_{j=1}^n A_{ij} \mathbf{v}_j
+$$
+
+**Complete Self-Attention Formula**:
+
+$$
+\text{Attention}(\mathbf{Q}, \mathbf{K}, \mathbf{V}) = \text{softmax}\left(\frac{\mathbf{Q} \mathbf{K}^\top}{\sqrt{d_k}}\right) \mathbf{V}
+$$
+
+**Concrete Example**:
+
+Sentence: "The cat sat on the mat"
+
+For token "sat" (query):
+- High attention to "cat" (subject performing action): $A_{\text{sat,cat}} = 0.45$
+- High attention to "mat" (object of preposition): $A_{\text{sat,mat}} = 0.30$
+- Moderate attention to "on" (preposition): $A_{\text{sat,on}} = 0.15$
+- Low attention to "the": $A_{\text{sat,the}} = 0.05$ each
+
+Output representation $\mathbf{z}_{\text{sat}}$ is weighted combination:
+
+$$
+\mathbf{z}_{\text{sat}} = 0.45 \mathbf{v}_{\text{cat}} + 0.30 \mathbf{v}_{\text{mat}} + 0.15 \mathbf{v}_{\text{on}} + \ldots
+$$
+
+This representation captures that "sat" relates primarily to "cat" and "mat"—syntactic and semantic structure discovered automatically!
+
+**Multi-Head Attention**
+
+**Motivation**: Single attention mechanism may focus on one relationship type (e.g., syntactic). Multiple heads can capture different relationship types in parallel.
+
+**Formulation**: Run $h$ attention heads with different projection matrices:
+
+$$
+\text{head}_i = \text{Attention}(\mathbf{Q} \mathbf{W}_Q^i, \mathbf{K} \mathbf{W}_K^i, \mathbf{V} \mathbf{W}_V^i)
+$$
+
+where $\mathbf{W}_Q^i, \mathbf{W}_K^i \in \mathbb{R}^{d \times d_k}$, $\mathbf{W}_V^i \in \mathbb{R}^{d \times d_v}$ are learned parameters for head $i$.
+
+**Concatenate and Project**:
+
+$$
+\text{MultiHead}(\mathbf{Q}, \mathbf{K}, \mathbf{V}) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h) \mathbf{W}^O
+$$
+
+where $\mathbf{W}^O \in \mathbb{R}^{h \cdot d_v \times d}$ projects back to original dimension.
+
+**Typical Configuration**: 
+- BERT-Base: $h=12$ heads, $d_k = d_v = d/h = 768/12 = 64$
+- Each head has 64-dimensional queries/keys/values
+
+**Empirical Finding**: Different heads specialize in different patterns:
+
+- **Head 1**: Subject-verb agreement ("cat **was**" vs. "cats **were**")
+- **Head 2**: Object-verb relationships
+- **Head 3**: Prepositional attachments
+- **Head 4**: Coreference resolution (pronouns → antecedents: "John ... **he**")
+- **Head 5**: Positional proximity (adjacent words)
+- **Head 6**: Semantic similarity (synonyms, related concepts)
+
+**Visualization**: Attention patterns reveal linguistic structure without explicit supervision!
+
+**The Transformer Architecture (Vaswani et al., 2017)**
+
+**Revolutionary Design**: Entirely based on attention, completely removing recurrence and convolution.
+
+**Encoder Architecture** (for classification):
+
+```
+Input Tokens
+    ↓
+Token Embedding + Positional Encoding
+    ↓
+┌─────────────────────────────────┐
+│  Encoder Block (×N layers)      │
+│  ┌───────────────────────────┐  │
+│  │ Multi-Head Self-Attention │  │
+│  └───────────────────────────┘  │
+│            ↓                     │
+│      Add & Normalize             │
+│            ↓                     │
+│  ┌───────────────────────────┐  │
+│  │  Feed-Forward Network     │  │
+│  └───────────────────────────┘  │
+│            ↓                     │
+│      Add & Normalize             │
+└─────────────────────────────────┘
+    ↓
+Classification Head (pooling + linear)
+    ↓
+Output Probabilities
+```
+
+**Key Components**:
+
+**1. Positional Encoding**
+
+**Problem**: Attention is **permutation invariant**—reordering tokens doesn't change attention output. But word order matters in language!
+
+**Solution**: Add position-dependent patterns to input embeddings.
+
+**Sinusoidal Encoding** (original Transformer):
+
+$$
+\begin{aligned}
+PE_{(\text{pos}, 2i)} &= \sin\left(\frac{\text{pos}}{10000^{2i/d}}\right) \\
+PE_{(\text{pos}, 2i+1)} &= \cos\left(\frac{\text{pos}}{10000^{2i/d}}\right)
+\end{aligned}
+$$
+
+where:
+- $\text{pos} \in \{0, 1, \ldots, n-1\}$: Position in sequence
+- $i \in \{0, 1, \ldots, d/2-1\}$: Dimension index
+- Even dimensions use sine, odd use cosine
+
+**Properties**:
+- Each position has unique encoding
+- Relative positions have consistent patterns: $PE_{\text{pos}+k}$ is linear function of $PE_{\text{pos}}$ (enables learning of relative position relationships)
+- Extrapolates to longer sequences than seen during training
+
+**Alternative: Learned Positional Embeddings** (BERT):
+
+$$
+PE_{\text{pos}} = \mathbf{W}_{\text{pos}}[\text{pos}] \in \mathbb{R}^d
+$$
+
+where $\mathbf{W}_{\text{pos}} \in \mathbb{R}^{n_{\max} \times d}$ is learned embedding matrix for positions up to $n_{\max}$.
+
+**Input to First Layer**:
+
+$$
+\mathbf{x}_i^{(0)} = \text{TokenEmbed}(w_i) + PE_i
+$$
+
+**2. Feed-Forward Network**
+
+Applied independently to each position (no interaction between positions):
+
+$$
+\text{FFN}(\mathbf{x}) = \max(0, \mathbf{x} \mathbf{W}_1 + \mathbf{b}_1) \mathbf{W}_2 + \mathbf{b}_2
+$$
+
+where:
+- $\mathbf{W}_1 \in \mathbb{R}^{d \times d_{\text{ff}}}$: Expand dimension (typically $d_{\text{ff}} = 4d$)
+- $\mathbf{W}_2 \in \mathbb{R}^{d_{\text{ff}} \times d}$: Project back
+- ReLU activation: $\max(0, \cdot)$
+
+**Intuition**: 
+- Self-attention mixes information across positions
+- FFN processes each position independently to extract features
+
+**3. Layer Normalization**
+
+Normalize activations across feature dimension (not batch like BatchNorm):
+
+$$
+\text{LayerNorm}(\mathbf{x}) = \gamma \odot \frac{\mathbf{x} - \mu}{\sqrt{\sigma^2 + \epsilon}} + \beta
+$$
+
+where:
+- $\mu = \frac{1}{d} \sum_{i=1}^d x_i$: Mean across features
+- $\sigma^2 = \frac{1}{d} \sum_{i=1}^d (x_i - \mu)^2$: Variance
+- $\gamma, \beta \in \mathbb{R}^d$: Learned scale and shift parameters
+- $\epsilon$: Small constant for numerical stability (typically $10^{-12}$)
+
+**Why Layer Norm?** Stabilizes training of deep networks by preventing internal covariate shift.
+
+**4. Residual Connections**
+
+Add input to output of each sublayer:
+
+$$
+\mathbf{x}^{(\ell+1)} = \text{LayerNorm}(\mathbf{x}^{(\ell)} + \text{Sublayer}(\mathbf{x}^{(\ell)}))
+$$
+
+**Benefit**: Enable gradient flow through deep networks (up to 24 layers in BERT-Large).
+
+**Gradient Backpropagation**: Residual connections create direct paths:
+
+$$
+\frac{\partial \mathbf{x}^{(L)}}{\partial \mathbf{x}^{(0)}} = \mathbf{I} + \frac{\partial}{\partial \mathbf{x}^{(0)}} \sum_{\ell=1}^L \text{Sublayer}^{(\ell)}
+$$
+
+Identity $\mathbf{I}$ ensures gradient has magnitude at least 1 (prevents vanishing).
+
+**Complete Encoder Layer**:
+
+$$
+\begin{aligned}
+\mathbf{z}^{(\ell)} &= \text{LayerNorm}(\mathbf{x}^{(\ell-1)} + \text{MultiHead}(\mathbf{x}^{(\ell-1)})) \\
+\mathbf{x}^{(\ell)} &= \text{LayerNorm}(\mathbf{z}^{(\ell)} + \text{FFN}(\mathbf{z}^{(\ell)}))
+\end{aligned}
+$$
+
+**Advantages Over RNNs and CNNs**:
+
+| Aspect | RNN/LSTM | CNN | Transformer |
+|--------|----------|-----|-------------|
+| **Parallelization** | Sequential (one token at a time) | Parallel within layer | Fully parallel |
+| **Training Speed** | Slow ($O(n)$ sequential steps) | Fast | Very fast |
+| **Long-Range Dependencies** | Limited (gradient decay) | Limited (receptive field) | Unlimited (direct connections) |
+| **Path Length** | $O(n)$ between distant tokens | $O(\log n)$ (stacked layers) | $O(1)$ (direct attention) |
+| **Memory** | $O(n)$ | $O(n)$ | $O(n^2)$ (attention matrix) |
+| **Receptive Field** | Full sequence | Local then global (stacking) | Full sequence from layer 1 |
+
+**Computational Complexity Analysis**:
+
+For sequence length $n$ and dimension $d$:
+
+**Self-Attention**:
+- $\mathbf{Q} \mathbf{K}^\top$: $O(n^2 \cdot d)$ (bottleneck for long sequences)
+- Softmax: $O(n^2)$
+- Attention $\times$ Values: $O(n^2 \cdot d)$
+- **Total**: $O(n^2 \cdot d)$
+
+**Feed-Forward**:
+- Two matrix multiplications: $O(n \cdot d \cdot d_{\text{ff}}) = O(n \cdot d^2)$ (since $d_{\text{ff}} = 4d$)
+
+**Trade-off**:
+- Short sequences ($n < d$): Self-attention faster
+- Long sequences ($n > d$): FFN dominates
+
+For typical transformers: $n=512$, $d=768$ → $n < d$ → attention is bottleneck
+
+**Maximum Sequence Length**: Quadratic memory $O(n^2)$ limits practical length:
+- BERT: 512 tokens
+- RoBERTa: 512 tokens
+- Longformer: 4096 tokens (sparse attention)
+- BigBird: 4096 tokens (random/window/global attention)
+
+This concludes Phase 3. Shall I continue with Phase 4 (Pre-trained Language Models) and Phase 5 (LLMs and Parameter Efficiency)?
 
 ## Project Structure
 
