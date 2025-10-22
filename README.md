@@ -775,14 +775,9 @@ $$
 P(w \mid w_t) = \prod_{i=1}^{L(w)-1} \sigma\left(\text{&#10214;} n(w, i+1) = \text{left}(n(w, i)) \text{&#10215;} \cdot \mathbf{u}_{n(w,i)}^\top \mathbf{v}_{w_t}\right)
 $$
 
-
-$$
-P(w \mid w_t) = \prod_{i=1}^{L(w)-1} \sigma\left(\llbracket n(w, i+1) = \text{left}(n(w, i)) \rrbracket \cdot \mathbf{u}_{n(w,i)}^\top \mathbf{v}_{w_t}\right)
-$$
-
 where:
 - $n(w, i)$: $i$-th node on path to word $w$
-- $\llbracket \cdot \rrbracket$: Indicator function (1 if true, -1 if false)
+- $\text{Indicator } \text{&#10214;}\cdot\text{&#10215;} : 1 \text{ if true, } -1 \text{ if false}$
 - $\sigma(z) = 1/(1 + e^{-z})$: Sigmoid function
 
 **Complexity Reduction**: $O(|\mathcal{V}|) \rightarrow O(\log |\mathcal{V}|)$ per word
