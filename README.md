@@ -810,8 +810,8 @@ $$
 where $f(w)$ is word frequency.
 
 **Intuition**:
-- Maximize probability that target word appears in context: &#963;(u<sub>w_c</sub><sup>&#x1D40B;</sup> v<sub>w_t</sub>) &#8594; 1  
-- Minimize probability that random words appear: &#963;(u<sub>w_i</sub><sup>&#x1D40B;</sup> v<sub>w_t</sub>) &#8594; 0
+- Maximize probability that target word appears in context: &#963;(<i>𝘶</i><sub>w<sub>c</sub></sub><sup>T</sup><i>𝘷</i><sub>w<sub>t</sub></sub>) &#8594; 1  
+- Minimize probability that random words appear: &#963;(<i>𝘶</i><sub>w<sub>i</sub></sub><sup>T</sup><i>𝘷</i><sub>w<sub>t</sub></sub>) &#8594; 0
 
 **Complexity**: $O(|\mathcal{V}|) \rightarrow O(k)$ per word, typically $k=5-20$
 
