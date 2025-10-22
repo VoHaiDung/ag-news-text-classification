@@ -9,10 +9,6 @@
 [![arXiv](https://img.shields.io/badge/arXiv-2025.xxxxx-b31b1b.svg)](https://arxiv.org/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-**Author**: Võ Hải Dũng  
-**Email**: vohaidung.work@gmail.com  
-**Repository**: [github.com/VoHaiDung/ag-news-text-classification](https://github.com/VoHaiDung/ag-news-text-classification)
-
 </div>
 
 ---
