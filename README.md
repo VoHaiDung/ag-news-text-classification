@@ -1,8 +1,8 @@
 # AG News Text Classification
 
-**Intuition**:
-- Maximize probability that target word appears in context: &#963;(𝘶<sub>w_c</sub><sup>T</sup> 𝘷<sub>w_t</sub>) &#8594; 1  
-- Minimize probability that random words appear: &#963;(𝘶<sub>w_i</sub></sub><sup>T</sup> 𝘷<sub>w_t</sub>) &#8594; 0
+**Intuition**:  
+- Maximize probability that target word appears in context: &#963;(𝐮<sub>w_c</sub><sup>T</sup>𝐯<sub>w_t</sub>) &#8594; 1  
+- Minimize probability that random words appear: &#963;(𝐮<sub>w_i</sub><sup>T</sup>𝐯<sub>w_t</sub>) &#8594; 0
 
 <div align="center">
 
