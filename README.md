@@ -1,8 +1,9 @@
 # AG News Text Classification
 
 $$
-A_{ij} = \llbracket Q^c_i K^c_j + Q^c_i K^r_{i-j} + K^c_j Q^r_{i-j} \rrbracket
+A_{ij} = ⟦ Q^c_i K^c_j + Q^c_i K^r_{i-j} + K^c_j Q^r_{i-j} ⟧
 $$
+
 
 
 <div align="center">
