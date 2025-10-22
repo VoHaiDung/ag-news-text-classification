@@ -1,6 +1,8 @@
 # AG News Text Classification
 
-\(A=Q_{i}^{c}K_{j}^{c}+Q_{i}^{c}K_{i-j}^{r}+K_{j}^{c}Q_{i-j}^{r}\)
+$$
+A_{ij} = Q^c_i K^c_j + Q^c_i K^r_{i-j} + K^c_j Q^r_{i-j}
+$$
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
