@@ -1,0 +1,79 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+pip-wheel-metadata/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_meta
+
+# Testing / coverage
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environment variables
+.env
+.env.local
+
+# Experiment tracking
+wandb/
+mlruns/
+mlartifacts/
+outputs/
+lightning_logs/
+
+# Data and model artefacts (kept out of git; use DVC / HuggingFace Hub)
+data/raw/
+data/interim/
+data/processed/
+data/external/
+artifacts/
+checkpoints/
+models/pretrained/
+*.bin
+*.safetensors
+*.onnx
+*.pt
+*.pth
+*.ckpt
+
+# Logs
+logs/
+*.log
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Local task tracking and editor scratch files (defensive)
+.todos/
+*.todo
+todo_*.md
+scratch_*.md
+.scratch/

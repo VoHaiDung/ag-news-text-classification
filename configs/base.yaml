@@ -1,0 +1,77 @@
+# Base configuration for the AG News capstone.
+# Phase- and model-specific configurations override fields declared here.
+
+name: base
+description: >-
+  Default settings shared across phases. Override the relevant blocks in
+  the per-phase configuration files (configs/phase*.yaml).
+
+paths:
+  data_dir: data
+  output_dir: outputs
+  cache_dir: data/cache
+  checkpoints_dir: outputs/checkpoints
+  figures_dir: outputs/figures
+  metrics_dir: outputs/metrics
+
+data:
+  name: ag_news
+  hf_path: ag_news
+  text_column: text
+  label_column: label
+  num_labels: 4
+  label_names: [World, Sports, Business, Sci/Tech]
+  train_split: train
+  test_split: test
+  validation_size: 0.1
+  max_length: 256
+  language: en
+
+model:
+  name: microsoft/deberta-v3-small
+  family: deberta-v3
+  tokenizer_name: null
+  max_length: 256
+  dropout: 0.1
+  pooling: cls
+
+training:
+  seed: 42
+  epochs: 3
+  batch_size: 32
+  eval_batch_size: 64
+  learning_rate: 2.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  gradient_accumulation_steps: 1
+  fp16: true
+  bf16: false
+  optimizer: adamw_torch
+  scheduler: linear
+  early_stopping_patience: 2
+  save_total_limit: 2
+  logging_steps: 50
+  eval_steps: null
+
+evaluation:
+  metrics: [accuracy, f1_macro, f1_weighted]
+  compute_calibration: true
+  n_calibration_bins: 15
+  benchmark_latency: true
+  latency_warmup: 10
+  latency_iters: 200
+  shap_n_samples: 25
+  lime_n_samples: 25
+
+deployment:
+  onnx_opset: 17
+  quantize: true
+  quantization_format: QInt8
+  gradio_share: false
+  hf_space_repo: null
+
+tracking:
+  backend: none
+  project: ag-news-classification
+  entity: null
+  run_name: null

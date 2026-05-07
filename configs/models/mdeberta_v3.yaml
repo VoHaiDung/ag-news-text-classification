@@ -1,0 +1,28 @@
+# mDeBERTa-v3 multilingual fine-tuning configuration (Phase 5).
+
+name: mdeberta_v3
+description: Microsoft mDeBERTa-v3-base fine-tuned on Vietnamese AG News.
+
+model:
+  name: microsoft/mdeberta-v3-base
+  family: mdeberta-v3
+  tokenizer_name: null
+  max_length: 256
+  dropout: 0.1
+  pooling: cls
+
+training:
+  seed: 42
+  epochs: 3
+  batch_size: 16
+  eval_batch_size: 32
+  learning_rate: 1.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  fp16: true
+  bf16: false
+  optimizer: adamw_torch
+  scheduler: linear
+  early_stopping_patience: 2
+  save_total_limit: 2
+  logging_steps: 50

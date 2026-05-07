@@ -1,0 +1,28 @@
+# SetFit few-shot configuration (Phase 6).
+
+name: setfit
+description: SetFit on top of paraphrase-mpnet-base-v2 sentence transformer.
+
+model:
+  name: sentence-transformers/paraphrase-mpnet-base-v2
+  family: setfit
+  tokenizer_name: null
+  max_length: 256
+  dropout: 0.0
+  pooling: mean
+
+training:
+  seed: 42
+  epochs: 1
+  batch_size: 16
+  eval_batch_size: 32
+  learning_rate: 2.0e-5
+  weight_decay: 0.0
+  warmup_ratio: 0.1
+  fp16: false
+  bf16: false
+  optimizer: adamw_torch
+  scheduler: linear
+  early_stopping_patience: 1
+  save_total_limit: 1
+  logging_steps: 25

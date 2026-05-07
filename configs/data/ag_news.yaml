@@ -1,0 +1,17 @@
+# AG News English dataset configuration.
+
+name: ag_news_en
+description: AG News (Zhang et al., 2015) - 120k train / 7.6k test, four-class topic.
+
+data:
+  name: ag_news
+  hf_path: ag_news
+  text_column: text
+  label_column: label
+  num_labels: 4
+  label_names: [World, Sports, Business, Sci/Tech]
+  train_split: train
+  test_split: test
+  validation_size: 0.1
+  max_length: 256
+  language: en

@@ -1,0 +1,93 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ag-news-text-classification"
+version = "0.1.0"
+description = "End-to-end modern NLP pipeline for AG News topic classification (SIC AI Capstone)."
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+license = { text = "MIT" }
+authors = [
+    { name = "Vo Hai Dung", email = "vohaidung.work@gmail.com" }
+]
+keywords = ["nlp", "text-classification", "ag-news", "transformers", "few-shot", "xai"]
+
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "scikit-learn>=1.4",
+    "scipy>=1.11",
+    "matplotlib>=3.8",
+    "seaborn>=0.13",
+    "tqdm>=4.66",
+    "pyyaml>=6.0",
+    "click>=8.1",
+    "python-dotenv>=1.0",
+    "datasets>=2.18",
+    "transformers>=4.41",
+    "tokenizers>=0.19",
+    "accelerate>=0.30",
+    "evaluate>=0.4",
+    "torch>=2.2",
+    "sentence-transformers>=2.7",
+    "setfit>=1.0",
+    "fasttext>=0.9.2",
+    "cleanlab>=2.6",
+    "bertopic>=0.16",
+    "umap-learn>=0.5",
+    "hdbscan>=0.8",
+    "wordcloud>=1.9",
+    "shap>=0.45",
+    "lime>=0.2.0.1",
+    "onnx>=1.16",
+    "onnxruntime>=1.18",
+    "optimum[onnxruntime]>=1.20",
+    "gradio>=4.31",
+    "wandb>=0.17",
+    "mlflow>=2.13",
+    "optuna>=3.6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2",
+    "pytest-cov>=5.0",
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "pre-commit>=3.7",
+    "jupyter>=1.0",
+    "ipykernel>=6.29",
+]
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+]
+
+[project.scripts]
+agnews = "src.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-select = ["E", "F", "I", "N", "B", "UP", "PL", "RUF"]
+ignore = ["PLR0913"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = false
+warn_unused_ignores = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q --strict-markers"
+markers = [
+    "slow: tests that take more than a few seconds",
+    "gpu: tests that require a CUDA-capable device",
+]

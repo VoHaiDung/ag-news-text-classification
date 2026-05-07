@@ -1,0 +1,50 @@
+# Core scientific stack
+numpy>=1.26
+pandas>=2.2
+scikit-learn>=1.4
+scipy>=1.11
+matplotlib>=3.8
+seaborn>=0.13
+tqdm>=4.66
+
+# Configuration / IO
+pyyaml>=6.0
+click>=8.1
+python-dotenv>=1.0
+
+# HuggingFace ecosystem
+datasets>=2.18
+transformers>=4.41
+tokenizers>=0.19
+accelerate>=0.30
+evaluate>=0.4
+sentence-transformers>=2.7
+setfit>=1.0
+
+# Deep learning
+torch>=2.2
+
+# Classical baselines
+fasttext>=0.9.2
+
+# Data quality / topic modelling
+cleanlab>=2.6
+bertopic>=0.16
+umap-learn>=0.5
+hdbscan>=0.8
+wordcloud>=1.9
+
+# Explainability
+shap>=0.45
+lime>=0.2.0.1
+
+# Optimisation / deployment
+onnx>=1.16
+onnxruntime>=1.18
+optimum[onnxruntime]>=1.20
+gradio>=4.31
+
+# Experiment tracking
+wandb>=0.17
+mlflow>=2.13
+optuna>=3.6

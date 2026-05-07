@@ -1,0 +1,28 @@
+# ModernBERT-base fine-tuning configuration.
+
+name: modernbert_base
+description: Answer.AI ModernBERT-base fine-tuned on AG News.
+
+model:
+  name: answerdotai/ModernBERT-base
+  family: modernbert
+  tokenizer_name: null
+  max_length: 256
+  dropout: 0.1
+  pooling: cls
+
+training:
+  seed: 42
+  epochs: 3
+  batch_size: 16
+  eval_batch_size: 32
+  learning_rate: 1.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  fp16: false
+  bf16: true
+  optimizer: adamw_torch
+  scheduler: cosine
+  early_stopping_patience: 2
+  save_total_limit: 2
+  logging_steps: 50
