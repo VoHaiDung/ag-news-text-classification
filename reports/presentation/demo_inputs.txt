@@ -1,0 +1,79 @@
+================================================================================
+DEMO INPUTS — AG News Text Classification
+Paste-ready text for capturing the demo screenshots (frames A-H).
+UI: http://localhost:7861  (F11 full screen, Ctrl+0 = 100% zoom)
+Expected results read off the live UI: EN Sci/Tech 90%, VI Sports 82%,
+FR Business 90%.
+================================================================================
+
+
+--------------------------------------------------------------------------------
+[ FRAME B ] Short English  ->  Predicted: Sci/Tech (~90%)
+            Model picker: ModernBERT-large (EN)
+--------------------------------------------------------------------------------
+NASA Perseverance rover discovers ancient microbial life on Mars surface.
+
+
+--------------------------------------------------------------------------------
+[ FRAME C ] Short Vietnamese  ->  Predicted: Sports (~82%)
+            Model picker auto-switches to: XLM-R-large vi+BT (VI)
+--------------------------------------------------------------------------------
+Đội tuyển Việt Nam thắng Thái Lan 2-0 tại chung kết AFF Cup.
+
+
+--------------------------------------------------------------------------------
+[ FRAME D ] Short French  ->  Predicted: Business (~90%)
+            Model picker auto-switches to: XLM-R-large fr-only (FR)
+--------------------------------------------------------------------------------
+La Banque centrale européenne relève ses taux directeurs de 25 points de base.
+
+
+--------------------------------------------------------------------------------
+[ FRAME E ] Long document  ->  Mode line must flip to "sliding-window"
+--------------------------------------------------------------------------------
+HOW TO TRIGGER sliding-window (must read):
+  1. Open the "Model checkpoint" dropdown and SELECT A 512-TOKEN ENCODER
+     BY HAND — DeBERTa-v3-base (EN, 510) or XLM-R-large (512). The
+     language router will NOT switch to a 512 model for English text, so
+     manual selection is required.
+  2. Paste the WHOLE block below (all paragraphs). It is ~640 DeBERTa
+     tokens, which exceeds the 510-token limit and forces the
+     "Mode: sliding window — N window(s)" path.
+  Note: do NOT use ModernBERT (8190-token limit) — this text fits in one
+  pass there and will stay on "single forward pass".
+The article is a NASA news release — U.S. government work, public domain.
+Source: https://science.nasa.gov/missions/webb/nasas-webb-finds-new-evidence-for-planet-around-closest-solar-twin/
+
+Astronomers using NASA's James Webb Space Telescope have found strong evidence of a giant planet orbiting a star in the stellar system closest to our own Sun. At just 4 light-years away from Earth, the Alpha Centauri triple star system has long been a compelling target in the search for worlds beyond our solar system.
+
+Alpha Centauri, located in the far southern sky, is made up of the binary Alpha Centauri A and Alpha Centauri B, both Sun-like stars, and the faint red dwarf star Proxima Centauri. Alpha Centauri A is the third brightest star in the night sky. While there are three confirmed planets orbiting Proxima Centauri, the presence of other worlds surrounding Alpha Centauri A and Alpha Centauri B has proved challenging to confirm.
+
+Now, Webb's observations from its Mid-Infrared Instrument (MIRI) are providing the strongest evidence to date of a gas giant orbiting Alpha Centauri A. The results have been accepted in a series of two papers in The Astrophysical Journal Letters.
+
+If confirmed, the planet would be the closest to Earth that orbits in the habitable zone of a Sun-like star. However, because the planet candidate is a gas giant, scientists say it would not support life as we know it.
+
+The first observations of the system took place in August 2024, using the coronagraphic mask aboard MIRI to block Alpha Centauri A's light. While extra brightness from the nearby companion star Alpha Centauri B complicated the analysis, the team was able to subtract out the light from both stars to reveal an object over 10,000 times fainter than Alpha Centauri A, separated from the star by about two times the distance between the Sun and Earth.
+
+While the initial detection was exciting, the research team needed more data to come to a firm conclusion. However, additional observations of the system in February 2025 and April 2025 did not reveal any objects like the one identified in August 2024.
+
+Based on the brightness of the planet in the mid-infrared observations and the orbit simulations, researchers say it could be a gas giant approximately the mass of Saturn orbiting Alpha Centauri A in an elliptical path varying between 1 to 2 times the distance between Sun and Earth.
+
+The James Webb Space Telescope is the world's premier space science observatory. Webb is solving mysteries in our solar system, looking beyond to distant worlds around other stars, and probing the mysterious structures and origins of our universe and our place in it. Webb is an international program led by NASA with its partners, ESA and CSA.
+
+Scientists around the world continue to analyse the data gathered by the telescope, comparing infrared signatures against theoretical models of planetary atmospheres, orbital dynamics, and the long-term stability of multi-star systems. Future observations with next-generation observatories are expected to refine these measurements further and may finally confirm whether a true planetary companion orbits this nearby Sun-like star.
+
+Researchers emphasise that detecting a planet so close to two bright, fast-moving stars pushes the telescope to the very edge of its capabilities, and that several more observing campaigns will be needed before the candidate can be formally catalogued as a confirmed exoplanet in the Alpha Centauri system.
+
+
+--------------------------------------------------------------------------------
+[ FRAME G ] SHAP explanation  ->  Explain tab, wait for the red/blue heat-map
+--------------------------------------------------------------------------------
+Federal Reserve cuts interest rates by 25 basis points to combat inflation.
+
+
+================================================================================
+FRAME A (hero) and FRAME F (softmax) need no input:
+  A = app home, scroll to top, empty box.
+  F = crop the Class probabilities panel from Frame B in the editor.
+FRAME H (model comparison table) needs no input: scroll to the bottom table.
+================================================================================
